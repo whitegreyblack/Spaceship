@@ -17,6 +17,7 @@ charMap['b']=92
 charMap['h']=179
 charMap['v']=196
 charMap['c']=9
+
 print(charMap.keys())
 
 class border:
@@ -71,7 +72,7 @@ def build_line(array, start, stop, color):
 def build_background(menu):
     x, y = len(menu)-2, len(menu[0])-2 # decrement by 2 to not overwrite border? or maybe draw background first then border
 
-    menu[10][5] = charmap['c']
+    menu[10][5] = charMap['c']
 
 
     return menu
@@ -82,7 +83,7 @@ if __name__ == '__main__':
     W, H = 100, 75
     tdl.setFont('fonts/new8x8_gs_ro.png', greyscale=True)
     cli = tdl.init(W,H,'menu')
-    menu = build_menu(W, H)
+    menu = build_background(build_menu(W, H))
     while True:
         timer += 1
         cli.clear()

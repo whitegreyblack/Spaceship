@@ -16,6 +16,7 @@ class Color:
             self.b = b
     def get(self):
         return (self.r, self.g, self.b)
+    
 wall = Color(0, 128, 255).get()
 floor = Color(128, 255, 255).get()
 hatch = Color(255, 128, 0).get()
