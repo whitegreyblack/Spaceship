@@ -1,7 +1,7 @@
 # utiltools : functions for 2D graphics manipulations and transformation
 
 def lambdafunc(f, x1, y1, x2, y2):
-    '''Returns a tuple containing results using parameter function'''
+    '''Returns a tuple containing results using parameter function: useful to prevent code duplications'''
     return (f(x1, x2), f(y1, y2))
 
 def deltanorm(p1, p2):

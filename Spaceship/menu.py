@@ -30,7 +30,6 @@ class border:
     sbrcorner=217
     svertical=196
     shorizontal=179
-    
 def array(x, y):
     choices = [z for z in range(65, 65+27)]
     return [[[random.choice(choices), WHITE] for _ in range(y)] for _ in range(x)]
@@ -56,9 +55,6 @@ def build_menu(x, y):
     menu_layout[x-1][y-1] = border.sbrcorner
     return menu_layout
 
-def build_opts(screen): pass
-def build_stat(screen): pass
-
 def deltanorm(p1, p2):
     dp = int((p2-p1)/abs(p2-p1))
     return dp
@@ -69,9 +65,7 @@ def build_line(array, start, stop, color):
     x2, y2 = stop
     if max(x2, x1) - min(x2, x1) is max(y2, y1) - min(y2, y1):
         dx = deltanorm(x1, x2)
-        print(dx, deltanorm(x1, x2))
         dy = deltanorm(y1, y2)
-        print(dy, deltanorm(y1, y2))
         return [(x1+dx*d, y1+dy*d) for d in range(max(x2, x1) - min(x2, x1)+1)]
     return []
 

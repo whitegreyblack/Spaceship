@@ -1,6 +1,9 @@
 from imports import *
 from colors import Color
 
+class TextBox:
+    def __init__(self, string):
+        self.string = string
 
 class Point:
     def __init__(self, x, y):
