@@ -17,7 +17,10 @@ charMap['b']=92
 charMap['h']=179
 charMap['v']=196
 charMap['c']=9
-
+charMap['^']=257
+charMap['v']=256
+charMap['<']=60
+charMap['>']=62
 print(charMap.keys())
 
 class border:
@@ -27,6 +30,7 @@ class border:
     sbrcorner=217
     svertical=196
     shorizontal=179
+    
 def array(x, y):
     choices = [z for z in range(65, 65+27)]
     return [[[random.choice(choices), WHITE] for _ in range(y)] for _ in range(x)]
@@ -52,6 +56,9 @@ def build_menu(x, y):
     menu_layout[x-1][y-1] = border.sbrcorner
     return menu_layout
 
+def build_opts(screen): pass
+def build_stat(screen): pass
+
 def deltanorm(p1, p2):
     dp = int((p2-p1)/abs(p2-p1))
     return dp
@@ -60,21 +67,32 @@ def deltanorm(p1, p2):
 def build_line(array, start, stop, color):
     x1, y1 = start
     x2, y2 = stop
-    if max(x2, x1) - min(x2, x1) is not max(y2, y1) - min(y2, y1):
-        print("not a straight line")
-    else:
-        print("straight line")
-    dx = deltanorm(x1, x2)
-    print(dx, deltanorm(x1, x2))
-    dy = deltanorm(y1, y2)
-    print(dy, deltanorm(y1, y2))
+    if max(x2, x1) - min(x2, x1) is max(y2, y1) - min(y2, y1):
+        dx = deltanorm(x1, x2)
+        print(dx, deltanorm(x1, x2))
+        dy = deltanorm(y1, y2)
+        print(dy, deltanorm(y1, y2))
+        return [(x1+dx*d, y1+dy*d) for d in range(max(x2, x1) - min(x2, x1)+1)]
+    return []
 
 def build_background(menu):
     x, y = len(menu)-2, len(menu[0])-2 # decrement by 2 to not overwrite border? or maybe draw background first then border
-
-    menu[10][5] = charMap['c']
-
-
+    points = build_line(menu, (28, 21), (12, 37), WHITE)
+    for x, y in points:
+        menu[x][y] = charMap['f']
+    points = build_line(menu, (44, 37), (28, 53), WHITE)
+    for x, y in points:
+        menu[x][y] = charMap['f']
+    points = build_line(menu, (28, 21), (44, 37), WHITE)
+    for x, y in points:
+        menu[x][y] = charMap['b']
+    points = build_line(menu, (12, 37), (28, 53), WHITE)
+    for x, y in points:
+        menu[x][y] = charMap['b']
+    menu[28][21] = charMap['^']
+    menu[28][53] = charMap['v']
+    menu[44][37] = charMap['>']
+    menu[12][37] = charMap['<']
     return menu
 
 if __name__ == '__main__':
@@ -89,7 +107,7 @@ if __name__ == '__main__':
         cli.clear()
         for i in range(W):
             for j in range(H):
-                cli.draw_char(i, j, menu[i][j], WHITE if not menu[i][j] else LGREY)
+                cli.draw_char(i, j, menu[i][j], WHITE if not menu[i][j] else WHITE)
         tdl.flush()
         for e in tdl.event.get():
             if "MOUSEUP" in e.type and "LEFT" in e.button:
