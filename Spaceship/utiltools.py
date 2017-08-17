@@ -4,10 +4,18 @@ def deltanorm(p1, p2):
     '''Returns direction of line given two points'''
     return int((p2-p1)/abs(p2-p1))
 
-def deltanorm(x1, y1, x2, y2)
+def deltanorms(x1, y1, x2, y2):
     '''Returns tuple of direction of line given two points'''
     return (deltanorm(x1, x2), deltanorm(y1, y2))
 
 def basicmap(x, y, v=0):
     '''Returns 2D list with width x, height y, and values of z'''
     return [[0 for _ in range(y)] for _ in range(x)]
+
+def truecompare(p1, p2):
+    '''Returns the distance between two points'''
+    return abs(p1 - p2)
+
+def sortcompare(p1, p2):
+    '''Returns the distance between two points'''
+    return max(p1, p2) - min(p1, p2)
