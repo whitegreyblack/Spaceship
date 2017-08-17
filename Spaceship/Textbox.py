@@ -1,6 +1,6 @@
 from imports import *
 
-class TextBox:
+class textbox:
     border = False
     color = (250, 250, 250)
     position = (0, 0)

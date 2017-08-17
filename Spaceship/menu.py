@@ -1,5 +1,6 @@
 import tdl
 from imports import *
+from textbox import textbox
 from collections import namedtuple
 
 WHITE = (250, 250, 250)
@@ -49,7 +50,7 @@ def build_menu(x, y):
         menu_layout[c][y-1] = border.svertical
 
     # corners
-    menu_layout[0][0] = border.stlcorner
+    menu_layout[0][0] =  border.stlcorner
     menu_layout[x-1][0] = border.strcorner
     menu_layout[0][y-1] = border.sblcorner
     menu_layout[x-1][y-1] = border.sbrcorner
