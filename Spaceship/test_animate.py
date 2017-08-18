@@ -5,7 +5,7 @@ from ctypes import c_uint32, addressof
 from namedlist import namedlist
 from time import time
 
-sprite = namedlist('Sprite', ['images', ('image', 0), ('frame', 0), ('frames', 30)])
+sprite = namedlist('Sprite', ['images', ('image', 0), ('frame', 0), ('frames', 15)])
 
 
 
@@ -22,9 +22,10 @@ class sprite:
 '''
 
 def test_sprite():
-    term.set("U+E000: ./imgs/dknight1.png, resize=32x40")
-    term.set("U+E001: ./imgs/dknight2.png, resize=32x40")
-    knight = sprite(images=[57344, 57345],)
+    term.set("U+E000: ./imgs/dknight1.png")
+    term.set("U+E001: ./imgs/dknight2.png")
+    term.set("U+E002: ./imgs/dknight3.png")
+    knight = sprite(images=[57344, 57345, 57346],)
     print(knight)
     term.clear()
     term.put(0, 1, knight.images[knight.image])
@@ -40,6 +41,7 @@ def test_sprite():
             term.clear()
             term.puts(0, 0, 'Animating a knight\n')
             term.put(0, 1, knight.images[knight.image])
+            term.puts(0, 5, 'Text under knight\n')
             term.refresh()
     except KeyboardInterrupt:
         pass
