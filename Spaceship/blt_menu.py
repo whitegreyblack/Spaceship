@@ -1,10 +1,12 @@
-from bearlibterminal import terminal
+from bearlibterminal import terminal as term
 
-terminal.open()
-terminal.printf(1, 1, 'hello')
-terminal.refresh()
+if __name__ == "__main__":
+    term.open()
+    term.set("window: size=80x25, title='Spaceshipe'")
+    term.printf(1, 1, 'hello')
+    term.refresh()
 
-reader = terminal.read()
-if reader == terminal.TK_ESCAPE:
-    exit()
-terminal.close()
+    reader = term.read()
+    if reader == term.TK_ESCAPE:
+        exit()
+    term.close()
