@@ -33,4 +33,11 @@ def maxmindistances(x1, y1, x2, y2):
     return (maxmindistance(x1, x2), maxmindistance(y1, y2))
 
 def line(array, start, stop, color):
-    
+    ld_line(array, start, stop, color):                                      
+    x1, y1 = start                                                              
+    x2, y2 = stop                                                               
+    if max(x2, x1) - min(x2, x1) is max(y2, y1) - min(y2, y1):                  
+        dx = deltanorm(x1, x2)                                                  
+        dy = deltanorm(y1, y2)                                                  
+        return [(x1+dx*d, y1+dy*d) for d in range(max(x2, x1) - min(x2, x1)+1)] 
+    return []  
