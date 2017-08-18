@@ -31,3 +31,6 @@ def maxmindistance(p1, p2):
 def maxmindistances(x1, y1, x2, y2):
     '''Returns a tuple of distances for x, y'''
     return (maxmindistance(x1, x2), maxmindistance(y1, y2))
+
+def line(array, start, stop, color):
+    
