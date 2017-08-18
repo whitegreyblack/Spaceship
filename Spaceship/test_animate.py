@@ -30,9 +30,14 @@ def test_sprite():
     term.clear()
     term.put(0, 1, knight.images[knight.image])
     term.refresh()
+
+    key = term.read()
     try:
-        while True:
+        while term.has_input():
+            key = term.read()
             knight.frame += 1
+            if term.TK_EVENT:
+                term.puts(0,5, 'Event happened')
             if knight.frame > knight.frames:
                 knight.frame = 0
                 knight.image += 1
@@ -41,7 +46,7 @@ def test_sprite():
             term.clear()
             term.puts(0, 0, 'Animating a knight\n')
             term.put(0, 1, knight.images[knight.image])
-            term.puts(0, 5, 'Text under knight\n')
+            term.puts(0, 4, 'Text under knight\n')
             term.refresh()
     except KeyboardInterrupt:
         pass
