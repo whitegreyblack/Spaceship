@@ -8,9 +8,9 @@ from time import time
 sprite = namedlist('Sprite', [('images', []), ('positions', ()), ('image', 0), ('frame', 0), ('frames', 15)])
 
 def test_sprite():
-    term.set("U+E000: ./imgs/dknight1.png")
-    term.set("U+E001: ./imgs/dknight2.png")
-    term.set("U+E002: ./imgs/dknight3.png")
+    term.set("U+E000: ./imgs/dknight1.png, resize=32x32")
+    term.set("U+E001: ./imgs/dknight2.png, resize=32x32")
+    term.set("U+E002: ./imgs/dknight3.png, resize=32x32")
     knight = sprite(images=[57344, 57345, 57346],)
     print(knight)
     term.clear()
