@@ -5,21 +5,7 @@ from ctypes import c_uint32, addressof
 from namedlist import namedlist
 from time import time
 
-sprite = namedlist('Sprite', ['images', ('image', 0), ('frame', 0), ('frames', 15)])
-
-
-
-'''
-class sprite:
-    def __init__(self, images):
-        self.images=images
-        self.index=0
-    def update(self):
-        self.index+=1
-        if self.index > len(self.images):
-            self.index = 0
-        return self.images[self.index]
-'''
+sprite = namedlist('Sprite', [('images', []), ('positions', ()), ('image', 0), ('frame', 0), ('frames', 15)])
 
 def test_sprite():
     term.set("U+E000: ./imgs/dknight1.png")
@@ -30,11 +16,9 @@ def test_sprite():
     term.clear()
     term.put(0, 1, knight.images[knight.image])
     term.refresh()
-
-    key = term.read()
+    proceed = True
     try:
-        while term.has_input():
-            key = term.read()
+        while proceed:
             knight.frame += 1
             if term.TK_EVENT:
                 term.puts(0,5, 'Event happened')
@@ -46,7 +30,17 @@ def test_sprite():
             term.clear()
             term.puts(0, 0, 'Animating a knight\n')
             term.put(0, 1, knight.images[knight.image])
-            term.puts(0, 4, 'Text under knight\n')
+            term.puts(0, 5, 'Text under knight\n')
+            while proceed and term.has_input():
+                term.puts(0, 5, 'Got input')
+                code = term.read()
+                if code in (term.TK_ESCAPE, term.TK_CLOSE):
+                    term.clear()
+                    term.puts(0, 1, 'Really Quit? (Y/N)')
+                    term.refresh()
+                    code = term.read()
+                    if code in (term.TK_Y, ):
+                        proceed = False
             term.refresh()
     except KeyboardInterrupt:
         pass
