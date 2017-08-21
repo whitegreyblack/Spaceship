@@ -34,7 +34,6 @@ def maxmindistances(x1, y1, x2, y2):
     return (maxmindistance(x1, x2), maxmindistance(y1, y2))
 
 def line(array, start, stop, color):
-    ld_line(array, start, stop, color):                                      
     x1, y1 = start                                                              
     x2, y2 = stop                                                               
     if max(x2, x1) - min(x2, x1) is max(y2, y1) - min(y2, y1):                  
@@ -43,10 +42,10 @@ def line(array, start, stop, color):
         return [(x1+dx*d, y1+dy*d) for d in range(max(x2, x1) - min(x2, x1)+1)] 
     return []  
 
-def positions_sine():
+def positions_sine(x):
     s = math.sin
-    return (s(0))
+    return (s(x))
 
-def positions_cosine():
+def positions_cosine(x):
     c = math.cos
-    return (c(0))
+    return (c(x))

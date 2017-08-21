@@ -1,19 +1,4 @@
-from imports import *
-
-class COLOR:
-    WHITE = (250, 250, 250)
-    BLACK = (0, 0, 0)
-    LGREY = (200, 200, 200)
-    GREY = (125, 125, 125)
-    DGREY = (50, 50, 50)
-    BROWN = (225, 175, 100)
-    YELLOW = (250, 250, 100)
-
-class SHIP_COLOR:
-    wall = color(0, 128, 255).get()
-    floor = color(128, 255, 255).get()
-    hatch = color(255, 128, 0).get()
-    other = color(128, 128, 192).get()
+import random
 
 class color:
     def __init__(self, r=None, g=None, b=None):
@@ -31,5 +16,20 @@ class color:
             self.b = b
     def get(self):
         return (self.r, self.g, self.b)
+
+class COLOR:
+    WHITE = (250, 250, 250)
+    BLACK = (0, 0, 0)
+    LGREY = (200, 200, 200)
+    GREY = (125, 125, 125)
+    DGREY = (50, 50, 50)
+    BROWN = (225, 175, 100)
+    YELLOW = (250, 250, 100)
+
+class SHIP_COLOR:
+    wall = color(0, 128, 255).get()
+    floor = color(128, 255, 255).get()
+    hatch = color(255, 128, 0).get()
+    other = color(128, 128, 192).get()
 
 
