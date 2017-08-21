@@ -1,5 +1,5 @@
 from imports import *
-from colors import Color
+from colors import COLOR, color, SHIP_COLOR
 
 class TextBox:
     def __init__(self, string):
