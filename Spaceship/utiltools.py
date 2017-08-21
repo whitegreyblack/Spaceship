@@ -1,4 +1,5 @@
 # utiltools : functions for 2D graphics manipulations and transformation
+import math
 
 def lambdafunc(f, x1, y1, x2, y2):
     '''Returns a tuple containing results using parameter function: useful to prevent code duplications'''
@@ -41,3 +42,11 @@ def line(array, start, stop, color):
         dy = deltanorm(y1, y2)                                                  
         return [(x1+dx*d, y1+dy*d) for d in range(max(x2, x1) - min(x2, x1)+1)] 
     return []  
+
+def positions_sine():
+    s = math.sin
+    return (s(0))
+
+def positions_cosine():
+    c = math.cos
+    return (c(0))

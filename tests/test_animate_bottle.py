@@ -12,7 +12,7 @@ def test_sprite():
     term.set("U+E001: ./assets/bottle_gray_02.png")
     term.set("U+E002: ./assets/bottle_gray_03.png")
     # [57344, 57345, 57346, 57345,]
-    bottle = sprite(images=[57344, 57344, 57344, 57344], positions=[(0,0), (0,-1), (0,-2), (0, -1)])
+    bottle = sprite(images=[57344], positions=[(0,0), (0,-1), (0,-2), (0,-1), (0, 0), (0, 1), (0, 2), (0, 1)])
     print(bottle)
     term.clear()
     term.put(0, 1, bottle.images[bottle.image])
