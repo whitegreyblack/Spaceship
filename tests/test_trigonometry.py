@@ -1,3 +1,1 @@
-import pytest
-
-from Spaceship import utiltools
+from spaceship import utiltools
