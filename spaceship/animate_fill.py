@@ -51,7 +51,6 @@ def test():
                 img, px, py, off = sprite.update()
                 term.put(px, py, img)
                 term.refresh()
-                sleep(0.1)
             while proceed and term.has_input():
                 code = term.read()
                 if code in (term.TK_ESCAPE,):

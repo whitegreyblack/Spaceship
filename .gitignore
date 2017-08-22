@@ -103,3 +103,6 @@ ENV/
 # vscode
 .vs/
 .vscode/
+
+# paint.net
+*.pdnBak
