@@ -23,6 +23,7 @@ def test_sprite():
     term.set("U+E001: ./assets/cursor02.png")
     term.set("U+E002: ./assets/cursor03.png")
     term.set("U+E003: ./assets/cursor03_small.png")
+    term.set("U+E004: ./assets/cursor03_smaller.png")
     term.clear()
     term.refresh()
     proceed = True
@@ -36,6 +37,7 @@ def test_sprite():
             term.puts(3, 1, f'{y}')
             term.puts(7, 1, f'{x//factor_x}')
             term.puts(10, 1, f'{y//factor_y}')
+            term.put(5,5, 'a')
             while proceed and term.has_input():
                 term.puts(0, 5, 'Got input')
                 code = term.read()
@@ -59,6 +61,8 @@ def test_sprite():
                     else:
                         y = max(min(y+dy*fy, limit_y), 0)
                     cursor_pos = (x, y)
+                else:
+                    term.puts(0,6, 'other input')
             term.refresh()
     except KeyboardInterrupt:
         pass
