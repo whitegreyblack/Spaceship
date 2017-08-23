@@ -60,6 +60,7 @@ def test_maxmindistance():
 def test_maxmindistances():
     distances = tools.maxmindistances(0, 1, 3, 0)
     assert distances == (3, 1)
+    assert tools.maxmindistances(0, 1, 3, 0) == tools.maxmindistances(3, 0, 0, 1)
 
 def test_line():
     start = (0, 0)
@@ -73,3 +74,12 @@ def test_line():
     line_points = tools.line(start, stop)
     assert len(line_points) == 0
     assert line_points == []
+
+def test_movement():
+    high, low = 10, 0
+    position, change, factor = 5, 1, 2
+    assert low < tools.movement(position, change, factor, low, high) < high
+    position, change = 1, -1
+    assert tools.movement(position, change, factor, low, high) == low
+    position, change = 9, 1
+    assert tools.movement(position, change, factor, low, high) == high
