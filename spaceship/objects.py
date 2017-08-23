@@ -84,15 +84,15 @@ class Grid:
         return "{}({},{},{})".format(
             self.__class__.__name__, self.mx, self.my, type(self.map[0][0]))
 
-
+'''
 class Tile(Point):
     def __init__(self, x, y, blocked, block_sight):
         super(Tile, self).__init__(x, y)
         self.blocked = blocked
         self.explored = False
         self.block_sight = block_sigh if block_sight else blocked
-
-
+'''
+'''
 class GameObject(Point):
     def __init__(self, x, y, char, color=None):
         self.x = x
@@ -103,7 +103,6 @@ class GameObject(Point):
     def __repr__(self):
         return "{}({},{},{},{}".format(self.__class__.__name__,
                                        self.x, self.y, self.char, self.color)
-
 
 class ImmovableObject(GameObject):
     def __init__(self, x, y, char, color=None):
@@ -118,3 +117,29 @@ class MovableObject(GameObject):
         if tile.open:
             self.x += dx
             self.y += dy
+'''
+
+class Object:
+    def __init__(self, x, y, i, c='white'):
+        """@parameters :- x, y, i, c
+            x: positional argument,
+            y: positional argument,
+            i: char/image for object representation,
+            c: color for object fill
+        """
+        self.x = x
+        self.y = y
+        self.i = i
+        self.c = c
+
+    def move(self, dx, dy):
+        self.x += dx
+        self.y += dy
+    
+    def draw(self):
+        return (self.x, self.y, self.i, self.c)
+
+class Tile:
+    def __init__(self, blocked, sight=None):
+        self.blocked = blocked
+        self.sight = blocked if sight is None else sight

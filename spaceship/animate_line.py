@@ -5,6 +5,7 @@ from ctypes import c_uint32, addressof
 from namedlist import namedlist
 from random import randint
 from time import time, sleep
+from tools import bresenhams
 
 maxi_x, maxi_y = 80, 24
 limit_x, limit_y = 78, 28 # offset by -1 to account for start index 0
@@ -21,7 +22,7 @@ def test_line():
         start = (randint(0, maxi_x), randint(0, maxi_y))
         end = (randint(0, maxi_x), randint(0, maxi_y))
 
-        points = get_line(start, end)
+        points = bresenhams(start, end)
         for x, y in points:
             term.puts(x, y, '.')
         term.refresh()
