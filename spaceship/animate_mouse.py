@@ -1,9 +1,5 @@
-# coding=utf-8
-
+# coding=utf-8 -*-
 from bearlibterminal import terminal as term
-from ctypes import c_uint32, addressof
-from namedlist import namedlist
-from time import time
 
 limit_x, limit_y = 76, 20 # offset by -1 to account for start index 0
 factor_x, factor_y = 4, 2
