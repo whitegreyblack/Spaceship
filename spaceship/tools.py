@@ -42,3 +42,4 @@ def line(start, stop):
         dy = deltanorm(y1, y2)                                                  
         return [(x1+dx*d, y1+dy*d) for d in range(max(x2, x1) - min(x2, x1)+1)] 
     return []  
+
