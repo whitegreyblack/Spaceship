@@ -1,6 +1,6 @@
 # main implementation of core mechanics
 from tools import bresenhams, movement, deltanorm, lambdafunc
-from objects import Object
+from objects import Object, Tile
 from bearlibterminal import terminal as term
 from ctypes import c_uint32, addressof
 from namedlist import namedlist
@@ -9,17 +9,17 @@ from random import randint
 
 # global terminal variables
 SCREEN_WIDTH, SCREEN_HEIGHT = 80, 24
-MAP_WIDTH, MAP_HEIGHT = 24, 48
-MAP_FACTOR = 2
 # LIMIT_FPS = 30 -- later used in sprite implementation
 
-# global game variables
-px, py = SCREEN_WIDTH//2, SCREEN_HEIGHT//2
-player = Object(px, py, '@')
-npc = Object(px-3, py-2, '@', 'orange')
-units = [player, npc]
-proceed = True
 
+# ---------------------------------------------------------------------------------------------------------------------#
+# TERMINAL SETUP & IMAGE IMPORTS
+def setup():
+    term.open()
+    term.set("window: size={}x{}, title='Main Game'".format(SCREEN_WIDTH, SCREEN_HEIGHT))
+# ---------------------------------------------------------------------------------------------------------------------#
+
+# ---------------------------------------------------------------------------------------------------------------------#
 # key/value codes for movement
 key_movement={
         term.TK_UP: (0, -1),
@@ -55,18 +55,56 @@ def key_in():
 
     player.move(x, y)
 
-def setup():
-    term.open()
-    term.set("window: size={}x{}, title='Main Game'".format(SCREEN_WIDTH, SCREEN_HEIGHT))
+# End Movement Functions
+# ---------------------------------------------------------------------------------------------------------------------#
+
 
 # ---------------------------------------------------------------------------------------------------------------------#
-# Start initializations here
-setup()
+# Map functions
+def make_map():
+    global map
 
-while proceed:
-    term.clear()
+    map = [[ Tile(False) for _ in range(MAP_HEIGHT)] for _ in range(MAP_WIDTH)]
+
+    map[30][12].blocked=True
+    map[30][12].sight=True
+    map[50][12].blocked=True
+    map[50][12].sight=True
+
+# End map functions
+# ---------------------------------------------------------------------------------------------------------------------#
+
+# ---------------------------------------------------------------------------------------------------------------------#
+# Graphic functions
+def draw():
+    global COLOR_DARK_GROUND, COLOR_DARK_WALL
+
     for unit in units:
         x, y, i, c = unit.draw()
         term.puts(x, y, ('[color={}]'+i+'[/color]').format(c))
+
+# End graphics functions
+# ---------------------------------------------------------------------------------------------------------------------#
+
+
+# ---------------------------------------------------------------------------------------------------------------------#
+# Start initializations
+setup()
+# global game variables
+MAP_WIDTH, MAP_HEIGHT = 24, 48
+MAP_FACTOR = 2
+COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
+COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
+px, py = SCREEN_WIDTH//2, SCREEN_HEIGHT//2
+player = Object(px, py, '@')
+npc = Object(px-3, py-2, '@', 'orange')
+units = [player, npc]
+proceed = True
+
+while proceed:
+    term.clear()
+    draw()
     term.refresh()
     key_in()
+# End Initiailiation
+# ---------------------------------------------------------------------------------------------------------------------#
