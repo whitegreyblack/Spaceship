@@ -18,6 +18,10 @@ def basicmap(x, y, v=0):
     '''Returns 2D list with width x, height y, and values of z'''
     return [[v for _ in range(y)] for _ in range(x)]
 
+def distance(x1, y1, x2, y2):
+    '''Returns a float that represents distance between two points'''
+    return math.sqrt(math.pow((x2-x1), 2) + math.pow((y2-y1), 2))
+
 def absdistance(p1, p2):
     '''Returns the distance between two points'''
     return abs(p1 - p2)
@@ -30,8 +34,8 @@ def maxmindistance(p1, p2):
     '''Returns the distance between two points'''
     return max(p1, p2) - min(p1, p2)
 
-def maxmindistances(x1, y1, x2, y2):
     '''Returns a tuple of distances for x, y'''
+def maxmindistances(x1, y1, x2, y2):
     return (maxmindistance(x1, x2), maxmindistance(y1, y2))
 
 def line(start, stop):

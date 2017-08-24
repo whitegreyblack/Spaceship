@@ -5,6 +5,7 @@ from ctypes import c_uint32, addressof
 from namedlist import namedlist
 from time import time, sleep
 from copy import deepcopy
+import tools
 
 limit_x, limit_y = 76, 20 # offset by -1 to account for start index 0
 factor_x, factor_y = 1, 1
@@ -21,18 +22,20 @@ movement_costs = {
 wmap = """\
 #########################################################
 #.......................................................#
-#..................######################################
-#....#........#....#
-#..................#
-#..................#
-#..................#
+#..................#.####################################
+#....#........#....#......#
+#..................#......########
+#..................#.............#
+#..................###############
 #..................#
 #....#........#....#
 #..................#
 #..................#
 ####################"""
 
+# this is by row
 copwmap = [[col for col in row] for row in wmap.split('\n')]
+print(len(copwmap))
 for i in range(len(copwmap)):
     print(len(copwmap[i]), copwmap[i])
 
@@ -53,19 +56,37 @@ def test_map():
     for i in range(len(copwmap)):
         for j in range(len(copwmap[i])):
             if copwmap[i][j] == "#":
+                # reverse index due to row-major from split()
                 blockables.append((j, i+1))
     try:
         while proceed:
             term.clear()
             term.puts(0, 0, 'Animating a map\n')
-            for x,y in blockables:
-                term.puts(x, y, '#')
+            term.color("grey")
+            # for x,y in blockables:
+            #     term.puts(x, y, '#')
             x, y = player_pos
 
-            #term.puts(0, 1, wmap)
+            term.puts(0, 1, wmap)
             term.puts(5,10, '[color=orange]r[/color]')
             units.append((5,10))
-            term.puts(x, y, '@')
+            term.puts(x, y, '[color=white]@[/color]')
+            #for  in blockables
+            i, j = blockables[0]
+            term.color("white")
+            try:
+                # reverse the indices to account for appending order
+                for j, i in blockables:
+                    if tools.distance(x, y, j, i) < 10:
+                        for point in tools.bresenhams((x, y), (i, j)):
+                            if point in blockables:
+                                term.puts(j, i, copwmap[i-1][j])
+                                break
+                            else:
+                                term.puts(j, i, copwmap[i-1][j])
+            except IndexError:
+                print(i, j)
+                raise
             while proceed and term.has_input():
                 term.puts(21, 5, 'Got input')
                 code = term.read()
