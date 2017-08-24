@@ -1,5 +1,4 @@
 # coding=utf-8
-
 from bearlibterminal import terminal as term
 from ctypes import c_uint32, addressof
 from namedlist import namedlist
@@ -19,14 +18,15 @@ def test_line():
     proceed = True
     while proceed:
         term.clear()
-        start = (randint(0, maxi_x), randint(0, maxi_y))
+        #start = (randint(0, maxi_x), randint(0, maxi_y))
+        start = (0, maxi_y//2)
         end = (randint(0, maxi_x), randint(0, maxi_y))
 
         points = bresenhams(start, end)
         for x, y in points:
             term.puts(x, y, '.')
         term.refresh()
-        sleep(3)
+        sleep(1)
         while proceed and term.has_input():
             term.puts(0, 5, 'Got input')
             code = term.read()

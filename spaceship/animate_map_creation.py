@@ -58,11 +58,11 @@ def test_map():
         while proceed:
             term.clear()
             term.puts(0, 0, 'Animating a map\n')
-            # for x,y in blockables:
-            #     term.puts(x, y, '#')
+            for x,y in blockables:
+                term.puts(x, y, '#')
             x, y = player_pos
 
-            term.puts(0, 1, wmap)
+            #term.puts(0, 1, wmap)
             term.puts(5,10, '[color=orange]r[/color]')
             units.append((5,10))
             term.puts(x, y, '@')
