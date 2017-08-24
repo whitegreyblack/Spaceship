@@ -23,6 +23,8 @@ def test_line():
         end = (randint(0, maxi_x), randint(0, maxi_y))
 
         points = bresenhams(start, end)
+        print(start, end, points[0], points[-1])
+        sleep(1)
         for x, y in points:
             term.puts(x, y, '.')
         term.refresh()

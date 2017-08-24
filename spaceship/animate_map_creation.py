@@ -21,23 +21,18 @@ movement_costs = {
 
 wmap = """\
 #########################################################
-#.......................................................#
+#....#..................................................#
 #..................#.####################################
-#....#........#....#......#
-#..................#......########
-#..................#.............#
-#..................###############
+#....#........#....#......#      #...............#
+#..................#......########...............#
+#....#.............#.............................#
+#..................###############...............#
+#....#.............#             #...............#
+#.............#....#             #################
+#....#.............#
 #..................#
-#....#........#....#
-#..................#
-#..................#
+#....#.............#
 ####################"""
-
-# this is by row
-copwmap = [[col for col in row] for row in wmap.split('\n')]
-print(len(copwmap))
-for i in range(len(copwmap)):
-    print(len(copwmap[i]), copwmap[i])
 
 
 def movement(pos, change, factor, low, high):
@@ -52,45 +47,60 @@ def test_map():
     proceed = True
     blockables =[]
     units = []
+    positions = []
+    # this is by row
+    copwmap = [[col for col in row] for row in wmap.split('\n')]
     #blockables = [(5,4), (5, 9), (14, 4), (14, 9)]
     for i in range(len(copwmap)):
         for j in range(len(copwmap[i])):
+            positions.append((j, i))
             if copwmap[i][j] == "#":
                 # reverse index due to row-major from split()
-                blockables.append((j, i+1))
+                blockables.append((j, i))
     try:
         while proceed:
             term.clear()
-            term.puts(0, 0, 'Animating a map\n')
+            term.puts(limit_x, 0, 'Animating a map\n')
             term.color("grey")
+            term.puts(0, 0, wmap)
             # for x,y in blockables:
             #     term.puts(x, y, '#')
+            #for  in blockables
+            term.color("white")
+            # reverse the indices to account for appending order
+            #for j, i in blockables:
+            #j, i = blockables[5]
             x, y = player_pos
-
-            term.puts(0, 1, wmap)
+            for j, i in positions:
+                if tools.distance(x, y, j, i) < 5:
+                    points = tools.bresenhams((x, y), (j, i))
+                    for px, py in points:
+                        term.puts(px, py, copwmap[py][px])
+                        if (px, py) in blockables:
+                            break
+                        # else:
+                        #     term.puts(px, py, copwmap[py][px])
             term.puts(5,10, '[color=orange]r[/color]')
             units.append((5,10))
             term.puts(x, y, '[color=white]@[/color]')
-            #for  in blockables
-            i, j = blockables[0]
-            term.color("white")
-            try:
-                # reverse the indices to account for appending order
-                for j, i in blockables:
-                    if tools.distance(x, y, j, i) < 10:
-                        for point in tools.bresenhams((x, y), (i, j)):
-                            if point in blockables:
-                                term.puts(j, i, copwmap[i-1][j])
-                                break
-                            else:
-                                term.puts(j, i, copwmap[i-1][j])
-            except IndexError:
-                print(i, j)
-                raise
+            # keyboard input
+            '''
+            # Currently handles:
+                Exitting: [ESC]|[CLOSE][CTRL-C] -- [Y/N]
+                Movement: [UP][DOWN][LEFT][RIGHT]
+                Abilitys: [T][S
+            '''
             while proceed and term.has_input():
                 term.puts(21, 5, 'Got input')
                 code = term.read()
                 if code in (term.TK_ESCAPE, term.TK_CLOSE):
+                    term.clear()
+                    term.puts(10, 6, 'Really Quit? (Y/N)')
+                    term.refresh()
+                    code = term.read()
+                    if code in (term.TK_Y,):
+                        proceed = False
+                elif code is term.TK_C and term.state(term.TK_CONTROL):
                     term.clear()
                     term.puts(10, 6, 'Really Quit? (Y/N)')
                     term.refresh()
@@ -116,7 +126,7 @@ def test_map():
                             tx, ty = x, y
                     else:
                         x = movement(x, dx, fx, 1, 79)
-                        y = movement(y, dy, fy, 2, 23)
+                        y = movement(y, dy, fy, 1, 23)
                         if (x, y) in blockables or (x, y) in units:
                             x, y = tx, ty
                     player_pos = (x, y)
