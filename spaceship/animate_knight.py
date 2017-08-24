@@ -41,6 +41,7 @@ def test_sprite():
             term.puts(0, 0, 'Animating a knight\n')
             term.put(0, 1, knight.images[knight.image])
             term.color("green")
+            term.put(10,10, "^")
             term.put(4, 1, dknight.images[dknight.image])
             term.color("white")
             term.puts(0, 5, 'Text under knight\n')
