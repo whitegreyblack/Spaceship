@@ -1,0 +1,17 @@
+# notes -- fov
+
+# Radius and the Double Circles
+Should have a double circle. Outside and an inner circle. Inside circle views 
+all three attributes (character of terrain, light visibility and unit shown).
+Each level from the inner torwards the outside circle lowers the intensity of
+the light level. All levels outside the inner circle can only view the light
+level and the terrain character. Any units inside the outer circle but out-
+side the inner circle cannot be seen except with an "?" character instaed of
+its true representation. Any level outside the outer circle is divided into
+two categories. Terrain and units. Units are invisible outside the double 
+circle. The terrain however is divided again into two categories. Walls and
+floors. Floors are invisible after they are outside the circle. Usually this
+does not impact the game or should not impact the game so much. However the
+walls will remain permanent after they have had their fog of war lifted. The
+color of their visibility should be the lowest light level before completely
+dark.
