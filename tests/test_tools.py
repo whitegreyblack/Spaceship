@@ -1,9 +1,14 @@
 # test_tools -- testing spaceship/tools.py
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
-
 from spaceship import tools
 import pytest
+import math
+string="""aaaaaaaaaa
+aaaaaaaaa
+aaaaaaaa
+aaaaaaaaaaa
+aaaaaaaaa"""
 
 def test_lamdafunc():
     value = tools.lambdafunc(min, 0, 1, 1, 0)
@@ -36,6 +41,12 @@ def test_basicmap():
     assert len(map2d) == 4
     assert len(map2d) == 4
     assert sum(map(sum, map2d)) == 4*4*4
+
+def test_distance():
+    d = tools.distance(0, 1, 3, 0)
+    x, y = tools.absdistances(0, 1, 3, 0)
+    assert d == math.sqrt(x**2+y**2)
+
 
 def test_absdistance():
     distance = tools.absdistance(0, 1)
@@ -83,3 +94,10 @@ def test_movement():
     assert tools.movement(position, change, factor, low, high) == low
     position, change = 9, 1
     assert tools.movement(position, change, factor, low, high) == high
+
+
+def test_dimensions():
+    smap, height, width = tools.dimensions(string)
+    print(string)
+    assert height == 5
+    assert width == 11  
