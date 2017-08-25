@@ -39,6 +39,7 @@ def maxmindistances(x1, y1, x2, y2):
     return (maxmindistance(x1, x2), maxmindistance(y1, y2))
 
 def line(start, stop):
+    '''Naive Line algorithm -- produces a list of tuples from start to end'''
     x1, y1 = start                                                              
     x2, y2 = stop                                                               
     if max(x2, x1) - min(x2, x1) is max(y2, y1) - min(y2, y1):                  
@@ -48,13 +49,19 @@ def line(start, stop):
     return []  
 
 def movement(pos, change, factor, low, high):
+    '''takes in a 1d axis position and change parameters and returns a new position'''
     updated = pos + change * factor
     return updated if low < updated < high else max(low, min(updated, high))
 
+def dimensions(string):
+    '''takes in a string map and returns a 2D list map and map dimensions'''
+    string_map = [[col for col in row] for row in string.split('\n')]
+    height = len(string_map)
+    width = max(len(col) for col in string_map)
+    return string_map, height, width
+
 def bresenhams(start, end):
-    """Bresenham's Line Algorithm
-    Produces a list of tuples from start and end
-    """
+    """Bresenham's Line Algorithm -- Produces a list of tuples from start and end"""
     
     # Setup initial conditions
     x1, y1 = start

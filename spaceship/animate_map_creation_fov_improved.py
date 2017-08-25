@@ -59,7 +59,15 @@ wmap = """\
 #.........................................................#
 ###########################################################"""
 
+def dimensions(string):
+    '''takes in a string map and returns a 2D list map and map dimensions'''
+    string_map = [[col for col in row] for row in string.split('\n')]
+    height = len(string_map)
+    width = max(len(col) for col in string_map)
+    return string_map, height, width
+
 def movement(pos, change, factor, low, high):
+    '''takes in a 1d axis position and change parameters and returns a new position'''
     updated = pos + change * factor
     return updated if low < updated < high else max(low, min(updated, high))
 
@@ -85,7 +93,7 @@ def sight(x, y, r):
                     if dx*dx + dy*dy < r_sq:
                         v.add((X,Y))
                     if blocked:
-                        if not lightable
+                        pass
     visible = set()
     visible.add((x,y))
     for region in range(len(mult)):
