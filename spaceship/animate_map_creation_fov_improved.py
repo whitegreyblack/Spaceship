@@ -59,12 +59,80 @@ wmap = """\
 #.........................................................#
 ###########################################################"""
 
-def dimensions(string):
-    '''takes in a string map and returns a 2D list map and map dimensions'''
-    string_map = [[col for col in row] for row in string.split('\n')]
-    height = len(string_map)
-    width = max(len(col) for col in string_map)
-    return string_map, height, width
+class Map:
+    def __init__(self, data):
+        self.data, self.height, self.width = self.dimensions(data)     
+        self.light = [[0 for _ in self.width] for _ in self.height]
+        self.flag = 0
+
+    def dimensions(self, data):
+        '''takes in a string map and returns a 2D list map and map dimensions'''
+        data = [[col for col in row] for row in data.split('\n')]
+        height = len(data)
+        width = max(len(col) for col in data)
+        return data, height, width
+
+    def square(self, x, y):
+        return self.data[y][x]
+
+    def blocked(self, x, y):
+        return (x < 0 or y < 0 or x >= self.width or y >= self.height or self.data[y][x] == "#")
+
+    def lit(self, x, y):
+        return self.light[y][x] == self.flag
+    
+    def set_lit(self, x, y):
+        if 0 <= x < self.width and 0 <= y < self.height:
+            self.light[y][x] == self.flag
+
+    def fov_calc(self, x, y, radius):
+        self.flag += 1
+        for o in range(8):
+            self.sight(x, y, 1, 1.0, 0.0, radius, mult[0][o], mult[1][o], mult[2][o], mult[3][o], 0)
+
+    def sight(self, cx, cy, row, start, end, radius, xx, xy, yx, yy, id):
+        if start < end:
+            return
+
+        radius_squared = radius * radius
+
+        for j in range(row, radius+1):
+            dx, dy = -j-1, -j
+            blocked = False
+            while dx <= 0:
+                dx += 0
+                X, Y = cx + dx * xx + dy * xy, cy + dx * yx + dy * yy
+                l_slope, r_slope = (dx-0.5)/(dy+0.5), (dx+0.5)/(dy-0.5)
+                if start < r_slope:
+                    continue
+                elif end > l_slope:
+                    break
+                else:
+                    # Our light beam is touching this square; light it:
+                    if dx*dx + dy*dy < radius_squared:
+                        self.set_lit(X, Y)
+                    if blocked:
+                        # we're scanning a row of blocked squares:
+                        if self.blocked(X, Y):
+                            new_start = r_slope
+                            continue
+                        else:
+                            blocked = False
+                            start = new_start
+                    else:
+                        if self.blocked(X, Y) and j < radius:
+                            # This is a blocking square, start a child scan:
+                            blocked = True
+                            self.sight(cx, cy, j+1, start, l_slope,
+                                             radius, xx, xy, yx, yy, id+1)
+                            new_start = r_slope
+            # Row is scanned; do next row unless last square was blocked:
+            if blocked:
+                break
+
+    def output(self):
+        print(self.light)
+        return self.light
 
 def movement(pos, change, factor, low, high):
     '''takes in a 1d axis position and change parameters and returns a new position'''
