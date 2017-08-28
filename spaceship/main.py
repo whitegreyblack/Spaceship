@@ -64,7 +64,7 @@ def key_in():
 def make_map():
     global map
 
-    map = [[ Tile(False) for _ in range(MAP_HEIGHT)] for _ in range(MAP_WIDTH)]
+    map = [[Tile(False) for _ in range(MAP_HEIGHT)] for _ in range(MAP_WIDTH)]
 
     map[30][12].blocked=True
     map[30][12].sight=True
