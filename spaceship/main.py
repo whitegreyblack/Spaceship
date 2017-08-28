@@ -7,7 +7,7 @@ from ctypes import c_uint32, addressof
 from namedlist import namedlist
 from maps import MAPS
 from time import time, sleep
-from random import randint
+from random import randint, choice
 
 # global terminal variables
 SCREEN_WIDTH, SCREEN_HEIGHT = 80, 24
@@ -24,21 +24,39 @@ def setup():
 # ---------------------------------------------------------------------------------------------------------------------#
 # Keyboard input
 
-def key_in(blockables):
-    global player, proceed
+def key_in():
+    global proceed
     # movement
     code = term.read()
     if code in (term.TK_ESCAPE, term.TK_CLOSE):
         proceed=False
-    
     x, y = 0, 0
     if code in key_movement:
         x, y = key_movement[code]
     elif code in num_movement:
         x, y = num_movement[code]
+    return x, y
 
-    if blockables[player.y+y][player.x+x] == False:
+def key_process(x, y, unit, blockables):
+    global player
+    unit_pos = [(unit.x, unit.y) for unit in units]
+    occupied = (player.x+x, player.y+y) in unit_pos
+    blocked = blockables[player.y+y][player.x+x] == True
+
+    if not (blocked or occupied):
         player.move(x, y)
+    else:
+        if blocked:
+            term.puts(0, MAP_HEIGHT-2, "wall")
+        if occupied:
+            term.puts(5, MAP_HEIGHT-2, "occupied")
+        term.refresh()
+    for unit in units:
+        x, y = 0, 0
+        if randint(0, 1):
+            x, y = num_movement[choice(list(num_movement.keys()))]
+        if blockables[unit.y+y][unit.x+x] == False and (unit.x+x, unit.y+y) != (player.x, player.y):
+            unit.move(x, y)
 
 # End Movement Functions
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -73,20 +91,21 @@ MAP_FACTOR = 2
 COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
 COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
 #px, py = SCREEN_WIDTH//2, SCREEN_HEIGHT//2
-px, py = 5, 5
+px, py = 4, 5
 dungeon = Map(MAPS.TEST)
 player = Object(px, py, '@')
-npc = Object(px-3, py-2, '@', 'orange')
-units = [player, npc]
+npc = Object(6, 6, '@', 'orange')
+units = [npc,]
 proceed = True
 
 while proceed:
     term.clear()
     dungeon.fov_calc(player.x, player.y, FOV_RADIUS)
-    positions = [(x, y, lit, ch) for x, y, lit, ch in dungeon.output(player.x, player.y)]
+    positions = [(x, y, lit, ch) for x, y, lit, ch in dungeon.output(player.x, player.y, [(npc.x, npc.y), ])]
     for x, y, lit, ch in positions:
         term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
     term.refresh()
-    key_in(dungeon.block)
+    x, y = key_in()
+    key_process(x, y, units, dungeon.block)
 # End Initiailiation
 # ---------------------------------------------------------------------------------------------------------------------#

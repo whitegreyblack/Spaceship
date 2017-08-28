@@ -16,13 +16,13 @@ key_movement={
         term.TK_RIGHT: (1, 0),
     }
 num_movement={
-        term.TK_1: (-1, 1),
-        term.TK_2: (0, 1),
-        term.TK_3: (1, 1),
-        term.TK_4: (-1, 0),
-        term.TK_5: (0, 0),
-        term.TK_6: (1, 0),
-        term.TK_7: (-1, -1),
-        term.TK_8: (0, -1),
-        term.TK_9: (1, -1),
+        term.TK_KP_1: (-1, 1),
+        term.TK_KP_2: (0, 1),
+        term.TK_KP_3: (1, 1),
+        term.TK_KP_4: (-1, 0),
+        term.TK_KP_5: (0, 0),
+        term.TK_KP_6: (1, 0),
+        term.TK_KP_7: (-1, -1),
+        term.TK_KP_8: (0, -1),
+        term.TK_KP_9: (1, -1),
     }
