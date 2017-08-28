@@ -56,12 +56,14 @@ def key_process(x, y, unit, blockables):
         if occupied:
             term.puts(5, MAP_HEIGHT-2, "occupied")
         term.refresh()
+
     for unit in units:
-        x, y = 0, 0
-        if randint(0, 1):
-            x, y = num_movement[choice(list(num_movement.keys()))]
-        if blockables[unit.y+y][unit.x+x] == False and (unit.x+x, unit.y+y) != (player.x, player.y):
-            unit.move(x, y)
+        if unit.c != "black":
+            x, y = 0, 0
+            if randint(0, 1):
+                x, y = num_movement[choice(list(num_movement.keys()))]
+            if not (blocked or occupied or not outofbounds):
+                unit.move(x, y)
 
 # End Movement Functions
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -101,17 +103,23 @@ px, py = 15, 5
 dungeon = Map(stringify("./assets/testmap.png"))
 player = Object(px, py, '@')
 npc = Object(6, 6, '@', 'orange')
-units = [npc,]
+npc1 = Object(5, 15, '@', 'orange')
+npc2 = Object(16, 5, '@', 'orange')
+guard1 = Object(77, 13, '@', 'black')
+guard2 = Object(77, 17, '@', 'black')
+guard3 = Object(67, 13, '@', 'black')
+guard4 = Object(67, 17, '@', 'black')
+units = [npc, guard1, guard2, guard3, guard4, npc1, npc2]
 proceed = True
 
 while proceed:
     term.clear()
     dungeon.fov_calc(player.x, player.y, FOV_RADIUS)
-    positions = [(x, y, lit, ch) for x, y, lit, ch in dungeon.output(player.x, player.y, [(npc.x, npc.y), ])]
+    positions = [(x, y, lit, ch) for x, y, lit, ch in dungeon.output(player.x, player.y, units)]
     for x, y, lit, ch in positions:
         term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
     term.refresh()
     x, y = key_in()
-    key_process(x, y, units, dungeon.block)
+    key_process(x, y, [], dungeon.block)
 # End Initiailiation
 # ---------------------------------------------------------------------------------------------------------------------#

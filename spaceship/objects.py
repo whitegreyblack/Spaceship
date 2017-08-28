@@ -222,7 +222,7 @@ class Map:
             if blocked:
                 break
 
-    def output(self, X, Y, npcs):
+    def output(self, X, Y, units):
         for x in range(self.width):
             for y in range(self.height):
                 if self.lit(x, y):
@@ -232,9 +232,13 @@ class Map:
                 if x == X and y == Y:
                     ch = "@"
                     lit = "white"
-                elif (x, y) in npcs and lit == "white":
+                elif (x, y) in units and lit == "white":
                     ch = "@"
                     lit = "orange"
+                    for unit in units:
+                        if (unit.x, unit.y) == (x, y):
+                            ch = unit.i
+                            lit = unit.c
                 else:
                     ch = self.square(x, y)
                 yield (x, y, lit, ch)
