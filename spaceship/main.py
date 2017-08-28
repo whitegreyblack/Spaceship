@@ -5,6 +5,7 @@ from objects import Object, Tile, Map
 from bearlibterminal import terminal as term
 from ctypes import c_uint32, addressof
 from namedlist import namedlist
+from stringify import stringify
 from maps import MAPS
 from time import time, sleep
 from random import randint, choice
@@ -40,10 +41,14 @@ def key_in():
 def key_process(x, y, unit, blockables):
     global player
     unit_pos = [(unit.x, unit.y) for unit in units]
+    outofbounds = 0 <= player.x+x < len(blockables[0]) and 0 <= player.y+y < len(blockables)
     occupied = (player.x+x, player.y+y) in unit_pos
-    blocked = blockables[player.y+y][player.x+x] == True
+    try:
+        blocked = blockables[player.y+y][player.x+x] == True
+    except:
+        blocked = False
 
-    if not (blocked or occupied):
+    if not (blocked or occupied or not outofbounds):
         player.move(x, y)
     else:
         if blocked:
@@ -91,8 +96,9 @@ MAP_FACTOR = 2
 COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
 COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
 #px, py = SCREEN_WIDTH//2, SCREEN_HEIGHT//2
-px, py = 4, 5
-dungeon = Map(MAPS.TEST)
+px, py = 15, 5
+#dungeon = Map(MAPS.TEST)
+dungeon = Map(stringify("./assets/testmap.png"))
 player = Object(px, py, '@')
 npc = Object(6, 6, '@', 'orange')
 units = [npc,]

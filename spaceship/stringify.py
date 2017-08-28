@@ -24,7 +24,7 @@ def stringify(string, debug=False):
             lines.append(line)
         if debug:
             print("\n".join(lines))
-        return lines
+        return "\n".join(lines)
 
 if __name__ == "__main__":
     stringify("./assets/testmap.png", debug=True)
