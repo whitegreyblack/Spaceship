@@ -91,8 +91,7 @@ class Tile(Point):
         self.blocked = blocked
         self.explored = False
         self.block_sight = block_sigh if block_sight else blocked
-'''
-'''
+
 class GameObject(Point):
     def __init__(self, x, y, char, color=None):
         self.x = x
@@ -153,7 +152,6 @@ class Map:
                 [1,  0,  0,  1, -1,  0,  0, -1]
             ]
     def __init__(self, data):
-        print('init')
         self.data, self.height, self.width = self.dimensions(data)     
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.flag = 0
