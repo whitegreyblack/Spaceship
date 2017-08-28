@@ -9,6 +9,7 @@ def stringify(string, debug=False):
         for j in range(h):
             line = ""
             for i in range(w):
+                # sometimes alpha channel is included so test for all four values first
                 try:
                     r, g, b, _ = pixels[i,j]
                 except:
@@ -19,7 +20,6 @@ def stringify(string, debug=False):
                 # buildings
                 # some other stuff
                 else:
-                    print(pixels[i,j])
                     line += "."
             lines.append(line)
         if debug:
