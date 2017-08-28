@@ -154,6 +154,7 @@ class Map:
     def __init__(self, data):
         self.data, self.height, self.width = self.dimensions(data)     
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
+        self.block = [[self.data[y][x] == "#" for x in range(self.width)] for y in range(self.height)]
         self.flag = 0
 
     def dimensions(self, data):
@@ -162,7 +163,7 @@ class Map:
         height = len(data)
         width = max(len(col) for col in data)
         return data, height, width
-
+    
     def square(self, x, y):
         return self.data[y][x]
 

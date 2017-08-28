@@ -24,9 +24,8 @@ def setup():
 # ---------------------------------------------------------------------------------------------------------------------#
 # Keyboard input
 
-def key_in():
+def key_in(blockables):
     global player, proceed
-
     # movement
     code = term.read()
     if code in (term.TK_ESCAPE, term.TK_CLOSE):
@@ -38,7 +37,8 @@ def key_in():
     elif code in num_movement:
         x, y = num_movement[code]
 
-    player.move(x, y)
+    if blockables[player.y+y][player.x+x] == False:
+        player.move(x, y)
 
 # End Movement Functions
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -74,7 +74,7 @@ COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
 COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
 #px, py = SCREEN_WIDTH//2, SCREEN_HEIGHT//2
 px, py = 5, 5
-dungeon = Map(MAPS.DUNGEON)
+dungeon = Map(MAPS.TEST)
 player = Object(px, py, '@')
 npc = Object(px-3, py-2, '@', 'orange')
 units = [player, npc]
@@ -87,6 +87,6 @@ while proceed:
     for x, y, lit, ch in positions:
         term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
     term.refresh()
-    key_in()
+    key_in(dungeon.block)
 # End Initiailiation
 # ---------------------------------------------------------------------------------------------------------------------#
