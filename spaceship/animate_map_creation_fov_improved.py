@@ -97,8 +97,8 @@ def test_map():
                         term.puts(21, 6, 'Pressed Shift')
                         stop = False
                         while not stop:
-                            x = movement(x, dx, fx, 1, 79)
-                            y = movement(y, dy, fy, 2, 23)
+                            x = tools.movement(x, dx, fx, 1, 79)
+                            y = tools.movement(y, dy, fy, 2, 23)
                             if (x, y) in blockables or (x, y) in units:
                                 x, y = tx, ty
                                 stop = True
@@ -106,8 +106,8 @@ def test_map():
                                 stop = True
                             tx, ty = x, y
                     else:
-                        x = movement(x, dx, fx, 1, 79)
-                        y = movement(y, dy, fy, 1, 23)
+                        x = tools.movement(x, dx, fx, 1, 79)
+                        y = tools.movement(y, dy, fy, 1, 23)
                         if (x, y) in blockables or (x, y) in units:
                             x, y = tx, ty
                     player_pos = (x, y)
