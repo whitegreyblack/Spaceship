@@ -2,6 +2,7 @@ from imports import *
 from colors import COLOR
 from colors import SHIP_COLOR
 from colors import color
+from random import randint, choice
 
 class TextBox:
     def __init__(self, string):
@@ -153,10 +154,12 @@ class Map:
                 [0,  1,  1,  0,  0, -1, -1,  0],
                 [1,  0,  0,  1, -1,  0,  0, -1]
             ]
+    colors_block = ["#ffc0c0c0", "#ffa0a0a0", "#ff808080", "#ff606060", "#ff404040"]
     def __init__(self, data):
         self.data, self.height, self.width = self.dimensions(data)
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.block = [[self.data[y][x] == "#" for x in range(self.width)] for y in range(self.height)]
+        self.color = [[choice(self.colors_block) for _ in range(self.width)] for _ in range(self.height)]
         self.flag = 0
 
     def dimensions(self, data):
@@ -243,4 +246,10 @@ class Map:
                             lit = unit.c
                 else:
                     ch = self.square(x, y)
+                    if ch == "~":
+                        lit = choice(["#ff6666ff", "#ff3333ff", "#ff9999ff"]) if randint(0, 1) else "#ff0000ff"
+                    if ch == "+":
+                        lit = "#ff994C00"
+                    if ch == "#":
+                        lit = self.color[y][x]
                 yield (x, y, lit, ch)
