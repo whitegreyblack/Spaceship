@@ -10,7 +10,7 @@
     Reformatting and Documentation
 
 ## [DONE]:
-    ~~Camera and Scrolling~~
+    <del>Camera and Scrolling</del>
     ~~Stringify Reversal: Map STRING to PNG~~
     ~~Created more test maps~~
     ~~Colorize maps~~
