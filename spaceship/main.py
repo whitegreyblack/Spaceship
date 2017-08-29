@@ -17,20 +17,26 @@ blocked = []
 
 # ---------------------------------------------------------------------------------------------------------------------#
 # TERMINAL SETUP & IMAGE IMPORTS
+
+
 def setup():
     term.open()
-    term.set("window: size={}x{}, title='Main Game'".format(SCREEN_WIDTH, SCREEN_HEIGHT))
+    term.set(
+        "window: size={}x{}, title='Main Game'".format(
+            SCREEN_WIDTH,
+            SCREEN_HEIGHT))
 # ---------------------------------------------------------------------------------------------------------------------#
 
 # ---------------------------------------------------------------------------------------------------------------------#
 # Keyboard input
+
 
 def key_in():
     global proceed
     # movement
     code = term.read()
     if code in (term.TK_ESCAPE, term.TK_CLOSE):
-        proceed=False
+        proceed = False
     x, y = 0, 0
     if code in key_movement:
         x, y = key_movement[code]
@@ -38,24 +44,27 @@ def key_in():
         x, y = num_movement[code]
     return x, y
 
+
 def key_process(x, y, unit, blockables):
     global player
     unit_pos = [(unit.x, unit.y) for unit in units]
-    outofbounds = 0 <= player.x+x < len(blockables[0]) and 0 <= player.y+y < len(blockables)
-    occupied = (player.x+x, player.y+y) in unit_pos
+    outofbounds = 0 <= player.x + x < len(blockables[0]) \
+        and 0 <= player.y + y < len(blockables)
+    occupied = (player.x + x, player.y + y) in unit_pos
     try:
-        blocked = blockables[player.y+y][player.x+x] == True
-    except:
+        blocked = blockables[player.y + y][player.x + x]
+    except BaseException:
         blocked = False
 
     if not (blocked or occupied or not outofbounds):
         player.move(x, y)
     else:
-        if blocked:
-            term.puts(0, MAP_HEIGHT-2, "wall")
-        if occupied:
-            term.puts(5, MAP_HEIGHT-2, "occupied")
-        term.refresh()
+        pass
+        # if blocked:
+        #     term.puts(0, MAP_HEIGHT - 2, "wall")
+        # if occupied:
+        #     term.puts(5, MAP_HEIGHT - 2, "occupied")
+        # term.refresh()
 
     for unit in units:
         if unit.c != "black":
@@ -82,7 +91,7 @@ def draw():
 
     for unit in units:
         x, y, i, c = unit.draw()
-        term.puts(x, y, ('[color={}]'+i+'[/color]').format(c))
+        term.puts(x, y, ('[color={}]' + i + '[/color]').format(c))
 
 # End graphics functions
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -115,7 +124,8 @@ proceed = True
 while proceed:
     term.clear()
     dungeon.fov_calc(player.x, player.y, FOV_RADIUS)
-    positions = [(x, y, lit, ch) for x, y, lit, ch in dungeon.output(player.x, player.y, units)]
+    positions = [(x, y, lit, ch)
+                 for x, y, lit, ch in dungeon.output(player.x, player.y, units)]
     for x, y, lit, ch in positions:
         term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
     term.refresh()
