@@ -111,14 +111,14 @@ COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
 COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
 #px, py = SCREEN_WIDTH//2, SCREEN_HEIGHT//2
 px, py = 15, 5
-#dungeon = Map(MAPS.TEST)
-dungeon = Map(stringify("./assets/testmap.png"))
+dungeon = Map(MAPS.LARGE)
+#dungeon = Map(stringify("./assets/testmap.png"))
 player = Object(px, py, '@')
 npc = Object(6, 6, '@', 'orange')
 npc1 = Object(5, 15, '@', 'orange')
 npc2 = Object(16, 5, '@', 'orange')
-guard1 = Object(77, 13, '@', 'black')
-guard2 = Object(77, 17, '@', 'black')
+guard1 = Object(77, 13, "@", 'black')
+guard2 = Object(77, 17, "@", 'black')
 guard3 = Object(67, 13, '@', 'black')
 guard4 = Object(67, 17, '@', 'black')
 units = [npc, guard1, guard2, guard3, guard4, npc1, npc2]
@@ -131,6 +131,7 @@ while proceed:
                  for x, y, lit, ch in dungeon.output(player.x, player.y, units)]
     for x, y, lit, ch in positions:
         term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
+        term.puts(0, SCREEN_HEIGHT-1, "{} {}".format(player.x, player.y))
     term.refresh()
     x, y = key_in()
     key_process(x, y, [], dungeon.block)

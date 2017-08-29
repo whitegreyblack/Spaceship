@@ -3,6 +3,10 @@ from colors import COLOR
 from colors import SHIP_COLOR
 from colors import color
 from random import randint, choice
+from constants import SCREEN_HEIGHT as sh
+from constants import SCREEN_WIDTH as sw
+
+# TODO: Maybe move map to a new file called map and create a camera class?
 
 class TextBox:
     def __init__(self, string):
@@ -228,8 +232,21 @@ class Map:
                 break
 
     def output(self, X, Y, units):
-        for x in range(self.width):
-            for y in range(self.height):
+        def scroll(p, s, m):
+            hs = s//2
+            if p < hs:
+                return 0
+            elif p >= m - hs:
+                return m - s
+            else: 
+                return p - hs
+        cx = scroll(X, sw, self.width)
+        cy = scroll(Y, sh, self.height)
+
+        # width should total 80 units
+        for x in range(cx, cx+80):
+            # height should total 24 units
+            for y in range(cy+24):
                 if self.lit(x, y):
                     lit = "white"
                 else:
@@ -243,7 +260,7 @@ class Map:
                     for unit in units:
                         if (unit.x, unit.y) == (x, y):
                             ch = unit.i
-                            lit = unit.c
+                            lit = "orange"
                 else:
                     ch = self.square(x, y)
                     if ch == "~":
@@ -252,4 +269,4 @@ class Map:
                         lit = "#ff994C00"
                     if ch == "#":
                         lit = self.color[y][x]
-                yield (x, y, lit, ch)
+                yield (x-cx, y-cy, lit, ch)
