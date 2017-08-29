@@ -43,7 +43,7 @@
 ## [Changelog]:
 
 ## [Git Log/Commits]:
-Should be formatted as:
-    TODO: ---
-    DONE: ---
-This allows for an easier way to extract log data using scripts
+    Should be formatted as:
+        TODO: ---
+        DONE: ---
+    This allows for an easier way to extract log data using scripts
