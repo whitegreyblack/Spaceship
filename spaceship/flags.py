@@ -21,10 +21,10 @@ def mirrorx(array):
     return array
 
 def randomize(W, H):
-    """ 
-    Column major 
     """
-    array=[[0 for _ in range(H)] for _ in range(W)]    
+    Column major
+    """
+    array=[[0 for _ in range(H)] for _ in range(W)]
     return array
 
 if __name__ == "__main__":

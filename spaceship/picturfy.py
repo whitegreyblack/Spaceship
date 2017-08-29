@@ -10,9 +10,9 @@ characters = {
 }
 
 def picturfy(string, asciify=False, debug=False):
-    '''Takes in a string map and two positional parameters to determine 
-    output. If asciify is specified then returns color codes reflective 
-    of their ascii character code else returns color based on regular 
+    '''Takes in a string map and two positional parameters to determine
+    output. If asciify is specified then returns color codes reflective
+    of their ascii character code else returns color based on regular
     character code. Debug is specified for testing and output viewing'''
 
     filename = "picturfy-img.png"
@@ -25,7 +25,7 @@ def picturfy(string, asciify=False, debug=False):
         string_list = list(mapping[j])
         for i in range(len(string_list)):
             drawer.rectangle((i, j, i+1, j+1), characters[string_list[i]])
-            
+
     img_to_save.save(filename)
     return filename
 

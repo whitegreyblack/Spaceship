@@ -238,7 +238,7 @@ class Map:
                 return 0
             elif p >= m - hs:
                 return m - s
-            else: 
+            else:
                 return p - hs
         cx = scroll(X, sw, self.width)
         cy = scroll(Y, sh, self.height)
