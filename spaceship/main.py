@@ -1,13 +1,16 @@
 # main implementation of core mechanics
-from tools import bresenhams, movement, deltanorm, lambdafunc
+from tools import bresenhams
+from tools import deltanorm
+from tools import lambdafunc
+from tools import movement
 from movement import key_movement, num_movement
-from objects import Object, Tile, Map
+from objects import Map
+from objects import Object
+from objects import Tile
 from bearlibterminal import terminal as term
-from ctypes import c_uint32, addressof
 from namedlist import namedlist
 from stringify import stringify
 from maps import MAPS
-from time import time, sleep
 from random import randint, choice
 
 # global terminal variables

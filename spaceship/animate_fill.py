@@ -1,10 +1,6 @@
 # coding=utf-8
-import random
 from bearlibterminal import terminal as term
-from collections import namedtuple
-from ctypes import c_uint32, addressof
 from namedlist import namedlist
-from time import time, sleep
 from sprite import Sprite
 
 def test():
@@ -20,8 +16,6 @@ def test():
     img_width = 32
     img_height = 32
 
-    img_offset_width = 4
-    img_offset_height = 2
 
     total_pixels_width = win_width * font_width
     total_pixels_height = win_height * font_height
@@ -40,7 +34,7 @@ def test():
                 space = False
             else:
                 space = True
-    
+
     # sprites.append(Sprite(images=[57345],  positions=[(0,0)], offset=[0, 0]))
     # sprites.append(Sprite(images=[57345],  positions=[(4,2)], offset=[0, 0]))
     proceed = True
@@ -67,7 +61,7 @@ def test():
                     term.puts(0,5, 'Event happened')
     except KeyboardInterrupt:
         pass
-                
+
 
 if __name__ == "__main__":
     term.open()

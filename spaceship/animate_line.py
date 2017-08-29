@@ -1,9 +1,8 @@
 # coding=utf-8
 from bearlibterminal import terminal as term
-from ctypes import c_uint32, addressof
 from namedlist import namedlist
 from random import randint
-from time import time, sleep
+from time import sleep
 from tools import bresenhams
 
 maxi_x, maxi_y = 80, 24

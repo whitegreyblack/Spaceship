@@ -2,9 +2,7 @@
 import random
 from bearlibterminal import terminal as term
 from collections import namedtuple
-from ctypes import c_uint32, addressof
 from namedlist import namedlist
-from time import time
 
 movement_costs = {
     term.TK_LEFT: (-1, 0),
@@ -12,19 +10,19 @@ movement_costs = {
     term.TK_DOWN: (0, 1),
     term.TK_UP: (0, -1),
 }
-sprite_list = namedlist( 'Sprite_List', [ 
-                                         ('sprites', []), 
+sprite_list = namedlist( 'Sprite_List', [
+                                         ('sprites', []),
                                          ('positions', []),
                                         ])
 sprite = namedlist('Sprite', [
-                              ('images', []), 
-                              ('positions', []), 
-                              ('image', 0), 
-                              ('position', 0), 
-                              ('frame', 0), 
-                              ('frames', 8), 
-                              ('speed', 0), 
-                              ('delay', 0), 
+                              ('images', []),
+                              ('positions', []),
+                              ('image', 0),
+                              ('position', 0),
+                              ('frame', 0),
+                              ('frames', 8),
+                              ('speed', 0),
+                              ('delay', 0),
                               ('offsets', [0, 0])
                              ])
 font_width = 8
@@ -45,7 +43,7 @@ def random_position(width, height, dx, dy):
 def test_sprite():
     term.set("U+E000: ./assets/bottle_gray_black_01.png, resize=32x32")
     term.set("U+E001: ./assets/shield.png, resize=32x32")
-    term.set("U+E002: ./assets/boots.png, resize=32x32") 
+    term.set("U+E002: ./assets/boots.png, resize=32x32")
     term.set("U+E003: ./assets/border.png, resize=64x64")
 
     # [57344, 57345, 57346, 57345,]
@@ -71,7 +69,7 @@ def test_sprite():
         while proceed:
             term.clear()
             term.put(0, 0, 57347)
-            
+
             for index in range(len(bottles)):
                 term.layer(index)
                 bottle = bottles.sprites[index]

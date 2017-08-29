@@ -1,11 +1,11 @@
 # main implementation of core mechanics
-from tools import bresenhams, movement, deltanorm, lambdafunc
+from tools import bresenhams
+from tools import deltanorm
+from tools import lambdafunc
+from tools import movement
 from objects import Object
 from bearlibterminal import terminal as term
-from ctypes import c_uint32, addressof
 from namedlist import namedlist
-from time import time, sleep
-from random import randint
 
 # global terminal variables
 SCREEN_WIDTH, SCREEN_HEIGHT = 80, 24
@@ -46,7 +46,7 @@ def key_in():
     code = term.read()
     if code in (term.TK_ESCAPE, term.TK_CLOSE):
         proceed=False
-    
+
     x, y = 0, 0
     if code in key_movement:
         x, y = key_movement[code]

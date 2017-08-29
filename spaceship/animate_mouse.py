@@ -26,7 +26,7 @@ def test_sprite():
     while proceed:
         term.clear()
         term.puts(0, 0, 'Animating a cursor\n')
-        x, y = cursor_pos   
+        x, y = cursor_pos
         term.put(x, y, 57347)
         term.puts(0, 1, f'{x}')
         term.puts(3, 1, f'{y}')

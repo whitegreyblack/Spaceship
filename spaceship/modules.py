@@ -12,7 +12,7 @@ from imports import *
             ...
         Sustainable
     Object Attributes
-        Washable 
+        Washable
         Wearable
         Tearable
         Sittable
@@ -76,4 +76,4 @@ from imports import *
 -------------------------------"""
 class Module:
     def __init__(self, name="Module"):
-        self.name == name 
+        self.name == name

@@ -19,11 +19,11 @@ if __name__ == '__main__':
     cli = tdl.init(W,H,'cabin')
     w, c = build(W,H)
     while True:
-	cli.clear()
+    cli.clear()
         for i in range(W):
             for j in range(H):
                 cli.draw_char(i, j, w[i][j], c[i][j])
-	tdl.flush()
-	for e in tdl.event.get():
-	    if e.type=='QUIT' or (e.type=='KEYDOWN' and e.keychar=='q'):
-	        raise SystemExit('Exit Program')
+    tdl.flush()
+    for e in tdl.event.get():
+        if e.type=='QUIT' or (e.type=='KEYDOWN' and e.keychar=='q'):
+            raise SystemExit('Exit Program')

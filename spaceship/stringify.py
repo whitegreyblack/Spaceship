@@ -16,6 +16,7 @@ def stringify(string, asciify=False, debug=False):
     to determine output. If asciify is specified then returns ascii
     character codes for use in map construction else outputs regular
     character text. Debug is specified for testing and output viewing'''
+
     lines = []
     colors = set()
 
@@ -40,7 +41,7 @@ def stringify(string, asciify=False, debug=False):
         print("\n".join(lines))
         print(colors)
         print(characters)
-        
+
     return "\n".join(lines)
 
 

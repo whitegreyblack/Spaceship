@@ -1,10 +1,7 @@
 # -*- coding=utf-8 -*-
 
 from bearlibterminal import terminal as term
-from ctypes import c_uint32, addressof
 from namedlist import namedlist
-from time import time, sleep
-from copy import deepcopy
 from objects import Map
 from maps import MAPS
 import tools
@@ -97,10 +94,10 @@ def test_map():
                     fx, fy = movement_ratio
                     if term.state(term.TK_SHIFT):
                         # px, py = x, y
-                        term.puts(21, 6, 'Pressed Shift') 
+                        term.puts(21, 6, 'Pressed Shift')
                         stop = False
                         while not stop:
-                            x = movement(x, dx, fx, 1, 79) 
+                            x = movement(x, dx, fx, 1, 79)
                             y = movement(y, dy, fy, 2, 23)
                             if (x, y) in blockables or (x, y) in units:
                                 x, y = tx, ty

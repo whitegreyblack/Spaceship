@@ -1,5 +1,7 @@
 from imports import *
-from colors import COLOR, color, SHIP_COLOR
+from colors import COLOR
+from colors import SHIP_COLOR
+from colors import color
 
 class TextBox:
     def __init__(self, string):
@@ -134,7 +136,7 @@ class Object:
     def move(self, dx, dy):
         self.x += dx
         self.y += dy
-    
+
     def draw(self):
         return (self.x, self.y, self.i, self.c)
 
@@ -152,7 +154,7 @@ class Map:
                 [1,  0,  0,  1, -1,  0,  0, -1]
             ]
     def __init__(self, data):
-        self.data, self.height, self.width = self.dimensions(data)     
+        self.data, self.height, self.width = self.dimensions(data)
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.block = [[self.data[y][x] == "#" for x in range(self.width)] for y in range(self.height)]
         self.flag = 0
@@ -163,7 +165,7 @@ class Map:
         height = len(data)
         width = max(len(col) for col in data)
         return data, height, width
-    
+
     def square(self, x, y):
         return self.data[y][x]
 
@@ -172,7 +174,7 @@ class Map:
 
     def lit(self, x, y):
         return self.light[y][x] == self.flag
-    
+
     def set_lit(self, x, y):
         if 0 <= x < self.width and 0 <= y < self.height:
             self.light[y][x] = self.flag

@@ -12,7 +12,7 @@ class Map:
             ]
     def __init__(self, data):
         print('init')
-        self.data, self.height, self.width = self.dimensions(data)     
+        self.data, self.height, self.width = self.dimensions(data)
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.flag = 0
 
@@ -31,7 +31,7 @@ class Map:
 
     def lit(self, x, y):
         return self.light[y][x] == self.flag
-    
+
     def set_lit(self, x, y):
         if 0 <= x < self.width and 0 <= y < self.height:
             self.light[y][x] = self.flag
@@ -135,4 +135,3 @@ if __name__ == "__main__":
             elif code in movement_costs.keys():
                 x, y = movement_costs[code]
                 px, py = px+x, py+y
-    import time

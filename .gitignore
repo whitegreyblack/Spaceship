@@ -1,3 +1,6 @@
+# pip checks
+pip-selfcheck.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -106,3 +109,6 @@ ENV/
 
 # paint.net
 *.pdnBak
+
+# coala orig
+*.orig

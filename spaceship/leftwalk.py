@@ -1,5 +1,5 @@
 import tdl
-from imports import *      
+from imports import *
 
 def walk(x, y):
     pass

@@ -1,5 +1,5 @@
 import tdl
-from imports import * 
+from imports import *
 from shapes import *
 
 def generate(x, y, l):
@@ -48,7 +48,7 @@ def generate(x, y, l):
 def populate(x, y, l):
     r = [[0 for j in range(y+1)] for i in range(x+1)]
     rmin, rmax = 6, 18
-    
+
     while l > 0:
         rx, ry = random.randint(0,(x/5-3)*5), random.randint(0,(y/5-3)*5)
         print(rx, ry)
@@ -90,7 +90,7 @@ def chess2(x, y):
         xo += 7
     return r
 def roomify(r):
-    xo = 2
+    pass
     #for i in range(split(len(r),4)):
     #    for j in range(split(len(r[0]),4)):
     #        for k in range(len(r)-4):

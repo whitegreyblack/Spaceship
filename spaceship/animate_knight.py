@@ -1,9 +1,7 @@
 # coding=utf-8
 
 from bearlibterminal import terminal as term
-from ctypes import c_uint32, addressof
 from namedlist import namedlist
-from time import time
 
 sprite = namedlist('Sprite', [('images', []), ('positions', ()), ('image', 0), ('frame', 0), ('frames', 15)])
 

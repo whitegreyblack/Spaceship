@@ -100,4 +100,4 @@ def test_dimensions():
     smap, height, width = tools.dimensions(string)
     print(string)
     assert height == 5
-    assert width == 11  
+    assert width == 11

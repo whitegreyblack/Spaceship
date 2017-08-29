@@ -4,15 +4,12 @@ from objects import *
 from colors import wall, hatch, floor, other
 
 def build(x, y):
-    wc = 1
-    hc = 2
     fc = 3
-    oc = 4
     bc = 16 * 13+11
     c = [[(0,0,0) for j in range(y)] for i in range(x)]
     s = [['4' for j in range(y)] for i in range(x)]
     r = [
-            Rectangle(1,9,9,5), 
+            Rectangle(1,9,9,5),
             Rectangle(9,5,9,9),
             Rectangle(9,13,9,5),
             Rectangle(17,5,9,5),

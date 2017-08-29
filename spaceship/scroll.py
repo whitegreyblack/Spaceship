@@ -8,7 +8,7 @@ class Camera:
         self.h = dy
         self.mx = lx
         self.my = ly
-    
+
 def movement_handler():
     pass
 def exit_handler():
@@ -47,7 +47,7 @@ if __name__ == "__main__":
             if e.type=='KEYDOWN' and e.keychar=='DOWN':
                 in_cam = py+1 < CAM_Y1+CAM_H
                 in_map = CAM_Y1+CAM_H-1 < MAP_H
-                
+
             if e.type=='KEYDOWN' and e.keychar=='UP':
                 if py > 0:
                     py -= 1

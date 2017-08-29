@@ -31,7 +31,7 @@ class Sprite:
 
     def draw(self):
         ''' returns a tuple of the image, the position, and the offset value'''
-        return (self.images[self.image], 
+        return (self.images[self.image],
                 self.positions[self.position][0],
-                self.positions[self.position][1], 
+                self.positions[self.position][1],
                 self.offset)
