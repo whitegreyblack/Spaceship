@@ -251,27 +251,23 @@ class Map:
         for x in range(cx, cx+(80 if self.width > 80 else self.width)):
             # height should total 24 units
             for y in range(cy+(24 if self.height > 24 else self.height)):
-                if self.lit(x, y):
-                    lit = "white"
-                else:
-                    lit = "grey"
+                lit = self.lit(x, y)
                 if x == X and y == Y:
                     ch = "@"
                     lit = "white"
-                elif (x, y) in units and lit == "white":
+                elif (x, y) in units and lit:
                     ch = "@"
                     lit = "orange"
-                    for unit in units:
-                        if (unit.x, unit.y) == (x, y):
-                            ch = unit.i
-                            lit = "orange"
                 else:
                     ch = self.square(x, y)
+                    if ch == ".":
+                        g, c = self.color[y][x]
+                        lit = "#ff"+hexify(g)*3 if lit else "black"
                     if ch == "~":
-                        lit = choice(["#ff6666ff", "#ff3333ff", "#ff9999ff"]) if randint(0, 1) else "#ff0000ff"
+                        lit = choice(["#ff6666ff", "#ff3333ff", "#ff9999ff"]) if lit else "#ff000000"
                     if ch == "+":
-                        lit = "#ff994C00"
+                        lit = "#ff994C00" if lit else "black"
                     if ch == "#":
                         g, c = self.color[y][x]
-                        lit = "#ff"+hexify(g)*3
+                        lit = "#ff"+hexify(g)*3 if lit else "black"
                 yield (x-cx, y-cy, lit, ch)
