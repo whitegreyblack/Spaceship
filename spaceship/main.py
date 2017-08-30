@@ -1,20 +1,13 @@
 # main implementation of core mechanics
-from tools import bresenhams
-from tools import deltanorm
-from tools import lambdafunc
-from tools import movement
-from movement import key_movement, num_movement
-from objects import Map
-from objects import Object
-from objects import Tile
+from spaceship.tools import bresenhams, deltanorm, movement
+from spaceship.action import key_movement, num_movement
+from spaceship.objects import Map, Object, Tile
 from bearlibterminal import terminal as term
 from namedlist import namedlist
 from stringify import stringify
 from maps import MAPS
 from random import randint, choice
-
-# global terminal variables
-SCREEN_WIDTH, SCREEN_HEIGHT = 80, 24
+from constants import SCREEN_HEIGHT, SCREEN_WIDTH
 # LIMIT_FPS = 30 -- later used in sprite implementation
 blocked = []
 
@@ -25,9 +18,10 @@ blocked = []
 def setup():
     term.open()
     term.set(
-        "window: size={}x{}, title='Main Game'".format(
+        "window: size={}x{}, cellsize={}x{}, title='Main Game'".format(
             SCREEN_WIDTH,
-            SCREEN_HEIGHT))
+            SCREEN_HEIGHT,
+            8,8))
 # ---------------------------------------------------------------------------------------------------------------------#
 
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -104,7 +98,7 @@ def draw():
 # Start initializations
 setup()
 # global game variables
-FOV_RADIUS = 10
+FOV_RADIUS = 8
 MAP_WIDTH, MAP_HEIGHT = 24, 48
 MAP_FACTOR = 2
 COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
