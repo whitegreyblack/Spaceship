@@ -5,7 +5,7 @@ from colors import color
 from random import randint, choice
 from constants import SCREEN_HEIGHT as sh
 from constants import SCREEN_WIDTH as sw
-
+from group import stones
 # TODO: Maybe move map to a new file called map and create a camera class?
 
 class TextBox:
@@ -166,7 +166,8 @@ class Map:
         self.color = [[choice(self.colors_block) for _ in range(self.width)] for _ in range(self.height)]
         self.flag = 0
 
-    def dimensions(self, data):
+    @staticmethod
+    def dimensions(data):
         '''takes in a string map and returns a 2D list map and map dimensions'''
         data = [[col for col in row] for row in data.split('\n')]
         height = len(data)
