@@ -1,10 +1,17 @@
 from bearlibterminal import terminal as term
 from maps import MAPS
-from objects import Map
 from functools import lru_cache
 from random import randint
 from time import sleep
 from math import sqrt, hypot
+
+def dimensions(data):
+    '''takes in a string map and returns a 2D list map and map dimensions'''
+    data = [[col for col in row] for row in data.split('\n')]
+    height = len(data)
+    width = max(len(col) for col in data)
+    return data, height, width
+
 def forest(w, h):
     def draw(x, y):
         i, j = x, y
@@ -70,61 +77,83 @@ def stones(w, h):
             try:
                 if n == 1:
                     i -= 1
-                    _, og, _, _ = data[j][i]
+                    og, _ = data[j][i]
                     ng = calculate(og, distance(abs(x-i), abs(y-j) * factor))
-                    data[j][i] = ("#", ng if og > ng else interpolate(ng, og), i, j)                
+                    #data[j][i] = ("#", ng if og > ng else interpolate(ng, og), i, j)
+                    data[j][i] = (ng if og > ng else interpolate(ng, og), "#")
                 if s == 1:
                     i += 1
-                    _, og, _, _ = data[j][i]
+                    og, _ = data[j][i]
                     ng = calculate(og, distance(abs(x-i), abs(y-j) * factor))
-                    data[j][i] = ("#", ng if og > ng else interpolate(ng, og), i, j)
+                    #data[j][i] = ("#", ng if og > ng else interpolate(ng, og), i, j)
+                    data[j][i] = (ng if og > ng else interpolate(ng, og), "#")              
                 if e == 1:
                     j += 1
-                    _, og, _, _ = data[j][i]
+                    og, _ = data[j][i]
                     ng = calculate(og, distance(abs(x-i), abs(y-j) * factor))
-                    data[j][i] = ("#", ng if og > ng else interpolate(ng, og), i, j)
+                    #data[j][i] = ("#", ng if og > ng else interpolate(ng, og), i, j)
+                    data[j][i] = (ng if og > ng else interpolate(ng, og), "#")             
                 if w == 1:
                     j -= 1
-                    _, og, _, _ = data[j][i]
+                    og, _ = data[j][i]
                     ng = calculate(og, distance(abs(x-i), abs(y-j) * factor))
-                    data[j][i] = ("#", ng if og > ng else interpolate(ng, og), i, j)
+                    #data[j][i] = ("#", ng if og > ng else interpolate(ng, og), i, j)
+                    data[j][i] = (ng if og > ng else interpolate(ng, og), "#")            
                 if nw == 1:
                     i -= 1
                     j -= 1
-                    _, og, _, _ = data[j][i]
+                    og, _ = data[j][i]
                     ng = calculate(og, distance(abs(x-i), abs(y-j) * factor))
-                    data[j][i] = ("#", ng if og > ng else interpolate(ng, og), i, j)
+                    #data[j][i] = ("#", ng if og > ng else interpolate(ng, og), i, j)
+                    data[j][i] = (ng if og > ng else interpolate(ng, og), "#")
                 if ne == 1:
                     i -= 1
                     j += 1
-                    _, og, _, _ = data[j][i]
+                    og, _ = data[j][i]
                     ng = calculate(og, distance(abs(x-i), abs(y-j) * factor))
-                    data[j][i] = ("#", ng if og > ng else interpolate(ng, og), i, j)
+                    #data[j][i] = ("#", ng if og > ng else interpolate(ng, og), i, j)
+                    data[j][i] = (ng if og > ng else interpolate(ng, og), "#")
                 if sw == 1:
                     i += 1
                     j -= 1
-                    _, og, _, _ = data[j][i]
+                    og, _ = data[j][i]
                     ng = calculate(og, distance(abs(x-i), abs(y-j) * factor))
-                    data[j][i] = ("#", ng if og > ng else interpolate(ng, og), i, j)
+                    #data[j][i] = ("#", ng if og > ng else interpolate(ng, og), i, j)
+                    data[j][i] = (ng if og > ng else interpolate(ng, og), "#")
                 if se == 1:
                     i += 1
                     j += 1
-                    _, og, _, _ = data[j][i]
+                    og, _ = data[j][i]
                     ng = calculate(og, distance(abs(x-i), abs(y-j) * factor))
-                    data[j][i] = ("#", ng if og > ng else interpolate(ng, og), i, j)
+                    #data[j][i] = ("#", ng if og > ng else interpolate(ng, og), i, j)
+                    data[j][i] = (ng if og > ng else interpolate(ng, og), "#")
             except:
                 pass
-    data = [[(".", 200, x, y) for x in range(w)] for y in range(h)]
+    #data = [[(".", 200, x, y) for x in range(w)] for y in range(h)]
+    data = [[(200, ".") for _ in range(w)] for _ in range(h)]
     for k in range(50): 
         x = randint(0, w)
         y = randint(0, h)
         draw(x, y)
+    lines = []
+    characters = {}
+    for row in data:
+        line = ""
+        for _, c in row:
+            try:
+                characters[c] += 1
+            except KeyError:
+                characters[c] = 1
+            line += c
+        lines.append(line)
+    print("\n".join(lines))
+    print(characters)
     return data
 
 if __name__ == "__main__":
     e = hexify
     term.open()
-    _, h, w = Map.dimensions(MAPS.TOWN)
+    _, h, w = dimensions(MAPS.TOWN)
     lines = []
     for row in stones(w, h):
         line = ""

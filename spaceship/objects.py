@@ -5,7 +5,7 @@ from colors import color
 from random import randint, choice
 from constants import SCREEN_HEIGHT as sh
 from constants import SCREEN_WIDTH as sw
-from group import stones
+from group import stones, hexify
 # TODO: Maybe move map to a new file called map and create a camera class?
 
 class TextBox:
@@ -161,9 +161,11 @@ class Map:
     colors_block = ["#ffc0c0c0", "#ffa0a0a0", "#ff808080", "#ff606060", "#ff404040"]
     def __init__(self, data):
         self.data, self.height, self.width = self.dimensions(data)
+        print(self.height, self.width)
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.block = [[self.data[y][x] == "#" for x in range(self.width)] for y in range(self.height)]
-        self.color = [[choice(self.colors_block) for _ in range(self.width)] for _ in range(self.height)]
+        self.color = stones(self.width, self.height)
+        print(self.height, self.width)
         self.flag = 0
 
     @staticmethod
@@ -241,13 +243,14 @@ class Map:
                 return m - s
             else:
                 return p - hs
-        cx = scroll(X, sw, self.width)
-        cy = scroll(Y, sh, self.height)
+
+        cx = scroll(X, self.width if self.width <= sw else sw, self.width)
+        cy = scroll(Y, self.height if self.height <= sh else sh, self.height)
 
         # width should total 80 units
-        for x in range(cx, cx+80):
+        for x in range(cx, cx+(80 if self.width > 80 else self.width)):
             # height should total 24 units
-            for y in range(cy+24):
+            for y in range(cy+(24 if self.height > 24 else self.height)):
                 if self.lit(x, y):
                     lit = "white"
                 else:
@@ -269,5 +272,6 @@ class Map:
                     if ch == "+":
                         lit = "#ff994C00"
                     if ch == "#":
-                        lit = self.color[y][x]
+                        g, c = self.color[y][x]
+                        lit = "#ff"+hexify(g)*3
                 yield (x-cx, y-cy, lit, ch)
