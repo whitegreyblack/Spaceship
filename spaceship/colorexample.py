@@ -1,8 +1,11 @@
 from bearlibterminal import terminal as term
+from maps import MAP
+
+def colormap(w, h): pass
 
 if __name__ == "__main__":
     term.open()
-    term.puts(0,0,'[color={}]a[/color]'.format("#ff0000ff"))
+    cm = colormap(w, h) 
     term.refresh()
     term.read()
     term.close()

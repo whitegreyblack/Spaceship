@@ -1,7 +1,7 @@
 # main implementation of core mechanics
-from spaceship.tools import bresenhams, deltanorm, movement
-from spaceship.action import key_movement, num_movement
-from spaceship.objects import Map, Object, Tile
+from tools import bresenhams, deltanorm, movement
+from action import key_movement, num_movement
+from objects import Map, Object, Tile
 from bearlibterminal import terminal as term
 from namedlist import namedlist
 from stringify import stringify
@@ -21,7 +21,7 @@ def setup():
         "window: size={}x{}, cellsize={}x{}, title='Main Game'".format(
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
-            8,8))
+            8,16))
 # ---------------------------------------------------------------------------------------------------------------------#
 
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -45,9 +45,12 @@ def key_in():
 def key_process(x, y, unit, blockables):
     global player
     unit_pos = [(unit.x, unit.y) for unit in units]
+
     outofbounds = 0 <= player.x + x < len(blockables[0]) \
         and 0 <= player.y + y < len(blockables)
+
     occupied = (player.x + x, player.y + y) in unit_pos
+
     try:
         blocked = blockables[player.y + y][player.x + x]
     except BaseException:
@@ -121,13 +124,16 @@ proceed = True
 while proceed:
     term.clear()
     dungeon.fov_calc(player.x, player.y, FOV_RADIUS)
-    positions = [(x, y, lit, ch)
-                 for x, y, lit, ch in dungeon.output(player.x, player.y, units)]
-    for x, y, lit, ch in positions:
+    # removed list creation
+    #positions = [(x, y, lit, ch)
+    #             for x, y, lit, ch in dungeon.output(player.x, player.y, units)]
+    for x, y, lit, ch in list(dungeon.output(player.x, player.y, units)):
         term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
         term.puts(0, SCREEN_HEIGHT-1, "{} {}".format(player.x, player.y))
     term.refresh()
     x, y = key_in()
     key_process(x, y, [], dungeon.block)
+    term.refresh()
+
 # End Initiailiation
 # ---------------------------------------------------------------------------------------------------------------------#
