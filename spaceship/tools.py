@@ -4,7 +4,7 @@ import math
 
 
 def lambdafunc(f, x1, y1, x2, y2):
-    '''Returns a tuple containing results using parameter function: useful to prevent code duplications'''
+    '''Returns a tuple containing results using parameter function'''
     return (f(x1, x2), f(y1, y2))
 
 
@@ -61,7 +61,7 @@ def line(start, stop):
 
 
 def movement(pos, change, factor, low, high):
-    '''takes in a 1d axis position and change parameters and returns a new position'''
+    '''takes a 1d position and change parameters and returns a new position'''
     updated = pos + change * factor
     return updated if low < updated < high else max(low, min(updated, high))
 
@@ -75,7 +75,7 @@ def dimensions(string):
 
 
 def bresenhams(start, end):
-    """Bresenham's Line Algorithm -- Produces a list of tuples from start and end"""
+    """Bresenham's Line Algo -- returns list of tuples from start and end"""
 
     # Setup initial conditions
     x1, y1 = start
