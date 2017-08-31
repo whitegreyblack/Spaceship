@@ -4,15 +4,20 @@ from PIL import Image, ImageDraw
 # Key-value pairs are mapped from characters to color tuples
 picturfy_chars = {
     "#": (0,0,0),
+    ",": (34, 177, 76),
     "+": (185, 122, 87),
     "~": (112, 146, 190),
+    ".": (127, 127, 127),
     ".": (255, 255, 255),
+
 }
 
 # Key-Value pairs are tuples to tuple pertaining to color and character mapping
 stringify_chars = { 
     (0, 0, 0): ("#", "89"),
+    (34, 177, 76): (",", "71"),
     (185, 122, 87): ("+", "90"),
+    (127, 127, 127): (".", "72"),
     (112, 146, 190): ("~", "91"),
     (255, 255, 255): (".", "92"),
 }
@@ -33,7 +38,7 @@ def picturfy(string, filename="picturfy-img.png", asciify=False, debug=False):
         for i in range(len(string_list)):
             drawer.rectangle((i, j, i+1, j+1), picturfy_chars[string_list[i]])
 
-    img_to_save.save(filename)
+    img_to_save.save("assets/"+filename)
     return filename
 
 

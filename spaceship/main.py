@@ -4,7 +4,7 @@ from action import key_movement, num_movement
 from objects import Map, Object, Tile
 from bearlibterminal import terminal as term
 from namedlist import namedlist
-from stringify import stringify
+from imgpy import stringify, picturfy
 from maps import MAPS
 from random import randint, choice
 from constants import SCREEN_HEIGHT, SCREEN_WIDTH
@@ -67,10 +67,16 @@ def key_process(x, y, unit, blockables):
         # term.refresh()
 
     for unit in units:
-        if unit.c != "black":
+        if unit.c != "grey":
             x, y = 0, 0
             if randint(0, 1):
                 x, y = num_movement[choice(list(num_movement.keys()))]
+            try:
+                blocked = blockables[unit.y+y][unit.x+x]
+            except:
+                blocked = False
+            occupied = (unit.x + x, unit.y + y) in unit_pos or (unit.x+x, unit.y+y) == (player.x, player.y)
+            outofbounds = 0 <= unit.x + x < len(blockables[0]) and 0 <= unit.y + y < len(blockables)
             if not (blocked or occupied or not outofbounds):
                 unit.move(x, y)
 
@@ -101,23 +107,23 @@ def draw():
 # Start initializations
 setup()
 # global game variables
-FOV_RADIUS = 8
+FOV_RADIUS = 25
 MAP_WIDTH, MAP_HEIGHT = 24, 48
 MAP_FACTOR = 2
 COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
 COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
 #px, py = SCREEN_WIDTH//2, SCREEN_HEIGHT//2
-px, py = 15, 5
-dungeon = Map(MAPS.TOWN)
+px, py = 15, 4
+dungeon = Map(MAPS.NEW)
 #dungeon = Map(stringify("./assets/testmap.png"))
 player = Object(px, py, '@')
-npc = Object(6, 6, '@', 'orange')
+npc = Object(7, 7, '@', 'orange')
 npc1 = Object(5, 15, '@', 'orange')
 npc2 = Object(16, 5, '@', 'orange')
-guard1 = Object(77, 13, "@", 'black')
-guard2 = Object(77, 17, "@", 'black')
-guard3 = Object(67, 13, '@', 'black')
-guard4 = Object(67, 17, '@', 'black')
+guard3 = Object(77, 11, '@', 'grey')
+guard1 = Object(77, 12, "@", 'grey')
+guard2 = Object(77, 17, "@", 'grey')
+guard4 = Object(67, 17, '@', 'grey')
 units = [npc, guard1, guard2, guard3, guard4, npc1, npc2]
 proceed = True
 

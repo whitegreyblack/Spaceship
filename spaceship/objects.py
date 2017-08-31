@@ -5,7 +5,8 @@ from colors import color
 from random import randint, choice
 from constants import SCREEN_HEIGHT as sh
 from constants import SCREEN_WIDTH as sw
-from group import stones, hexify
+from elements import stone, element
+from grass import grass
 # TODO: Maybe move map to a new file called map and create a camera class?
 
 class TextBox:
@@ -145,6 +146,9 @@ class Object:
     def draw(self):
         return (self.x, self.y, self.i, self.c)
 
+    def pos(self):
+        return self.x , self.y
+
 class Tile:
     def __init__(self, blocked, sight=None):
         self.blocked = blocked
@@ -162,9 +166,11 @@ class Map:
     def __init__(self, data):
         self.data, self.height, self.width = self.dimensions(data)
         print(self.height, self.width)
+        self.tiles = []
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.block = [[self.data[y][x] == "#" for x in range(self.width)] for y in range(self.height)]
-        self.color = stones(self.width, self.height)
+        self.stone = stone(self.width, self.height)
+        self.grass = grass(self.width, self.height)
         print(self.height, self.width)
         self.flag = 0
 
@@ -176,23 +182,35 @@ class Map:
         width = max(len(col) for col in data)
         return data, height, width
 
+
     def square(self, x, y):
         return self.data[y][x]
 
+
     def blocked(self, x, y):
-        return (x < 0 or y < 0 or x >= self.width or y >= self.height or self.data[y][x] == "#")
+        return (x < 0 or y < 0 or x >= self.width 
+                or y >= self.height or self.data[y][x] == "#")
+
 
     def lit(self, x, y):
         return self.light[y][x] == self.flag
+
 
     def set_lit(self, x, y):
         if 0 <= x < self.width and 0 <= y < self.height:
             self.light[y][x] = self.flag
 
+
     def fov_calc(self, x, y, radius):
         self.flag += 1
         for o in range(8):
-            self.sight(x, y, 1, 1.0, 0.0, radius, self.mult[0][o], self.mult[1][o], self.mult[2][o], self.mult[3][o], 0)
+            self.sight(x, y, 1, 1.0, 0.0, 
+                       radius, 
+                       self.mult[0][o], 
+                       self.mult[1][o], 
+                       self.mult[2][o], 
+                       self.mult[3][o], 0)
+
 
     def sight(self, cx, cy, row, start, end, radius, xx, xy, yx, yy, id):
         if start < end:
@@ -246,7 +264,11 @@ class Map:
 
         cx = scroll(X, self.width if self.width <= sw else sw, self.width)
         cy = scroll(Y, self.height if self.height <= sh else sh, self.height)
+        fog = "#ff808080"
 
+        positions = {}
+        for unit in units:
+            positions[unit.pos()] = unit
         # width should total 80 units
         for x in range(cx, cx+(80 if self.width > 80 else self.width)):
             # height should total 24 units
@@ -255,19 +277,23 @@ class Map:
                 if x == X and y == Y:
                     ch = "@"
                     lit = "white"
-                elif (x, y) in units and lit:
-                    ch = "@"
-                    lit = "orange"
+                elif (x, y) in positions.keys() and lit:
+                    unit = positions[(x,y)]
+                    ch = unit.i
+                    lit = unit.c
                 else:
                     ch = self.square(x, y)
                     if ch == ".":
-                        g, c = self.color[y][x]
-                        lit = "#ff"+hexify(g)*3 if lit else "black"
+                        _, color, _, _ = self.stone[y][x]
+                        lit = element.hexone(color) if lit else fog
+                    if ch == ",":
+                        ch, color, _, _ = self.grass[y][x]
+                        lit = element.hextup(color) if lit else fog
                     if ch == "~":
-                        lit = choice(["#ff6666ff", "#ff3333ff", "#ff9999ff"]) if lit else "#ff000000"
+                        lit = choice(["#ff6666ff", "#ff3333ff", "#ff9999ff"]) if lit else fog
                     if ch == "+":
-                        lit = "#ff994C00" if lit else "black"
+                        lit = "#ff994C00" if lit else fog
                     if ch == "#":
-                        g, c = self.color[y][x]
-                        lit = "#ff"+hexify(g)*3 if lit else "black"
+                        _, color, _, _ = self.stone[y][x]
+                        lit = element.hexone(color) if lit else fog
                 yield (x-cx, y-cy, lit, ch)

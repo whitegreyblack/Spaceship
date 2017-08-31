@@ -1,7 +1,11 @@
-"""Test file to test imgpy"""
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from PIL import Image
 from spaceship.imgpy import picturfy, stringify
 from spaceship.maps import MAPS
+
+"""Test file to test imgpy"""
 
 original = "./assets/testmap.png"
 
