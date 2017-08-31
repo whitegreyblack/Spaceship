@@ -35,6 +35,7 @@ lint: lint-flake lint-pep8
 
 test: clean
 	py.test --verbose --color=yes --cov=spaceship $(TESTS)
+	if [ -a picturfy-img.png ] ; then rm picturfy-img.png; fi;
 
 test-clean: test clean
 

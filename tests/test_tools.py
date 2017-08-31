@@ -8,7 +8,8 @@ import math
 """Test file for spaceship/tools.py"""
 
 
-string = """aaaaaaaaaa
+string = """\
+aaaaaaaaaa
 aaaaaaaaa
 aaaaaaaa
 aaaaaaaaaaa
