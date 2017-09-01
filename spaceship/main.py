@@ -4,8 +4,7 @@ from action import key_movement, num_movement
 from objects import Map, Object, Tile
 from bearlibterminal import terminal as term
 from namedlist import namedlist
-from imgpy import stringify, picturfy
-from maps import MAPS
+from maps import stringify, hextup, hexone
 from random import randint, choice
 from constants import SCREEN_HEIGHT, SCREEN_WIDTH
 # LIMIT_FPS = 30 -- later used in sprite implementation
@@ -114,7 +113,7 @@ COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
 COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
 #px, py = SCREEN_WIDTH//2, SCREEN_HEIGHT//2
 px, py = 15, 4
-dungeon = Map(MAPS.LARGE)
+dungeon = Map(stringify("./assets/testmap_colored.png"))
 #dungeon = Map(stringify("./assets/testmap.png"))
 player = Object(px, py, '@')
 npc = Object(7, 7, '@', 'orange')

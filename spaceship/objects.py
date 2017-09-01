@@ -5,8 +5,7 @@ from colors import color
 from random import randint, choice
 from constants import SCREEN_HEIGHT as sh
 from constants import SCREEN_WIDTH as sw
-from elements import stone, element
-from grass import grass
+from maps import gradient, hextup, hexone, output
 # TODO: Maybe move map to a new file called map and create a camera class?
 
 class TextBox:
@@ -165,12 +164,12 @@ class Map:
     colors_block = ["#ffc0c0c0", "#ffa0a0a0", "#ff808080", "#ff606060", "#ff404040"]
     def __init__(self, data):
         self.data, self.height, self.width = self.dimensions(data)
-        print(self.height, self.width)
-        self.tiles = []
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.block = [[self.data[y][x] == "#" for x in range(self.width)] for y in range(self.height)]
-        self.stone = stone(self.width, self.height)
-        self.grass = grass(self.width, self.height)
+        self.stone = gradient(self.width, self.height, '.', ["#"])
+        output(self.stone)
+        self.grass = gradient(self.width, self.height, '.', [",",";",])
+        output(self.grass)
         print(self.height, self.width)
         self.flag = 0
 
@@ -287,9 +286,9 @@ class Map:
                         #_, color, _, _ = self.stone[y][x]
                         lit = "white" if lit else fog
                         #lit = element.hexone(color) if lit else fog
-                    if ch == ",":
+                    if ch in (",",";","!",):
                         ch, color, _, _ = self.grass[y][x]
-                        lit = element.hextup(color) if lit else fog
+                        lit = hextup(color,5,2,5) if lit else fog
                     if ch == "~":
                         lit = choice(["#ff6666ff", "#ff3333ff", "#ff9999ff"]) if lit else fog
                     if ch == "+":
