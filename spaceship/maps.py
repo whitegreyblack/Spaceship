@@ -2,6 +2,7 @@
 from PIL import Image, ImageDraw
 from functools import lru_cache
 from random import randint, choice
+from tools import bresenhams
 from math import hypot
 
 """Maps file holds template functions that return randomized data maps used\
@@ -128,8 +129,76 @@ def dimensions(data):
 
 
 def world(x, y, p=50, i=100):
-    pass
+    """Returns a more realistic world map of size (X, y)"""
+    quads = {
+        0: (0,x//2,0,y//2),
+        1: (x//2+1, x, 0, y//2),
+        2: (0,x//2, y//2+1, y),
+        3: (x//2+1, x, y//2+1, y),
+    }
 
+    factor = 5
+    chance = 8
+    w, h = x, y
+    data = table(".", 200, x, y)
+
+    quad_beg, quad_end = 0, 0
+    while quad_beg == quad_end:
+        quad_beg = randint(0,3)
+        quad_end = randint(0,3)
+        
+    x0, x1, y0, y1 = quads[quad_beg]
+    bx, by = randint(x0, x1), randint(y0, y1)
+
+    x0, x1, y0, y1 = quads[quad_end]
+    ex, ey = randint(x0, x1), randint(y0, y1)
+
+    points = bresenhams((bx, by), (ex, ey))
+    for x, y in points:
+        data[y % h][x % w] = ("#", 0, x, y)
+
+    for point in range(len(points)):
+        x, y = points[point]
+        i, j = x, y
+        data = table(" ", 0, x, y)
+
+        for _ in range(i):
+            try:
+                if randint(0, 1):
+                    i -= 1
+                    data[j % h][i % w] = ("#", 0, i, j)
+
+                if randint(0, 1):
+                    i += 1
+                    data[j % h][i % w] = ("#", 0, i, j)
+
+                if randint(0, 1):
+                    j += 1
+                    data[j % h][i % w] = ("#", 0, i, j)
+
+                if randint(0, 1):
+                    j -= 1
+                    data[j % h][i % w] = ("#", 0, i, j)
+                if randint(-chance+1, 1):
+                    i, j = i-1, j-1
+                    data[j % h][i % w] = ("#", 0, i, j)
+
+                if randint(-chance+1, 1):
+                    i, j = i-1, j+1
+                    data[j % h][i % w] = ("#", 0, i, j)
+
+                if randint(-chance+1, 1):
+                    i, j = i+1, j-1
+                    data[j % h][i % w] = ("#", 0, i, j)
+
+                if randint(-chance+1, 1):
+                    i, j = i+1, j+1
+                    data[j % h][i % w] = ("#", 0, i, j)
+
+            except IndexError:
+                pass
+
+    return data    
 
 def gradient(x, y, d, c, p=50, i=100):
     """Returns a list of lists with symbols and color gradient tuple"""
@@ -161,7 +230,6 @@ def gradient(x, y, d, c, p=50, i=100):
     data = table(".", 200, x, y)
 
     for _ in range(p):
-        chance = chance
         x, y = randint(0, w), randint(0, h)
         i, j = x, y
 
@@ -205,6 +273,5 @@ def gradient(x, y, d, c, p=50, i=100):
 
 
 if __name__ == "__main__":
-    land, chars = output(gradient(300, 75, 100, 100))
-    print(land)
-    print(chars)
+    #output(gradient(300, 75, 100, 100))
+    output(world(300, 75, 100, 100))
