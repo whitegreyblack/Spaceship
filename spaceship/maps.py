@@ -1,12 +1,12 @@
 # -*- coding=utf-8 -*-
-from bearlibterminal import terminal as term
 from functools import lru_cache
 from random import randint
-from time import sleep
-from math import sqrt, hypot
+from math import hypot
+
 
 """Maps file holds template functions that return randomized data maps used\
 in creating procedural worlds"""
+
 
 def table(ch, val, x, y):
     """Returns a 2d list of lists holding a four element tuple"""
@@ -21,13 +21,14 @@ def hexify(x):
 def hextup(x, a, b, c):
     """Returns a triple hex valued tuple as ARGB hex string"""
     return "#ff" \
-            + hexify(x//a) \
-            + hexify(x//b) \
-            + hexify(x//c)
+        + hexify(x//a) \
+        + hexify(x//b) \
+        + hexify(x//c)
 
 
 def hexone(x):
-    return "#ff" +  hexify(x)*3
+    return "#ff" + hexify(x) * 3
+
 
 def output(data):
     lines = []
@@ -43,7 +44,8 @@ def output(data):
             line += c
         lines.append(line)
 
-    return "\n".join(lines), characters 
+    return "\n".join(lines), characters
+
 
 def dimensions(data):
     """Takes in a string map and returns a 2D list map and map dimensions"""
@@ -52,8 +54,10 @@ def dimensions(data):
     width = max(len(col) for col in data)
     return data, height, width
 
+
 def world(x, y, p=50, i=100):
     pass
+
 
 def gradient(x, y, p=50, i=100):
     """Returns a list of lists with symbols and color gradient tuple"""
@@ -62,14 +66,12 @@ def gradient(x, y, p=50, i=100):
     def distance(x, y):
         """Returns the hypotenuse distance between two points"""
         return int(hypot(x, y))
-    
 
     @lru_cache(maxsize=None)
-    def mm(g,v):
+    def mm(g, v):
         """Returns the value or predetermined value if out of bounds"""
-        return min(max(50, g-v), 250) 
-    
-    
+        return min(max(50, g-v), 250)
+
     @lru_cache(maxsize=None)
     def mid(x, y):
         """Returns the midpoint value between two points"""
@@ -77,9 +79,9 @@ def gradient(x, y, p=50, i=100):
 
     def replace(x, y, i, j):
         """Evaluates the tuple in data and replaces it with a new tuple"""
-        _, og, _, _ = data[j%h][i%w]
+        _, og, _, _ = data[j % h][i % w]
         ng = mm(og, distance(abs(x-i), abs(y-j) * factor))
-        data[j%h][i%w] = ("#", ng if og > ng else mid(ng, og), i, j)        
+        data[j % h][i % w] = ("#", ng if og > ng else mid(ng, og), i, j)
 
     factor = 5
     chance = 8
@@ -98,36 +100,37 @@ def gradient(x, y, p=50, i=100):
                     replace(x, y, i, j)
 
                 if randint(0, 1):
-                    i += 1     
-                    replace(x, y, i, j)  
+                    i += 1
+                    replace(x, y, i, j)
 
                 if randint(0, 1):
-                    j += 1  
-                    replace(x, y, i, j)   
+                    j += 1
+                    replace(x, y, i, j)
 
                 if randint(0, 1):
-                    j -= 1  
-                    replace(x, y, i, j)      
+                    j -= 1
+                    replace(x, y, i, j)
                 if randint(-chance+1, 1):
                     i, j = i-1, j-1
-                    replace(x, y, i, j)      
+                    replace(x, y, i, j)
 
                 if randint(-chance+1, 1):
                     i, j = i-1, j+1
-                    replace(x, y, i, j)      
+                    replace(x, y, i, j)
 
                 if randint(-chance+1, 1):
                     i, j = i+1, j-1
-                    replace(x, y, i, j)      
+                    replace(x, y, i, j)
 
                 if randint(-chance+1, 1):
                     i, j = i+1, j+1
-                    replace(x, y, i, j)    
+                    replace(x, y, i, j)
 
             except IndexError:
                 pass
 
     return data
+
 
 if __name__ == "__main__":
     land, chars = output(gradient(300, 75, 100, 100))
