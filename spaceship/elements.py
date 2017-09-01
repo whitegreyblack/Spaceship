@@ -8,9 +8,16 @@ from math import sqrt, hypot
 class element:
     factor = 5
     chance = 8
+    points = 50
+    iterate = 100
 
     def draw(self):
         raise NotImplementedError
+
+    
+    @staticmethod
+    def table(ch, val, x, y):
+        return [[(ch, val, i, j) for i in range(x)] for j in range(y)]
 
 
     @staticmethod
@@ -18,13 +25,15 @@ class element:
         """Returns a single hex transformed value as a string"""
         return hex(x).split('x')[1] if x > 15 else '0'+hex(x).split('x')[1]
 
+
     @staticmethod
-    def hextup(x):
+    def hextup(x, a, b, c):
         """Returns a triple hex valued tuple as ARGB hex string"""
         return "#ff" \
-             + element.hexify(x//randint(5,x//5)) \
-             + element.hexify(x//randint(2,3)) \
-             + element.hexify(x//randint(5,x//5))
+             + element.hexify(x//a) \
+             + element.hexify(x//b) \
+             + element.hexify(x//c)
+
 
     @staticmethod
     def hexone(x):

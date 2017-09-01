@@ -21,7 +21,7 @@ def setup():
         "window: size={}x{}, cellsize={}x{}, title='Main Game'".format(
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
-            8,16))
+            8,10))
 # ---------------------------------------------------------------------------------------------------------------------#
 
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -107,14 +107,14 @@ def draw():
 # Start initializations
 setup()
 # global game variables
-FOV_RADIUS = 25
+FOV_RADIUS = 10
 MAP_WIDTH, MAP_HEIGHT = 24, 48
 MAP_FACTOR = 2
 COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
 COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
 #px, py = SCREEN_WIDTH//2, SCREEN_HEIGHT//2
 px, py = 15, 4
-dungeon = Map(MAPS.NEW)
+dungeon = Map(MAPS.LARGE)
 #dungeon = Map(stringify("./assets/testmap.png"))
 player = Object(px, py, '@')
 npc = Object(7, 7, '@', 'orange')

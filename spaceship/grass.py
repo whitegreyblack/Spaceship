@@ -96,8 +96,8 @@ def grass(w, h):
 
     factor = 5
     chance = 8
-
-    data = [[(".", 200, i, j) for i in range(w)] for j in range(h)]
+    debug = False
+    data = [[("#", 200, i, j) for i in range(w)] for j in range(h)]
 
     for k in range(50): 
         draw(
@@ -106,34 +106,36 @@ def grass(w, h):
 
     lines = []
     characters = {}
-
-    for row in data:
-        line = ""
-        for c, _, _, _ in row:
-            try:
-                characters[c] += 1
-            except KeyError:
-                characters[c] = 1
-            line += c
-        lines.append(line)
-
-    print("\n".join(lines))
-    print(characters)
+    if debug:
+        for row in data:
+            line = ""
+            for c, _, _, _ in row:
+                try:
+                    characters[c] += 1
+                except KeyError:
+                    characters[c] = 1
+                line += c
+            lines.append(line)
+        print("\n".join(lines))
+        print(characters)
     return data
 
 if __name__ == "__main__":
     e = hexify
     term.open()
     _, h, w = dimensions(MAPS.TOWN)
-    grass(w, h)
+    positions = grass(w, h)
     lines = []
-    for row in grass(w, h):
-        line = ""
-        for ch, g, x, y in row:
-            line += ch
-            term.puts(x, y, f'[color={hexval(g)}]{ch}[/color]')
-        lines.append(line)
-    print("\n".join(lines))
-    term.refresh()
-    term.read()
+    while True:
+        for row in positions:
+            line = ""
+            for ch, g, x, y in row:
+                line += ch
+                term.puts(x, y, f'[color={hexval(g)}]{ch}[/color]')
+            lines.append(line)
+        print("\n".join(lines))
+        term.refresh()
+        ch = term.read()
+        if ch in(term.TK_ESCAPE, term.TK_CLOSE,):
+            break
     term.close()

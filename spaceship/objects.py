@@ -262,9 +262,9 @@ class Map:
             else:
                 return p - hs
 
-        cx = scroll(X, self.width if self.width <= sw else sw, self.width)
-        cy = scroll(Y, self.height if self.height <= sh else sh, self.height)
-        fog = "#ff808080"
+        cx = scroll(X, self.width if self.width <= 80 else 80, self.width)
+        cy = scroll(Y, self.height if self.height <= 24 else 24, self.height)
+        fog = "#ff404040"
 
         positions = {}
         for unit in units:
@@ -284,8 +284,9 @@ class Map:
                 else:
                     ch = self.square(x, y)
                     if ch == ".":
-                        _, color, _, _ = self.stone[y][x]
-                        lit = element.hexone(color) if lit else fog
+                        #_, color, _, _ = self.stone[y][x]
+                        lit = "white" if lit else fog
+                        #lit = element.hexone(color) if lit else fog
                     if ch == ",":
                         ch, color, _, _ = self.grass[y][x]
                         lit = element.hextup(color) if lit else fog
@@ -294,6 +295,7 @@ class Map:
                     if ch == "+":
                         lit = "#ff994C00" if lit else fog
                     if ch == "#":
-                        _, color, _, _ = self.stone[y][x]
-                        lit = element.hexone(color) if lit else fog
+                        #_, color, _, _ = self.stone[y][x]
+                        #lit = element.hexone(color) if lit else fog
+                        lit = "white" if lit else fog
                 yield (x-cx, y-cy, lit, ch)
