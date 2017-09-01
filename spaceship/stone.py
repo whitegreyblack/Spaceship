@@ -12,11 +12,14 @@ class Stone(element):
         self.w, self.h = x, y
         self.data = self.table(".", 200, x, y)
 
+
     def draw(self, p=None, i=None):
+
         def replace(x, y, i, j):
             _, og, _, _ = self.data[j][i]
             ng = self.calculate(og, self.distance(abs(x-i), abs(y-j) * self.factor))
             self.data[j][i] = ("#", ng if og > ng else self.interpolate(ng, og), i, j)        
+
 
         if p:
             self.points = p
@@ -56,9 +59,11 @@ class Stone(element):
 
                     if randint(0, chance) == 1:
                         i, j = i+1, j+1
-                        replace(x, y, i, j)      
+                        replace(x, y, i, j)    
+                          
                 except IndexError:
                     pass
+
 
     def output(self):
         lines = []
@@ -75,6 +80,7 @@ class Stone(element):
             lines.append(line)
         
         return "\n".join(lines), characters
+
 
 stone = Stone(300, 50)
 stone.draw(100, 100)
