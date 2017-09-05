@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 # utiltools : functions for 2D graphics manipulations and transformation
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
+
 import math
 
 

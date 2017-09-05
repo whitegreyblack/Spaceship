@@ -1,12 +1,13 @@
 # -*- coding=utf-8 -*-
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from bearlibterminal import terminal as term
 from PIL import Image, ImageDraw
 from functools import lru_cache
 from random import randint, choice
-from tools import bresenhams
+from spaceship.tools import bresenhams
 from math import hypot
-import sys
-
 """Maps file holds template functions that return randomized data maps used\
 in creating procedural worlds"""
 
@@ -31,7 +32,7 @@ stringify_chars = {
     (255, 255, 255): (".", "92"),
 }
 
-def picturfy(string, filename="picturfy-img.png", asciify=False, debug=False):
+def picturfy(string, filename="picturfy-img.png", folder="./", asciify=False, debug=False):
     '''Takes in a string map and two positional parameters to determine
     output. If asciify is specified then returns color codes reflective
     of their ascii character code else returns color based on regular
@@ -47,8 +48,9 @@ def picturfy(string, filename="picturfy-img.png", asciify=False, debug=False):
         for i in range(len(string_list)):
             drawer.rectangle((i, j, i+1, j+1), picturfy_chars[string_list[i]])
 
-    img_to_save.save("assets/"+filename)
-    return filename
+    print("Saving string as {}".format(folder+filename))
+    img_to_save.save(folder+filename)
+    return folder+filename
 
 
 def stringify(string, asciify=False, debug=False):
