@@ -286,17 +286,17 @@ def gradient(x, y, d, c, p=50, i=100):
 
 if __name__ == "__main__":
     width = 100
-    height = 100
+    height = 50
     if len(sys.argv) == 2 and sys.argv[1] == "-t":
         term.open()
         term.set("window: size={}x{}, cellsize={}x{}, title='Maps'".format(
-            width, height, 8, 8
+            width, height, 8, 16
         ))
         data = world(width, height, 100, 100)
         output(data)
         for row in data:
             for c, col, i, j in row:
-                col = hextup(col, 1, 1, 1) if col > 5 else hextup((col+1)*25, (col+1)*25//2, (col+1)*25//2, col+1)
+                col = hextup(col, 2, 1, 1) if col > 5 else hextup((col+1)*25, (col+1)*25//2, (col+1)*25//2, col+1)
                 term.puts(i, j, "[color={}]{}[/color]".format(col, c))
         term.refresh()
         term.read()
