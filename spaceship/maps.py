@@ -1,9 +1,11 @@
 # -*- coding=utf-8 -*-
+from bearlibterminal import terminal as term
 from PIL import Image, ImageDraw
 from functools import lru_cache
 from random import randint, choice
 from tools import bresenhams
 from math import hypot
+import sys
 
 """Maps file holds template functions that return randomized data maps used\
 in creating procedural worlds"""
@@ -117,7 +119,8 @@ def output(data):
                 characters[c] = 1
             line += c
         lines.append(line)
-    print("\n".join(lines), characters)
+    print("\n".join(lines))
+    print(characters)
 
 
 def dimensions(data):
@@ -130,71 +133,96 @@ def dimensions(data):
 
 def world(x, y, p=50, i=100):
     """Returns a more realistic world map of size (X, y)"""
+    def inc(x, y):
+        _, i, _, _ = data[y][x]
+        data[y][x] = (char, mm(i+1), x, y)
+
+    def double(x, y):
+        pairs.add((x,y))
+        pairs.add((y,x))
+
+    @lru_cache(maxsize=None)
+    def mm(c):
+        """Returns the value or predetermined value if out of bounds"""
+        return min(max(0, c), 250)
+
     quads = {
         0: (0,x//2,0,y//2),
-        1: (x//2+1, x, 0, y//2),
-        2: (0,x//2, y//2+1, y),
-        3: (x//2+1, x, y//2+1, y),
+        1: (x//2+1, x-1, 0, y//2),
+        2: (0,x//2, y//2+1, y-1),
+        3: (x//2+1, x-1, y//2+1, y-1),
+    }
+    quad_pos = {
+        0: (x//4, y//4),
+        1: (x*3//4, y//4),
+        2: (x//4, y*3//4),
+        3: (x*3//4, y*3//4)
+    }
+    qprint = {
+        0: "0", 1: "1", 2: "2", 3: "3",
     }
 
     factor = 5
-    chance = 8
+    chance = 10
+    char = "#"
+    unch = "."
     w, h = x, y
-    data = table(".", 200, x, y)
-
-    quad_beg, quad_end = 0, 0
-    while quad_beg == quad_end:
-        quad_beg = randint(0,3)
-        quad_end = randint(0,3)
+    data = table(unch, 0, x, y)
+    pairs = set()
+    for _ in range(5):
+        quad_beg, quad_end = 0, 0
+        while quad_beg == quad_end:
+            quad_beg = randint(0,3)
+            quad_end = randint(0,3)
         
-    x0, x1, y0, y1 = quads[quad_beg]
-    bx, by = randint(x0, x1), randint(y0, y1)
+        #print(qprint[quad_beg], qprint[quad_end])
+        x0, x1, y0, y1 = quads[quad_beg]
+        bx, by = randint(x0, x1), randint(y0, y1)
 
-    x0, x1, y0, y1 = quads[quad_end]
-    ex, ey = randint(x0, x1), randint(y0, y1)
+        x0, x1, y0, y1 = quads[quad_end]
+        ex, ey = randint(x0, x1), randint(y0, y1)
 
-    points = bresenhams((bx, by), (ex, ey))
-    for x, y in points:
-        data[y % h][x % w] = ("#", 0, x, y)
-
-    for point in range(len(points)):
-        x, y = points[point]
-        i, j = x, y
-        data = table(" ", 0, x, y)
-
-        for _ in range(i):
+        points = bresenhams((bx, by), (ex, ey))
+        for x, y in points:
+            inc(x, y)
+            
+        for point in range(len(points)):
+            x, y = points[point]
+            i, j = x, y
             try:
-                if randint(0, 1):
-                    i -= 1
-                    data[j % h][i % w] = ("#", 0, i, j)
+                inc(i, j)
+                for _ in range(i):
+                        if randint(-chance+1, 1):
+                            i -= 1
+                            inc(i, j)
 
-                if randint(0, 1):
-                    i += 1
-                    data[j % h][i % w] = ("#", 0, i, j)
+                        if randint(-chance+1, 1):
+                            i += 1
+                            inc(i, j)
 
-                if randint(0, 1):
-                    j += 1
-                    data[j % h][i % w] = ("#", 0, i, j)
+                        if randint(-chance+1, 1):
+                            j += 1
+                            inc(i,j)
 
-                if randint(0, 1):
-                    j -= 1
-                    data[j % h][i % w] = ("#", 0, i, j)
-                if randint(-chance+1, 1):
-                    i, j = i-1, j-1
-                    data[j % h][i % w] = ("#", 0, i, j)
+                        if randint(-chance+1, 1):
+                            j -= 1
+                            inc(i,j)
 
-                if randint(-chance+1, 1):
-                    i, j = i-1, j+1
-                    data[j % h][i % w] = ("#", 0, i, j)
+                        if randint(-chance+1, 1):
+                            i, j = i-1, j-1
+                            inc(i, j)
 
-                if randint(-chance+1, 1):
-                    i, j = i+1, j-1
-                    data[j % h][i % w] = ("#", 0, i, j)
+                        if randint(-chance+1, 1):
+                            i, j = i-1, j+1
+                            inc(i, j)
 
-                if randint(-chance+1, 1):
-                    i, j = i+1, j+1
-                    data[j % h][i % w] = ("#", 0, i, j)
+                        if randint(-chance+1, 1):
+                            i, j = i+1, j-1
+                            inc(i, j)
 
+                        if randint(-chance+1, 1):
+                            i, j = i+1, j+1
+                            inc(i, j)
             except IndexError:
                 pass
 
@@ -220,9 +248,9 @@ def gradient(x, y, d, c, p=50, i=100):
 
     def replace(x, y, i, j):
         """Evaluates the tuple in data and replaces it with a new tuple"""
-        _, og, _, _ = data[j % h][i % w]
+        _, og, _, _ = data[j][i]
         ng = mm(og, distance(abs(x-i), abs(y-j) * factor))
-        data[j % h][i % w] = (choice(c), ng if og > ng else mid(ng, og), i, j)
+        data[j][i] = (choice(c), ng if og > ng else mid(ng, og), i, j)
 
     factor = 5
     chance = 8
@@ -273,5 +301,18 @@ def gradient(x, y, d, c, p=50, i=100):
 
 
 if __name__ == "__main__":
-    #output(gradient(300, 75, 100, 100))
-    output(world(300, 75, 100, 100))
+    width = 200
+    height = 75
+    if sys.argv[1] == "-t":
+        term.open()
+        term.set("window: size={}x{}, cellsize={}x{}, title='Maps'".format(
+            width, height, 8, 10
+        ))
+        data = world(width, height, 100, 100)
+        for row in data:
+            for c, col, i, j in row:
+                term.puts(i, j, "[color={}]{}[/color]".format(hexone(col), c))
+        term.refresh()
+        term.read()
+    else:
+        output(world(width, height, 100, 100))

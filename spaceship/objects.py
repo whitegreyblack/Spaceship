@@ -22,7 +22,7 @@ class Point:
             self.__class__.__name__, self.x, self.y)
 
 
-class Plane(object):
+class Plane:
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -276,7 +276,8 @@ class Map:
                 if x == X and y == Y:
                     ch = "@"
                     lit = "white"
-                elif (x, y) in positions.keys() and lit:
+                elif (x, y) in po
+                sitions.keys() and lit:
                     unit = positions[(x,y)]
                     ch = unit.i
                     lit = unit.c
