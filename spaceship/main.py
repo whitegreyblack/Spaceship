@@ -4,7 +4,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 
 from spaceship.tools import bresenhams, deltanorm, movement
-from spaceship.action import key_movement, num_movement, key_actions, action
+from spaceship.action import key_movement, num_movement, key_actions, action, keypress
 from spaceship.objects import Map, Object, Tile
 from bearlibterminal import terminal as term
 from collections import namedtuple
@@ -33,19 +33,23 @@ def setup():
 
 
 def key_in():
+    keydown = namedtuple("Key_Down", ("x", "y", "a"))
     global proceed
     # movement
     code = term.read()
     if code in (term.TK_ESCAPE, term.TK_CLOSE):
         proceed = False
-    x, y = 0, 0
+    a, x, y = 0, 0, 0
     if code in key_movement:
         x, y = key_movement[code]
     elif code in num_movement:
         x, y = num_movement[code]
+    elif code in key_actions:
+        act = key_actions[code].key
+        print(act)
     else:
-        pass
-    return x, y
+        print("unrecognized command")
+    return keydown(x, y, a)
 
 # should change to movement process
 def key_process(x, y, action, unit, blockables):
@@ -93,7 +97,7 @@ def processAction(x, y, action, unit, blockables):
             
     global player
     print(action)
-    if action.a == "o":
+    if action == "o":
         print("open action")
         openables = []
         for i, j in eightsquare(x, y):
@@ -105,6 +109,8 @@ def processAction(x, y, action, unit, blockables):
             i, j = openables[0]
             dungeon.open_door(i, j)
             dungeon.unblock(i, j)
+    else:
+        print("not open")
     #print(eightsquare(x,y))
 
             
@@ -167,9 +173,12 @@ while proceed:
         term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
         term.puts(0, SCREEN_HEIGHT-1, "{} {}".format(player.x, player.y))
     term.refresh()
-    x, y = key_in()
-    key_process(x, y, None, [], dungeon.block)
-    processAction(player.x, player.y, action("o","open"), [], dungeon.block)
+    x, y, a = key_in()
+    if a:
+        processAction(player.x, player.y, a, [], dungeon.block)
+    else:
+        key_process(x, y, None, [], dungeon.block)
+    #processAction(player.x, player.y, action("o","open"), [], dungeon.block)
     term.refresh()
 
 # End Initiailiation
