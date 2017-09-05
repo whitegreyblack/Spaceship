@@ -39,7 +39,7 @@ def key_in():
     code = term.read()
     if code in (term.TK_ESCAPE, term.TK_CLOSE):
         proceed = False
-    a, x, y = 0, 0, 0
+    act, x, y = 0, 0, 0
     if code in key_movement:
         x, y = key_movement[code]
     elif code in num_movement:
@@ -49,7 +49,7 @@ def key_in():
         print(act)
     else:
         print("unrecognized command")
-    return keydown(x, y, a)
+    return keydown(x, y, act)
 
 # should change to movement process
 def key_process(x, y, action, unit, blockables):
@@ -91,13 +91,14 @@ def key_process(x, y, action, unit, blockables):
                 unit.move(x, y)
 
 def processAction(x, y, action, unit, blockables):
+    print(x, y, action)
     space = namedtuple("Space", ("x","y"))
     def eightsquare(x, y):
         return [space(x+i,y+j) for i, j in list(num_movement.values())]
             
     global player
-    print(action)
     if action == "o":
+        print(action)
         print("open action")
         openables = []
         for i, j in eightsquare(x, y):
@@ -109,8 +110,18 @@ def processAction(x, y, action, unit, blockables):
             i, j = openables[0]
             dungeon.open_door(i, j)
             dungeon.unblock(i, j)
-    else:
-        print("not open")
+    if action == "c":
+        print(action, "closing")
+        closeables = []
+        for i, j in eightsquare(x, y):
+            if (i, j) != (x, y):
+                if dungeon.square(i, j) == "/":
+                    print("there is a closeable object near you")
+                    closeables.append((i, j))
+        if len(closeables) == 1:
+            i, j = closeables[0]
+            dungeon.close_door(i, j)
+            dungeon.reblock(i, j)
     #print(eightsquare(x,y))
 
             

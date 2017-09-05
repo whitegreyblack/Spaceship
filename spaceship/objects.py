@@ -189,6 +189,13 @@ class Map:
     def open_door(self, x, y):
         if self.square(x, y) == "+":
             self.data[y][x] = "/"
+    
+    def close_door(self, x, y):
+        if self.square(x, y) == "/":
+            self.data[y][x] = "+"
+
+    def reblock(self, x, y):
+        self.block[y][x] = True
 
     def unblock(self, x, y):
         self.block[y][x] = False
