@@ -276,8 +276,7 @@ class Map:
                 if x == X and y == Y:
                     ch = "@"
                     lit = "white"
-                elif (x, y) in po
-                sitions.keys() and lit:
+                elif (x, y) in positions.keys() and lit:
                     unit = positions[(x,y)]
                     ch = unit.i
                     lit = unit.c

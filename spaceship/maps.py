@@ -131,8 +131,10 @@ def dimensions(data):
     return data, height, width
 
 
-def world(x, y, p=50, i=100):
-    """Returns a more realistic world map of size (X, y)"""
+def world(x, y, pos=50, iterations=20):
+    """Returns a more realistic world map of size (X, y)
+    TODO: Color currently starts at 0 and increments by 1 everytime data is accessed -- more realistic algo?
+    """
     def inc(x, y):
         _, i, _, _ = data[y][x]
         data[y][x] = (char, mm(i+1), x, y)
@@ -145,23 +147,31 @@ def world(x, y, p=50, i=100):
     def mm(c):
         """Returns the value or predetermined value if out of bounds"""
         return min(max(0, c), 250)
-
+    
+    # random integers for picking a random point in quadrant
     quads = {
-        0: (0,x//2,0,y//2),
+        0: (0,x//2, 0, y//3),
         1: (x//2+1, x-1, 0, y//2),
         2: (0,x//2, y//2+1, y-1),
-        3: (x//2+1, x-1, y//2+1, y-1),
+        3: (x//2+1, x-1, y//3+1, y-1),
     }
+    # explicit midpoint in each quadrant
     quad_pos = {
         0: (x//4, y//4),
         1: (x*3//4, y//4),
         2: (x//4, y*3//4),
         3: (x*3//4, y*3//4)
     }
-    qprint = {
-        0: "0", 1: "1", 2: "2", 3: "3",
-    }
-
+    rotations = [
+        (-1, 0),
+        (1, 0),
+        (0, -1),
+        (0, 1),
+        (-1, -1),
+        (-1, 1),
+        (1, -1),
+        (1, 1), 
+    ]
     factor = 5
     chance = 10
     char = "#"
@@ -169,13 +179,12 @@ def world(x, y, p=50, i=100):
     w, h = x, y
     data = table(unch, 0, x, y)
     pairs = set()
-    for _ in range(5):
+    for _ in range(10):
         quad_beg, quad_end = 0, 0
         while quad_beg == quad_end:
             quad_beg = randint(0,3)
             quad_end = randint(0,3)
         
-        #print(qprint[quad_beg], qprint[quad_end])
         x0, x1, y0, y1 = quads[quad_beg]
         bx, by = randint(x0, x1), randint(y0, y1)
 
@@ -186,42 +195,17 @@ def world(x, y, p=50, i=100):
         for x, y in points:
             inc(x, y)
             
-        for point in range(len(points)):
+        for point in range(0,len(points), 3):
             x, y = points[point]
             i, j = x, y
             try:
                 inc(i, j)
-                for _ in range(i):
+                for _ in range(iterations):
+                    for rot in rotations:
                         if randint(-chance+1, 1):
-                            i -= 1
-                            inc(i, j)
-
-                        if randint(-chance+1, 1):
-                            i += 1
-                            inc(i, j)
-
-                        if randint(-chance+1, 1):
-                            j += 1
-                            inc(i,j)
-
-                        if randint(-chance+1, 1):
-                            j -= 1
-                            inc(i,j)
-
-                        if randint(-chance+1, 1):
-                            i, j = i-1, j-1
-                            inc(i, j)
-
-                        if randint(-chance+1, 1):
-                            i, j = i-1, j+1
-                            inc(i, j)
-
-                        if randint(-chance+1, 1):
-                            i, j = i+1, j-1
-                            inc(i, j)
-
-                        if randint(-chance+1, 1):
-                            i, j = i+1, j+1
+                            di, dj = rot
+                            i -= di
+                            j -= dj
                             inc(i, j)
             except IndexError:
                 pass
@@ -301,18 +285,20 @@ def gradient(x, y, d, c, p=50, i=100):
 
 
 if __name__ == "__main__":
-    width = 200
-    height = 75
-    if sys.argv[1] == "-t":
+    width = 100
+    height = 100
+    if len(sys.argv) == 2 and sys.argv[1] == "-t":
         term.open()
         term.set("window: size={}x{}, cellsize={}x{}, title='Maps'".format(
-            width, height, 8, 10
+            width, height, 8, 8
         ))
         data = world(width, height, 100, 100)
+        output(data)
         for row in data:
             for c, col, i, j in row:
-                term.puts(i, j, "[color={}]{}[/color]".format(hexone(col), c))
+                col = hextup(col, 1, 1, 1) if col > 5 else hextup((col+1)*25, (col+1)*25//2, (col+1)*25//2, col+1)
+                term.puts(i, j, "[color={}]{}[/color]".format(col, c))
         term.refresh()
         term.read()
     else:
-        output(world(width, height, 100, 100))
+        output(world(width, height//2, 100, 100))
