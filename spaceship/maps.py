@@ -2,6 +2,7 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
+
 from bearlibterminal import terminal as term
 from PIL import Image, ImageDraw
 from functools import lru_cache

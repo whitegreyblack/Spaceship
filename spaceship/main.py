@@ -1,12 +1,17 @@
 # main implementation of core mechanics
-from tools import bresenhams, deltanorm, movement
-from action import key_movement, num_movement
-from objects import Map, Object, Tile
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
+
+from spaceship.tools import bresenhams, deltanorm, movement
+from spaceship.action import key_movement, num_movement, key_actions, action
+from spaceship.objects import Map, Object, Tile
 from bearlibterminal import terminal as term
+from collections import namedtuple
 from namedlist import namedlist
 from maps import stringify, hextup, hexone
 from random import randint, choice
-from constants import SCREEN_HEIGHT, SCREEN_WIDTH
+from spaceship.constants import SCREEN_HEIGHT, SCREEN_WIDTH
 # LIMIT_FPS = 30 -- later used in sprite implementation
 blocked = []
 
@@ -38,10 +43,12 @@ def key_in():
         x, y = key_movement[code]
     elif code in num_movement:
         x, y = num_movement[code]
+    else:
+        pass
     return x, y
 
-
-def key_process(x, y, unit, blockables):
+# should change to movement process
+def key_process(x, y, action, unit, blockables):
     global player
     unit_pos = [(unit.x, unit.y) for unit in units]
 
@@ -79,6 +86,29 @@ def key_process(x, y, unit, blockables):
             if not (blocked or occupied or not outofbounds):
                 unit.move(x, y)
 
+def processAction(x, y, action, unit, blockables):
+    space = namedtuple("Space", ("x","y"))
+    def eightsquare(x, y):
+        return [space(x+i,y+j) for i, j in list(num_movement.values())]
+            
+    global player
+    print(action)
+    if action.a == "o":
+        print("open action")
+        openables = []
+        for i, j in eightsquare(x, y):
+            if (i, j) != (x, y):
+                if dungeon.square(i, j) == "+":
+                    print("there is an openable object near you")
+                    openables.append((i, j))
+        if len(openables) == 1:
+            i, j = openables[0]
+            dungeon.open_door(i, j)
+            dungeon.unblock(i, j)
+    #print(eightsquare(x,y))
+
+            
+
 # End Movement Functions
 # ---------------------------------------------------------------------------------------------------------------------#
 
@@ -112,7 +142,7 @@ MAP_FACTOR = 2
 COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
 COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
 #px, py = SCREEN_WIDTH//2, SCREEN_HEIGHT//2
-px, py = 15, 4
+px, py = 14, 4
 dungeon = Map(stringify("./assets/testmap_colored.png"))
 #dungeon = Map(stringify("./assets/testmap.png"))
 player = Object(px, py, '@')
@@ -126,6 +156,7 @@ guard4 = Object(67, 17, '@', 'grey')
 units = [npc, guard1, guard2, guard3, guard4, npc1, npc2]
 proceed = True
 
+
 while proceed:
     term.clear()
     dungeon.fov_calc(player.x, player.y, FOV_RADIUS)
@@ -137,7 +168,8 @@ while proceed:
         term.puts(0, SCREEN_HEIGHT-1, "{} {}".format(player.x, player.y))
     term.refresh()
     x, y = key_in()
-    key_process(x, y, [], dungeon.block)
+    key_process(x, y, None, [], dungeon.block)
+    processAction(player.x, player.y, action("o","open"), [], dungeon.block)
     term.refresh()
 
 # End Initiailiation

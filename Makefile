@@ -5,10 +5,10 @@ all: test lint clean
 
 .PHONY: clean
 clean:
-	rm -rf *.orig
-	rm -rf *.pyc
-	rm -rf */__pycache__
-
+	rm -rf *.orig~
+	rm -rf *.pyc~
+	rm -rf */__pycache__~
+	rm -rf *.stackdump~
 lint-flake-tests:
 	python2.7.exe -m flake8 $(TESTS)
 
@@ -30,7 +30,8 @@ lint: lint-flake lint-pep8
 
 test:
 	py.test --verbose --color=yes --cov=$(SOURCE) $(TESTS)
-	if [ -a picturfy-img.png ] ; then rm picturfy-img.png; fi;
+	if [ -a picturfy-img.png ] ; then rm picturfy-img.png ; fi;
+	if [ -a assets/picturfy-img.png ] ; then rm assets/picturfy-img.png ; fi
 
 test-clean: test clean
 

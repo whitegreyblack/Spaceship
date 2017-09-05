@@ -1,7 +1,5 @@
 from imports import *
-from colors import COLOR
-from colors import SHIP_COLOR
-from colors import color
+from colors import color, COLOR, SHIP_COLOR
 from random import randint, choice
 from constants import SCREEN_HEIGHT as sh
 from constants import SCREEN_WIDTH as sw
@@ -165,7 +163,7 @@ class Map:
     def __init__(self, data):
         self.data, self.height, self.width = self.dimensions(data)
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
-        self.block = [[self.data[y][x] == "#" for x in range(self.width)] for y in range(self.height)]
+        self.block = [[self.data[y][x] in ("#", "+",) for x in range(self.width)] for y in range(self.height)]
         self.stone = gradient(self.width, self.height, '.', ["#"])
         output(self.stone)
         self.grass = gradient(self.width, self.height, '.', [",",";",])
@@ -185,10 +183,19 @@ class Map:
     def square(self, x, y):
         return self.data[y][x]
 
+    def openable(self, x, y, ch):
+        return self.square(x,y) == "+"
+
+    def open_door(self, x, y):
+        if self.square(x, y) == "+":
+            self.data[y][x] = "/"
+
+    def unblock(self, x, y):
+        self.block[y][x] = False
 
     def blocked(self, x, y):
         return (x < 0 or y < 0 or x >= self.width 
-                or y >= self.height or self.data[y][x] == "#")
+                or y >= self.height or self.data[y][x] in ("#", "+",))
 
 
     def lit(self, x, y):
@@ -291,7 +298,7 @@ class Map:
                         lit = hextup(color,5,2,5) if lit else fog
                     if ch == "~":
                         lit = choice(["#ff6666ff", "#ff3333ff", "#ff9999ff"]) if lit else fog
-                    if ch == "+":
+                    if ch in ("+", "/",):
                         lit = "#ff994C00" if lit else fog
                     if ch == "#":
                         #_, color, _, _ = self.stone[y][x]

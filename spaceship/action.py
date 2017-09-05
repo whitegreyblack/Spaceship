@@ -8,21 +8,45 @@ TODO: Might combine the movement keys into one dictionary
       Rename filename into actions.py with movement as a sub category in the file
       Add action key-value dictionaries alongside a combined movement dictionary
 """
+from collections import namedtuple
 from bearlibterminal import terminal as term
+
+"""
+    Movement:
+        <,^,v,>: Movement keys -> (x,y)
+    Actions:
+        (O|o)pen (blockable(s)): -> unblockable(s)
+        (C|c)lose (unblockable(s)): -> blockable(s)
+        (T|t)alk (object(s)): -> string 
+    Menu Screens:
+        (I|i)nventory (menu): -> inventory screen
+        (Esc|Escape) (menu): -> escape screen/main menu
+"""
+    
+
 key_movement={
-        term.TK_UP: (0, -1),
-        term.TK_DOWN: (0, 1),
-        term.TK_LEFT: (-1, 0),
-        term.TK_RIGHT: (1, 0),
-    }
+    term.TK_UP: (0, -1),
+    term.TK_DOWN: (0, 1),
+    term.TK_LEFT: (-1, 0),
+    term.TK_RIGHT: (1, 0),
+}
 num_movement={
-        term.TK_KP_1: (-1, 1),
-        term.TK_KP_2: (0, 1),
-        term.TK_KP_3: (1, 1),
-        term.TK_KP_4: (-1, 0),
-        term.TK_KP_5: (0, 0),
-        term.TK_KP_6: (1, 0),
-        term.TK_KP_7: (-1, -1),
-        term.TK_KP_8: (0, -1),
-        term.TK_KP_9: (1, -1),
-    }
+    term.TK_KP_1: (-1, 1),
+    term.TK_KP_2: (0, 1),
+    term.TK_KP_3: (1, 1),
+    term.TK_KP_4: (-1, 0),
+    term.TK_KP_5: (0, 0),
+    term.TK_KP_6: (1, 0),
+    term.TK_KP_7: (-1, -1),
+    term.TK_KP_8: (0, -1),
+    term.TK_KP_9: (1, -1),
+}
+
+action = namedtuple("Action", ("a", "action"))
+
+# Open|Close -> Openable/Closable classes? --> Doors/Chests/Hatch?
+
+key_actions={
+    term.TK_O: action("o", "open"),
+    term.TK_C: action("c", "close"),
+}
