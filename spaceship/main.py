@@ -103,28 +103,36 @@ def eightsquare(x, y):
     space = namedtuple("Space", ("x","y"))
     return [space(x+i,y+j) for i, j in list(num_movement.values())]
 
-def actionOpen(x, y):
-    def openDoor(openable):
+def interactDoor(x, y, key):
+    def openDoor(i, j):
         glog.add("Opened door")
-        i, j = openable
         dungeon.open_door(i, j)
         dungeon.unblock(i, j)
 
-    openables = []
+    def closeDoor(i, j):
+        glog.add("Closed door")
+        dungeon.close_door(i, j)
+        dungeon.reblock(i, j)
+
+    opening = key is "o"
+    char = "+" if key is "o" else "/"
+
+    reachables = []
     for i, j in eightsquare(x, y):
         if (i, j) != (x, y):
-            if dungeon.square(i, j) == "+":
-                openables.append((i, j))
-                
-    if not openables:
-        glog.add("No openables near you")
+            if dungeon.square(i, j) is char:
+                reachables.append((i,j))
 
-    elif onlyOne(openables):
-        openDoor(openables[0])
+    if not reachables:
+        glog.add("No {} near you".format("openables" if opening else "closeables"))
+    
+    elif onlyOne(reachables):
+        i, j = reachables.pop()
+        openDoor(i, j) if opening else closeDoor(i, j)
 
     else:
         glog.add("Which direction?")
-        term.refresh()  
+        term.refresh()
         code = term.read()
 
         if code in key_movement:
@@ -133,53 +141,22 @@ def actionOpen(x, y):
             cx, cy = num_movement[code]
         else:
             return
-        if (x+cx, y+cy) in openables:
-            openDoor((x+cx, y+cy))        
 
-def actionClose(x, y):
-    pass
+        if (x+cx, y+cy) in openables:
+            openDoor(x+cx, y+cy) if opening else closeDoor(x+cx, y+cy)
 
 actions={
-    'o': actionOpen,
-    'c': actionClose,
+    'o': interactDoor,
+    'c': interactDoor,
 }
 
-def processAction(x, y, key, unit, blockables):
+def processAction(x, y, key):
     global player, glog
-            
-
-            
-    print(x, y, key)
-            
+                        
     try:
-        actions[key](x, y)
+        actions[key](x, y, key)
     except KeyError:
         print("unknown command")
-    """
-    if action == "o":
-        print(action)
-        print("open action")
-        openables = []
-        for i, j in eightsquare(x, y):
-            if (i, j) != (x, y):
-                if dungeon.square(i, j) == "+":
-                    print("there is an openable object near you")
-                    openables.append((i, j))
-        open_door(openables)
-    if action == "c":
-        print(action, "closing")
-        closeables = []
-        for i, j in eightsquare(x, y):
-            if (i, j) != (x, y):
-                if dungeon.square(i, j) == "/":
-                    print("there is a closeable object near you")
-                    closeables.append((i, j))
-        if len(closeables) == 1:
-            i, j = closeables[0]
-            dungeon.close_door(i, j)
-            dungeon.reblock(i, j)
-    #print(eightsquare(x,y))
-    """
             
 
 # End Movement Functions
@@ -238,7 +215,7 @@ while proceed:
     term.refresh()
     x, y, a = key_in()
     if a:
-        processAction(player.x, player.y, a, [], dungeon.block)
+        processAction(player.x, player.y, a)
     else:
         key_process(x, y, None, [], dungeon.block)
         #processAction(player.x, player.y, action("o","open"), [], dungeon.block)
