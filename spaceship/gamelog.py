@@ -29,17 +29,21 @@ class GameLogger:
         self.index = 0
 
     def add(self, message):
+        print(message)
         if len(self.messages)+1 > self.maxsize:
-            self.dump(self.message[0])
+            self.dump(self.messages[0])
             self.messages.pop(0)
         self.messages.append(message)
-
-    def update(self, n = 0):
+        self.update()
+    def update(self, n=0):
         self.index = len(self.messages)-4 if not n else n
 
-    def write(self, message):
+    def write(self):
         """Return a set of messages for game loop to print"""
-            return log(self.messages[self.index+i] for i in range(4))
+        if len(self.messages) < 4:
+            return log(self.messages)
+        return log([self.messages[self.index+i] for i in range(4)])
 
     def dump(self, f):
         """Write log to disk"""
+        pass

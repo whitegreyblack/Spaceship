@@ -2,7 +2,7 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
-
+from spaceship.gamelog import GameLogger
 from spaceship.tools import bresenhams, deltanorm, movement
 from spaceship.action import key_movement, num_movement, key_actions, action, keypress
 from spaceship.objects import Map, Object, Tile
@@ -25,7 +25,7 @@ def setup():
         "window: size={}x{}, cellsize={}x{}, title='Main Game'".format(
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
-            8,10))
+            8,16))
 # ---------------------------------------------------------------------------------------------------------------------#
 
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -53,7 +53,7 @@ def key_in():
 
 # should change to movement process
 def key_process(x, y, action, unit, blockables):
-    global player
+    global player, glog
     unit_pos = [(unit.x, unit.y) for unit in units]
 
     outofbounds = 0 <= player.x + x < len(blockables[0]) \
@@ -69,7 +69,8 @@ def key_process(x, y, action, unit, blockables):
     if not (blocked or occupied or not outofbounds):
         player.move(x, y)
     else:
-        pass
+        if blocked:
+            glog.add("Walked into a wall")
         # if blocked:
         #     term.puts(0, MAP_HEIGHT - 2, "wall")
         # if occupied:
@@ -93,22 +94,60 @@ def key_process(x, y, action, unit, blockables):
 def onlyOne(container):
     return len(container) == 1
 
-def processAction(x, y, action, unit, blockables):
-    def open_door(openables):
-        if onlyOne(openables):
-            i, j = openables[0]
-            dungeon.open_door(i, j)
-            dungeon.unblock(i, j)
-        else:
-            term.puts(0, SCREEN_HEIGHT-2, "Which door?")
-            term.read()
-            
-    print(x, y, action)
+def eightsquare(x, y):
     space = namedtuple("Space", ("x","y"))
-    def eightsquare(x, y):
-        return [space(x+i,y+j) for i, j in list(num_movement.values())]
+    return [space(x+i,y+j) for i, j in list(num_movement.values())]
+
+def actionOpen(x, y):
+    def openDoor(openable):
+        i, j = openable
+        dungeon.open_door(i, j)
+        dungeon.unblock(i, j)
+
+    glog.add("open action")
+    openables = []
+    for i, j in eightsquare(x, y):
+        if (i, j) != (x, y):
+            if dungeon.square(i, j) == "+":
+                glog.add("openable object near you")
+                openables.append((i, j))
+    if not openables:
+        print("no openables near you")
+        glog.add("No openables near you")
+    elif onlyOne(openables):
+        openDoor(openables[0])
+    else:
+        glog.add("Which direction?")
+        code = term.read()
+        if code in key_movement:
+            cx, cy = key_movement[code]
+        elif code in num_movement:
+            cx, cy = num_movement[code]
+        else:
+            return
+        if (x+cx, y+cy) in openables:
+            openDoor((x+cx, y+cy))        
+
+def actionClose(x, y):
+    pass
+
+actions={
+    'o': actionOpen,
+    'c': actionClose,
+}
+
+def processAction(x, y, key, unit, blockables):
+    global player, glog
             
-    global player
+
+            
+    print(x, y, key)
+            
+    try:
+        actions[key](x, y)
+    except KeyError:
+        print("unknown command")
+    """
     if action == "o":
         print(action)
         print("open action")
@@ -118,14 +157,7 @@ def processAction(x, y, action, unit, blockables):
                 if dungeon.square(i, j) == "+":
                     print("there is an openable object near you")
                     openables.append((i, j))
-        if len(openables) == 1:
-            i, j = openables[0]
-            dungeon.open_door(i, j)
-            dungeon.unblock(i, j)
-        else:
-            term.puts(0, SCREEN_HEIGHT-2, "which direction?")
-            term.refresh()
-            term.read()
+        open_door(openables)
     if action == "c":
         print(action, "closing")
         closeables = []
@@ -139,7 +171,7 @@ def processAction(x, y, action, unit, blockables):
             dungeon.close_door(i, j)
             dungeon.reblock(i, j)
     #print(eightsquare(x,y))
-
+    """
             
 
 # End Movement Functions
@@ -168,8 +200,9 @@ def draw():
 # ---------------------------------------------------------------------------------------------------------------------#
 # Start initializations
 setup()
+glog = GameLogger()
 # global game variables
-FOV_RADIUS = 10
+FOV_RADIUS = 25
 MAP_WIDTH, MAP_HEIGHT = 24, 48
 MAP_FACTOR = 2
 COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
@@ -192,6 +225,14 @@ proceed = True
 
 while proceed:
     term.clear()
+    message_index = 0
+    messages = glog.write().messages
+    print(messages)
+    if messages:
+        for message in messages:
+            print(message)
+            term.puts(0, SCREEN_HEIGHT-5+message_index, message)
+            message_index += 1
     dungeon.fov_calc(player.x, player.y, FOV_RADIUS)
     # removed list creation
     #positions = [(x, y, lit, ch)
@@ -205,7 +246,7 @@ while proceed:
         processAction(player.x, player.y, a, [], dungeon.block)
     else:
         key_process(x, y, None, [], dungeon.block)
-    #processAction(player.x, player.y, action("o","open"), [], dungeon.block)
+        #processAction(player.x, player.y, action("o","open"), [], dungeon.block)
     term.refresh()
 
 # End Initiailiation
