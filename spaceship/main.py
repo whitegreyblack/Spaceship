@@ -90,7 +90,19 @@ def key_process(x, y, action, unit, blockables):
             if not (blocked or occupied or not outofbounds):
                 unit.move(x, y)
 
+def onlyOne(container):
+    return len(container) == 1
+
 def processAction(x, y, action, unit, blockables):
+    def open_door(openables):
+        if onlyOne(openables):
+            i, j = openables[0]
+            dungeon.open_door(i, j)
+            dungeon.unblock(i, j)
+        else:
+            term.puts(0, SCREEN_HEIGHT-2, "Which door?")
+            term.read()
+            
     print(x, y, action)
     space = namedtuple("Space", ("x","y"))
     def eightsquare(x, y):
@@ -110,6 +122,10 @@ def processAction(x, y, action, unit, blockables):
             i, j = openables[0]
             dungeon.open_door(i, j)
             dungeon.unblock(i, j)
+        else:
+            term.puts(0, SCREEN_HEIGHT-2, "which direction?")
+            term.refresh()
+            term.read()
     if action == "c":
         print(action, "closing")
         closeables = []
