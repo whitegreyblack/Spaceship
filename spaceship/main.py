@@ -25,9 +25,9 @@ def setup():
         "window: size={}x{}, cellsize={}x{}, title='Main Game'".format(
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
-            8,16))
-# ---------------------------------------------------------------------------------------------------------------------#
+            8,12))
 
+# END SETUP TOOLS
 # ---------------------------------------------------------------------------------------------------------------------#
 # Keyboard input
 
@@ -52,7 +52,9 @@ def key_in():
     return keydown(x, y, act)
 
 # should change to movement process
+walkBlock = "walked into {}"
 def key_process(x, y, action, unit, blockables):
+
     global player, glog
     unit_pos = [(unit.x, unit.y) for unit in units]
 
@@ -63,6 +65,7 @@ def key_process(x, y, action, unit, blockables):
 
     try:
         blocked = blockables[player.y + y][player.x + x]
+        ch = dungeon.square(player.x+x, player.y+y)
     except BaseException:
         blocked = False
 
@@ -70,12 +73,14 @@ def key_process(x, y, action, unit, blockables):
         player.move(x, y)
     else:
         if blocked:
-            glog.add("Walked into a wall")
-        # if blocked:
-        #     term.puts(0, MAP_HEIGHT - 2, "wall")
-        # if occupied:
-        #     term.puts(5, MAP_HEIGHT - 2, "occupied")
-        # term.refresh()
+            if ch == "+":
+                glog.add(walkBlock.format("a door"))
+            if ch == "#":
+                glog.add(walkBlock.format("a wall"))
+        elif occupied:
+            glog.add(walkBlock.format("someone"))
+        elif outofbounds:
+            glog.add(walkBlock.format("the edge of the map"))
 
     for unit in units:
         if unit.c != "grey":
@@ -100,24 +105,28 @@ def eightsquare(x, y):
 
 def actionOpen(x, y):
     def openDoor(openable):
+        glog.add("Opened door")
         i, j = openable
         dungeon.open_door(i, j)
         dungeon.unblock(i, j)
 
-    glog.add("open action")
     openables = []
     for i, j in eightsquare(x, y):
         if (i, j) != (x, y):
             if dungeon.square(i, j) == "+":
-                glog.add("openable object near you")
                 openables.append((i, j))
+                
     if not openables:
         glog.add("No openables near you")
+
     elif onlyOne(openables):
         openDoor(openables[0])
+
     else:
         glog.add("Which direction?")
+        term.refresh()  
         code = term.read()
+
         if code in key_movement:
             cx, cy = key_movement[code]
         elif code in num_movement:
@@ -175,15 +184,6 @@ def processAction(x, y, key, unit, blockables):
 
 # End Movement Functions
 # ---------------------------------------------------------------------------------------------------------------------#
-
-
-# ---------------------------------------------------------------------------------------------------------------------#
-# Map functions
-
-# End map functions
-# ---------------------------------------------------------------------------------------------------------------------#
-
-# ---------------------------------------------------------------------------------------------------------------------#
 # Graphic functions
 def draw():
     global COLOR_DARK_GROUND, COLOR_DARK_WALL
@@ -192,10 +192,13 @@ def draw():
         x, y, i, c = unit.draw()
         term.puts(x, y, ('[color={}]' + i + '[/color]').format(c))
 
+def log_screen():
+    messages = glog.write().messages
+    if messages:
+        for idx in range(len(messages)):
+            term.puts(0, SCREEN_HEIGHT-5+idx, messages[idx])
+    
 # End graphics functions
-# ---------------------------------------------------------------------------------------------------------------------#
-
-
 # ---------------------------------------------------------------------------------------------------------------------#
 # Start initializations
 setup()
@@ -224,11 +227,7 @@ proceed = True
 
 while proceed:
     term.clear()
-    message_index = 0
-    messages = glog.write().messages
-    if messages:
-        for idx in range(len(messages)):
-            term.puts(0, SCREEN_HEIGHT-5+idx, messages[idx])
+    log_screen()
     dungeon.fov_calc(player.x, player.y, FOV_RADIUS)
     # removed list creation
     #positions = [(x, y, lit, ch)
