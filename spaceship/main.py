@@ -112,7 +112,6 @@ def actionOpen(x, y):
                 glog.add("openable object near you")
                 openables.append((i, j))
     if not openables:
-        print("no openables near you")
         glog.add("No openables near you")
     elif onlyOne(openables):
         openDoor(openables[0])
@@ -227,12 +226,9 @@ while proceed:
     term.clear()
     message_index = 0
     messages = glog.write().messages
-    print(messages)
     if messages:
-        for message in messages:
-            print(message)
-            term.puts(0, SCREEN_HEIGHT-5+message_index, message)
-            message_index += 1
+        for idx in range(len(messages)):
+            term.puts(0, SCREEN_HEIGHT-5+idx, messages[idx])
     dungeon.fov_calc(player.x, player.y, FOV_RADIUS)
     # removed list creation
     #positions = [(x, y, lit, ch)
