@@ -11,6 +11,7 @@ from collections import namedtuple
 from namedlist import namedlist
 from maps import stringify, hextup, hexone
 from random import randint, choice
+from time import clock
 from spaceship.constants import SCREEN_HEIGHT, SCREEN_WIDTH
 # LIMIT_FPS = 30 -- later used in sprite implementation
 blocked = []
@@ -46,7 +47,7 @@ def key_in():
         x, y = num_movement[code]
     elif code in key_actions:
         act = key_actions[code].key
-        print(act)
+        #print(key_actions[code])
     else:
         print("unrecognized command")
     return keydown(x, y, act)
@@ -131,7 +132,10 @@ def interactDoor(x, y, key):
         openDoor(i, j) if opening else closeDoor(i, j)
 
     else:
+        term.clear()
         glog.add("Which direction?")
+        log_screen()
+        map_screen()
         term.refresh()
         code = term.read()
 
@@ -142,7 +146,7 @@ def interactDoor(x, y, key):
         else:
             return
 
-        if (x+cx, y+cy) in openables:
+        if (x+cx, y+cy) in reachables:
             openDoor(x+cx, y+cy) if opening else closeDoor(x+cx, y+cy)
 
 actions={
@@ -174,7 +178,11 @@ def log_screen():
     if messages:
         for idx in range(len(messages)):
             term.puts(0, SCREEN_HEIGHT-5+idx, messages[idx])
-    
+
+def map_screen():
+    for x, y, lit, ch in list(dungeon.output(player.x, player.y, units)):
+        term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
+    term.refresh()
 # End graphics functions
 # ---------------------------------------------------------------------------------------------------------------------#
 # Start initializations
@@ -209,17 +217,16 @@ while proceed:
     # removed list creation
     #positions = [(x, y, lit, ch)
     #             for x, y, lit, ch in dungeon.output(player.x, player.y, units)]
-    for x, y, lit, ch in list(dungeon.output(player.x, player.y, units)):
-        term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
-        term.puts(0, SCREEN_HEIGHT-1, "{} {}".format(player.x, player.y))
-    term.refresh()
+    map_screen()
     x, y, a = key_in()
     if a:
         processAction(player.x, player.y, a)
     else:
         key_process(x, y, None, [], dungeon.block)
+    while term.has_input():
+        term.read()
         #processAction(player.x, player.y, action("o","open"), [], dungeon.block)
-    term.refresh()
-
+    #term.refresh()
+    #print(clock()-t1)
 # End Initiailiation
 # ---------------------------------------------------------------------------------------------------------------------#

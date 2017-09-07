@@ -165,10 +165,7 @@ class Map:
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.block = [[self.data[y][x] in ("#", "+",) for x in range(self.width)] for y in range(self.height)]
         self.stone = gradient(self.width, self.height, '.', ["#"])
-        output(self.stone)
         self.grass = gradient(self.width, self.height, '.', [",",";",])
-        output(self.grass)
-        print(self.height, self.width)
         self.flag = 0
 
     @staticmethod
@@ -284,8 +281,10 @@ class Map:
             positions[unit.pos()] = unit
         # width should total 80 units
         for x in range(cx, cx+(80 if self.width > 80 else self.width)):
+
             # height should total 24 units
             for y in range(cy+(24 if self.height > 24 else self.height)):
+                
                 lit = self.lit(x, y)
                 if x == X and y == Y:
                     ch = "@"

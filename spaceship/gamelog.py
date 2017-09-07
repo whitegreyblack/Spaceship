@@ -53,7 +53,7 @@ class GameLogger:
         """
         if self.messages and message in self.messages[-1]:
             self.messages.pop(-1)
-            print("same message")
+            #print("same message")
             self.counter += 1
             message += f'(x{self.counter})'
         else:
