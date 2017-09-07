@@ -274,16 +274,19 @@ class Map:
 
         cx = scroll(X, self.width if self.width <= 80 else 80, self.width)
         cy = scroll(Y, self.height if self.height <= 24 else 24, self.height)
+        uw = 80 if self.width > 80 else self.width
+        uh = 24 if self.height > 24 else self.height
         fog = "#ff404040"
-
+        cxe = cx + uw
+        cye = cy + uh
         positions = {}
         for unit in units:
             positions[unit.pos()] = unit
         # width should total 80 units
-        for x in range(cx, cx+(80 if self.width > 80 else self.width)):
+        for x in range(cx, cxe):
 
             # height should total 24 units
-            for y in range(cy+(24 if self.height > 24 else self.height)):
+            for y in range(cy, cye):
                 
                 lit = self.lit(x, y)
                 if x == X and y == Y:

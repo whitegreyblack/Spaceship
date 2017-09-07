@@ -26,7 +26,7 @@ def setup():
         "window: size={}x{}, cellsize={}x{}, title='Main Game'".format(
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
-            8,12))
+            8,10))
 
 # END SETUP TOOLS
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -183,9 +183,11 @@ def map_screen():
     for x, y, lit, ch in list(dungeon.output(player.x, player.y, units)):
         term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
     term.refresh()
+
 # End graphics functions
 # ---------------------------------------------------------------------------------------------------------------------#
 # Start initializations
+
 setup()
 glog = GameLogger()
 # global game variables
@@ -195,8 +197,11 @@ MAP_FACTOR = 2
 COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
 COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
 #px, py = SCREEN_WIDTH//2, SCREEN_HEIGHT//2
-px, py = 14, 4
+px, py = 0, 55
+#px, py = 0, 0
 dungeon = Map(stringify("./assets/testmap_colored.png"))
+# units = Map.appendUnitList("./unitlist/test_map_colored.png")
+# map = Map(parse("testmap.dat"))
 #dungeon = Map(stringify("./assets/testmap.png"))
 player = Object(px, py, '@')
 npc = Object(7, 7, '@', 'orange')
@@ -208,7 +213,6 @@ guard2 = Object(77, 17, "@", 'grey')
 guard4 = Object(67, 17, '@', 'grey')
 units = [npc, guard1, guard2, guard3, guard4, npc1, npc2]
 proceed = True
-
 
 while proceed:
     term.clear()
@@ -223,8 +227,8 @@ while proceed:
         processAction(player.x, player.y, a)
     else:
         key_process(x, y, None, [], dungeon.block)
-    while term.has_input():
-        term.read()
+    # while term.has_input():
+    #     term.read()
         #processAction(player.x, player.y, action("o","open"), [], dungeon.block)
     #term.refresh()
     #print(clock()-t1)
