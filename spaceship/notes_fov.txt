@@ -1,6 +1,7 @@
-# notes -- fov
+# File: Notes.txt
+# Auth: Sam Whang
 
-# Radius and the Double Circles
+# Radius and the Double Circles -- Aug 27
 Should have a double circle. Outside and an inner circle. Inside circle views 
 all three attributes (character of terrain, light visibility and unit shown).
 Each level from the inner torwards the outside circle lowers the intensity of
@@ -15,3 +16,12 @@ does not impact the game or should not impact the game so much. However the
 walls will remain permanent after they have had their fog of war lifted. The
 color of their visibility should be the lowest light level before completely
 dark.
+
+
+# Lights and Multiple LOS -- Sept 7
+I want to add light sources to my map. Maybe to allow for lamps and firepits
+in the future. Overall goal is to get them working so I can start building
+spaceship vehicle interiors. Multiple light sources can add ominence and 
+fanciness during town/harbor visits and fear/safety during monster encounters.
+Hopefully it won't take too much time. This is more of a extra for this project
+since I have not yet finished the basics
