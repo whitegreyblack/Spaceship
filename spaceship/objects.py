@@ -167,6 +167,8 @@ class Map:
         self.stone = gradient(self.width, self.height, '.', ["#"])
         self.grass = gradient(self.width, self.height, '.', [",",";",])
         self.flag = 0
+        self.map_display_width = min(self.width, sw-20)
+        self.map_display_height = min(self.height, sh-4)
 
     @staticmethod
     def dimensions(data):
@@ -176,26 +178,31 @@ class Map:
         width = max(len(col) for col in data)
         return data, height, width
 
-
     def square(self, x, y):
         return self.data[y][x]
 
+
     def openable(self, x, y, ch):
         return self.square(x,y) == "+"
+
 
     def open_door(self, x, y):
         if self.square(x, y) == "+":
             self.data[y][x] = "/"
     
+
     def close_door(self, x, y):
         if self.square(x, y) == "/":
             self.data[y][x] = "+"
 
+
     def reblock(self, x, y):
         self.block[y][x] = True
 
+
     def unblock(self, x, y):
         self.block[y][x] = False
+
 
     def blocked(self, x, y):
         return (x < 0 or y < 0 or x >= self.width 
@@ -229,6 +236,7 @@ class Map:
         radius_squared = radius * radius
 
         for j in range(row, radius+1):
+
             dx, dy = -j-1, -j
             blocked = False
             while dx <= 0:
@@ -264,6 +272,10 @@ class Map:
 
     def output(self, X, Y, units):
         def scroll(p, s, m):
+            """@p: current position of player 1D
+            @s: size of the screen
+            @m: size of the map           
+            """
             hs = s//2
             if p < hs:
                 return 0
@@ -272,16 +284,17 @@ class Map:
             else:
                 return p - hs
 
-        cx = scroll(X, self.width if self.width <= 80 else 80, self.width)
-        cy = scroll(Y, self.height if self.height <= 24 else 24, self.height)
-        uw = 80 if self.width > 80 else self.width
-        uh = 24 if self.height > 24 else self.height
-        fog = "#ff404040"
-        cxe = cx + uw
-        cye = cy + uh
+        cx = scroll(X, self.map_display_width, self.width)
+        cy = scroll(Y, self.map_display_height, self.height)
+        cxe = cx + self.map_display_width
+        cye = cy + self.map_display_height
+
+        fog = "#ff202020"
         positions = {}
+
         for unit in units:
             positions[unit.pos()] = unit
+
         # width should total 80 units
         for x in range(cx, cxe):
 
@@ -292,25 +305,48 @@ class Map:
                 if x == X and y == Y:
                     ch = "@"
                     lit = "white"
+
                 elif (x, y) in positions.keys() and lit:
                     unit = positions[(x,y)]
                     ch = unit.i
                     lit = unit.c
+
                 else:
                     ch = self.square(x, y)
-                    if ch == ".":
-                        #_, color, _, _ = self.stone[y][x]
-                        lit = "white" if lit else fog
-                        #lit = element.hexone(color) if lit else fog
+                    # then try to color according to block type
+                    # color the floor
+                    if ch in (".", ":",):
+                        _, color, _, _ = self.stone[y][x]
+                        #lit = "white" if lit else fog
+                        lit = hexone(color) if lit else fog
+
+                    # color some grasses
                     if ch in (",",";","!",):
                         ch, color, _, _ = self.grass[y][x]
                         lit = hextup(color,5,2,5) if lit else fog
+
+                    # color the water
                     if ch == "~":
                         lit = choice(["#ff6666ff", "#ff3333ff", "#ff9999ff"]) if lit else fog
+
+                    # color the doors
                     if ch in ("+", "/",):
                         lit = "#ff994C00" if lit else fog
+
+                    # color the walls
                     if ch == "#":
-                        #_, color, _, _ = self.stone[y][x]
-                        #lit = element.hexone(color) if lit else fog
-                        lit = "white" if lit else fog
+                        _, color, _, _ = self.stone[y][x]
+                        lit = hexone(color) if lit else fog
+                        #lit = "white" if lit else fog
+                    
+                    if ch == "%":
+                        _, color, _, _ = self.stone[y][x]
+                        lit = hexone(color) if lit else fog
+                
+                    # street border
+                    if ch == "=":
+                        _, color, _, _ = self.grass[y][x]
+                        lit = hextup(color, 3,3,3) if lit else fog
+
+                # all said and done -- return by unit block        
                 yield (x-cx, y-cy, lit, ch)

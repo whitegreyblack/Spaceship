@@ -26,7 +26,7 @@ def setup():
         "window: size={}x{}, cellsize={}x{}, title='Main Game'".format(
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
-            8,10))
+            16,16))
 
 # END SETUP TOOLS
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -180,6 +180,10 @@ def log_screen():
             term.puts(0, SCREEN_HEIGHT-5+idx, messages[idx])
 
 def map_screen():
+    """ Logic:
+            Should first print map in gray/black
+            Then print units/interactables?
+            Finally light sources and player?"""
     for x, y, lit, ch in list(dungeon.output(player.x, player.y, units)):
         term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
     term.refresh()
@@ -191,8 +195,9 @@ def map_screen():
 setup()
 glog = GameLogger()
 # global game variables
-FOV_RADIUS = 25
-MAP_WIDTH, MAP_HEIGHT = 24, 48
+FOV_RADIUS = 10
+#MAP_WIDTH, MAP_HEIGHT = 24, 48
+
 MAP_FACTOR = 2
 COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
 COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
@@ -218,6 +223,7 @@ while proceed:
     term.clear()
     log_screen()
     dungeon.fov_calc(player.x, player.y, FOV_RADIUS)
+    dungeon.fov_calc(40, 40, FOV_RADIUS)
     # removed list creation
     #positions = [(x, y, lit, ch)
     #             for x, y, lit, ch in dungeon.output(player.x, player.y, units)]

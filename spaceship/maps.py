@@ -2,42 +2,52 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
-
+from spaceship.action import num_movement
 from bearlibterminal import terminal as term
 from PIL import Image, ImageDraw
 from functools import lru_cache
 from random import randint, choice
 from spaceship.tools import bresenhams
 from math import hypot
+from copy import deepcopy
 """Maps file holds template functions that return randomized data maps used\
 in creating procedural worlds"""
 
 # Key-value pairs are mapped from characters to color tuples
 picturfy_chars = {
     "#": (0,0,0),
+    ":": (136, 0, 21),
+    "^": (255, 242, 0),
     ",": (34, 177, 76),
     "+": (185, 122, 87),
     "~": (112, 146, 190),
     ".": (127, 127, 127),
     ".": (255, 255, 255),
-
+    "%": (195, 195, 195),
 }
 
 # Key-Value pairs are tuples to tuple pertaining to color and character mapping
 stringify_chars = { 
-    (0, 0, 0): ("#", "89"),
-    (34, 177, 76): (",", "71"),
-    (185, 122, 87): ("+", "90"),
-    (127, 127, 127): (".", "72"),
-    (112, 146, 190): ("~", "91"),
-    (255, 255, 255): (".", "92"),
+    (0, 0, 0): "#",
+    (136, 0, 21): ":",
+    (255, 242, 0): "^",
+    (34, 177, 76): ",",
+    (185, 122, 87): "+",
+    (127, 127, 127): ".",
+    (112, 146, 190): "~",
+    (255, 255, 255): ".",
+    (195, 195, 195): "%",
 }
 
-def picturfy(string, filename="picturfy-img.png", folder="./", asciify=False, debug=False):
-    '''Takes in a string map and two positional parameters to determine
-    output. If asciify is specified then returns color codes reflective
-    of their ascii character code else returns color based on regular
-    character code. Debug is specified for testing and output viewing'''
+unicode_blocks = {
+
+}
+
+def picturfy(string, filename="picturfy-img.png", folder="./", debug=False):
+    """Takes in a list of string lists and three positional parameters.
+    Filename and folder are used to determine the output path after 
+    function execution. Debug is used to print testing and terminal
+    output. The inverse function to stringify and asciify"""
 
     mapping = string.split('\n')
     h, w = len(mapping), len(mapping[0])
@@ -54,11 +64,10 @@ def picturfy(string, filename="picturfy-img.png", folder="./", asciify=False, de
     return folder+filename
 
 
-def stringify(string, asciify=False, debug=False):
-    '''Takes in a file location string and two positional parameters
-    to determine output. If asciify is specified then returns ascii
-    character codes for use in map construction else outputs regular
-    character text. Debug is specified for testing and output viewing'''
+def stringify(string, debug=False):
+    """Takes in a file location string and a bool for debug
+    to determine output. Sister function to asciify. Uses 
+    only keyboard accessible characters in the map."""
 
     lines = []
     colors = set()
@@ -73,11 +82,14 @@ def stringify(string, asciify=False, debug=False):
             # sometimes alpha channel is included so test for all values first
             try:
                 r, g, b, _ = pixels[i, j]
-            except BaseException:
+            except ValueError:
                 r, g, b = pixels[i, j]
             if (r, g, b) not in colors:
                 colors.add((r, g, b))
-            line += stringify_chars[(r, g, b)][int(asciify)]
+            try:
+                line += stringify_chars[(r, g, b)][0]
+            except KeyError:
+                print((r, g, b))
         lines.append(line)
 
     if debug:
@@ -86,6 +98,53 @@ def stringify(string, asciify=False, debug=False):
 
     return "\n".join(lines)
 
+def asciify(string, debug=False):
+    """Takes in a file location string and a debug parameter
+    to determine output. Sister function to stringify. Uses
+    unicode characters provided they are available in blt."""
+    lines = []
+    colors = set()
+    with Image.open(string) as img:
+        pixels = img.load()
+        w, h = img.size
+    
+    # first pass -- evaluates and transforms colors into string characters
+    # second pass -- evaluates and transforms ascii characters into unicode
+    for j in range(h):
+        line = []
+        for i in range(w):
+            try:
+                r, g, b, _ = pixels[i, j]
+            except ValueError:
+                r, g, b = pixels[i, j]
+            if (r, g, b) not in colors:
+                colors.add((r,g,b))
+            try:
+                line.append(stringify_chars[(r, g, b)][1])
+            except KeyError:
+                print((r, g, b))
+        lines.append(line)
+
+    if debug:
+        for i in range(h):
+            print(lines[h])
+            print(colors)
+
+    # return evaluate_block(lines, w, h)
+
+    # returns a 2D array/map
+    return lines 
+
+def evaluate_block(lines, w, h):
+    """Helper function for asciify which returns the same sized map
+    but with the indices holding unicode character codes"""
+    def evalValue(x, y):
+        pass
+    unicodes = deepcopy(lines)
+    for i in range(h):
+        for j in range(w):
+            if lines[i][j] == "#":
+                unicodes[i][j] = evalValue(j, i)
 
 def table(ch, val, x, y):
     """Returns a 2d list of lists holding a four element tuple"""
