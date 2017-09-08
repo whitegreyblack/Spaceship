@@ -39,9 +39,31 @@ stringify_chars = {
     (195, 195, 195): ":",
 }
 
-unicode_blocks = {
-
+unicode_blocks_thin = {
+    0: "25D9",
+    1: "25D9",
+    2: "25D9",
+    #3: "255A",
+    3: "25D9",
+    4: "25D9",
+    5: "2551",
+    #6: "2554",
+    6: "25D9",
+    7: "2560",
+    8: "25D9",
+#   9: "255D",
+    9: "25D9",
+    10: "2550",
+    11: "2569",
+#   12: "2557",
+    12: "25D9",
+    13: "2562",
+    14: "2566",
+    15: "256C",
 }
+
+def toInt(hexval):
+    return int(hexval, 16)
 
 def picturfy(string, filename="picturfy-img.png", folder="./", debug=False):
     """Takes in a list of string lists and three positional parameters.
@@ -102,7 +124,7 @@ def asciify(string, debug=False):
     """Takes in a file location string and a debug parameter
     to determine output. Sister function to stringify. Uses
     unicode characters provided they are available in blt."""
-    lines = []
+    array = []
     colors = set()
     with Image.open(string) as img:
         pixels = img.load()
@@ -111,7 +133,7 @@ def asciify(string, debug=False):
     # first pass -- evaluates and transforms colors into string characters
     # second pass -- evaluates and transforms ascii characters into unicode
     for j in range(h):
-        line = []
+        column = []
         for i in range(w):
             try:
                 r, g, b, _ = pixels[i, j]
@@ -120,45 +142,43 @@ def asciify(string, debug=False):
             if (r, g, b) not in colors:
                 colors.add((r,g,b))
             try:
-                line.append(stringify_chars[(r, g, b)][1])
+                column.append(stringify_chars[(r, g, b)])
             except KeyError:
                 print((r, g, b))
-        lines.append(line)
+        array.append(column)
 
     if debug:
         for i in range(h):
-            print(lines[h])
-            print(colors)
+            print("".join(array[i]))
+        print(colors)
 
     # return evaluate_block(lines, w, h)
 
     # returns a 2D array/map
-    return lines 
+    return array
 
-def evaluate_block(lines, w, h):
+def evaluate_blocks(data, w, h, array=False):
     """Helper function for asciify which returns the same sized map
     but with the indices holding unicode character codes"""
     def evalValue(x, y):
         bit_value=0
-        try:
-            for i in range(-1, 2):
-                for j in range(-1, 2):
-                    char = unicodes[y+i][x+j]
-                    
-                    if char == "#":
-                        pass
-                    if char == "+":
-                        pass
-                    if char == "o":
-                        pass
-        except IndexError:
-            pass
-    unicodes = deepcopy(lines)
+        increment=1
+        debug=11
+        for i, j in ((0,-1), (1,0), (0,1), (-1, 0)):
+                try:
+                    char = data[y+j][x+i]
+                except IndexError:
+                    char = ""
+                if char in ("#", "o", "+"):
+                    bit_value += increment
+                increment *= 2
+        return bit_value
+
+    unicodes = deepcopy(data)
     for i in range(h):
         for j in range(w):
-            if lines[i][j] == "#":
-                unicodes[i][j] = evalValue(j, i)
-        
+            if data[i][j] == "#":
+                unicodes[i][j] = toInt(unicode_blocks_thin[evalValue(j, i)])
     return unicodes
 
 def table(ch, val, x, y):
@@ -200,13 +220,13 @@ def output(data):
     print(characters)
 
 
-def dimensions(data):
+def dimensions(data, array=False):
     """Takes in a string map and returns a 2D list map and map dimensions"""
-    data = [[col for col in row] for row in data.split('\n')]
+    if not array:
+        data = [[col for col in row] for row in data.split('\n')]
     height = len(data)
     width = max(len(col) for col in data)
     return data, height, width
-
 
 def world(x, y, pos=50, iterations=20):
     """Returns a more realistic world map of size (X, y)
@@ -313,10 +333,10 @@ def gradient(x, y, d, c, p=100, i=100):
         ng = mm(og, distance(abs(x-i), abs(y-j) * factor))
         data[j][i] = (choice(c), ng if og > ng else mid(ng, og), i, j)
 
-    factor = 5
-    chance = 8
+    factor = 3
+    chance = 5
     w, h = x, y
-    data = table(".", 200, x, y)
+    data = table(".", 250, x, y)
 
     for _ in range(p):
         x, y = randint(0, w), randint(0, h)

@@ -26,7 +26,7 @@ def setup():
         "window: size={}x{}, cellsize={}x{}, title='Main Game'".format(
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
-            8,12))
+            10,12))
 
 # END SETUP TOOLS
 # ---------------------------------------------------------------------------------------------------------------------#
