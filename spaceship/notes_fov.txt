@@ -24,4 +24,6 @@ in the future. Overall goal is to get them working so I can start building
 spaceship vehicle interiors. Multiple light sources can add ominence and 
 fanciness during town/harbor visits and fear/safety during monster encounters.
 Hopefully it won't take too much time. This is more of a extra for this project
-since I have not yet finished the basics
+since I have not yet finished the basics. So how should I start? First we can
+decouple line of sight from map and create a light/shadow class for the map
+class to hold instead of using line of sight in the map class.

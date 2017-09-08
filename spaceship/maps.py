@@ -16,27 +16,27 @@ in creating procedural worlds"""
 # Key-value pairs are mapped from characters to color tuples
 picturfy_chars = {
     "#": (0,0,0),
-    ":": (136, 0, 21),
-    "^": (255, 242, 0),
+    "%": (136, 0, 21),
+    "o": (255, 242, 0),
     ",": (34, 177, 76),
     "+": (185, 122, 87),
     "~": (112, 146, 190),
     ".": (127, 127, 127),
     ".": (255, 255, 255),
-    "%": (195, 195, 195),
+    ":": (195, 195, 195),
 }
 
 # Key-Value pairs are tuples to tuple pertaining to color and character mapping
 stringify_chars = { 
     (0, 0, 0): "#",
-    (136, 0, 21): ":",
-    (255, 242, 0): "^",
+    (136, 0, 21): "%",
+    (255, 242, 0): "o",
     (34, 177, 76): ",",
     (185, 122, 87): "+",
     (127, 127, 127): ".",
     (112, 146, 190): "~",
     (255, 255, 255): ".",
-    (195, 195, 195): "%",
+    (195, 195, 195): ":",
 }
 
 unicode_blocks = {
@@ -87,7 +87,7 @@ def stringify(string, debug=False):
             if (r, g, b) not in colors:
                 colors.add((r, g, b))
             try:
-                line += stringify_chars[(r, g, b)][0]
+                line += stringify_chars[(r, g, b)]
             except KeyError:
                 print((r, g, b))
         lines.append(line)
@@ -139,12 +139,27 @@ def evaluate_block(lines, w, h):
     """Helper function for asciify which returns the same sized map
     but with the indices holding unicode character codes"""
     def evalValue(x, y):
-        pass
+        bit_value=0
+        try:
+            for i in range(-1, 2):
+                for j in range(-1, 2):
+                    char = unicodes[y+i][x+j]
+                    
+                    if char == "#":
+                        pass
+                    if char == "+":
+                        pass
+                    if char == "o":
+                        pass
+        except IndexError:
+            pass
     unicodes = deepcopy(lines)
     for i in range(h):
         for j in range(w):
             if lines[i][j] == "#":
                 unicodes[i][j] = evalValue(j, i)
+        
+    return unicodes
 
 def table(ch, val, x, y):
     """Returns a 2d list of lists holding a four element tuple"""

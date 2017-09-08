@@ -26,7 +26,7 @@ def setup():
         "window: size={}x{}, cellsize={}x{}, title='Main Game'".format(
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
-            16,16))
+            8,12))
 
 # END SETUP TOOLS
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -84,18 +84,18 @@ def key_process(x, y, action, unit, blockables):
             glog.add(walkBlock.format("the edge of the map"))
 
     for unit in units:
-        if unit.c != "grey":
-            x, y = 0, 0
-            if randint(0, 1):
-                x, y = num_movement[choice(list(num_movement.keys()))]
-            try:
-                blocked = blockables[unit.y+y][unit.x+x]
-            except:
-                blocked = False
-            occupied = (unit.x + x, unit.y + y) in unit_pos or (unit.x+x, unit.y+y) == (player.x, player.y)
-            outofbounds = 0 <= unit.x + x < len(blockables[0]) and 0 <= unit.y + y < len(blockables)
-            if not (blocked or occupied or not outofbounds):
-                unit.move(x, y)
+   #     if unit.c != "grey":
+        x, y = 0, 0
+        if randint(0, 1):
+            x, y = num_movement[choice(list(num_movement.keys()))]
+        try:
+            blocked = blockables[unit.y+y][unit.x+x]
+        except:
+            blocked = False
+        occupied = (unit.x + x, unit.y + y) in unit_pos or (unit.x+x, unit.y+y) == (player.x, player.y)
+        outofbounds = 0 <= unit.x + x < len(blockables[0]) and 0 <= unit.y + y < len(blockables)
+        if not (blocked or occupied or not outofbounds):
+            unit.move(x, y)
 
 def onlyOne(container):
     return len(container) == 1
@@ -185,6 +185,7 @@ def map_screen():
             Then print units/interactables?
             Finally light sources and player?"""
     for x, y, lit, ch in list(dungeon.output(player.x, player.y, units)):
+        # term.bkcolor(bgkd)
         term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
     term.refresh()
 
@@ -211,11 +212,11 @@ dungeon = Map(stringify("./assets/testmap_colored.png"))
 player = Object(px, py, '@')
 npc = Object(7, 7, '@', 'orange')
 npc1 = Object(5, 15, '@', 'orange')
-npc2 = Object(16, 5, '@', 'orange')
-guard3 = Object(77, 11, '@', 'grey')
-guard1 = Object(77, 12, "@", 'grey')
-guard2 = Object(77, 17, "@", 'grey')
-guard4 = Object(67, 17, '@', 'grey')
+npc2 = Object(0, 56, '@', 'orange')
+guard3 = Object(77, 11, '@', 'orange')
+guard1 = Object(77, 12, "@", 'orange')
+guard2 = Object(77, 17, "@", 'orange')
+guard4 = Object(67, 17, '@', 'orange')
 units = [npc, guard1, guard2, guard3, guard4, npc1, npc2]
 proceed = True
 
@@ -223,7 +224,6 @@ while proceed:
     term.clear()
     log_screen()
     dungeon.fov_calc(player.x, player.y, FOV_RADIUS)
-    dungeon.fov_calc(40, 40, FOV_RADIUS)
     # removed list creation
     #positions = [(x, y, lit, ch)
     #             for x, y, lit, ch in dungeon.output(player.x, player.y, units)]

@@ -161,6 +161,7 @@ class Map:
             ]
     colors_block = ["#ffc0c0c0", "#ffa0a0a0", "#ff808080", "#ff606060", "#ff404040"]
     def __init__(self, data):
+        self.map_type = "town"
         self.data, self.height, self.width = self.dimensions(data)
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.block = [[self.data[y][x] in ("#", "+",) for x in range(self.width)] for y in range(self.height)]
@@ -212,6 +213,8 @@ class Map:
     def lit(self, x, y):
         return self.light[y][x] == self.flag
 
+    def town(self):
+        return self.map_type is "town"
 
     def set_lit(self, x, y):
         if 0 <= x < self.width and 0 <= y < self.height:
@@ -289,7 +292,8 @@ class Map:
         cxe = cx + self.map_display_width
         cye = cy + self.map_display_height
 
-        fog = "#ff202020"
+        fg_fog = "#ff202020"
+        bg_fog = "#ff000000"
         positions = {}
 
         for unit in units:
@@ -300,13 +304,15 @@ class Map:
 
             # height should total 24 units
             for y in range(cy, cye):
-                
+                town = self.town()
                 lit = self.lit(x, y)
+                visible = town or lit
                 if x == X and y == Y:
                     ch = "@"
                     lit = "white"
+                    ## bkgd = "black"
 
-                elif (x, y) in positions.keys() and lit:
+                elif (x, y) in positions.keys() and visible:
                     unit = positions[(x,y)]
                     ch = unit.i
                     lit = unit.c
@@ -316,37 +322,45 @@ class Map:
                     # then try to color according to block type
                     # color the floor
                     if ch in (".", ":",):
-                        _, color, _, _ = self.stone[y][x]
+                        #_, color, _, _ = self.stone[y][x]
                         #lit = "white" if lit else fog
-                        lit = hexone(color) if lit else fog
+                        #lit = hexone(color//2) if visible else fg_fog
+                        lit = "grey" if visible else fg_fog
+                        ## bkgd = "black" if not lit else bg_fog
 
                     # color some grasses
                     if ch in (",",";","!",):
                         ch, color, _, _ = self.grass[y][x]
-                        lit = hextup(color,5,2,5) if lit else fog
+                        lit = hextup(color,5,2,5) if visible else fg_fog
+                        # bkgd = hextup(color, 5,3,5) if lit else bg_fog
 
                     # color the water
                     if ch == "~":
-                        lit = choice(["#ff6666ff", "#ff3333ff", "#ff9999ff"]) if lit else fog
+                        lit, _ = choice([
+                            ("#ff3333ff", "#ff666ff"),
+                            ("#ff6666ff", "#ff999ff"),
+                            ("#ff9999ff", "#ff999ff")]) if visible else (fg_fog, bg_fog)
 
                     # color the doors
                     if ch in ("+", "/",):
-                        lit = "#ff994C00" if lit else fog
-
+                            lit = "#ff994C00" if visible else fg_fog
+                        # bkgd = "black"
                     # color the walls
                     if ch == "#":
                         _, color, _, _ = self.stone[y][x]
-                        lit = hexone(color) if lit else fog
+                        lit = hexone(color) if visible else fg_fog
+                        # bkgd = "grey" if lit else bg_fog
                         #lit = "white" if lit else fog
                     
                     if ch == "%":
                         _, color, _, _ = self.stone[y][x]
-                        lit = hexone(color) if lit else fog
-                
+                        #lit = hexone(color//2) if lit else fg_fog
+                        lit = hextup(color, 3,5,5) if visible else fg_fog
+                        # bkgd = "grey" if lit else bg_fog
                     # street border
                     if ch == "=":
                         _, color, _, _ = self.grass[y][x]
-                        lit = hextup(color, 3,3,3) if lit else fog
-
+                        lit = hextup(color, 3,3,3) if visible else fg_fog
+                        # bkgd = hextup(color, 4,4,4) if lit else bg_fog
                 # all said and done -- return by unit block        
                 yield (x-cx, y-cy, lit, ch)
