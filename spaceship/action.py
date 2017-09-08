@@ -50,4 +50,5 @@ key_actions={
     term.TK_O: action("o", "open"),
     term.TK_C: action("c", "close"),
     term.TK_T: action("t", "talk"),
+    term.TK_I: action("i", "inventory")
 }

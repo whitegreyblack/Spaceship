@@ -289,7 +289,7 @@ def world(x, y, pos=50, iterations=20):
 
     return data    
 
-def gradient(x, y, d, c, p=50, i=100):
+def gradient(x, y, d, c, p=100, i=100):
     """Returns a list of lists with symbols and color gradient tuple"""
 
     @lru_cache(maxsize=None)

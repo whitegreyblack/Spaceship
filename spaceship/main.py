@@ -47,7 +47,6 @@ def key_in():
         x, y = num_movement[code]
     elif code in key_actions:
         act = key_actions[code].key
-        #print(key_actions[code])
     else:
         print("unrecognized command")
     return keydown(x, y, act)
@@ -97,6 +96,28 @@ def key_process(x, y, action, unit, blockables):
         if not (blocked or occupied or not outofbounds):
             unit.move(x, y)
 
+def openInventory(x, y, key):
+    glog.add("opeining inventory")
+    playscreen = False
+
+    current_range = 0
+    while True:
+        term.clear()
+        log_screen()
+        term.puts(2, 1, "[color=white]Inventory")
+        term.refresh()
+        code = term.read()
+        if code in (term.TK_ESCAPE, term.TK_I,):
+            break
+        elif code == term.TK_UP:
+            if current_range > 0: current_range -= 1
+        elif code == term.TK_DOWN:
+            if current_range < 10: current_range += 1
+    else:
+        glog.add("Closing inventoryy")
+    term.clear()
+    log_screen()
+    map_screen()
 def onlyOne(container):
     return len(container) == 1
 
@@ -152,11 +173,10 @@ def interactDoor(x, y, key):
 actions={
     'o': interactDoor,
     'c': interactDoor,
+    'i': openInventory,
 }
 
-def processAction(x, y, key):
-    global player, glog
-                        
+def processAction(x, y, key):                        
     try:
         actions[key](x, y, key)
     except KeyError:
@@ -177,7 +197,7 @@ def log_screen():
     messages = glog.write().messages
     if messages:
         for idx in range(len(messages)):
-            term.puts(0, SCREEN_HEIGHT-5+idx, messages[idx])
+            term.puts(0, SCREEN_HEIGHT-4+idx, messages[idx])
 
 def map_screen():
     """ Logic:
@@ -205,7 +225,7 @@ COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
 #px, py = SCREEN_WIDTH//2, SCREEN_HEIGHT//2
 px, py = 0, 55
 #px, py = 0, 0
-dungeon = Map(stringify("./assets/testmap_colored.png"))
+dungeon = Map(stringify("./assets/testmap_colored_flipped.png"))
 # units = Map.appendUnitList("./unitlist/test_map_colored.png")
 # map = Map(parse("testmap.dat"))
 #dungeon = Map(stringify("./assets/testmap.png"))
