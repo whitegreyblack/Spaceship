@@ -336,7 +336,7 @@ def gradient(x, y, d, c, p=100, i=100):
     factor = 3
     chance = 5
     w, h = x, y
-    data = table(".", 250, x, y)
+    data = table(d, 250, x, y)
 
     for _ in range(p):
         x, y = randint(0, w), randint(0, h)
@@ -359,6 +359,7 @@ def gradient(x, y, d, c, p=100, i=100):
                 if randint(0, 1):
                     j -= 1
                     replace(x, y, i, j)
+        
                 if randint(-chance+1, 1):
                     i, j = i-1, j-1
                     replace(x, y, i, j)

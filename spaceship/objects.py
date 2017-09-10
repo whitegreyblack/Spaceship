@@ -166,7 +166,7 @@ class Map:
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.block = [[self.data[y][x] in ("#", "+",) for x in range(self.width)] for y in range(self.height)]
         self.stone = gradient(self.width, self.height, '.', ["#"])
-        self.grass = gradient(self.width, self.height, '.', [",",";","`","!"])
+        self.grass = gradient(self.width, self.height, '`', [",",";","!"])
         self.flag = 0
         self.map_display_width = min(self.width, sw-20)
         self.map_display_height = min(self.height, sh-4)
@@ -344,7 +344,8 @@ class Map:
                     # color the doors
                     if ch in ("+", "/",):
                             lit = "#ff994C00" if visible else fg_fog
-                        # bkgd = "black"
+                        # bkgd = "black"i
+
                     # color the walls
                     if ch == "#":
                         _, color, _, _ = self.stone[y][x]
@@ -357,6 +358,7 @@ class Map:
                         #lit = hexone(color//2) if lit else fg_fog
                         lit = hextup(color, 3,5,5) if visible else fg_fog
                         # bkgd = "grey" if lit else bg_fog
+                   
                     # street border
                     if ch == "=":
                         _, color, _, _ = self.grass[y][x]
