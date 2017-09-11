@@ -203,11 +203,11 @@ def blender(hex1, hex2, n=10):
         return [int(i, 16) for i in c]
 
     def blend(ca, cb, n, i):
-        value = abs(ca-cb)
+        value = ca - cb
         value /= n
-        value *= i+1
+        value *= i
         value = round(value)
-        value = hex(min(ca,cb)+value)
+        value = hex(cb+value)
         value = value.replace("0x", "")
         #value = hex(((abs(ca-cb)//n))*i).replace("0x", "")
         return value
@@ -215,16 +215,18 @@ def blender(hex1, hex2, n=10):
     def mash(color):
         return "#ff"+"".join(map(lambda x: "0"+str(x) if len(str(x)) < 2 else str(x), color))
 
-    colorA = transform(splitter(hex1))
-    colorB = transform(splitter(hex2))
-    colorS = [mash(splitter(hex2.replace("#","")))]
+    colorA = transform(splitter(hex2))
+    colorB = transform(splitter(hex1))
+    colorS = [mash(splitter(hex1.replace("#","")))]
 
     for i in range(n-2):
         color=[]
         for j in range(3):
-            color.append(blend(colorA[j], colorB[j], n, i))
+            color.append(blend(colorA[j], colorB[j], n-2, i+1))
         colorS.append(mash(color))
-    colorS.append(mash(splitter(hex1.replace("#",""))))
+
+    colorS.append(mash(splitter(hex2.replace("#",""))))
+    
     return colorS
 
 def gradient(hex1, hex2, n):
