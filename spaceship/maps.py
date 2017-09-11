@@ -187,28 +187,45 @@ def table(ch, val, x, y):
     return [[(ch, val, i, j) for i in range(x)] for j in range(y)]
 
 
-def blender(hex1, hex2):
+def blender(hex1, hex2, n=10):
     """blender holds color transformation functions
-    TODO: probably should move this to another file"""
+    TODO: probably should move this to another file
+    Up to user to decide whether color is valid"""
     def splitter(c):
-        return wrap(c.replace("#", ""),2)
+        c = c.replace("#", "")
+        if len(c) > 8:
+            c = c[2::]
+        return wrap(c,2)
     
     def transform(c):
+        # for i in c:
+        #   integer = int(i, 16)
         return [int(i, 16) for i in c]
 
-    def blend(ca, cb):
-        return hex((ca+cb)//2).replace("0x", "")
+    def blend(ca, cb, n, i):
+        value = abs(ca-cb)
+        value /= n
+        value *= i+1
+        value = round(value)
+        value = hex(min(ca,cb)+value)
+        value = value.replace("0x", "")
+        #value = hex(((abs(ca-cb)//n))*i).replace("0x", "")
+        return value
 
     def mash(color):
-        return "#ff"+"".join(map(str, color))
+        return "#ff"+"".join(map(lambda x: "0"+str(x) if len(str(x)) < 2 else str(x), color))
 
     colorA = transform(splitter(hex1))
     colorB = transform(splitter(hex2))
-    colorC = []
+    colorS = [mash(splitter(hex2.replace("#","")))]
 
-    for i in range(3):
-        colorC.append(blend(colorA[i], colorB[i]))
-    return mash(colorC)
+    for i in range(n-2):
+        color=[]
+        for j in range(3):
+            color.append(blend(colorA[j], colorB[j], n, i))
+        colorS.append(mash(color))
+    colorS.append(mash(splitter(hex1.replace("#",""))))
+    return colorS
 
 def gradient(hex1, hex2, n):
     pass
