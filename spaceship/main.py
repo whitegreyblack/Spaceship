@@ -26,7 +26,7 @@ def setup():
         "window: size={}x{}, cellsize={}x{}, title='Main Game'".format(
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
-            8, 16))
+            8, 12))
 
 # END SETUP TOOLS
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -216,16 +216,17 @@ def map_screen():
 setup()
 glog = GameLogger()
 # global game variables
-FOV_RADIUS = 10
+FOV_RADIUS = 5
 #MAP_WIDTH, MAP_HEIGHT = 24, 48
 
 MAP_FACTOR = 2
 COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
 COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
 #px, py = SCREEN_WIDTH//2, SCREEN_HEIGHT//2
-px, py = 0, 55
+px, py = 86, 30
 #px, py = 0, 0
-dungeon = Map(stringify("./assets/testmap_colored_flipped.png"))
+
+dungeon = Map(stringify("./assets/testmap_colored.png"))
 # units = Map.appendUnitList("./unitlist/test_map_colored.png")
 # map = Map(parse("testmap.dat"))
 #dungeon = Map(stringify("./assets/testmap.png"))
@@ -239,11 +240,20 @@ guard2 = Object(77, 17, "@", 'orange')
 guard4 = Object(67, 17, '@', 'orange')
 units = [npc, guard1, guard2, guard3, guard4, npc1, npc2]
 proceed = True
-
+lr = 4
+lights = [
+    (64, 13, lr),
+    (72, 13, lr),
+    (79, 13, lr),
+    (86, 13, lr),
+    (98, 13, lr),
+    (103, 13, lr),
+    (110, 13, lr),
+]
 while proceed:
     term.clear()
     log_screen()
-    dungeon.fov_calc(player.x, player.y, FOV_RADIUS)
+    dungeon.fov_calc(lights+[(player.x, player.y, FOV_RADIUS)])
     # removed list creation
     #positions = [(x, y, lit, ch)
     #             for x, y, lit, ch in dungeon.output(player.x, player.y, units)]

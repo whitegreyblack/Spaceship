@@ -10,6 +10,7 @@ from random import randint, choice
 from spaceship.tools import bresenhams
 from math import hypot
 from copy import deepcopy
+from textwrap import wrap
 """Maps file holds template functions that return randomized data maps used\
 in creating procedural worlds"""
 
@@ -186,6 +187,32 @@ def table(ch, val, x, y):
     return [[(ch, val, i, j) for i in range(x)] for j in range(y)]
 
 
+def blender(hex1, hex2):
+    """blender holds color transformation functions
+    TODO: probably should move this to another file"""
+    def splitter(c):
+        return wrap(c.replace("#", ""),2)
+    
+    def transform(c):
+        return [int(i, 16) for i in c]
+
+    def blend(ca, cb):
+        return hex((ca+cb)//2).replace("0x", "")
+
+    def mash(color):
+        return "#ff"+"".join(map(str, color))
+
+    colorA = transform(splitter(hex1))
+    colorB = transform(splitter(hex2))
+    colorC = []
+
+    for i in range(3):
+        colorC.append(blend(colorA[i], colorB[i]))
+    return mash(colorC)
+
+def gradient(hex1, hex2, n):
+    pass
+
 def hexify(x):
     """Returns a single hex transformed value as a string"""
     return hex(x).split('x')[1] if x > 15 else '0' + hex(x).split('x')[1]
@@ -309,7 +336,7 @@ def world(x, y, pos=50, iterations=20):
 
     return data    
 
-def gradient(x, y, d, c, p=100, i=100):
+def forests(x, y, d, c, p=100, i=100):
     """Returns a list of lists with symbols and color gradient tuple"""
 
     @lru_cache(maxsize=None)

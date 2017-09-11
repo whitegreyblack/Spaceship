@@ -3,7 +3,7 @@ from colors import color, COLOR, SHIP_COLOR
 from random import randint, choice
 from constants import SCREEN_HEIGHT as sh
 from constants import SCREEN_WIDTH as sw
-from maps import gradient, hextup, hexone, output
+from maps import forests, hextup, hexone, output
 # TODO: Maybe move map to a new file called map and create a camera class?
 
 class TextBox:
@@ -161,12 +161,12 @@ class Map:
             ]
     colors_block = ["#ffc0c0c0", "#ffa0a0a0", "#ff808080", "#ff606060", "#ff404040"]
     def __init__(self, data):
-        self.map_type = "town"
+        self.map_type = "city"
         self.data, self.height, self.width = self.dimensions(data)
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.block = [[self.data[y][x] in ("#", "+",) for x in range(self.width)] for y in range(self.height)]
-        self.stone = gradient(self.width, self.height, '.', ["#"])
-        self.grass = gradient(self.width, self.height, '`', [",",";","!"])
+        self.stone = forests(self.width, self.height, '.', ["#"])
+        self.grass = forests(self.width, self.height, '|', [";","!"])
         self.flag = 0
         self.map_display_width = min(self.width, sw-20)
         self.map_display_height = min(self.height, sh-4)
@@ -202,6 +202,7 @@ class Map:
 
 
     def unblock(self, x, y):
+
         self.block[y][x] = False
 
 
@@ -209,27 +210,30 @@ class Map:
         return (x < 0 or y < 0 or x >= self.width 
                 or y >= self.height or self.data[y][x] in ("#", "+",))
 
+    def town(self):
+        return self.map_type is "town"
+
 
     def lit(self, x, y):
         return self.light[y][x] == self.flag
 
-    def town(self):
-        return self.map_type is "town"
 
     def set_lit(self, x, y):
         if 0 <= x < self.width and 0 <= y < self.height:
             self.light[y][x] = self.flag
 
 
-    def fov_calc(self, x, y, radius):
+    #def fov_calc(self, x, y, radius):
+    def fov_calc(self, lights):
         self.flag += 1
-        for o in range(8):
-            self.sight(x, y, 1, 1.0, 0.0, 
-                       radius, 
-                       self.mult[0][o], 
-                       self.mult[1][o], 
-                       self.mult[2][o], 
-                       self.mult[3][o], 0)
+        for x, y, radius in lights:
+            for o in range(8):
+                self.sight(x, y, 1, 1.0, 0.0, 
+                        radius,
+                        self.mult[0][o], 
+                        self.mult[1][o], 
+                        self.mult[2][o], 
+                        self.mult[3][o], 0)
 
 
     def sight(self, cx, cy, row, start, end, radius, xx, xy, yx, yy, id):
@@ -292,7 +296,8 @@ class Map:
         cxe = cx + self.map_display_width
         cye = cy + self.map_display_height
 
-        fg_fog = "#ff202020"
+        #fg_fog = "#ff202020"
+        fg_fog = "darkest grey"
         bg_fog = "#ff000000"
         positions = {}
 
