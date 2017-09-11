@@ -240,15 +240,15 @@ guard2 = Object(77, 17, "@", 'orange')
 guard4 = Object(67, 17, '@', 'orange')
 units = [npc, guard1, guard2, guard3, guard4, npc1, npc2]
 proceed = True
-lr = 4
+lr = 5
 lights = [
     (64, 13, lr),
-    (72, 13, lr),
+#    (72, 13, lr),
     (79, 13, lr),
-    (86, 13, lr),
-    (98, 13, lr),
+#    (86, 13, lr),
+#    (98, 13, lr),
     (103, 13, lr),
-    (110, 13, lr),
+#    (110, 13, lr),
 ]
 while proceed:
     term.clear()

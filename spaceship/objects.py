@@ -6,6 +6,11 @@ from constants import SCREEN_WIDTH as sw
 from maps import hextup, hexone, output, blender, gradient
 # TODO: Maybe move map to a new file called map and create a camera class?
 
+chars_grass= [",",";",]
+chars_walls= ["#"]
+chars_doors= ["+"]
+color_grass=("#56ab2f", "#a8e063")
+color_walls=("#eacda3", "#d6ae7b")
 class Object:
     def __init__(self, x, y, i, c='white'):
         """@parameters :- x, y, i, c
@@ -28,7 +33,7 @@ class Object:
 
     def pos(self):
         return self.x , self.y
-    
+
 class Map:
     ''' Ray Tracing Implementation based off of Rogue Basin Python Tutorial '''
     mult = [
@@ -37,18 +42,17 @@ class Map:
                 [0,  1,  1,  0,  0, -1, -1,  0],
                 [1,  0,  0,  1, -1,  0,  0, -1]
             ]
-    wall_colors = blender("#eacda3", "#d6ae7b", 3)
     colors_block = ["#ffc0c0c0", "#ffa0a0a0", "#ff808080", "#ff606060", "#ff404040"]
-    grass_colors = blender("#56ab2f", "#a8e063")
+    colors_water = blender("#43C6AC", "#191654", 20)
     def __init__(self, data):
-        self.map_type = "city"
+        self.map_type = ""
         self.data, self.height, self.width = self.dimensions(data)
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.block = [[self.data[y][x] in ("#", "+",) for x in range(self.width)] for y in range(self.height)]
         #self.stone = forests(self.width, self.height, '.', ["#"])
-        self.stone = gradient(self.width, self.height, characters, colorA, colorB)
+        self.walls = gradient(self.width, self.height, chars_walls, color_walls)
         #self.grass = forests(self.width, self.height, '|', [";","!"])
-        self.grass = gradient(self.width, self.height)
+        self.grass = gradient(self.width, self.height, chars_grass, color_grass)
         self.flag = 0
         self.map_display_width = min(self.width, sw-20)
         self.map_display_height = min(self.height, sh-4)
@@ -90,20 +94,29 @@ class Map:
 
     def blocked(self, x, y):
         return (x < 0 or y < 0 or x >= self.width 
-                or y >= self.height or self.data[y][x] in ("#", "+",))
+                or y >= self.height or self.data[y][x] in ("#", "+", "o",))
 
     def town(self):
         return self.map_type is "town"
 
 
     def lit(self, x, y):
-        return self.light[y][x] == self.flag
+        #return self.light[y][x] == self.flag
+        return self.light[y][x] > 0
 
-
+    def lit_level(self, x, y):
+        return self.light[y][x]
+    """
     def set_lit(self, x, y):
         if 0 <= x < self.width and 0 <= y < self.height:
             self.light[y][x] = self.flag
+    """
+    def set_lit(self, x, y, row):
+        if 0 <= x < self.width and 0 <= y < self.height:
+            self.light[y][x] = row
 
+    def lit_reset(self):
+        self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
 
     #def fov_calc(self, x, y, radius):
     def fov_calc(self, lights):
@@ -116,7 +129,6 @@ class Map:
                         self.mult[1][o], 
                         self.mult[2][o], 
                         self.mult[3][o], 0)
-
 
     def sight(self, cx, cy, row, start, end, radius, xx, xy, yx, yy, id):
         if start < end:
@@ -139,7 +151,8 @@ class Map:
                 else:
                     # Our light beam is touching this square; light it:
                     if dx*dx + dy*dy < radius_squared:
-                        self.set_lit(X, Y)
+                        #self.set_lit(X, Y)
+                        self.set_lit(X, Y, j)
                     if blocked:
                         # we're scanning a row of blocked squares:
                         if self.blocked(X, Y):
@@ -193,6 +206,7 @@ class Map:
             for y in range(cy, cye):
                 town = self.town()
                 lit = self.lit(x, y)
+                level = self.lit_level(x, y)
                 visible = town or lit
                 if x == X and y == Y:
                     ch = "@"
@@ -221,30 +235,28 @@ class Map:
                         #lit = hextup(color,5,2,5) if visible else fg_fog
                         # bkgd = hextup(color, 5,3,5) if lit else bg_fog
                         lit = col if visible else (fg_fog)
+
                     # color the water
                     if ch == "~":
-                        lit, _ = choice([
-                            ("#ff3333ff", "#ff666ff"),
-                            ("#ff6666ff", "#ff999ff"),
-                            ("#ff9999ff", "#ff999ff")]) if visible else (fg_fog, bg_fog)
+                        lit = choice(self.colors_water) if visible else fg_fog
 
                     # color the doors
                     if ch in ("+", "/",):
-                            lit = "#ff994C00" if visible else fg_fog
+                        lit = "#ff994C00" if visible else fg_fog
                         # bkgd = "black"i
 
                     # color the walls
                     if ch == "#":
-                        #_, color, _, _ = self.stone[y][x]
+                        _, color, _, _ = self.walls[y][x]
                         #lit = hexone(color) if visible else fg_fog
-                        lit = choice(self.wall_colors) if visible else fg_fog
+                        lit = color if visible else fg_fog
                         # bkgd = "grey" if lit else bg_fog
                         #lit = "white" if lit else fog
                     
                     if ch == "%":
-                        _, color, _, _ = self.stone[y][x]
+                        _, color, _, _ = self.walls[y][x]
                         #lit = hexone(color//2) if lit else fg_fog
-                        lit = hextup(color, 3,5,5) if visible else fg_fog
+                        lit = color if visible else fg_fog
                         # bkgd = "grey" if lit else bg_fog
                    
                     # street border
@@ -254,3 +266,4 @@ class Map:
                         # bkgd = hextup(color, 4,4,4) if lit else bg_fog
                 # all said and done -- return by unit block        
                 yield (x-cx, y-cy, lit, ch)
+        self.lit_reset()
