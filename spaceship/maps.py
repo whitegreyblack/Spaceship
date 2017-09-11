@@ -184,7 +184,7 @@ def evaluate_blocks(data, w, h, array=False):
 
 def table(ch, val, x, y):
     """Returns a 2d list of lists holding a four element tuple"""
-    return [[(ch, val, i, j) for i in range(x)] for j in range(y)]
+    return [[(choice(ch), choice(val), i, j) for i in range(x)] for j in range(y)]
 
 
 def blender(hex1, hex2, n=10):
@@ -222,15 +222,12 @@ def blender(hex1, hex2, n=10):
     for i in range(n-2):
         color=[]
         for j in range(3):
-            color.append(blend(colorA[j], colorB[j], n-2, i+1))
+            color.append(blend(colorA[j], colorB[j], n-2, i))
         colorS.append(mash(color))
 
     colorS.append(mash(splitter(hex2.replace("#",""))))
     
     return colorS
-
-def gradient(hex1, hex2, n):
-    pass
 
 def hexify(x):
     """Returns a single hex transformed value as a string"""
@@ -274,175 +271,25 @@ def dimensions(data, array=False):
     width = max(len(col) for col in data)
     return data, height, width
 
-def world(x, y, pos=50, iterations=20):
-    """Returns a more realistic world map of size (X, y)
-    TODO: Color currently starts at 0 and increments by 1 everytime data is accessed -- more realistic algo?
-    """
-    def inc(x, y):
-        _, i, _, _ = data[y][x]
-        data[y][x] = (char, mm(i+1), x, y)
-
-    def double(x, y):
-        pairs.add((x,y))
-        pairs.add((y,x))
-
-    @lru_cache(maxsize=None)
-    def mm(c):
-        """Returns the value or predetermined value if out of bounds"""
-        return min(max(0, c), 250)
-    
-    # random integers for picking a random point in quadrant
-    quads = {
-        0: (0,x//2, 0, y//3),
-        1: (x//2+1, x-1, 0, y//2),
-        2: (0,x//2, y//2+1, y-1),
-        3: (x//2+1, x-1, y//3+1, y-1),
-    }
-    # explicit midpoint in each quadrant
-    quad_pos = {
-        0: (x//4, y//4),
-        1: (x*3//4, y//4),
-        2: (x//4, y*3//4),
-        3: (x*3//4, y*3//4)
-    }
-    rotations = [
-        (-1, 0),
-        (1, 0),
-        (0, -1),
-        (0, 1),
-        (-1, -1),
-        (-1, 1),
-        (1, -1),
-        (1, 1), 
-    ]
-    factor = 5
-    chance = 10
-    char = "#"
-    unch = "."
-    w, h = x, y
-    data = table(unch, 0, x, y)
-    pairs = set()
-    for _ in range(10):
-        quad_beg, quad_end = 0, 0
-        while quad_beg == quad_end:
-            quad_beg = randint(0,3)
-            quad_end = randint(0,3)
-        
-        x0, x1, y0, y1 = quads[quad_beg]
-        bx, by = randint(x0, x1), randint(y0, y1)
-
-        x0, x1, y0, y1 = quads[quad_end]
-        ex, ey = randint(x0, x1), randint(y0, y1)
-
-        points = bresenhams((bx, by), (ex, ey))
-        for x, y in points:
-            inc(x, y)
-            
-        for point in range(0,len(points), 3):
-            x, y = points[point]
-            i, j = x, y
-            try:
-                inc(i, j)
-                for _ in range(iterations):
-                    for rot in rotations:
-                        if randint(-chance+1, 1):
-                            di, dj = rot
-                            i -= di
-                            j -= dj
-                            inc(i, j)
-            except IndexError:
-                pass
-
-    return data    
-
-def forests(x, y, d, c, p=100, i=100):
-    """Returns a list of lists with symbols and color gradient tuple"""
-
-    @lru_cache(maxsize=None)
-    def distance(x, y):
-        """Returns the hypotenuse distance between two points"""
-        return int(hypot(x, y))
-
-    @lru_cache(maxsize=None)
-    def mm(g, v):
-        """Returns the value or predetermined value if out of bounds"""
-        return min(max(50, g-v), 250)
-
-    @lru_cache(maxsize=None)
-    def mid(x, y):
-        """Returns the midpoint value between two points"""
-        return (x+y)//2
-
-    def replace(x, y, i, j):
-        """Evaluates the tuple in data and replaces it with a new tuple"""
-        _, og, _, _ = data[j][i]
-        ng = mm(og, distance(abs(x-i), abs(y-j) * factor))
-        data[j][i] = (choice(c), ng if og > ng else mid(ng, og), i, j)
-
-    factor = 3
-    chance = 5
-    w, h = x, y
-    data = table(d, 250, x, y)
-
-    for _ in range(p):
-        x, y = randint(0, w), randint(0, h)
-        i, j = x, y
-
-        for _ in range(i):
-            try:
-                if randint(0, 1):
-                    i -= 1
-                    replace(x, y, i, j)
-
-                if randint(0, 1):
-                    i += 1
-                    replace(x, y, i, j)
-
-                if randint(0, 1):
-                    j += 1
-                    replace(x, y, i, j)
-
-                if randint(0, 1):
-                    j -= 1
-                    replace(x, y, i, j)
-        
-                if randint(-chance+1, 1):
-                    i, j = i-1, j-1
-                    replace(x, y, i, j)
-
-                if randint(-chance+1, 1):
-                    i, j = i-1, j+1
-                    replace(x, y, i, j)
-
-                if randint(-chance+1, 1):
-                    i, j = i+1, j-1
-                    replace(x, y, i, j)
-
-                if randint(-chance+1, 1):
-                    i, j = i+1, j+1
-                    replace(x, y, i, j)
-
-            except IndexError:
-                pass
-
-    return data
+def gradient(x, y, characters, colors):
+    """Returns a more realistic map color gradient"""
+    ca, cb = colors
+    return table(characters, blender(ca,cb), x, y)
 
 
 if __name__ == "__main__":
-    width = 100
-    height = 50
-    if len(sys.argv) == 2 and sys.argv[1] == "-t":
-        term.open()
-        term.set("window: size={}x{}, cellsize={}x{}, title='Maps'".format(
-            width, height, 8, 16
-        ))
-        data = world(width, height, 100, 100)
-        output(data)
-        for row in data:
-            for c, col, i, j in row:
-                col = hextup(col, 2, 1, 1) if col > 5 else hextup((col+1)*25, (col+1)*25//2, (col+1)*25//2, col+1)
-                term.puts(i, j, "[color={}]{}[/color]".format(col, c))
-        term.refresh()
-        term.read()
-    else:
-        output(world(width, height//2, 100, 100))
+    if len(sys.argv) < 4:
+        print(sys.argv)
+        exit('ERROR :- incorrect num of args')
+        
+    term.open()
+    term.set(f"window: size=80x25")
+    colors = blender(sys.argv[1], sys.argv[2], int(sys.argv[3]))
+    print(colors)
+    step = 80 // len(colors)
+    for i in range(len(colors)):
+        for y in range(25):
+            for x in range(step):
+                term.puts(step*i+x, y, f"[color={colors[i]}]%[/color]")
+    term.refresh()
+    term.read()

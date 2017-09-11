@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.gamelog import GameLogger
 from spaceship.tools import bresenhams, deltanorm, movement
 from spaceship.action import key_movement, num_movement, key_actions, action, keypress
-from spaceship.objects import Map, Object, Tile
+from spaceship.objects import Map, Object
 from bearlibterminal import terminal as term
 from collections import namedtuple
 from namedlist import namedlist
