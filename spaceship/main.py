@@ -213,7 +213,14 @@ def map_screen():
             Finally light sources and player?"""
     for x, y, lit, ch in list(dungeon.output(player.x, player.y, units)):
         # term.bkcolor(bgkd)
-        term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
+        if len(str(ch)) < 2:
+            term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
+        else:
+            try:
+                term.puts(x, y, "[color={}]".format(lit)+chr(ch)+"[/color]")
+            except:
+                print(lit, ch)
+                raise
     term.refresh()
 
 # End graphics functions

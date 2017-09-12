@@ -4,7 +4,7 @@ from colors import color, COLOR, SHIP_COLOR
 from random import randint, choice
 from constants import SCREEN_HEIGHT as sh
 from constants import SCREEN_WIDTH as sw
-from maps import hextup, hexone, output, blender, gradient
+from maps import hextup, hexone, output, blender, gradient, evaluate_blocks
 # TODO: Maybe move map to a new file called map and create a camera class?
 
 
@@ -231,7 +231,6 @@ class Map:
         fg_fog = "grey"
         bg_fog = "#ff000000"
         positions = {}
-
         for unit in units:
             positions[unit.pos()] = unit
 
@@ -284,62 +283,68 @@ class Map:
                     level = ""
                     ch = self.square(x, y)
                     flag = ch
+
                     # then try to color according to block type
                     # color the floor
-                    if ch in (".", ":",):
-                        #_, color, _, _ = self.stone[y][x]
-                        #lit = "white" if lit else fog
-                        #lit = hexone(color//2) if visible else fg_fog
-                        level = fog_levels[lit//2] if lit else "darkest " 
-                        lit = "grey" if visible else fg_fog
-                        ## bkgd = "black" if not lit else bg_fog
+                    if len(str(ch)) < 2:
+                        if ch in (".", ":",):
+                            #_, color, _, _ = self.stone[y][x]
+                            #lit = "white" if lit else fog
+                            #lit = hexone(color//2) if visible else fg_fog
+                            level = fog_levels[lit//2] if lit else "darkest " 
+                            lit = "grey" if visible else fg_fog
+                            ## bkgd = "black" if not lit else bg_fog
 
-                    # color some grasses
-                    if ch in (",",";","!","`"):
-                        ch, col, _, _ = self.grass[y][x]
-                        #lit = hextup(color,5,2,5) if visible else fg_fog
-                        # bkgd = hextup(color, 5,3,5) if lit else bg_fog
-                        level = fog_levels[lit//2] if lit else "darkest " 
-                        lit = col if visible else fg_fog
+                        # color some grasses
+                        if ch in (",",";","!","`"):
+                            ch, col, _, _ = self.grass[y][x]
+                            #lit = hextup(color,5,2,5) if visible else fg_fog
+                            # bkgd = hextup(color, 5,3,5) if lit else bg_fog
+                            level = fog_levels[lit//2] if lit else "darkest " 
+                            lit = col if visible else fg_fog
 
-                    # color the water
-                    if ch == "~":
-                        lit = choice(self.colors_water) if visible else fg_fog
+                        # color the water
+                        if ch == "~":
+                            lit = choice(self.colors_water) if visible else fg_fog
 
-                    # color the doors
-                    if ch in ("+", "/",):
-                        lit = "#ff994C00" if visible else fg_fog
-                        # bkgd = "black"i
+                        # color the doors
+                        if ch in ("+", "/",):
+                            lit = "#ff994C00" if visible else fg_fog
+                            # bkgd = "black"i
 
-                    # color the lamps
-                    if ch in ("o",):
-                        lit = "white" if visible else fg_fog
+                        # color the lamps
+                        if ch in ("o",):
+                            lit = "white" if visible else fg_fog
 
-                    # color the walls
-                    if ch == "#":
-                        _, color, _, _ = self.walls[y][x]
-                        #lit = hexone(color) if visible else fg_fog
-                        lit = color if visible else fg_fog
-                        # bkgd = "grey" if lit else bg_fog
-                        #lit = "white" if lit else fog
+                        # color the walls
+                        if ch == "#":
+                            _, color, _, _ = self.walls[y][x]
+                            #lit = hexone(color) if visible else fg_fog
+                            lit = color if visible else fg_fog
+                            # bkgd = "grey" if lit else bg_fog
+                            #lit = "white" if lit else fog
+                        
+                        if ch == "%":
+                            _, color, _, _ = self.walls[y][x]
+                            #lit = hexone(color//2) if lit else fg_fog
+                            lit = color if visible else fg_fog
+                            # bkgd = "grey" if lit else bg_fog
                     
-                    if ch == "%":
+                        # street border
+                        if ch in ("=",):
+                            lit = "dark white" if visible else fg_fog
+
+                        if ch in ("x"):
+                            lit = "brown" if visible else fg_fog
+                        
+                        if ch in ("|"):
+                            level = fog_levels[lit//2] if lit else "darkest " 
+                            lit = "yellow" if visible else fg_fog
+
+                    else:
                         _, color, _, _ = self.walls[y][x]
-                        #lit = hexone(color//2) if lit else fg_fog
                         lit = color if visible else fg_fog
-                        # bkgd = "grey" if lit else bg_fog
-                   
-                    # street border
-                    if ch in ("=",):
-                        lit = "dark white" if visible else fg_fog
-
-
-                    if ch in ("x"):
-                        lit = "brown" if visible else fg_fog
-                    
-                    if ch in ("|"):
-                        level = fog_levels[lit//2] if lit else "darkest " 
-                        lit = "yellow" if visible else fg_fog
+                        
                 # bkgd = hextup(color, 4,4,4) if lit else bg_fog
                 # all said and done -- return by unit block        
                 try:
