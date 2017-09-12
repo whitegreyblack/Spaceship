@@ -242,7 +242,7 @@ class Map:
         #fg_fog = "#ff202020"
         daytime= True if self._sun() else False
 
-        fg_fog = "grey"
+        fg_fog = "black"
         bg_fog = "#ff000000"
         positions = {}
         for unit in units:

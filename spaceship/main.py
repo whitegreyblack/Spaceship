@@ -193,17 +193,28 @@ def processAction(x, y, key):
 # End Movement Functions
 # ---------------------------------------------------------------------------------------------------------------------#
 # Graphic functions
-def draw():
-    global COLOR_DARK_GROUND, COLOR_DARK_WALL
-
-    for unit in units:
-        x, y, i, c = unit.draw()
-        term.puts(x, y, ('[color={}]' + i + '[/color]').format(c))
-
 def status_box(h, m, s):
     term.puts(81, 1, f"[color=red]Health[/color]: {h}")
     term.puts(81, 2, f"[color=blue]Magic [/color]: {m}")
     term.puts(81, 3, f"[color=green]Energy[/color]: {s}")
+    term.puts(82, 4, f"[color=darkest red]A[/color]")
+    term.puts(82, 5, f"[color=darker red]A[/color]")
+    term.puts(82, 6, f"[color=dark red]A[/color]")
+    term.puts(82, 7, f"[color=light red]A[/color]")
+    term.puts(82, 8, f"[color=lighter red]A[/color]")
+    term.puts(82, 9, f"[color=lightest red]A[/color]")
+    term.puts(83, 4, f"[color=darkest blue]A[/color]")
+    term.puts(83, 5, f"[color=darker blue]A[/color]")
+    term.puts(83, 6, f"[color=dark blue]A[/color]")
+    term.puts(83, 7, f"[color=light blue]A[/color]")
+    term.puts(83, 8, f"[color=lighter blue]A[/color]")
+    term.puts(83, 9, f"[color=lightest blue]A[/color]")
+    term.puts(84, 4, f"[color=darkest green]A[/color]")
+    term.puts(84, 5, f"[color=darker green]A[/color]")
+    term.puts(84, 6, f"[color=dark green]A[/color]")
+    term.puts(84, 7, f"[color=light green]A[/color]")
+    term.puts(84, 8, f"[color=lighter green]A[/color]")
+    term.puts(84, 9, f"[color=lightest green]A[/color]")
 
 def log_box():
     messages = glog.write().messages
@@ -252,26 +263,26 @@ player = Person(px, py, '@')
 npc = Object(7, 7, '@', 'orange')
 npc1 = Object(5, 15, '@', 'orange')
 npc2 = Object(0, 56, '@', 'orange')
-guard3 = Object(77, 11, '@', 'orange')
-guard1 = Object(77, 12, "@", 'orange')
-guard2 = Object(77, 17, "@", 'orange')
-guard4 = Object(67, 17, '@', 'orange')
+guard3 = Object(83, 31, '@', 'orange')
+guard1 = Object(84, 32, "@", 'orange')
+guard2 = Object(83, 37, "@", 'orange')
+guard4 = Object(84, 37, '@', 'orange')
 units = [npc, guard1, guard2, guard3, guard4, npc1, npc2]
 proceed = True
 lr = 5
 lights = [
     (63, 11, lr),
-    (40, 25, lr*2),
-    (40, 33, lr*2),
+    (40, 25, lr*3),
+    (40, 33, 30),
     (65, 25, lr),
     (77, 25, lr),
     (93, 25, lr),
     (107, 25, lr),
-    (103, 13, lr),
 ]
 while proceed:
     term.clear()
     status_box(player.h, player.m, player.s)
+    player.h -= 10
     log_box()
     # removed list creation
     #positions = [(x, y, lit, ch)
