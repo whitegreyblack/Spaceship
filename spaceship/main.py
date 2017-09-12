@@ -211,6 +211,7 @@ def map_screen():
             Should first print map in gray/black
             Then print units/interactables?
             Finally light sources and player?"""
+    dungeon.fov_calc(lights+[(player.x, player.y, FOV_RADIUS)])
     for x, y, lit, ch in list(dungeon.output(player.x, player.y, units)):
         # term.bkcolor(bgkd)
         if len(str(ch)) < 2:
@@ -266,7 +267,6 @@ lights = [
 while proceed:
     term.clear()
     log_screen()
-    dungeon.fov_calc(lights+[(player.x, player.y, FOV_RADIUS)])
     # removed list creation
     #positions = [(x, y, lit, ch)
     #             for x, y, lit, ch in dungeon.output(player.x, player.y, units)]
