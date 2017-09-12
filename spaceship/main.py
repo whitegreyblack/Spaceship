@@ -15,6 +15,7 @@ from time import clock
 from spaceship.constants import SCREEN_HEIGHT, SCREEN_WIDTH
 # LIMIT_FPS = 30 -- later used in sprite implementation
 blocked = []
+dungeon = Map(stringify("./assets/testmap_colored.png"))
 
 # ---------------------------------------------------------------------------------------------------------------------#
 # TERMINAL SETUP & IMAGE IMPORTS
@@ -77,6 +78,7 @@ def key_process(x, y, action, unit, blockables):
                 glog.add(walkBlock.format("a door"))
             if ch == "#":
                 glog.add(walkBlock.format("a wall"))
+                glog.add(f"{player.x+x}, {player.y+y}")
         elif occupied:
             glog.add(walkBlock.format("someone"))
         elif outofbounds:
@@ -118,6 +120,7 @@ def openInventory(x, y, key):
     term.clear()
     log_screen()
     map_screen()
+
 def onlyOne(container):
     return len(container) == 1
 
@@ -174,11 +177,15 @@ actions={
     'o': interactDoor,
     'c': interactDoor,
     'i': openInventory,
+    'f1': dungeon.sundown,
+    'f2': dungeon.sunup,
 }
 
 def processAction(x, y, key):                        
     try:
         actions[key](x, y, key)
+    except TypeError:
+        actions[key]()
     except KeyError:
         print("unknown command")
             
@@ -216,7 +223,7 @@ def map_screen():
 setup()
 glog = GameLogger()
 # global game variables
-FOV_RADIUS = 5
+FOV_RADIUS = 10
 #MAP_WIDTH, MAP_HEIGHT = 24, 48
 
 MAP_FACTOR = 2
@@ -225,8 +232,6 @@ COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
 #px, py = SCREEN_WIDTH//2, SCREEN_HEIGHT//2
 px, py = 86, 30
 #px, py = 0, 0
-
-dungeon = Map(stringify("./assets/testmap_colored.png"))
 # units = Map.appendUnitList("./unitlist/test_map_colored.png")
 # map = Map(parse("testmap.dat"))
 #dungeon = Map(stringify("./assets/testmap.png"))

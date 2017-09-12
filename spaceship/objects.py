@@ -6,11 +6,28 @@ from constants import SCREEN_WIDTH as sw
 from maps import hextup, hexone, output, blender, gradient
 # TODO: Maybe move map to a new file called map and create a camera class?
 
+# fog levels are calculated in steps of 2, so radius of 10/11 will be the max bounds
+fog_levels= {
+    0: "darkest ",
+    1: "darker ",
+    2: "dark ",
+    3: "light ",
+    4: "lighter ",
+    5: "lightest",
+}
+chars={
+    "grass": ([",",";"], ("#56ab2f", "#a8e063")),
+    "walls": (["#"], ("#eacda3", "#d6ae7b")),
+    "doors": (["+"], ("#ff994C00", "#ff994C00")),
+    "brick": (["%"], ("#a73737", "#7a2828"))
+}
+
 chars_grass= [",",";",]
 chars_walls= ["#"]
 chars_doors= ["+"]
 color_grass=("#56ab2f", "#a8e063")
-color_walls=("#eacda3", "#d6ae7b")
+#color_walls=("#eacda3", "#d6ae7b")
+color_walls=("#a73737", "#7a2828")
 class Object:
     def __init__(self, x, y, i, c='white'):
         """@parameters :- x, y, i, c
@@ -42,13 +59,17 @@ class Map:
                 [0,  1,  1,  0,  0, -1, -1,  0],
                 [1,  0,  0,  1, -1,  0,  0, -1]
             ]
+
     colors_block = ["#ffc0c0c0", "#ffa0a0a0", "#ff808080", "#ff606060", "#ff404040"]
     colors_water = blender("#43C6AC", "#191654", 20)
+
     def __init__(self, data):
-        self.map_type = ""
+        self.daytime = False
         self.data, self.height, self.width = self.dimensions(data)
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
-        self.block = [[self.data[y][x] in ("#", "+",) for x in range(self.width)] for y in range(self.height)]
+        self.lamps = None
+        self.fogofwar=[[0 for _ in range(self.width)] for _ in range(self.height)]
+        self.block = [[self.data[y][x] in ("#", "+", "o") for x in range(self.width)] for y in range(self.height)]
         #self.stone = forests(self.width, self.height, '.', ["#"])
         self.walls = gradient(self.width, self.height, chars_walls, color_walls)
         #self.grass = forests(self.width, self.height, '|', [";","!"])
@@ -72,6 +93,13 @@ class Map:
     def openable(self, x, y, ch):
         return self.square(x,y) == "+"
 
+    def sunup(self):
+        print("sunup")
+        return True
+
+    def sundown(self):
+        print("sundown")
+        return False
 
     def open_door(self, x, y):
         if self.square(x, y) == "+":
@@ -96,8 +124,8 @@ class Map:
         return (x < 0 or y < 0 or x >= self.width 
                 or y >= self.height or self.data[y][x] in ("#", "+", "o",))
 
-    def town(self):
-        return self.map_type is "town"
+    def sun(self):
+        return self.daytime
 
 
     def lit(self, x, y):
@@ -114,12 +142,14 @@ class Map:
     def set_lit(self, x, y, row):
         if 0 <= x < self.width and 0 <= y < self.height:
             self.light[y][x] = row
+            self.fogofwar[y][x] = True
 
     def lit_reset(self):
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
 
     #def fov_calc(self, x, y, radius):
     def fov_calc(self, lights):
+        self.lamps = lights
         self.flag += 1
         for x, y, radius in lights:
             for o in range(8):
@@ -192,7 +222,7 @@ class Map:
         cye = cy + self.map_display_height
 
         #fg_fog = "#ff202020"
-        fg_fog = "darkest grey"
+        fg_fog = "grey"
         bg_fog = "#ff000000"
         positions = {}
 
@@ -204,21 +234,50 @@ class Map:
 
             # height should total 24 units
             for y in range(cy, cye):
-                town = self.town()
-                lit = self.lit(x, y)
-                level = self.lit_level(x, y)
-                visible = town or lit
+
+                # need to check if light is out
+                if self.sun():
+                    # sun causes everything to be lit
+                    lit = True
+                    level = "darkest "
+
+                else:
+                    # check if the square is lighted and the light strength
+                    lit = self.lit(x, y)
+                    level = fog_levels[min(self.lit_level(x, y)//2, 5)]
+
+                #blocks are visible if the sun is up or in range of a lightable object
+                visible = self.sun() or lit
+
+                #level = fog_levels[max(5-level, 0)] if level else fog_levels[min(0, level)]
+
                 if x == X and y == Y:
+                    level = ""
                     ch = "@"
                     lit = "white"
                     ## bkgd = "black"
 
-                elif (x, y) in positions.keys() and visible:
-                    unit = positions[(x,y)]
-                    ch = unit.i
-                    lit = unit.c
+                elif (x, y) in positions.keys():
+                    if visible:
+                        level = "dark "
+                        unit = positions[(x,y)]
+                        ch = unit.i
+                        lit = unit.c
+                    
+                    else:
+                        level = ""
+                        ch = self.square(x, y)
+                        
+                elif (x, y, 5) in self.lamps:
+                    level = ""
+                    ch = "!"
+                    lit = "white"
 
                 else:
+                    if self.sun():
+                        level = "lightest"
+                    else:
+                        level = "darkest"
                     ch = self.square(x, y)
                     # then try to color according to block type
                     # color the floor
@@ -245,6 +304,10 @@ class Map:
                         lit = "#ff994C00" if visible else fg_fog
                         # bkgd = "black"i
 
+                    # color the lamps
+                    if ch in ("o",):
+                        lit = "white" if visible else fg_fog
+
                     # color the walls
                     if ch == "#":
                         _, color, _, _ = self.walls[y][x]
@@ -265,5 +328,8 @@ class Map:
                         lit = hextup(color, 3,3,3) if visible else fg_fog
                         # bkgd = hextup(color, 4,4,4) if lit else bg_fog
                 # all said and done -- return by unit block        
-                yield (x-cx, y-cy, lit, ch)
+                try:
+                    yield (x-cx, y-cy, level+lit, ch)
+                except TypeError:
+                    print(x-cx, y-cy, ch, level, visible, lit)
         self.lit_reset()
