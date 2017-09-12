@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.gamelog import GameLogger
 from spaceship.tools import bresenhams, deltanorm, movement
 from spaceship.action import key_movement, num_movement, key_actions, action, keypress
-from spaceship.objects import Map, Object
+from spaceship.objects import Map, Object, Person
 from bearlibterminal import terminal as term
 from collections import namedtuple
 from namedlist import namedlist
@@ -105,7 +105,7 @@ def openInventory(x, y, key):
     current_range = 0
     while True:
         term.clear()
-        log_screen()
+        log_box()
         term.puts(2, 1, "[color=white]Inventory")
         term.refresh()
         code = term.read()
@@ -158,8 +158,8 @@ def interactDoor(x, y, key):
     else:
         term.clear()
         glog.add("Which direction?")
-        log_screen()
-        map_screen()
+        log_box()
+        map_box()
         term.refresh()
         code = term.read()
 
@@ -200,13 +200,18 @@ def draw():
         x, y, i, c = unit.draw()
         term.puts(x, y, ('[color={}]' + i + '[/color]').format(c))
 
-def log_screen():
+def status_box(h, m, s):
+    term.puts(81, 1, f"[color=red]Health[/color]: {h}")
+    term.puts(81, 2, f"[color=blue]Magic [/color]: {m}")
+    term.puts(81, 3, f"[color=green]Energy[/color]: {s}")
+
+def log_box():
     messages = glog.write().messages
     if messages:
         for idx in range(len(messages)):
             term.puts(0, SCREEN_HEIGHT-4+idx, messages[idx])
 
-def map_screen():
+def map_box():
     """ Logic:
             Should first print map in gray/black
             Then print units/interactables?
@@ -243,7 +248,7 @@ px, py = 86, 30
 # units = Map.appendUnitList("./unitlist/test_map_colored.png")
 # map = Map(parse("testmap.dat"))
 #dungeon = Map(stringify("./assets/testmap.png"))
-player = Object(px, py, '@')
+player = Person(px, py, '@')
 npc = Object(7, 7, '@', 'orange')
 npc1 = Object(5, 15, '@', 'orange')
 npc2 = Object(0, 56, '@', 'orange')
@@ -266,11 +271,12 @@ lights = [
 ]
 while proceed:
     term.clear()
-    log_screen()
+    status_box(player.h, player.m, player.s)
+    log_box()
     # removed list creation
     #positions = [(x, y, lit, ch)
     #             for x, y, lit, ch in dungeon.output(player.x, player.y, units)]
-    map_screen()
+    map_box()
     x, y, a = key_in()
     if a:
         processAction(player.x, player.y, a)

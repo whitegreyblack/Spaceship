@@ -56,6 +56,20 @@ class Object:
     def pos(self):
         return self.x , self.y
 
+class Person(Object):
+    def __init__(self, x, y, i, c='white'):
+        super().__init__(x, y, i, c)
+        self.h = 100
+        self.m = 100
+        self.s = 100
+
+    def stats(self):
+        return self.h, self.m, self.s
+
+    def draw(self):
+        prev = list(super().draw())
+        return tuple(prev+[self.h, self.m, self.s])
+    
 class Map:
     ''' Ray Tracing Implementation based off of Rogue Basin Python Tutorial '''
     mult = [
