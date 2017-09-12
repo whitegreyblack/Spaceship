@@ -254,13 +254,14 @@ units = [npc, guard1, guard2, guard3, guard4, npc1, npc2]
 proceed = True
 lr = 5
 lights = [
-    (64, 13, lr),
-#    (72, 13, lr),
-    (79, 13, lr),
-#    (86, 13, lr),
-#    (98, 13, lr),
+    (63, 11, lr),
+    (40, 25, lr*2),
+    (40, 33, lr*2),
+    (65, 25, lr),
+    (77, 25, lr),
+    (93, 25, lr),
+    (107, 25, lr),
     (103, 13, lr),
-#    (110, 13, lr),
 ]
 while proceed:
     term.clear()

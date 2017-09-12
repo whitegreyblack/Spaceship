@@ -344,12 +344,8 @@ class Map:
                     else:
                         _, color, _, _ = self.walls[y][x]
                         lit = color if visible else fg_fog
-                        
+
                 # bkgd = hextup(color, 4,4,4) if lit else bg_fog
                 # all said and done -- return by unit block        
-                try:
-                    yield (x-cx, y-cy, level+lit, ch)
-                except TypeError:
-                    
-                    print(errormessage(x, y-cy, (flag), level, visible, lit))
+                yield (x-cx, y-cy, level+lit, ch)
         self.lit_reset()
