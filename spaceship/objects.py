@@ -144,8 +144,9 @@ class Map:
     """
     def set_lit(self, x, y, row):
         if 0 <= x < self.width and 0 <= y < self.height:
-            self.light[y][x] = 10-row
-            self.fogofwar[y][x] = True
+            if self.light[y][x] < 10-row:
+                self.light[y][x] = 10-row
+                self.fogofwar[y][x] = True
 
     def lit_reset(self):
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
@@ -335,6 +336,10 @@ class Map:
 
                     if ch in ("x"):
                         lit = "brown" if visible else fg_fog
+                    
+                    if ch in ("|"):
+                        level = fog_levels[lit//2] if lit else "darkest " 
+                        lit = "yellow" if visible else fg_fog
                 # bkgd = hextup(color, 4,4,4) if lit else bg_fog
                 # all said and done -- return by unit block        
                 try:
