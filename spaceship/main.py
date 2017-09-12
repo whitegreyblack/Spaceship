@@ -15,7 +15,7 @@ from time import clock
 from spaceship.constants import SCREEN_HEIGHT, SCREEN_WIDTH
 # LIMIT_FPS = 30 -- later used in sprite implementation
 blocked = []
-dungeon = Map(stringify("./assets/testmap_colored.png"))
+dungeon = Map(stringify("./assets/test_tube.png"))
 
 # ---------------------------------------------------------------------------------------------------------------------#
 # TERMINAL SETUP & IMAGE IMPORTS
@@ -118,8 +118,8 @@ def openInventory(x, y, key):
     else:
         glog.add("Closing inventoryy")
     term.clear()
-    log_screen()
-    map_screen()
+    log_box()
+    map_box()
 
 def onlyOne(container):
     return len(container) == 1
@@ -269,15 +269,22 @@ guard2 = Object(83, 37, "@", 'orange')
 guard4 = Object(84, 37, '@', 'orange')
 units = [npc, guard1, guard2, guard3, guard4, npc1, npc2]
 proceed = True
-lr = 5
+lr = 10
 lights = [
-    (63, 11, lr),
-    (40, 25, lr*3),
-    (40, 33, 30),
-    (65, 25, lr),
-    (77, 25, lr),
-    (93, 25, lr),
-    (107, 25, lr),
+    (1, 10, lr),
+    (21, 10, lr),
+    (41, 10, lr),
+    (61, 10, lr),
+    (81, 10, lr),
+    (101, 10, lr),
+    (121, 10, lr),
+    (1, 38, lr),
+    (21, 38, lr),
+    (41, 38, lr),
+    (61, 38, lr),
+    (81, 38, lr),
+    (101, 38, lr),
+    (121, 38, lr),
 ]
 while proceed:
     term.clear()
