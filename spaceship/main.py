@@ -177,8 +177,8 @@ actions={
     'o': interactDoor,
     'c': interactDoor,
     'i': openInventory,
-    'f1': dungeon.sundown,
-    'f2': dungeon.sunup,
+    'f1': dungeon._sundown,
+    'f2': dungeon._sunup,
 }
 
 def processAction(x, y, key):                        
