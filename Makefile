@@ -4,12 +4,15 @@ SOURCE=./spaceship
 all: test lint clean
 
 .PHONY: clean
-clean:
+clean: clean-logs
 	rm -rf *.orig~
 	rm -rf *.pyc~
 	rm -rf */__pycache__
 	rm -rf *.stackdump~
-	
+
+clean-logs:
+	rm -rf logs/*.txt~
+
 lint-flake-tests:
 	python2.7.exe -m flake8 $(TESTS)
 

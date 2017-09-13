@@ -30,9 +30,11 @@ chars={
 chars_grass= [",",";",]
 chars_walls= ["#"]
 chars_doors= ["+"]
+chars_plant= ["2663"]
 color_grass=("#56ab2f", "#a8e063")
-#color_walls=("#eacda3", "#d6ae7b")
-color_walls=("#a73737", "#7a2828")
+color_walls=("#eacda3", "#d6ae7b")
+color_plant=("#FDFC47", "##24FE41")
+#color_walls=("#a73737", "#7a2828")
 class Object:
     def __init__(self, x, y, i, c='white'):
         """@parameters :- x, y, i, c
@@ -88,14 +90,15 @@ class Map:
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.lamps = None
         self.fogofwar=[[0 for _ in range(self.width)] for _ in range(self.height)]
-        self.block = [[self.data[y][x] in ("#", "+", "o") for x in range(self.width)] for y in range(self.height)]
+        self.block = [[self.data[y][x] in ("#", "+", "o", "x") for x in range(self.width)] for y in range(self.height)]
         #self.stone = forests(self.width, self.height, '.', ["#"])
         self.walls = gradient(self.width, self.height, chars_walls, color_walls)
         #self.grass = forests(self.width, self.height, '|', [";","!"])
         self.grass = gradient(self.width, self.height, chars_grass, color_grass)
+        self.plant = gradient(self.width, self.height, chars_plant, color_plant)
         self.flag = 0
         self.map_display_width = min(self.width, sw-20)
-        self.map_display_height = min(self.height, sh-4)
+        self.map_display_height = min(self.height, sh-6)
 
     @staticmethod
     def dimensions(data):
@@ -139,7 +142,7 @@ class Map:
 
     def blocked(self, x, y):
         return (x < 0 or y < 0 or x >= self.width 
-                or y >= self.height or self.data[y][x] in ("#", "+", "o",))
+                or y >= self.height or self.data[y][x] in ("#", "+",))
 
     def _sun(self):
         return self.SUN
@@ -242,7 +245,7 @@ class Map:
         #fg_fog = "#ff202020"
         daytime= True if self._sun() else False
 
-        fg_fog = "black"
+        fg_fog = "grey"
         bg_fog = "#ff000000"
         positions = {}
         for unit in units:
@@ -257,7 +260,7 @@ class Map:
                 if daytime:
                     # sun causes everything to be lit
                     lit = fog_levels[3]
-
+                    level = ""
                 else:
                     # check if the square is lighted and the light strength
                     lit = self.lit(x, y)
@@ -265,7 +268,6 @@ class Map:
 
                 #blocks are visible if the sun is up or in range of a lightable object
                 visible = daytime or lit
-
                 #level = fog_levels[max(5-level, 0)] if level else fog_levels[min(0, level)]
 
                 if x == X and y == Y:
@@ -275,8 +277,8 @@ class Map:
                     ## bkgd = "black"
 
                 elif (x, y) in positions.keys():
-                    if visible:
-                        level = "dark "
+                    if daytime:
+                        level = ""
                         unit = positions[(x,y)]
                         ch = unit.i
                         lit = unit.c
@@ -301,20 +303,26 @@ class Map:
                     # then try to color according to block type
                     # color the floor
                     if len(str(ch)) < 2:
-                        if ch in (".", ":",):
+                        if ch in (".",):
                             #_, color, _, _ = self.stone[y][x]
                             #lit = "white" if lit else fog
                             #lit = hexone(color//2) if visible else fg_fog
-                            level = fog_levels[lit//2] if lit else "darkest " 
+                            level = fog_levels[lit//2] if not daytime else "darkest " 
                             lit = "grey" if visible else fg_fog
                             ## bkgd = "black" if not lit else bg_fog
-
+                        if ch in (":",):
+                            #_, color, _, _ = self.stone[y][x]
+                            #lit = "white" if lit else fog
+                            #lit = hexone(color//2) if visible else fg_fog
+                            level = fog_levels[lit//2] if not daytime else "" 
+                            lit =  "#9a8478" if visible else fg_fog
+                            ## bkgd = "black" if not lit else bg_fog
                         # color some grasses
                         if ch in (",",";","!","`"):
                             ch, col, _, _ = self.grass[y][x]
                             #lit = hextup(color,5,2,5) if visible else fg_fog
                             # bkgd = hextup(color, 5,3,5) if lit else bg_fog
-                            level = fog_levels[lit//2] if lit else "darkest " 
+                            level = fog_levels[lit//2] if not daytime else "" 
                             lit = col if visible else fg_fog
 
                         # color the water
@@ -349,11 +357,15 @@ class Map:
                             lit = "dark white" if visible else fg_fog
 
                         if ch in ("x"):
-                            lit = "brown" if visible else fg_fog
+                            lit = "#1e130c" if visible else fg_fog
                         
                         if ch in ("|"):
-                            level = fog_levels[lit//2] if lit else "darkest " 
-                            lit = "yellow" if visible else fg_fog
+                            ch, col, _, _ = self.plant[y][x]
+                            #level = fog_levels[lit//2] if lit else "darkest " 
+                            
+                            #lit = "yellow" if visible else fg_fog
+                            level = "light "
+                            lit = col if visible else fg_fog
 
                     else:
                         _, color, _, _ = self.walls[y][x]

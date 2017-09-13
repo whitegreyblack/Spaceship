@@ -9,13 +9,13 @@ from spaceship.objects import Map, Object, Person
 from bearlibterminal import terminal as term
 from collections import namedtuple
 from namedlist import namedlist
-from maps import stringify, hextup, hexone
+from maps import stringify, hextup, hexone, toInt
 from random import randint, choice
 from time import clock
 from spaceship.constants import SCREEN_HEIGHT, SCREEN_WIDTH
 # LIMIT_FPS = 30 -- later used in sprite implementation
 blocked = []
-dungeon = Map(stringify("./assets/test_tube.png"))
+dungeon = Map(stringify("./assets/testmap_colored.png"))
 
 # ---------------------------------------------------------------------------------------------------------------------#
 # TERMINAL SETUP & IMAGE IMPORTS
@@ -27,7 +27,7 @@ def setup():
         "window: size={}x{}, cellsize={}x{}, title='Main Game'".format(
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
-            8, 12))
+            8, 10))
 
 # END SETUP TOOLS
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -38,11 +38,12 @@ def key_in():
     keydown = namedtuple("Key_Down", ("x", "y", "a"))
     global proceed
     # movement
+    act, x, y = 0, 0, 0
     code = term.read()
     if code in (term.TK_ESCAPE, term.TK_CLOSE):
+        glog.dumps()
         proceed = False
-    act, x, y = 0, 0, 0
-    if code in key_movement:
+    elif code in key_movement:
         x, y = key_movement[code]
     elif code in num_movement:
         x, y = num_movement[code]
@@ -53,6 +54,12 @@ def key_in():
     return keydown(x, y, act)
 
 # should change to movement process
+walkChars = {
+    "+": "a door",
+    "o": "a lamp",
+    "#": "a wall",
+    "x": "a post"
+}
 walkBlock = "walked into {}"
 def key_process(x, y, action, unit, blockables):
 
@@ -74,11 +81,12 @@ def key_process(x, y, action, unit, blockables):
         player.move(x, y)
     else:
         if blocked:
-            if ch == "+":
-                glog.add(walkBlock.format("a door"))
-            if ch == "#":
-                glog.add(walkBlock.format("a wall"))
-                glog.add(f"{player.x+x}, {player.y+y}")
+            glog.add(walkBlock.format(walkChars[ch]))
+            # if ch == "+":
+            #     glog.add(walkBlock.format("a door"))
+            # if ch == "#":
+            #     glog.add(walkBlock.format("a wall"))
+                # glog.add(f"{player.x+x}, {player.y+y}")
         elif occupied:
             glog.add(walkBlock.format("someone"))
         elif outofbounds:
@@ -99,12 +107,15 @@ def key_process(x, y, action, unit, blockables):
             unit.move(x, y)
 
 def openInventory(x, y, key):
+    def border():
+        pass
     glog.add("opeining inventory")
     playscreen = False
 
     current_range = 0
     while True:
         term.clear()
+        status_box(player.h, player.m, player.s)
         log_box()
         term.puts(2, 1, "[color=white]Inventory")
         term.refresh()
@@ -118,17 +129,18 @@ def openInventory(x, y, key):
     else:
         glog.add("Closing inventoryy")
     term.clear()
-    log_box()
-    map_box()
-
-def onlyOne(container):
-    return len(container) == 1
-
-def eightsquare(x, y):
-    space = namedtuple("Space", ("x","y"))
-    return [space(x+i,y+j) for i, j in list(num_movement.values())]
+    # status_box()
+    # log_box()
+    # map_box()
 
 def interactDoor(x, y, key):
+    def onlyOne(container):
+        return len(container) == 1
+
+    def eightsquare(x, y):
+        space = namedtuple("Space", ("x","y"))
+        return [space(x+i,y+j) for i, j in list(num_movement.values())]
+
     def openDoor(i, j):
         glog.add("Opened door")
         dungeon.open_door(i, j)
@@ -193,40 +205,42 @@ def processAction(x, y, key):
 # End Movement Functions
 # ---------------------------------------------------------------------------------------------------------------------#
 # Graphic functions
+def status_border():
+    for i in range(20):
+        term.puts(SCREEN_WIDTH-20+i, 0, "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]")
+        term.puts(SCREEN_WIDTH-20+i, SCREEN_HEIGHT-1, "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]")
+    for j in range(35):
+        term.puts(SCREEN_WIDTH-20, j, "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]")
+        term.puts(SCREEN_WIDTH-1, j, "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]")
+
 def status_box(h, m, s):
-    term.puts(81, 1, f"[color=red]Health[/color]: {h}")
-    term.puts(81, 2, f"[color=blue]Magic [/color]: {m}")
-    term.puts(81, 3, f"[color=green]Energy[/color]: {s}")
-    term.puts(82, 4, f"[color=darkest red]A[/color]")
-    term.puts(82, 5, f"[color=darker red]A[/color]")
-    term.puts(82, 6, f"[color=dark red]A[/color]")
-    term.puts(82, 7, f"[color=light red]A[/color]")
-    term.puts(82, 8, f"[color=lighter red]A[/color]")
-    term.puts(82, 9, f"[color=lightest red]A[/color]")
-    term.puts(83, 4, f"[color=darkest blue]A[/color]")
-    term.puts(83, 5, f"[color=darker blue]A[/color]")
-    term.puts(83, 6, f"[color=dark blue]A[/color]")
-    term.puts(83, 7, f"[color=light blue]A[/color]")
-    term.puts(83, 8, f"[color=lighter blue]A[/color]")
-    term.puts(83, 9, f"[color=lightest blue]A[/color]")
-    term.puts(84, 4, f"[color=darkest green]A[/color]")
-    term.puts(84, 5, f"[color=darker green]A[/color]")
-    term.puts(84, 6, f"[color=dark green]A[/color]")
-    term.puts(84, 7, f"[color=light green]A[/color]")
-    term.puts(84, 8, f"[color=lighter green]A[/color]")
-    term.puts(84, 9, f"[color=lightest green]A[/color]")
+    status_border()
+    term.puts(61, 1, f"[color=red]HP[/color]: {h}")
+    term.puts(61, 3, f"[color=blue]MP[/color]: {m}")
+    term.puts(61, 5, f"[color=green]SP[/color]: {s}")
+    term.puts(61, 7, f"[color=yellow]{'day' if dungeon._sun() else 'night'}[/color]")
+
+def log_border():
+    for i in range(60):
+        term.puts(i, SCREEN_HEIGHT-6, "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]")
+        term.puts(i, SCREEN_HEIGHT-1, "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]")
+    for j in range(6):
+        term.puts(0, SCREEN_HEIGHT-6+j, "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]")
+        term.puts(SCREEN_WIDTH-20, SCREEN_HEIGHT-6+j, "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]")
 
 def log_box():
+    log_border()
     messages = glog.write().messages
     if messages:
         for idx in range(len(messages)):
-            term.puts(0, SCREEN_HEIGHT-4+idx, messages[idx])
+            term.puts(1, SCREEN_HEIGHT-5+idx, messages[idx])
 
 def map_box():
     """ Logic:
             Should first print map in gray/black
             Then print units/interactables?
             Finally light sources and player?"""
+    term.composition(False)
     dungeon.fov_calc(lights+[(player.x, player.y, FOV_RADIUS)])
     for x, y, lit, ch in list(dungeon.output(player.x, player.y, units)):
         # term.bkcolor(bgkd)
@@ -234,7 +248,7 @@ def map_box():
             term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
         else:
             try:
-                term.puts(x, y, "[color={}]".format(lit)+chr(ch)+"[/color]")
+                term.puts(x, y, "[color={}]".format(lit)+chr(toInt(ch))+"[/color]")
             except:
                 print(lit, ch)
                 raise
@@ -245,9 +259,9 @@ def map_box():
 # Start initializations
 
 setup()
-glog = GameLogger()
+glog = GameLogger(4)
 # global game variables
-FOV_RADIUS = 10
+FOV_RADIUS = 9
 #MAP_WIDTH, MAP_HEIGHT = 24, 48
 
 MAP_FACTOR = 2
@@ -263,29 +277,30 @@ player = Person(px, py, '@')
 npc = Object(7, 7, '@', 'orange')
 npc1 = Object(5, 15, '@', 'orange')
 npc2 = Object(0, 56, '@', 'orange')
-guard3 = Object(83, 31, '@', 'orange')
-guard1 = Object(84, 32, "@", 'orange')
-guard2 = Object(83, 37, "@", 'orange')
-guard4 = Object(84, 37, '@', 'orange')
+guard3 = Object(63, 31, '@', 'orange')
+guard1 = Object(64, 32, "@", 'orange')
+guard2 = Object(63, 37, "@", 'orange')
+guard4 = Object(64, 37, '@', 'orange')
 units = [npc, guard1, guard2, guard3, guard4, npc1, npc2]
 proceed = True
-lr = 10
-lights = [
-    (1, 10, lr),
-    (21, 10, lr),
-    (41, 10, lr),
-    (61, 10, lr),
-    (81, 10, lr),
-    (101, 10, lr),
-    (121, 10, lr),
-    (1, 38, lr),
-    (21, 38, lr),
-    (41, 38, lr),
-    (61, 38, lr),
-    (81, 38, lr),
-    (101, 38, lr),
-    (121, 38, lr),
-]
+lr = 5
+# lights = [
+#     (1, 10, lr),
+#     (21, 10, lr),
+#     (41, 10, lr),
+#     (61, 10, lr),
+#     (81, 10, lr),
+#     (101, 10, lr),
+#     (121, 10, lr),
+#     (1, 38, lr),
+#     (21, 38, lr),
+#     (41, 38, lr),
+#     (61, 38, lr),
+#     (81, 38, lr),
+#     (101, 38, lr),
+#     (121, 38, lr),
+# ]
+lights = []
 while proceed:
     term.clear()
     status_box(player.h, player.m, player.s)
