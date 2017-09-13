@@ -115,7 +115,7 @@ def openInventory(x, y, key):
     current_range = 0
     while True:
         term.clear()
-        status_box(player.h, player.m, player.s)
+        status_box()
         log_box()
         term.puts(2, 1, "[color=white]Inventory")
         term.refresh()
@@ -205,31 +205,34 @@ def processAction(x, y, key):
 # End Movement Functions
 # ---------------------------------------------------------------------------------------------------------------------#
 # Graphic functions
-def status_border():
+def graphics(integer: int) -> None:
+    if not 0 < integer < 8:
+        raise ValueError("Must be within 0-7")
+def border():
+    # status border
+    border_line =  "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]"
     for i in range(20):
-        term.puts(SCREEN_WIDTH-20+i, 0, "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]")
-        term.puts(SCREEN_WIDTH-20+i, SCREEN_HEIGHT-1, "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]")
+        term.puts(SCREEN_WIDTH-20+i, 0, border_line)
+        term.puts(SCREEN_WIDTH-20+i, SCREEN_HEIGHT-1, border_line)
     for j in range(35):
-        term.puts(SCREEN_WIDTH-20, j, "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]")
-        term.puts(SCREEN_WIDTH-1, j, "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]")
+        term.puts(SCREEN_WIDTH-20, j, border_line)
+        term.puts(SCREEN_WIDTH-1, j, border_line)
+    # message log border
+    for i in range(60):
+        term.puts(i, SCREEN_HEIGHT-6, border_line)
+        term.puts(i, SCREEN_HEIGHT-1, border_line)
+    for j in range(6):
+        term.puts(0, SCREEN_HEIGHT-6+j, border_line)
+        #term.puts(SCREEN_WIDTH-20, SCREEN_HEIGHT-6+j,border_line)
 
-def status_box(h, m, s):
-    status_border()
-    term.puts(61, 1, f"[color=red]HP[/color]: {h}")
-    term.puts(61, 3, f"[color=blue]MP[/color]: {m}")
-    term.puts(61, 5, f"[color=green]SP[/color]: {s}")
+def status_box():
+    global player
+    term.puts(61, 1, f"[color=red]HP[/color]: {player.h}")
+    term.puts(61, 3, f"[color=blue]MP[/color]: {player.m}")
+    term.puts(61, 5, f"[color=green]SP[/color]: {player.s}")
     term.puts(61, 7, f"[color=yellow]{'day' if dungeon._sun() else 'night'}[/color]")
 
-def log_border():
-    for i in range(60):
-        term.puts(i, SCREEN_HEIGHT-6, "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]")
-        term.puts(i, SCREEN_HEIGHT-1, "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]")
-    for j in range(6):
-        term.puts(0, SCREEN_HEIGHT-6+j, "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]")
-        term.puts(SCREEN_WIDTH-20, SCREEN_HEIGHT-6+j, "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]")
-
 def log_box():
-    log_border()
     messages = glog.write().messages
     if messages:
         for idx in range(len(messages)):
@@ -242,7 +245,7 @@ def map_box():
             Finally light sources and player?"""
     term.composition(False)
     dungeon.fov_calc(lights+[(player.x, player.y, FOV_RADIUS)])
-    for x, y, lit, ch in list(dungeon.output(player.x, player.y, units)):
+    for x, y, lit, ch, bkgd in list(dungeon.output(player.x, player.y, units)):
         # term.bkcolor(bgkd)
         if len(str(ch)) < 2:
             term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
@@ -303,12 +306,9 @@ lr = 5
 lights = []
 while proceed:
     term.clear()
-    status_box(player.h, player.m, player.s)
-    player.h -= 10
+    status_box()
+    border()
     log_box()
-    # removed list creation
-    #positions = [(x, y, lit, ch)
-    #             for x, y, lit, ch in dungeon.output(player.x, player.y, units)]
     map_box()
     x, y, a = key_in()
     if a:

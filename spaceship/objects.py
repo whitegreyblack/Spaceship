@@ -87,13 +87,13 @@ class Map:
     def __init__(self, data):
         self.SUN = False
         self.data, self.height, self.width = self.dimensions(data)
+        # self.block blocks both light (and movement?)
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.lamps = None
         self.fogofwar=[[0 for _ in range(self.width)] for _ in range(self.height)]
+        # self.block only blocks movements
         self.block = [[self.data[y][x] in ("#", "+", "o", "x") for x in range(self.width)] for y in range(self.height)]
-        #self.stone = forests(self.width, self.height, '.', ["#"])
         self.walls = gradient(self.width, self.height, chars_walls, color_walls)
-        #self.grass = forests(self.width, self.height, '|', [";","!"])
         self.grass = gradient(self.width, self.height, chars_grass, color_grass)
         self.plant = gradient(self.width, self.height, chars_plant, color_plant)
         self.flag = 0
@@ -284,9 +284,9 @@ class Map:
                         lit = unit.c
 
                     else:
-                        level = "darkest "
-                        ch = self.square(x, y)
-                        lit = fg_fog
+                        level = "" if visible else "darkest "
+                        ch = "@" if visible else self.square(x, y)
+                        lit = "orange" if visible else fg_fog
                     
                 elif (x, y, 5) in self.lamps:
                     level = ""
@@ -308,7 +308,7 @@ class Map:
                             #lit = "white" if lit else fog
                             #lit = hexone(color//2) if visible else fg_fog
                             level = fog_levels[lit//2] if not daytime else "darkest " 
-                            lit = "grey" if visible else fg_fog
+                            lit = "grey" if visible else "black"
                             ## bkgd = "black" if not lit else bg_fog
                         if ch in (":",):
                             #_, color, _, _ = self.stone[y][x]
@@ -372,6 +372,9 @@ class Map:
                         lit = color if visible else fg_fog
 
                 # bkgd = hextup(color, 4,4,4) if lit else bg_fog
-                # all said and done -- return by unit block        
-                yield (x-cx, y-cy, level+lit, ch)
+                # all said and done -- return by unit block
+                try:        
+                    yield (x-cx, y-cy, level+lit, ch, bkgd)
+                except NameError:
+                    yield (x-cx, y-cy, level+lit, ch, None)
         self.lit_reset()

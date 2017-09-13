@@ -1,8 +1,9 @@
 # File: Notes.txt
 # Auth: Sam Whang
 
+
 # Radius and the Double Circles -- Aug 27
-Should have a double circle. Outside and an inner circle. Inside circle views 
+Should have a double circle. Outside and an inner circle. Inside circle views
 all three attributes (character of terrain, light visibility and unit shown).
 Each level from the inner torwards the outside circle lowers the intensity of
 the light level. All levels outside the inner circle can only view the light
@@ -27,3 +28,17 @@ Hopefully it won't take too much time. This is more of a extra for this project
 since I have not yet finished the basics. So how should I start? First we can
 decouple line of sight from map and create a light/shadow class for the map
 class to hold instead of using line of sight in the map class.
+
+
+# Movement Blocking vs Light Blocking -- Sept 13
+Light and movement use almost the same amount of data for similar usages. If a
+square is found with a certain character then it is considered blocked. During
+the sight algorithm the function determines if those blocked characters allow
+light to pass through them. This enables a very flexible lighting system where
+players are able to see through a square yet not be able to pass due to the 
+blocking mechanic. This is especially useful when implementing see through 
+blocks such as glass/windows, fences, jail cells and other "materials" that
+you would be able to see through but not pass through. Currently this mechanic
+is implemented in two seperate data structures. However due to a memory
+concern I am hoping to implement it in one datastructure with a list of tuples
+that would hold the values instead.
