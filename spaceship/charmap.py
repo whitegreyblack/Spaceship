@@ -11,6 +11,6 @@ class Charmap:
     PLANT=charmap(["|"], ("#FDFC47", "#24FE41"))
     LAMPS=charmap(["o"], ("#ffffff", "#ffffff"))
     BRICK=charmap(["%"], ("#a73737", "#7a2828"))
-    ROADS=charmap([":"], ("#808080", "#C0C0C0"))
+    ROADS=charmap([":"], ("#808080", "#994C00"))
     POSTS=charmap(["x"], ("#9a8478", "#9a8478"))
     BLOCK=("#", "+", "o", "x")

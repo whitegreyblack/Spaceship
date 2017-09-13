@@ -251,7 +251,7 @@ def map_box():
             Then print units/interactables?
             Finally light sources and player?"""
     term.composition(False)
-    dungeon.fov_calc(lights+[(player.x, player.y, FOV_RADIUS)])
+    dungeon.fov_calc(lights+[(player.x, player.y, player.l)])
     for x, y, lit, ch, bkgd in list(dungeon.output(player.x, player.y, units)):
         # term.bkcolor(bgkd)
         if len(str(ch)) < 2:
@@ -282,7 +282,7 @@ px, py = 86, 30
 # units = Map.appendUnitList("./unitlist/test_map_colored.png")
 # map = Map(parse("testmap.dat"))
 #dungeon = Map(stringify("./assets/testmap.png"))
-player = Person(px, py, '@')
+player = Person(px, py, '@', 10)
 rat = Object(85, 30, 'r', 'white')
 npc = Object(7, 7, '@', 'orange')
 npc1 = Object(5, 15, '@', 'orange')

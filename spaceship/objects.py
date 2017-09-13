@@ -6,6 +6,7 @@ from collections import namedtuple
 from spaceship.imports import *
 from spaceship.colors import color, COLOR, SHIP_COLOR
 from random import randint, choice
+from math import sqrt
 from spaceship.constants import SCREEN_HEIGHT as sh
 from spaceship.constants import SCREEN_WIDTH as sw
 from spaceship.maps import hextup, hexone, output, blender, gradient, evaluate_blocks
@@ -44,6 +45,7 @@ color_tiles=("#808080", "#C0C0C0")
 color_water=("#43C6AC", "#191654")
 color_doors=("#994C00", "#994C00")
 color_posts=("#9A8478", "#9A8478")
+
 class Object:
     def __init__(self, x, y, i, c='white'):
         """@parameters :- x, y, i, c
@@ -68,11 +70,12 @@ class Object:
         return self.x , self.y
 
 class Person(Object):
-    def __init__(self, x, y, i, c='white'):
+    def __init__(self, x, y, i, l, c='white'):
         super().__init__(x, y, i, c)
         self.h = 100
         self.m = 100
         self.s = 100
+        self.l = l
 
     def stats(self):
         return self.h, self.m, self.s
@@ -129,10 +132,10 @@ class Map:
             "#": tile(choice(cm.WALLS.char), choice(cm.WALLS.hexcode), Light.Unexplored, "No"),
             "~": tile(choice(cm.WATER.char), choice(cm.WATER.hexcode), Light.Unexplored, "No"),
             "+": tile(choice(cm.DOORS.char), choice(cm.DOORS.hexcode), Light.Unexplored, "No"),
-            "x": tile(choice(cm.DOORS.char), choice(cm.POSTS.hexcode), Light.Unexplored, "No"), 
+            "x": tile(choice(cm.POSTS.char), choice(cm.POSTS.hexcode), Light.Unexplored, "No"), 
             "|": tile(choice(cm.PLANT.char), choice(cm.PLANT.hexcode), Light.Unexplored, "Yes"),
             "o": tile(choice(cm.LAMPS.char), choice(cm.LAMPS.hexcode), Light.Unexplored, "No"),
-            ":": tile(choice(cm.ROADS.char), choice(cm.TILES.hexcode), Light.Unexplored, "Yes"),
+            ":": tile(choice(cm.ROADS.char), choice(cm.ROADS.hexcode), Light.Unexplored, "Yes"),
             "=": tile(choice(cm.HOUSE.char), choice(cm.HOUSE.hexcode), Light.Unexplored, "Yes"),
         }
 
@@ -246,7 +249,11 @@ class Map:
                     # Our light beam is touching this square; light it:
                     if dx*dx + dy*dy < radius_squared:
                         #self.set_lit(X, Y)
-                        self.set_lit(X, Y, j, radius)
+                        lx = abs(cx-X) * abs(cx-X)
+                        ly = abs(cy-Y) * abs(cy-Y)
+                        lv = int(round(sqrt(lx+ly)))
+                        self.set_lit(X, Y, lv, 25)
+
                     if blocked:
                         # we're scanning a row of blocked squares:
                         if self.blocked(X, Y):
@@ -331,9 +338,9 @@ class Map:
                         ch = "@" if visible else self.square(x, y)
                         lit = "orange" if visible else fg_fog
                     
-                elif (x, y, 5) in self.lamps:
+                elif (x, y, 10) in self.lamps:
                     level = ""
-                    ch = "!"
+                    ch = self.square(x, y)
                     lit = "white"
 
                 else:
@@ -350,14 +357,14 @@ class Map:
                             #_, color, _, _ = self.stone[y][x]
                             #lit = "white" if lit else fog
                             #lit = hexone(color//2) if visible else fg_fog
-                            level = fog_levels[lit//5] if not daytime else "darkest " 
+                            level = fog_levels[lit//25] if not daytime else "darkest " 
                             lit = "grey" if visible else "black"
                             ## bkgd = "black" if not lit else bg_fog
                         if ch in (":",):
-                            #_, color, _, _ = self.stone[y][x]
+                            ch, color, _, _ = self.tilemap[y][x]
                             #lit = "white" if lit else fog
                             #lit = hexone(color//2) if visible else fg_fog
-                            level = fog_levels[lit//5] if not daytime else "" 
+                            level = fog_levels[lit//25] if not daytime else "" 
                             lit =  "#9a8478" if visible else fg_fog
                             ## bkgd = "black" if not lit else bg_fog
                         # color some grasses
@@ -365,7 +372,10 @@ class Map:
                             ch, col, _, _ = self.grass[y][x]
                             #lit = hextup(color,5,2,5) if visible else fg_fog
                             # bkgd = hextup(color, 5,3,5) if lit else bg_fog
-                            level = fog_levels[lit//5] if not daytime else "" 
+                            try:
+                                level = fog_levels[lit//25] if not daytime else "" 
+                            except IndexError:
+                                print(lit)
                             lit = col if visible else fg_fog
 
                         # color the water
