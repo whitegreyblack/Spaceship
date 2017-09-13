@@ -15,6 +15,7 @@ tile = namedlist("Tile", "char color visible walkable")
 errormessage=namedtuple("ErrMsg", "x y ch lvl vis lit")
 symboltype = namedtuple("Symbol", "ascii unicode")
 visibility = namedtuple("Visiblity", "movement visibility lightlevel")
+
 class Light: Unexplored, Explored, Visible = range(3)    
 class Letter: Ascii, Unicode = range(2)
 
@@ -28,21 +29,19 @@ fog_levels= {
     5: "lightest",
 }
 
-chars={
-    "grass": ([",",";","`"], ("#56ab2f", "#a8e063")),
-    "walls": (["#"], ("#eacda3", "#d6ae7b")),
-    "doors": (["+"], ("#ff994C00", "#ff994C00")),
-    "brick": (["%"], ("#a73737", "#7a2828"))
-}
+charmap = namedtuple("Charmap", "char hexcode")
+class Charmap:
+    GRASS=charmap([",", ";"], ("#56ab2f", "#a8e063"))
+    HOUSE=charmap(["="], ("#ffffff", "#ffffff"))
+    TILES=charmap(["."], ("#808080", "#C0C0C0"))
+    WALLS=charmap(["#"], ("#eacda3", "#d6ae7b"))
+    WATER=charmap(["~"], ("#43C6AC", "#191654"))
+    DOORS=charmap(["+"], ("#994C00", "#994C00"))
+    PLANT=charmap(["|"], ("#FDFC47", "#24FE41"))
+    POSTS=charmap(["o"], ("#9A8478", "#9A8478"))
+    BRICK=charmap(["%"], ("#a73737", "#7a2828"))
+    BLOCK=("#", "+", "o", "x")
 
-class Symbols:
-    Tiles=["."]
-    Grass=[",",";"]
-    Walls=[]
-    Water=[]
-    Doors=[]
-    Plant=[]
-    Posts=[]
 chars_roads=[":"]
 chars_tiles=["."]
 chars_block= ("#", "+", "o", "x")
@@ -54,6 +53,7 @@ chars_doors= ["+"]
 chars_plant= ["2663"]
 chars_posts= ["x"]
 chars_lamps= ["o"]
+
 color_house=("#ffffff", "#ffffff")
 color_lamps=("#ffffff", "#ffffff")
 color_grass=("#56ab2f", "#a8e063")
