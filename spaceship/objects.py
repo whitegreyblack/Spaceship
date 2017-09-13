@@ -9,9 +9,9 @@ from random import randint, choice
 from spaceship.constants import SCREEN_HEIGHT as sh
 from spaceship.constants import SCREEN_WIDTH as sw
 from spaceship.maps import hextup, hexone, output, blender, gradient, evaluate_blocks
+from spaceship.charmap import Charmap as cm
 # TODO: Maybe move map to a new file called map and create a camera class?
 
-tile = namedlist("Tile", "char color visible walkable")
 errormessage=namedtuple("ErrMsg", "x y ch lvl vis lit")
 symboltype = namedtuple("Symbol", "ascii unicode")
 visibility = namedtuple("Visiblity", "movement visibility lightlevel")
@@ -20,31 +20,11 @@ class Light: Unexplored, Explored, Visible = range(3)
 class Letter: Ascii, Unicode = range(2)
 
 # fog levels are calculated in steps of 2, so radius of 10/11 will be the max bounds
-fog_levels= {
-    0: "darkest ",
-    1: "darker ",
-    2: "dark ",
-    3: "light ",
-    4: "lighter ",
-    5: "lightest",
-}
-
-charmap = namedtuple("Charmap", "char hexcode")
-class Charmap:
-    GRASS=charmap([",", ";"], ("#56ab2f", "#a8e063"))
-    HOUSE=charmap(["="], ("#ffffff", "#ffffff"))
-    TILES=charmap(["."], ("#808080", "#C0C0C0"))
-    WALLS=charmap(["#"], ("#eacda3", "#d6ae7b"))
-    WATER=charmap(["~"], ("#43C6AC", "#191654"))
-    DOORS=charmap(["+"], ("#994C00", "#994C00"))
-    PLANT=charmap(["|"], ("#FDFC47", "#24FE41"))
-    POSTS=charmap(["o"], ("#9A8478", "#9A8478"))
-    BRICK=charmap(["%"], ("#a73737", "#7a2828"))
-    BLOCK=("#", "+", "o", "x")
+fog_levels= ["darkest ", "darker ", "dark ","light ","lighter ", "lightest"]
 
 chars_roads=[":"]
 chars_tiles=["."]
-chars_block= ("#", "+", "o", "x")
+chars_block= ("#", "+", "o", "x", "~")
 chars_grass= [",",";",]
 chars_water= ["~"]
 chars_house= ["="]
@@ -112,6 +92,7 @@ class Map:
 
     colors_block = ["#ffc0c0c0", "#ffa0a0a0", "#ff808080", "#ff606060", "#ff404040"]
     colors_water = blender(color_water, 20)
+
     def __init__(self, data):
         self.SUN = False
         self.data, self.height, self.width = self.dimensions(data)
@@ -128,8 +109,10 @@ class Map:
         self.map_display_width = min(self.width, sw-20)
         self.map_display_height = min(self.height, sh-6)
         self.tilemap = self.fill(data, self.width, self.height)
-        output(self.tilemap)    
+        
+
     def fill(self, d, w, h):
+        tile = namedlist("Tile", "char color visible walkable")
         # char color visible walkable
         tiles = blender(color_tiles) 
         walls = blender(color_walls)
@@ -141,17 +124,18 @@ class Map:
         lamps = blender(color_lamps)
         house = blender(color_house)
         chars={
-            ".": tile(choice(chars_tiles), choice(tiles), Light.Unexplored, "Yes"),
-            ",": tile(choice(chars_grass), choice(grass), Light.Unexplored, "Yes"),
-            "#": tile(choice(chars_walls), choice(walls), Light.Unexplored, "No"),
-            "~": tile(choice(chars_water), choice(water), Light.Unexplored, "No"),
-            "+": tile(choice(chars_doors), choice(doors), Light.Unexplored, "No"),
-            "x": tile(choice(chars_posts), choice(posts), Light.Unexplored, "No"), 
-            "|": tile(choice(chars_plant), choice(plant), Light.Unexplored, "Yes"),
-            "o": tile(choice(chars_lamps), choice(lamps), Light.Unexplored, "No"),
-            ":": tile(choice(chars_roads), choice(tiles), Light.Unexplored, "Yes"),
-            "=": tile(choice(chars_house), choice(house), Light.Unexplored, "Yes"),
+            ".": tile(choice(cm.TILES.char), choice(cm.TILES.hexcode), Light.Unexplored, "Yes"),
+            ",": tile(choice(cm.GRASS.char), choice(cm.GRASS.hexcode), Light.Unexplored, "Yes"),
+            "#": tile(choice(cm.WALLS.char), choice(cm.WALLS.hexcode), Light.Unexplored, "No"),
+            "~": tile(choice(cm.WATER.char), choice(cm.WATER.hexcode), Light.Unexplored, "No"),
+            "+": tile(choice(cm.DOORS.char), choice(cm.DOORS.hexcode), Light.Unexplored, "No"),
+            "x": tile(choice(cm.DOORS.char), choice(cm.POSTS.hexcode), Light.Unexplored, "No"), 
+            "|": tile(choice(cm.PLANT.char), choice(cm.PLANT.hexcode), Light.Unexplored, "Yes"),
+            "o": tile(choice(cm.LAMPS.char), choice(cm.LAMPS.hexcode), Light.Unexplored, "No"),
+            ":": tile(choice(cm.ROADS.char), choice(cm.TILES.hexcode), Light.Unexplored, "Yes"),
+            "=": tile(choice(cm.HOUSE.char), choice(cm.HOUSE.hexcode), Light.Unexplored, "Yes"),
         }
+
         def evaluate(char):
             try:
                 t = chars[char]
@@ -159,6 +143,7 @@ class Map:
                 raise
             return t
         return [[evaluate(col) for col in row] for row in d.split('\n')]
+
 
     @staticmethod
     def dimensions(data):
@@ -168,6 +153,7 @@ class Map:
         width = max(len(col) for col in data)
         return data, height, width
 
+
     def square(self, x, y):
         return self.data[y][x]
 
@@ -175,11 +161,14 @@ class Map:
     def openable(self, x, y, ch):
         return self.square(x,y) == "+"
 
+
     def _sunup(self):
         self.SUN=True
 
+
     def _sundown(self):
         self.SUN=False
+
 
     def open_door(self, x, y):
         if self.square(x, y) == "+":
@@ -190,15 +179,11 @@ class Map:
         if self.square(x, y) == "/":
             self.data[y][x] = "+"
 
-
     def reblock(self, x, y):
         self.block[y][x] = True
 
-
     def unblock(self, x, y):
-
         self.block[y][x] = False
-
 
     def blocked(self, x, y):
         return (x < 0 or y < 0 or x >= self.width 
@@ -206,7 +191,6 @@ class Map:
 
     def _sun(self):
         return self.SUN
-
 
     def lit(self, x, y):
         #return self.light[y][x] == self.flag
@@ -219,16 +203,15 @@ class Map:
         if 0 <= x < self.width and 0 <= y < self.height:
             self.light[y][x] = self.flag
     """
-    def set_lit(self, x, y, row):
+    def set_lit(self, x, y, row, radius):
         if 0 <= x < self.width and 0 <= y < self.height:
-            if self.light[y][x] < 10-row:
-                self.light[y][x] = 10-row
+            if self.light[y][x] < radius-row:
+                self.light[y][x] = radius-row
                 self.fogofwar[y][x] = True
 
     def lit_reset(self):
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
-
-    #def fov_calc(self, x, y, radius):
+    
     def fov_calc(self, lights):
         self.lamps = lights
         self.flag += 1
@@ -263,7 +246,7 @@ class Map:
                     # Our light beam is touching this square; light it:
                     if dx*dx + dy*dy < radius_squared:
                         #self.set_lit(X, Y)
-                        self.set_lit(X, Y, j)
+                        self.set_lit(X, Y, j, radius)
                     if blocked:
                         # we're scanning a row of blocked squares:
                         if self.blocked(X, Y):
@@ -367,14 +350,14 @@ class Map:
                             #_, color, _, _ = self.stone[y][x]
                             #lit = "white" if lit else fog
                             #lit = hexone(color//2) if visible else fg_fog
-                            level = fog_levels[lit//2] if not daytime else "darkest " 
+                            level = fog_levels[lit//5] if not daytime else "darkest " 
                             lit = "grey" if visible else "black"
                             ## bkgd = "black" if not lit else bg_fog
                         if ch in (":",):
                             #_, color, _, _ = self.stone[y][x]
                             #lit = "white" if lit else fog
                             #lit = hexone(color//2) if visible else fg_fog
-                            level = fog_levels[lit//2] if not daytime else "" 
+                            level = fog_levels[lit//5] if not daytime else "" 
                             lit =  "#9a8478" if visible else fg_fog
                             ## bkgd = "black" if not lit else bg_fog
                         # color some grasses
@@ -382,7 +365,7 @@ class Map:
                             ch, col, _, _ = self.grass[y][x]
                             #lit = hextup(color,5,2,5) if visible else fg_fog
                             # bkgd = hextup(color, 5,3,5) if lit else bg_fog
-                            level = fog_levels[lit//2] if not daytime else "" 
+                            level = fog_levels[lit//5] if not daytime else "" 
                             lit = col if visible else fg_fog
 
                         # color the water

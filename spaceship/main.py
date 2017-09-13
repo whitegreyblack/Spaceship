@@ -12,7 +12,7 @@ from namedlist import namedlist
 from maps import stringify, hextup, hexone, toInt
 from random import randint, choice
 from time import clock
-from spaceship.constants import SCREEN_HEIGHT, SCREEN_WIDTH
+from spaceship.constants import SCREEN_HEIGHT, SCREEN_WIDTH, FOV_RADIUS
 # LIMIT_FPS = 30 -- later used in sprite implementation
 blocked = []
 dungeon = Map(stringify("./assets/testmap_colored.png"))
@@ -27,7 +27,7 @@ def setup():
         "window: size={}x{}, cellsize={}x{}, title='Main Game'".format(
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
-            8, 10))
+            8, 8))
 
 # END SETUP TOOLS
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -58,7 +58,8 @@ walkChars = {
     "+": "a door",
     "o": "a lamp",
     "#": "a wall",
-    "x": "a post"
+    "x": "a post",
+    "~": "a river",
 }
 walkBlock = "walked into {}"
 def key_process(x, y, action, unit, blockables):
@@ -107,14 +108,15 @@ def key_process(x, y, action, unit, blockables):
             unit.move(x, y)
 
 def openInventory(x, y, key):
-    def border():
-        pass
-    glog.add("opeining inventory")
+    debug=False
+    if debug:
+        glog.add("opening inventory")
     playscreen = False
 
     current_range = 0
     while True:
         term.clear()
+        border()
         status_box()
         log_box()
         term.puts(2, 1, "[color=white]Inventory")
@@ -126,7 +128,7 @@ def openInventory(x, y, key):
             if current_range > 0: current_range -= 1
         elif code == term.TK_DOWN:
             if current_range < 10: current_range += 1
-    else:
+    if debug:
         glog.add("Closing inventoryy")
     term.clear()
     # status_box()
@@ -207,9 +209,10 @@ def processAction(x, y, key):
 # Graphic functions
 def graphics(integer: int) -> None:
     def toBin(n):
-        pass
+        return list(bin(n).replace('0b'))
     if not 0 < integer < 8:
         raise ValueError("Must be within 0-7")
+
 def border():
     # status border
     border_line =  "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]"
@@ -227,12 +230,14 @@ def border():
         term.puts(0, SCREEN_HEIGHT-6+j, border_line)
         #term.puts(SCREEN_WIDTH-20, SCREEN_HEIGHT-6+j,border_line)
 
+turn = 0
 def status_box():
-    global player
+    global player, turn
     term.puts(61, 1, f"[color=red]HP[/color]: {player.h}")
     term.puts(61, 3, f"[color=blue]MP[/color]: {player.m}")
     term.puts(61, 5, f"[color=green]SP[/color]: {player.s}")
     term.puts(61, 7, f"[color=yellow]{'day' if dungeon._sun() else 'night'}[/color]")
+    term.puts(61, 9, f"[color=orange]{turn}[/color]")
 
 def log_box():
     messages = glog.write().messages
@@ -266,7 +271,6 @@ def map_box():
 setup()
 glog = GameLogger(4)
 # global game variables
-FOV_RADIUS = 9
 #MAP_WIDTH, MAP_HEIGHT = 24, 48
 
 MAP_FACTOR = 2
@@ -279,6 +283,7 @@ px, py = 86, 30
 # map = Map(parse("testmap.dat"))
 #dungeon = Map(stringify("./assets/testmap.png"))
 player = Person(px, py, '@')
+rat = Object(85, 30, 'r', 'white')
 npc = Object(7, 7, '@', 'orange')
 npc1 = Object(5, 15, '@', 'orange')
 npc2 = Object(0, 56, '@', 'orange')
@@ -286,7 +291,7 @@ guard3 = Object(63, 31, '@', 'orange')
 guard1 = Object(64, 32, "@", 'orange')
 guard2 = Object(63, 37, "@", 'orange')
 guard4 = Object(64, 37, '@', 'orange')
-units = [npc, guard1, guard2, guard3, guard4, npc1, npc2]
+units = [npc, guard1, guard2, guard3, guard4, npc1, npc2, rat]
 proceed = True
 lr = 5
 # lights = [
@@ -305,7 +310,7 @@ lr = 5
 #     (101, 38, lr),
 #     (121, 38, lr),
 # ]
-lights = []
+lights = [(121, 39, 10)]
 while proceed:
     term.clear()
     status_box()
