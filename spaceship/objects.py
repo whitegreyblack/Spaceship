@@ -1,6 +1,7 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
+from namedlist import namedlist
 from collections import namedtuple
 from spaceship.imports import *
 from spaceship.colors import color, COLOR, SHIP_COLOR
@@ -10,10 +11,12 @@ from spaceship.constants import SCREEN_WIDTH as sw
 from spaceship.maps import hextup, hexone, output, blender, gradient, evaluate_blocks
 # TODO: Maybe move map to a new file called map and create a camera class?
 
-
+tile = namedlist("Tile", "char color visible walkable")
 errormessage=namedtuple("ErrMsg", "x y ch lvl vis lit")
-
+symboltype = namedtuple("Symbol", "ascii unicode")
+visibility = namedtuple("Visiblity", "movement visibility lightlevel")
 class Light: Unexplored, Explored, Visible = range(3)    
+class Letter: Ascii, Unicode = range(2)
 
 # fog levels are calculated in steps of 2, so radius of 10/11 will be the max bounds
 fog_levels= {
@@ -32,14 +35,35 @@ chars={
     "brick": (["%"], ("#a73737", "#7a2828"))
 }
 
+class Symbols:
+    Tiles=["."]
+    Grass=[",",";"]
+    Walls=[]
+    Water=[]
+    Doors=[]
+    Plant=[]
+    Posts=[]
+chars_roads=[":"]
+chars_tiles=["."]
+chars_block= ("#", "+", "o", "x")
 chars_grass= [",",";",]
+chars_water= ["~"]
+chars_house= ["="]
 chars_walls= ["#"]
 chars_doors= ["+"]
 chars_plant= ["2663"]
+chars_posts= ["x"]
+chars_lamps= ["o"]
+color_house=("#ffffff", "#ffffff")
+color_lamps=("#ffffff", "#ffffff")
 color_grass=("#56ab2f", "#a8e063")
 color_walls=("#eacda3", "#d6ae7b")
-color_plant=("#FDFC47", "##24FE41")
-#color_walls=("#a73737", "#7a2828")
+color_plant=("#FDFC47", "#24FE41")
+color_brick=("#a73737", "#7a2828")
+color_tiles=("#808080", "#C0C0C0")
+color_water=("#43C6AC", "#191654")
+color_doors=("#994C00", "#994C00")
+color_posts=("#9A8478", "#9A8478")
 class Object:
     def __init__(self, x, y, i, c='white'):
         """@parameters :- x, y, i, c
@@ -87,8 +111,7 @@ class Map:
             ]
 
     colors_block = ["#ffc0c0c0", "#ffa0a0a0", "#ff808080", "#ff606060", "#ff404040"]
-    colors_water = blender("#43C6AC", "#191654", 20)
-
+    colors_water = blender(color_water, 20)
     def __init__(self, data):
         self.SUN = False
         self.data, self.height, self.width = self.dimensions(data)
@@ -97,13 +120,45 @@ class Map:
         self.lamps = None
         self.fogofwar=[[0 for _ in range(self.width)] for _ in range(self.height)]
         # self.block only blocks movements
-        self.block = [[self.data[y][x] in ("#", "+", "o", "x") for x in range(self.width)] for y in range(self.height)]
+        self.block = [[self.data[y][x] in chars_block for x in range(self.width)] for y in range(self.height)]
         self.walls = gradient(self.width, self.height, chars_walls, color_walls)
         self.grass = gradient(self.width, self.height, chars_grass, color_grass)
         self.plant = gradient(self.width, self.height, chars_plant, color_plant)
         self.flag = 0
         self.map_display_width = min(self.width, sw-20)
         self.map_display_height = min(self.height, sh-6)
+        self.tilemap = self.fill(data, self.width, self.height)
+        output(self.tilemap)    
+    def fill(self, d, w, h):
+        # char color visible walkable
+        tiles = blender(color_tiles) 
+        walls = blender(color_walls)
+        plant = blender(color_plant)
+        grass = blender(color_grass)
+        water = blender(color_water)
+        doors = blender(color_doors)
+        posts = blender(color_posts)
+        lamps = blender(color_lamps)
+        house = blender(color_house)
+        chars={
+            ".": tile(choice(chars_tiles), choice(tiles), Light.Unexplored, "Yes"),
+            ",": tile(choice(chars_grass), choice(grass), Light.Unexplored, "Yes"),
+            "#": tile(choice(chars_walls), choice(walls), Light.Unexplored, "No"),
+            "~": tile(choice(chars_water), choice(water), Light.Unexplored, "No"),
+            "+": tile(choice(chars_doors), choice(doors), Light.Unexplored, "No"),
+            "x": tile(choice(chars_posts), choice(posts), Light.Unexplored, "No"), 
+            "|": tile(choice(chars_plant), choice(plant), Light.Unexplored, "Yes"),
+            "o": tile(choice(chars_lamps), choice(lamps), Light.Unexplored, "No"),
+            ":": tile(choice(chars_roads), choice(tiles), Light.Unexplored, "Yes"),
+            "=": tile(choice(chars_house), choice(house), Light.Unexplored, "Yes"),
+        }
+        def evaluate(char):
+            try:
+                t = chars[char]
+            except KeyError:
+                raise
+            return t
+        return [[evaluate(col) for col in row] for row in d.split('\n')]
 
     @staticmethod
     def dimensions(data):

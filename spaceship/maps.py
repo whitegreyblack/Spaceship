@@ -194,10 +194,11 @@ def table(ch, val, x, y):
     return [[(choice(ch), choice(val), i, j) for i in range(x)] for j in range(y)]
 
 
-def blender(hex1, hex2, n=10):
+def blender(hexes, n=10):
     """blender holds color transformation functions
     TODO: probably should move this to another file
     Up to user to decide whether color is valid"""
+    hex1, hex2 = hexes
     def splitter(c):
         c = c.replace("#", "")
         if len(c) > 8:
@@ -270,6 +271,7 @@ def output(data):
     print(characters)
 
 
+# copy from objects.maps.dimensions() but takes in array as positional
 def dimensions(data, array=False):
     """Takes in a string map and returns a 2D list map and map dimensions"""
     if not array:
@@ -280,8 +282,7 @@ def dimensions(data, array=False):
 
 def gradient(x, y, characters, colors):
     """Returns a more realistic map color gradient"""
-    ca, cb = colors
-    return table(characters, blender(ca,cb), x, y)
+    return table(characters, blender(colors), x, y)
 
 
 if __name__ == "__main__":
