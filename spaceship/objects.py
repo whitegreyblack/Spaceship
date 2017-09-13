@@ -1,14 +1,19 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from collections import namedtuple
-from imports import *
-from colors import color, COLOR, SHIP_COLOR
+from spaceship.imports import *
+from spaceship.colors import color, COLOR, SHIP_COLOR
 from random import randint, choice
-from constants import SCREEN_HEIGHT as sh
-from constants import SCREEN_WIDTH as sw
-from maps import hextup, hexone, output, blender, gradient, evaluate_blocks
+from spaceship.constants import SCREEN_HEIGHT as sh
+from spaceship.constants import SCREEN_WIDTH as sw
+from spaceship.maps import hextup, hexone, output, blender, gradient, evaluate_blocks
 # TODO: Maybe move map to a new file called map and create a camera class?
 
 
 errormessage=namedtuple("ErrMsg", "x y ch lvl vis lit")
+
+class Light: Unexplored, Explored, Visible = range(3)    
 
 # fog levels are calculated in steps of 2, so radius of 10/11 will be the max bounds
 fog_levels= {

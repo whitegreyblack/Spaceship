@@ -206,6 +206,8 @@ def processAction(x, y, key):
 # ---------------------------------------------------------------------------------------------------------------------#
 # Graphic functions
 def graphics(integer: int) -> None:
+    def toBin(n):
+        pass
     if not 0 < integer < 8:
         raise ValueError("Must be within 0-7")
 def border():
