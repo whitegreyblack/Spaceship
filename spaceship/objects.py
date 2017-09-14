@@ -52,7 +52,6 @@ class Slot:
 
     @property
     def slot(self):
-        print("getting item from slot")
         return self._slot
 
     @slot.setter
@@ -62,18 +61,20 @@ class Slot:
 
 
 class Object:
-    def __init__(self, x, y, i, c='white', r="human"):
+    def __init__(self, n, x, y, i, c='white', r="human", h=10):
         """@parameters :- x, y, i, c
             x: positional argument,
             y: positional argument,
             i: char/image for object representation,
             c: color for object fill
         """
+        self.name = n
         self.x = x
         self.y = y
         self.i = i
         self.c = c
         self.r = r
+        self.h = h
 
     def move(self, dx, dy):
         self.x += dx
@@ -86,9 +87,8 @@ class Object:
         return self.x , self.y
 
 class Character(Object):
-    def __init__(self, x, y, i, c='white', r='human', h=10, m=10, s=10, b=6, l=5):
-        super().__init__(x, y, i, c, r)
-        self.h=h
+    def __init__(self, n, x, y, i, c='white', r='human', m=10, s=10, b=6, l=5):
+        super().__init__(n, x, y, i, c, r)
         self.m=m
         self.s=s
         self.l=l
@@ -101,16 +101,13 @@ class Inventory:
 
     def __getitem__(self, n):
         try:
-            print(f"getting inventory[{n}]")
             return self._inventory[n]
         except:
             IndexError("Not a valid slot number")
     
     def __setitem__(self, n, i):
         try:
-            print(f"setting {i} to inventory[{n}]")
             self._inventory[n].slot=i
-            print(f"set {i} to inventory[{n}]")
         except:
             IndexError("Not a valid slot number")
 
@@ -128,7 +125,7 @@ class Map:
     colors_water = blender(color_water, 20)
 
     def __init__(self, data):
-        self.SUN = False
+        self.SUN = True
         self.data, self.height, self.width = self.dimensions(data)
         # self.block blocks both light (and movement?)
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]

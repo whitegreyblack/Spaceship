@@ -49,6 +49,8 @@ class GameLogger:
     def setupFileWriting(self):
         self.filename = "logs/log_"+"_".join(filter(lambda x: ":" not in x, ctime().split(" ")))+".txt"
         print(f"Setup log file in {self.filename}")
+        with open(self.filename, 'w') as f:
+            pass
     def getHeader(self):
         return "["+"-".join(filter(lambda x: ":" in x, ctime().split(" ")))+"]:- "
 

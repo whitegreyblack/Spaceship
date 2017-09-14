@@ -27,7 +27,7 @@ def setup():
         "window: size={}x{}, cellsize={}x{}, title='Main Game'".format(
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
-            8, 8))
+            8, 10))
 
 # END SETUP TOOLS
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -61,23 +61,31 @@ walkChars = {
     "x": "a post",
     "~": "a river",
 }
-walkBlock = "walked into {}"
-def key_process(x, y, action, unit, blockables):
 
-    global player, glog
+walkBlock = "walked into {}"
+def key_process(x, y, blockables):
+
+    global player, glog, units
+    tposx = player.x + x
+    tposy = player.y + y
+    positions = {}
+    for unit in units:
+        positions[unit.pos()] = unit
     unit_pos = [(unit.x, unit.y) for unit in units]
 
-    outofbounds = 0 <= player.x + x < len(blockables[0]) \
-        and 0 <= player.y + y < len(blockables)
+    outofbounds = 0 <= tposx < len(blockables[0]) \
+        and 0 <= tposy < len(blockables)
 
-    occupied = (player.x + x, player.y + y) in unit_pos
+    occupied = (tposx, tposy) in unit_pos
 
     try:
-        blocked = blockables[player.y + y][player.x + x]
-        ch = dungeon.square(player.x+x, player.y+y)
+        blocked = blockables[tposy][tposx]
+        ch = dungeon.square(tposx, tposy)
     except BaseException:
         blocked = False
 
+
+    # (not blocked) and (not occupied) and (inbounds)
     if not (blocked or occupied or not outofbounds):
         player.move(x, y)
     else:
@@ -89,9 +97,22 @@ def key_process(x, y, action, unit, blockables):
             #     glog.add(walkBlock.format("a wall"))
                 # glog.add(f"{player.x+x}, {player.y+y}")
         elif occupied:
-            glog.add(walkBlock.format("someone"))
+            # ============= START COMBAT LOG =======================
+            unit = positions[(tposx, tposy)]
+            if unit.r is not "human": # condition should be more complex
+                unit.h -= 1
+                glog.add(f"You attack the {unit.name} for {1}")
+                glog.add(f"The {unit.name} has {unit.h} left")
+                if unit.h < 1:
+                    glog.add(f"You have killed the {unit.name}")
+            # =============== END COMBAD LOG ========================
+            else:
+                glog.add(walkBlock.format(unit.r))
         elif outofbounds:
             glog.add(walkBlock.format("the edge of the map"))
+
+    # refresh units
+    units = list(filter(lambda u: u.h > 0, units))
 
     for unit in units:
    #     if unit.c != "grey":
@@ -244,7 +265,6 @@ def status_box():
 
 def inventory_box():
     global player
-    print("Inv: "+player.inventory[0].slot)
     term.puts(61, 11, f"{player.inventory[0].slot}")
 
 def log_box():
@@ -291,17 +311,16 @@ px, py = 86, 30
 # units = Map.appendUnitList("./unitlist/test_map_colored.png")
 # map = Map(parse("testmap.dat"))
 #dungeon = Map(stringify("./assets/testmap.png"))
-player = Character(px, py, '@')
+player = Character("player", px, py, '@')
 player.inventory[0] = "sword"
-print(player.inventory[0])
-rat = Object(85, 30, 'r', r="monster")
-npc = Object(7, 7, '@', 'orange')
-npc1 = Object(5, 15, '@', 'orange')
-npc2 = Object(0, 56, '@', 'orange')
-guard3 = Object(63, 31, '@', 'orange')
-guard1 = Object(64, 32, "@", 'orange')
-guard2 = Object(63, 37, "@", 'orange')
-guard4 = Object(64, 37, '@', 'orange')
+rat = Object("rat", 85, 30, 'r', r="monster")
+npc = Object("v1", 7, 7, '@', 'orange')
+npc1 = Object("v2", 5, 15, '@', 'orange')
+npc2 = Object("v3", 0, 56, '@', 'orange')
+guard3 = Object("v4", 63, 31, '@', 'orange')
+guard1 = Object("v5", 64, 32, "@", 'orange')
+guard2 = Object("v6", 63, 37, "@", 'orange')
+guard4 = Object("v7", 64, 37, '@', 'orange')
 units = [npc, guard1, guard2, guard3, guard4, npc1, npc2, rat]
 proceed = True
 lr = 5
@@ -333,11 +352,6 @@ while proceed:
     if a:
         processAction(player.x, player.y, a)
     else:
-        key_process(x, y, None, [], dungeon.block)
-    # while term.has_input():
-    #     term.read()
-        #processAction(player.x, player.y, action("o","open"), [], dungeon.block)
-    #term.refresh()
-    #print(clock()-t1)
+        key_process(x, y, dungeon.block)
 # End Initiailiation
 # ---------------------------------------------------------------------------------------------------------------------#
