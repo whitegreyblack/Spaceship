@@ -46,8 +46,36 @@ color_water=("#43C6AC", "#191654")
 color_doors=("#994C00", "#994C00")
 color_posts=("#9A8478", "#9A8478")
 
+class Slot:
+    def __init__(self, current=None):
+        self._slot = current
+
+    @property
+    def slot(self):
+        return self._slot
+
+    @slot.setter
+    def slot(self, item):
+        self._slot = item
+
+class Inventory:
+    def __init__(self, slots, maxsize=100):
+        self._slots = [Slot() for _ in range(slots)]
+        self._maxsize = maxsize
+
+    @property
+    def slots(self):
+        return self._slots
+
+    @slots.setter
+    def slots(self, n, v):
+        try:
+            self._slots[n] = v
+        except IndexError:
+            exit("Slot does not exist")
+
 class Object:
-    def __init__(self, x, y, i, c='white'):
+    def __init__(self, x, y, i, c='white', r="human"):
         """@parameters :- x, y, i, c
             x: positional argument,
             y: positional argument,
@@ -58,6 +86,7 @@ class Object:
         self.y = y
         self.i = i
         self.c = c
+        self.r = r
 
     def move(self, dx, dy):
         self.x += dx
@@ -69,21 +98,15 @@ class Object:
     def pos(self):
         return self.x , self.y
 
-class Person(Object):
-    def __init__(self, x, y, i, l, c='white'):
-        super().__init__(x, y, i, c)
-        self.h = 100
-        self.m = 100
-        self.s = 100
-        self.l = l
+class Character(Object):
+    def __init__(self, x, y, i, c='white', r='human', h=10, m=10, s=10, b=6, l=5):
+        super().__init__(x, y, i, c, r)
+        self.h=h
+        self.m=m
+        self.s=s
+        self.l=l
+        self.inventory = Inventory(b)
 
-    def stats(self):
-        return self.h, self.m, self.s
-
-    def draw(self):
-        prev = list(super().draw())
-        return tuple(prev+[self.h, self.m, self.s])
-    
 class Map:
     ''' Ray Tracing Implementation based off of Rogue Basin Python Tutorial '''
     mult = [
@@ -249,10 +272,10 @@ class Map:
                     # Our light beam is touching this square; light it:
                     if dx*dx + dy*dy < radius_squared:
                         #self.set_lit(X, Y)
-                        lx = abs(cx-X) * abs(cx-X)
-                        ly = abs(cy-Y) * abs(cy-Y)
-                        lv = int(round(sqrt(lx+ly)))
-                        self.set_lit(X, Y, lv, 25)
+                        lx = (cx - X) * (cx - X)
+                        ly = (cy - Y) * (cy - Y)
+                        lv = int(sqrt(lx+ly))
+                        self.set_lit(X, Y, row, 0)
 
                     if blocked:
                         # we're scanning a row of blocked squares:
@@ -357,14 +380,14 @@ class Map:
                             #_, color, _, _ = self.stone[y][x]
                             #lit = "white" if lit else fog
                             #lit = hexone(color//2) if visible else fg_fog
-                            level = fog_levels[lit//25] if not daytime else "darkest " 
+                            level = fog_levels[lit*2] if not daytime else "darkest " 
                             lit = "grey" if visible else "black"
                             ## bkgd = "black" if not lit else bg_fog
                         if ch in (":",):
                             ch, color, _, _ = self.tilemap[y][x]
                             #lit = "white" if lit else fog
                             #lit = hexone(color//2) if visible else fg_fog
-                            level = fog_levels[lit//25] if not daytime else "" 
+                            level = fog_levels[lit] if not daytime else "" 
                             lit =  "#9a8478" if visible else fg_fog
                             ## bkgd = "black" if not lit else bg_fog
                         # color some grasses
@@ -373,7 +396,7 @@ class Map:
                             #lit = hextup(color,5,2,5) if visible else fg_fog
                             # bkgd = hextup(color, 5,3,5) if lit else bg_fog
                             try:
-                                level = fog_levels[lit//25] if not daytime else "" 
+                                level = fog_levels[lit] if not daytime else "" 
                             except IndexError:
                                 print(lit)
                             lit = col if visible else fg_fog

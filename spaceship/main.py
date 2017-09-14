@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.gamelog import GameLogger
 from spaceship.tools import bresenhams, deltanorm, movement
 from spaceship.action import key_movement, num_movement, key_actions, action, keypress
-from spaceship.objects import Map, Object, Person
+from spaceship.objects import Map, Object, Character
 from bearlibterminal import terminal as term
 from collections import namedtuple
 from namedlist import namedlist
@@ -258,9 +258,10 @@ def map_box():
             term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
         else:
             try:
+                term.bkcolor(bkgd if bkgd else "black")
                 term.puts(x, y, "[color={}]".format(lit)+chr(toInt(ch))+"[/color]")
             except:
-                print(lit, ch)
+                print(lit, ch, bkgd)
                 raise
     term.refresh()
 
@@ -282,8 +283,8 @@ px, py = 86, 30
 # units = Map.appendUnitList("./unitlist/test_map_colored.png")
 # map = Map(parse("testmap.dat"))
 #dungeon = Map(stringify("./assets/testmap.png"))
-player = Person(px, py, '@', 10)
-rat = Object(85, 30, 'r', 'white')
+player = Character(px, py, '@')
+rat = Object(85, 30, 'r', r="monster")
 npc = Object(7, 7, '@', 'orange')
 npc1 = Object(5, 15, '@', 'orange')
 npc2 = Object(0, 56, '@', 'orange')
