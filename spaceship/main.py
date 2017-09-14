@@ -216,19 +216,22 @@ def graphics(integer: int) -> None:
 def border():
     # status border
     border_line =  "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]"
-    for i in range(20):
-        term.puts(SCREEN_WIDTH-20+i, 0, border_line)
-        term.puts(SCREEN_WIDTH-20+i, SCREEN_HEIGHT-1, border_line)
+
+    # y axis
+    for i in range(80):
+        if i < 20:
+            term.puts(SCREEN_WIDTH-20+i, 0, border_line)
+            term.puts(SCREEN_WIDTH-20+i, 10, border_line)
+        if i < 60:
+            term.puts(i, SCREEN_HEIGHT-6, border_line)
+        term.puts(i, SCREEN_HEIGHT-1, border_line)
+    
+    # x axis
     for j in range(35):
+        if j < 6:
+            term.puts(0, SCREEN_HEIGHT-6+j, border_line)
         term.puts(SCREEN_WIDTH-20, j, border_line)
         term.puts(SCREEN_WIDTH-1, j, border_line)
-    # message log border
-    for i in range(60):
-        term.puts(i, SCREEN_HEIGHT-6, border_line)
-        term.puts(i, SCREEN_HEIGHT-1, border_line)
-    for j in range(6):
-        term.puts(0, SCREEN_HEIGHT-6+j, border_line)
-        #term.puts(SCREEN_WIDTH-20, SCREEN_HEIGHT-6+j,border_line)
 
 turn = 0
 def status_box():
@@ -238,6 +241,11 @@ def status_box():
     term.puts(61, 5, f"[color=green]SP[/color]: {player.s}")
     term.puts(61, 7, f"[color=yellow]{'day' if dungeon._sun() else 'night'}[/color]")
     term.puts(61, 9, f"[color=orange]{turn}[/color]")
+
+def inventory_box():
+    global player
+    print("Inv: "+player.inventory[0].slot)
+    term.puts(61, 11, f"{player.inventory[0].slot}")
 
 def log_box():
     messages = glog.write().messages
@@ -284,6 +292,8 @@ px, py = 86, 30
 # map = Map(parse("testmap.dat"))
 #dungeon = Map(stringify("./assets/testmap.png"))
 player = Character(px, py, '@')
+player.inventory[0] = "sword"
+print(player.inventory[0])
 rat = Object(85, 30, 'r', r="monster")
 npc = Object(7, 7, '@', 'orange')
 npc1 = Object(5, 15, '@', 'orange')
@@ -317,6 +327,7 @@ while proceed:
     status_box()
     border()
     log_box()
+    inventory_box()
     map_box()
     x, y, a = key_in()
     if a:

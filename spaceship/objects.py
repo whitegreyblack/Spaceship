@@ -52,27 +52,14 @@ class Slot:
 
     @property
     def slot(self):
+        print("getting item from slot")
         return self._slot
 
     @slot.setter
     def slot(self, item):
         self._slot = item
+        print(f"set slot to {item}")
 
-class Inventory:
-    def __init__(self, slots, maxsize=100):
-        self._slots = [Slot() for _ in range(slots)]
-        self._maxsize = maxsize
-
-    @property
-    def slots(self):
-        return self._slots
-
-    @slots.setter
-    def slots(self, n, v):
-        try:
-            self._slots[n] = v
-        except IndexError:
-            exit("Slot does not exist")
 
 class Object:
     def __init__(self, x, y, i, c='white', r="human"):
@@ -106,6 +93,27 @@ class Character(Object):
         self.s=s
         self.l=l
         self.inventory = Inventory(b)
+
+
+class Inventory:
+    def __init__(self, n):
+        self._inventory = [Slot() for _ in range(n)]
+
+    def __getitem__(self, n):
+        try:
+            print(f"getting inventory[{n}]")
+            return self._inventory[n]
+        except:
+            IndexError("Not a valid slot number")
+    
+    def __setitem__(self, n, i):
+        try:
+            print(f"setting {i} to inventory[{n}]")
+            self._inventory[n].slot=i
+            print(f"set {i} to inventory[{n}]")
+        except:
+            IndexError("Not a valid slot number")
+
 
 class Map:
     ''' Ray Tracing Implementation based off of Rogue Basin Python Tutorial '''
