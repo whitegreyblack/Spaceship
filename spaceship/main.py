@@ -314,6 +314,7 @@ px, py = 86, 30
 player = Character("player", px, py, '@')
 player.inventory[0] = "sword"
 rat = Object("rat", 85, 30, 'r', r="monster")
+rat2 = Object("rat", 85, 29, 'R', r="monster")
 npc = Object("v1", 7, 7, '@', 'orange')
 npc1 = Object("v2", 5, 15, '@', 'orange')
 npc2 = Object("v3", 0, 56, '@', 'orange')
@@ -321,7 +322,7 @@ guard3 = Object("v4", 63, 31, '@', 'orange')
 guard1 = Object("v5", 64, 32, "@", 'orange')
 guard2 = Object("v6", 63, 37, "@", 'orange')
 guard4 = Object("v7", 64, 37, '@', 'orange')
-units = [npc, guard1, guard2, guard3, guard4, npc1, npc2, rat]
+units = [npc, guard1, guard2, guard3, guard4, npc1, npc2, rat, rat2]
 proceed = True
 lr = 5
 # lights = [
