@@ -18,6 +18,46 @@ Character=namedtuple("Char", "unicode character")
 Color=namedtuple("Color", "format red green blue")
 Tile=namedtuple("Tile", "position character color")
 Square=namedlist("Square", "base block light unit item")
+'''
+class Light:
+    self.light_map = [[]]
+    self.light_list = []
+
+    for i in light_list:
+        calc_light()
+
+class Map:
+    def __init__(self, xy=None, stringdata=None):
+        if not xy or stringdata:
+            raise ValueError
+
+        if x, y -> generate map
+            rooms -> regular dungeon map
+            dwalk -> drunkards cave walk
+            towns -> generated city/town/village
+            plain -> generated wilderness from map character/color as parameter -> if not exists create wilderness
+            ships -> generate a spaceship interior
+            
+        if stringdata -> extract character
+            color[character] -- color mapping for character
+            block[character] -- block
+            generate the map using these parameters
+
+    def add_units(self, unit_list):
+        # adds units to the map
+        if hasattr(self, unit_list):
+            self.unit_list.append(list)
+        else:
+            self.unit_list = list
+
+    def add_items(self, item_list):
+        # adds items to the map
+        if hasattr(self, item_list)
+            self.item_list.append(list)
+        else:
+            self.item_list = list
+    # ^ probably refactor these into their own seperate classes
+
 
 class Engine:
     '''Refactor of objects.Map since it was getting clustered'''
