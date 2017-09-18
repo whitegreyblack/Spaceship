@@ -209,13 +209,13 @@ def interactDoor(x, y, key):
     reachables = []
     for i, j in eightsquare(x, y):
         if (i, j) != (x, y):
+            isSquare = 0
             try:
                 isSquare = dungeon.square(i, j) is char
-                if isSquare:
-                    reachables.append((i,j))
             except IndexError:
-                print(f"out of bounds ({i},{j})"
-
+                glog.add(f"out of bounds ({i},{j})")
+            if isSquare:
+                reachables.append((i, j))
     if not reachables:
         glog.add("No {} near you".format("openables" if opening else "closeables"))
     
