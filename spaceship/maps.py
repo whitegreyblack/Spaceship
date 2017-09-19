@@ -193,17 +193,20 @@ def table(ch, val, x, y):
     """Returns a 2d list of lists holding a four element tuple"""
     return [[(choice(ch), choice(val), i, j) for i in range(x)] for j in range(y)]
 
+def splitter(c):
+    c = c.replace("#", "")
+    if len(c) >= 8:
+        c = c[2::]
+    return wrap(c,2)
+
+def darken(hexcode):
+    return
 
 def blender(hexes, n=10):
     """blender holds color transformation functions
     TODO: probably should move this to another file
     Up to user to decide whether color is valid"""
     hex1, hex2 = hexes
-    def splitter(c):
-        c = c.replace("#", "")
-        if len(c) > 8:
-            c = c[2::]
-        return wrap(c,2)
     
     def transform(c):
         # for i in c:
