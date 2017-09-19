@@ -51,6 +51,9 @@ def key_in():
         act = key_actions[code].key
     else:
         print("unrecognized command")
+    
+    while term.has_input():
+        term.read()
     return keydown(x, y, act)
 
 # should change to movement process
@@ -156,14 +159,40 @@ def openInventory(x, y, key):
     # log_box()
     # map_box()
 
+def onlyOne(container):
+    return len(container) == 1
+
+def eightsquare(x, y):
+    space = namedtuple("Space", ("x","y"))
+    return [space(x+i,y+j) for i, j in list(num_movement.values())]
+
+'''
+def interactUnit(x, y, key):
+    def talkUnit(x, y, key):
+        glog.add("Talking to unit")
+        
+    interactables = []
+    for i, j in eightsquare(x, y):
+        # dungeon.has_unit(i, j) -> returns true or false if unit is on the square
+        if (i, j) != (x, y) and dungeon.unit(i, j):
+            interactables.append((i, j))
+
+    # no interactables
+    if not interactables:
+        glogl.add("No one to talk with")
+    # only one interactable
+    elif onlyOne(interactables):
+        i, j = interactables.pop()
+        talkToUnit(i, j)
+    # many interactables
+    else:
+        term.clear()
+        glog.add.add("Which direction?")
+'''
+                
+
+
 def interactDoor(x, y, key):
-    def onlyOne(container):
-        return len(container) == 1
-
-    def eightsquare(x, y):
-        space = namedtuple("Space", ("x","y"))
-        return [space(x+i,y+j) for i, j in list(num_movement.values())]
-
     def openDoor(i, j):
         glog.add("Opened door")
         dungeon.open_door(i, j)
@@ -175,14 +204,18 @@ def interactDoor(x, y, key):
         dungeon.reblock(i, j)
 
     opening = key is "o"
-    char = "+" if key is "o" else "/"
+    char = "+" if opening else "/"
 
     reachables = []
     for i, j in eightsquare(x, y):
         if (i, j) != (x, y):
-            if dungeon.square(i, j) is char:
-                reachables.append((i,j))
-
+            isSquare = 0
+            try:
+                isSquare = dungeon.square(i, j) is char
+            except IndexError:
+                glog.add(f"out of bounds ({i},{j})")
+            if isSquare:
+                reachables.append((i, j))
     if not reachables:
         glog.add("No {} near you".format("openables" if opening else "closeables"))
     
@@ -191,10 +224,7 @@ def interactDoor(x, y, key):
         openDoor(i, j) if opening else closeDoor(i, j)
 
     else:
-        term.clear()
         glog.add("Which direction?")
-        log_box()
-        map_box()
         term.refresh()
         code = term.read()
 
@@ -356,3 +386,7 @@ while proceed:
         key_process(x, y, dungeon.block)
 # End Initiailiation
 # ---------------------------------------------------------------------------------------------------------------------#
+# Start Script 
+if __name__ == "__main__":
+    if len(sys.argv) > 2:
+        print(sys.argv)
