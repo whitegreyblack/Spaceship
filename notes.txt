@@ -43,14 +43,19 @@ is implemented in two seperate data structures. However due to a memory
 concern I am hoping to implement it in one datastructure with a list of tuples
 that would hold the values instead.
 
-# AI Walkthrough -- Sept 20
+
+# AI Walkthrough -- Sept 20 (Probably the largest planned update development)
 Implementing AI will be the next big hurdle in developing the roguelike being
 built. Naively, the ai will only have two action types: Move and interact. This
 is based off of several open source roguelikes which simplify the ai thought
 process. For the move action we have several factors which would affect the 
 direction of which the ai unit would take. We can split these factors further
 into internal and external motives. We can list a few of these below.
-Internal Motives:
-    - Health, Stamina, Mana, personal buffs/debuffs and effects
-External Motives:
-    - Ally/Enemy Units, Items on ground, Environmental hazards
+  - Internal Motives: Health, Stamina, Mana, personal buffs/debuffs and effects
+  - External Motives: Ally/Enemy Units, Items on ground, Environmental hazards
+This can lead to certain simulations that we can test for in the roguelike. For
+example if there are two enemy units with HATE relationship attributes for the
+other, an item of great value some equal distance away from both the units, and
+also a trap between them which action would the ais' take during their turn.  
+So for this development this mechanic will certainly be given great thought in
+its logic and implementation.
