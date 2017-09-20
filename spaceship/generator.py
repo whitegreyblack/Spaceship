@@ -46,10 +46,11 @@ def keys(enumname):
     return tuple(name for name, _ in enumname.__members__.items())
 
 
-'Tests'
-print(build("rat", DataType))
-print(build("rat", DataType, 2))
-try:
-    print(build("do", DataType))
-except ValueError:
-    print("ValueError")
+'Tests: -- should put in tests folder later'
+if __name__ == "__main__":
+    print(build("rat", DataType))
+    print(build("rat", DataType, 2))
+    try:
+        print(build("do", DataType))
+    except ValueError:
+        print("ValueError")
