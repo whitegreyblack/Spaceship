@@ -438,7 +438,7 @@ class Map:
                             lit = "dark white" if visible else fg_fog
 
                         if ch in ("x"):
-                            lit = "#1e130c" if visible else fg_fog
+                            lit = "#383838" if visible else fg_fog
                         
                         if ch in ("|"):
                             ch, col, _, _ = self.plant[y][x]

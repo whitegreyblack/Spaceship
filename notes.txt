@@ -42,3 +42,15 @@ you would be able to see through but not pass through. Currently this mechanic
 is implemented in two seperate data structures. However due to a memory
 concern I am hoping to implement it in one datastructure with a list of tuples
 that would hold the values instead.
+
+# AI Walkthrough -- Sept 20
+Implementing AI will be the next big hurdle in developing the roguelike being
+built. Naively, the ai will only have two action types: Move and interact. This
+is based off of several open source roguelikes which simplify the ai thought
+process. For the move action we have several factors which would affect the 
+direction of which the ai unit would take. We can split these factors further
+into internal and external motives. We can list a few of these below.
+Internal Motives:
+    - Health, Stamina, Mana, personal buffs/debuffs and effects
+External Motives:
+    - Ally/Enemy Units, Items on ground, Environmental hazards
