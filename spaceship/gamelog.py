@@ -48,7 +48,7 @@ class GameLogger:
 
     def setupFileWriting(self):
         self.filename = "logs/log_"+"_".join(filter(lambda x: ":" not in x, ctime().split(" ")))+".txt"
-        print(f"Setup log file in {self.filename}")
+        print("Setup log file in {}".format(self.filename))
         with open(self.filename, 'w') as f:
             pass
     def getHeader(self):
@@ -65,7 +65,7 @@ class GameLogger:
         if self.messages and message in self.messages[-1]:
             self.messages.pop(-1)
             self.counter += 1
-            message += f'(x{self.counter})'
+            message += "(x{})".format(self.counter)
         else:
             self.counter = 0
         
@@ -100,7 +100,7 @@ class GameLogger:
 
     def dumps(self):
         """Write entire message queue to disk"""
-        print(f'writing dump to {self.filename}')
+        print("writing dump to {}".format(self.filename))
         with open(self.filename, 'a') as f:
             for message in self.messages:
                 f.write(self.getHeader() + message + "\n")

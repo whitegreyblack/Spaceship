@@ -57,7 +57,7 @@ class Slot:
     @slot.setter
     def slot(self, item):
         self._slot = item
-        print(f"set slot to {item}")
+        print("set slot to {}".format(item))
 
 
 class Object:

@@ -104,10 +104,10 @@ def key_process(x, y, blockables):
             unit = positions[(tposx, tposy)]
             if unit.r is not "human": # condition should be more complex
                 unit.h -= 1
-                glog.add(f"You attack the {unit.name} for {1}")
-                glog.add(f"The {unit.name} has {unit.h} left")
+                glog.add("You attack the {}".format(unit.name))
+                glog.add("The {} has {} left".format(unit.name, unit.h))
                 if unit.h < 1:
-                    glog.add(f"You have killed the {unit.name}")
+                    glog.add("You have killed the {}".format(unit.name))
             # =============== END COMBAD LOG ========================
             else:
                 glog.add(walkBlock.format(unit.r))
@@ -213,7 +213,7 @@ def interactDoor(x, y, key):
             try:
                 isSquare = dungeon.square(i, j) is char
             except IndexError:
-                glog.add(f"out of bounds ({i},{j})")
+                glog.add("out of bounds ({},{})".format(i, j))
             if isSquare:
                 reachables.append((i, j))
     if not reachables:
@@ -287,15 +287,15 @@ def border():
 turn = 0
 def status_box():
     global player, turn
-    term.puts(61, 1, f"[color=red]HP[/color]: {player.h}")
-    term.puts(61, 3, f"[color=blue]MP[/color]: {player.m}")
-    term.puts(61, 5, f"[color=green]SP[/color]: {player.s}")
-    term.puts(61, 7, f"[color=yellow]{'day' if dungeon._sun() else 'night'}[/color]")
-    term.puts(61, 9, f"[color=orange]{turn}[/color]")
+    term.puts(61, 1, "[color=red]HP[/color]: {}".format(player.h))
+    term.puts(61, 3, "[color=blue]MP[/color]: {}".format(player.m))
+    term.puts(61, 5, "[color=green]SP[/color]: {}".format(player.s))
+    term.puts(61, 7, "[color=yellow]{}[/color]".format('day' if dungeon._sun() else 'night'))
+    term.puts(61, 9, "[color=orange]{}[/color]".format(turn))
 
 def inventory_box():
     global player
-    term.puts(61, 11, f"{player.inventory[0].slot}")
+    term.puts(61, 11, "{}".format(player.inventory[0].slot))
 
 def log_box():
     messages = glog.write().messages
