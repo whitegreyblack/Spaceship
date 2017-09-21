@@ -39,6 +39,9 @@ test:
 	
 test-clean: test clean
 
+profile:
+	python -m cProfile -s time spaceship/main.py > profiler.txt
+
 help:
 	@echo "    clean-pyc:"
 	@echo "        Clean directory of .pyc files and __pycache__ folders"

@@ -358,4 +358,88 @@ if __name__ == "__main__":
     else:
         output(world(width, height//2, 100, 100))
 
+
+                    then try to color according to block type
+                    color the floor
+                    if len(str(ch)) < 2:
+                        # tile = namedlist("Tile", "char color visible walkable")
+                        if isFloor(ch):
+                            level = ""
+                            lit = "grey"
+                        if isRoads(ch):
+                            ch, color, _, _ = self.tilemap[y][x]
+                            level = fog_levels[lit] if not daytime else ""
+                        # if ch in (".",):
+                        #     #_, color, _, _ = self.stone[y][x]
+                        #     #lit = "white" if lit else fog
+                        #     #lit = hexone(color//2) if visible else fg_fog
+                        #     level = fog_levels[lit*2] if not daytime else "darkest " 
+                        #     lit = "grey" if visible else "black"
+                        #     ## bkgd = "black" if not lit else bg_fog
+                        if ch in (":",):
+                            ch, color, _, _ = self.tilemap[y][x]
+                            #lit = "white" if lit else fog
+                            #lit = hexone(color//2) if visible else fg_fog
+                            level = fog_levels[lit] if not daytime else "" 
+                            lit =  "#9a8478" if visible else fg_fog
+                            ## bkgd = "black" if not lit else bg_fog
+                        # color some grasses
+                        if ch in (",",";","!","`"):
+                            ch, col, _, _ = self.grass[y][x]
+                            #lit = hextup(color,5,2,5) if visible else fg_fog
+                            # bkgd = hextup(color, 5,3,5) if lit else bg_fog
+                            try:
+                                level = fog_levels[lit] if not daytime else "" 
+                            except IndexError:
+                                print(lit)
+                            lit = col if visible else fg_fog
+
+                        # color the water
+                        if ch == "~":
+                            lit = choice(self.colors_water) if visible else fg_fog
+
+                        # color the doors
+                        if ch in ("+", "/",):
+                            lit = "#ff994C00" if visible else fg_fog
+                            # bkgd = "black"i
+
+                        # color the lamps
+                        if ch in ("o",):
+                            lit = "white" if visible else fg_fog
+
+                        # color the walls
+                        if ch == "#":
+                            _, color, _, _ = self.walls[y][x]
+                            #lit = hexone(color) if visible else fg_fog
+                            lit = color if visible else fg_fog
+                            # bkgd = "grey" if lit else bg_fog
+                            #lit = "white" if lit else fog
+                        
+                        if ch == "%":
+                            _, color, _, _ = self.walls[y][x]
+                            #lit = hexone(color//2) if lit else fg_fog
+                            lit = color if visible else fg_fog
+                            # bkgd = "grey" if lit else bg_fog
+                    
+                        # street border
+                        if ch in ("=",):
+                            lit = "dark white" if visible else fg_fog
+
+                        if ch in ("x"):
+                            lit = "#383838" if visible else fg_fog
+                        
+                        if ch in ("|"):
+                            ch, col, _, _ = self.plant[y][x]
+                            #level = fog_levels[lit//2] if lit else "darkest " 
+                            
+                            #lit = "yellow" if visible else fg_fog
+                            level = "light "
+                            lit = col if visible else fg_fog
+
+                    else:
+                        _, color, _, _ = self.walls[y][x]
+                        lit = color if visible else fg_fog
+
+                bkgd = hextup(color, 4,4,4) if lit else bg_fog
+                all said and done -- return by unit block
 '''
