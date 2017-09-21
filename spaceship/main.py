@@ -2,17 +2,19 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
-from spaceship.gamelog import GameLogger
-from spaceship.tools import bresenhams, deltanorm, movement
 from spaceship.action import key_movement, num_movement, key_actions, action, keypress
+from spaceship.constants import SCREEN_HEIGHT, SCREEN_WIDTH, FOV_RADIUS
+from spaceship.tools import bresenhams, deltanorm, movement
+from spaceship.maps import stringify, hextup, hexone, toInt
 from spaceship.objects import Map, Object, Character
 from bearlibterminal import terminal as term
+from spaceship.manager import UnitManager
+from spaceship.gamelog import GameLogger
+from random import randint, choice
 from collections import namedtuple
 from namedlist import namedlist
-from maps import stringify, hextup, hexone, toInt
-from random import randint, choice
 from time import clock
-from spaceship.constants import SCREEN_HEIGHT, SCREEN_WIDTH, FOV_RADIUS
+
 # LIMIT_FPS = 30 -- later used in sprite implementation
 blocked = []
 dungeon = Map(stringify("./assets/testmap_colored.png"))
@@ -27,7 +29,7 @@ def setup():
         "window: size={}x{}, cellsize={}x{}, title='Main Game'".format(
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
-            8, 10))
+            8, 16))
 
 # END SETUP TOOLS
 # ---------------------------------------------------------------------------------------------------------------------#
@@ -41,7 +43,7 @@ def key_in():
     act, x, y = 0, 0, 0
     code = term.read()
     if code in (term.TK_ESCAPE, term.TK_CLOSE):
-        glog.dumps()
+        gamelog.dumps()
         proceed = False
     elif code in key_movement:
         x, y = key_movement[code]
@@ -68,7 +70,7 @@ walkChars = {
 walkBlock = "walked into {}"
 def key_process(x, y, blockables):
 
-    global player, glog, units
+    global player, gamelog, units
     tposx = player.x + x
     tposy = player.y + y
     positions = {}
@@ -93,26 +95,26 @@ def key_process(x, y, blockables):
         player.move(x, y)
     else:
         if blocked:
-            glog.add(walkBlock.format(walkChars[ch]))
+            gamelog.add(walkBlock.format(walkChars[ch]))
             # if ch == "+":
-            #     glog.add(walkBlock.format("a door"))
+            #     gamelog.add(walkBlock.format("a door"))
             # if ch == "#":
-            #     glog.add(walkBlock.format("a wall"))
-                # glog.add(f"{player.x+x}, {player.y+y}")
+            #     gamelog.add(walkBlock.format("a wall"))
+                # gamelog.add(f"{player.x+x}, {player.y+y}")
         elif occupied:
             # ============= START COMBAT LOG =======================
             unit = positions[(tposx, tposy)]
             if unit.r is not "human": # condition should be more complex
                 unit.h -= 1
-                glog.add("You attack the {}".format(unit.name))
-                glog.add("The {} has {} left".format(unit.name, unit.h))
+                gamelog.add("You attack the {}".format(unit.name))
+                gamelog.add("The {} has {} left".format(unit.name, unit.h))
                 if unit.h < 1:
-                    glog.add("You have killed the {}".format(unit.name))
+                    gamelog.add("You have killed the {}".format(unit.name))
             # =============== END COMBAD LOG ========================
             else:
-                glog.add(walkBlock.format(unit.r))
+                gamelog.add(walkBlock.format(unit.r))
         elif outofbounds:
-            glog.add(walkBlock.format("the edge of the map"))
+            gamelog.add(walkBlock.format("the edge of the map"))
 
     # refresh units
     units = list(filter(lambda u: u.h > 0, units))
@@ -134,7 +136,7 @@ def key_process(x, y, blockables):
 def openInventory(x, y, key):
     debug=False
     if debug:
-        glog.add("opening inventory")
+        gamelog.add("opening inventory")
     playscreen = False
 
     current_range = 0
@@ -153,7 +155,7 @@ def openInventory(x, y, key):
         elif code == term.TK_DOWN:
             if current_range < 10: current_range += 1
     if debug:
-        glog.add("Closing inventoryy")
+        gamelog.add("Closing inventoryy")
     term.clear()
     # status_box()
     # log_box()
@@ -169,7 +171,7 @@ def eightsquare(x, y):
 '''
 def interactUnit(x, y, key):
     def talkUnit(x, y, key):
-        glog.add("Talking to unit")
+        gamelog.add("Talking to unit")
         
     interactables = []
     for i, j in eightsquare(x, y):
@@ -179,7 +181,7 @@ def interactUnit(x, y, key):
 
     # no interactables
     if not interactables:
-        glogl.add("No one to talk with")
+        gamelogl.add("No one to talk with")
     # only one interactable
     elif onlyOne(interactables):
         i, j = interactables.pop()
@@ -187,19 +189,19 @@ def interactUnit(x, y, key):
     # many interactables
     else:
         term.clear()
-        glog.add.add("Which direction?")
+        gamelog.add.add("Which direction?")
 '''
                 
 
 
 def interactDoor(x, y, key):
     def openDoor(i, j):
-        glog.add("Opened door")
+        gamelog.add("Opened door")
         dungeon.open_door(i, j)
         dungeon.unblock(i, j)
 
     def closeDoor(i, j):
-        glog.add("Closed door")
+        gamelog.add("Closed door")
         dungeon.close_door(i, j)
         dungeon.reblock(i, j)
 
@@ -213,18 +215,18 @@ def interactDoor(x, y, key):
             try:
                 isSquare = dungeon.square(i, j) is char
             except IndexError:
-                glog.add("out of bounds ({},{})".format(i, j))
+                gamelog.add("out of bounds ({},{})".format(i, j))
             if isSquare:
                 reachables.append((i, j))
     if not reachables:
-        glog.add("No {} near you".format("openables" if opening else "closeables"))
+        gamelog.add("No {} near you".format("openables" if opening else "closeables"))
     
     elif onlyOne(reachables):
         i, j = reachables.pop()
         openDoor(i, j) if opening else closeDoor(i, j)
 
     else:
-        glog.add("Which direction?")
+        gamelog.add("Which direction?")
         term.refresh()
         code = term.read()
 
@@ -298,7 +300,7 @@ def inventory_box():
     term.puts(61, 11, "{}".format(player.inventory[0].slot))
 
 def log_box():
-    messages = glog.write().messages
+    messages = gamelog.write().messages
     if messages:
         for idx in range(len(messages)):
             term.puts(1, SCREEN_HEIGHT-5+idx, messages[idx])
@@ -328,7 +330,7 @@ def map_box():
 # Start initializations
 
 setup()
-glog = GameLogger(4)
+gamelog = GameLogger(4)
 # global game variables
 #MAP_WIDTH, MAP_HEIGHT = 24, 48
 

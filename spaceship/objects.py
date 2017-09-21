@@ -23,14 +23,14 @@ class Letter: Ascii, Unicode = range(2)
 # fog levels are calculated in steps of 2, so radius of 10/11 will be the max bounds
 fog_levels= ["darkest ", "darker ", "dark ","light ","lighter ", "lightest"]
 
-chars_roads=[":"]
-chars_tiles=["."]
+chars_roads= [":"]
+chars_floor= ["."]
 chars_block= ("#", "+", "o", "x", "~")
 chars_grass= [",",";",]
 chars_water= ["~"]
 chars_house= ["="]
 chars_walls= ["#"]
-chars_doors= ["+"]
+chars_doors= ["+", "/"]
 chars_plant= ["2663"]
 chars_posts= ["x"]
 chars_lamps= ["o"]
@@ -155,16 +155,16 @@ class Map:
         lamps = blender(color_lamps)
         house = blender(color_house)
         chars={
-            ".": tile(choice(cm.TILES.char), choice(cm.TILES.hexcode), Light.Unexplored, "Yes"),
-            ",": tile(choice(cm.GRASS.char), choice(cm.GRASS.hexcode), Light.Unexplored, "Yes"),
-            "#": tile(choice(cm.WALLS.char), choice(cm.WALLS.hexcode), Light.Unexplored, "No"),
-            "~": tile(choice(cm.WATER.char), choice(cm.WATER.hexcode), Light.Unexplored, "No"),
-            "+": tile(choice(cm.DOORS.char), choice(cm.DOORS.hexcode), Light.Unexplored, "No"),
-            "x": tile(choice(cm.POSTS.char), choice(cm.POSTS.hexcode), Light.Unexplored, "No"), 
-            "|": tile(choice(cm.PLANT.char), choice(cm.PLANT.hexcode), Light.Unexplored, "Yes"),
-            "o": tile(choice(cm.LAMPS.char), choice(cm.LAMPS.hexcode), Light.Unexplored, "No"),
-            ":": tile(choice(cm.ROADS.char), choice(cm.ROADS.hexcode), Light.Unexplored, "Yes"),
-            "=": tile(choice(cm.HOUSE.char), choice(cm.HOUSE.hexcode), Light.Unexplored, "Yes"),
+            ".": tile(choice(cm.TILES.chars), choice(cm.TILES.hexcode), Light.Unexplored, "Yes"),
+            ",": tile(choice(cm.GRASS.chars), choice(cm.GRASS.hexcode), Light.Unexplored, "Yes"),
+            "#": tile(choice(cm.WALLS.chars), choice(cm.WALLS.hexcode), Light.Unexplored, "No"),
+            "~": tile(choice(cm.WATER.chars), choice(cm.WATER.hexcode), Light.Unexplored, "No"),
+            "+": tile(choice(cm.DOORS.chars), choice(cm.DOORS.hexcode), Light.Unexplored, "No"),
+            "x": tile(choice(cm.POSTS.chars), choice(cm.POSTS.hexcode), Light.Unexplored, "No"), 
+            "|": tile(choice(cm.PLANT.chars), choice(cm.PLANT.hexcode), Light.Unexplored, "Yes"),
+            "o": tile(choice(cm.LAMPS.chars), choice(cm.LAMPS.hexcode), Light.Unexplored, "No"),
+            ":": tile(choice(cm.ROADS.chars), choice(cm.ROADS.hexcode), Light.Unexplored, "Yes"),
+            "=": tile(choice(cm.HOUSE.chars), choice(cm.HOUSE.hexcode), Light.Unexplored, "Yes"),
         }
 
         def evaluate(char):
@@ -183,7 +183,6 @@ class Map:
         height = len(data)
         width = max(len(col) for col in data)
         return data, height, width
-
 
     def square(self, x, y):
         return self.data[y][x]
@@ -302,6 +301,17 @@ class Map:
                 break
 
     def output(self, X, Y, units):
+        def isWalls(c): return c in chars_walls
+        def isPosts(c): return c in chars_posts
+        def isDoors(c): return c in chars_doors
+        def isLamps(c): return c in chars_lamps
+        def isRoads(c): return c in chars_roads
+        def isWater(c): return c in chars_water
+        def isPlant(c): return c in chars_plant
+        def isGrass(c): return c in chars_grass
+        def isHouse(c): return c in chars_house
+        def isFloor(c): return c in chars_floor
+
         def scroll(p, s, m):
             """@p: current position of player 1D
             @s: size of the screen
@@ -372,88 +382,8 @@ class Map:
                     lit = "white"
 
                 else:
-                    flag = ""
-                    lit = self.lit_level(x, y)
+                    ch, lit, _, _ = self.tilemap[y][x]
                     level = ""
-                    ch = self.square(x, y)
-                    flag = ch
-
-                    # then try to color according to block type
-                    # color the floor
-                    if len(str(ch)) < 2:
-                        if ch in (".",):
-                            #_, color, _, _ = self.stone[y][x]
-                            #lit = "white" if lit else fog
-                            #lit = hexone(color//2) if visible else fg_fog
-                            level = fog_levels[lit*2] if not daytime else "darkest " 
-                            lit = "grey" if visible else "black"
-                            ## bkgd = "black" if not lit else bg_fog
-                        if ch in (":",):
-                            ch, color, _, _ = self.tilemap[y][x]
-                            #lit = "white" if lit else fog
-                            #lit = hexone(color//2) if visible else fg_fog
-                            level = fog_levels[lit] if not daytime else "" 
-                            lit =  "#9a8478" if visible else fg_fog
-                            ## bkgd = "black" if not lit else bg_fog
-                        # color some grasses
-                        if ch in (",",";","!","`"):
-                            ch, col, _, _ = self.grass[y][x]
-                            #lit = hextup(color,5,2,5) if visible else fg_fog
-                            # bkgd = hextup(color, 5,3,5) if lit else bg_fog
-                            try:
-                                level = fog_levels[lit] if not daytime else "" 
-                            except IndexError:
-                                print(lit)
-                            lit = col if visible else fg_fog
-
-                        # color the water
-                        if ch == "~":
-                            lit = choice(self.colors_water) if visible else fg_fog
-
-                        # color the doors
-                        if ch in ("+", "/",):
-                            lit = "#ff994C00" if visible else fg_fog
-                            # bkgd = "black"i
-
-                        # color the lamps
-                        if ch in ("o",):
-                            lit = "white" if visible else fg_fog
-
-                        # color the walls
-                        if ch == "#":
-                            _, color, _, _ = self.walls[y][x]
-                            #lit = hexone(color) if visible else fg_fog
-                            lit = color if visible else fg_fog
-                            # bkgd = "grey" if lit else bg_fog
-                            #lit = "white" if lit else fog
-                        
-                        if ch == "%":
-                            _, color, _, _ = self.walls[y][x]
-                            #lit = hexone(color//2) if lit else fg_fog
-                            lit = color if visible else fg_fog
-                            # bkgd = "grey" if lit else bg_fog
-                    
-                        # street border
-                        if ch in ("=",):
-                            lit = "dark white" if visible else fg_fog
-
-                        if ch in ("x"):
-                            lit = "#383838" if visible else fg_fog
-                        
-                        if ch in ("|"):
-                            ch, col, _, _ = self.plant[y][x]
-                            #level = fog_levels[lit//2] if lit else "darkest " 
-                            
-                            #lit = "yellow" if visible else fg_fog
-                            level = "light "
-                            lit = col if visible else fg_fog
-
-                    else:
-                        _, color, _, _ = self.walls[y][x]
-                        lit = color if visible else fg_fog
-
-                # bkgd = hextup(color, 4,4,4) if lit else bg_fog
-                # all said and done -- return by unit block
                 try:        
                     yield (x-cx, y-cy, level+lit, ch, bkgd)
                 except NameError:
