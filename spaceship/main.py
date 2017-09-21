@@ -22,7 +22,6 @@ dungeon = Map(stringify("./assets/testmap_colored.png"))
 # ---------------------------------------------------------------------------------------------------------------------#
 # TERMINAL SETUP & IMAGE IMPORTS
 
-
 def setup():
     term.open()
     term.set(
@@ -45,17 +44,24 @@ def key_in():
     if code in (term.TK_ESCAPE, term.TK_CLOSE):
         gamelog.dumps()
         proceed = False
+    
+    # arrow keys
     elif code in key_movement:
         x, y = key_movement[code]
+    # numberpad keys
     elif code in num_movement:
         x, y = num_movement[code]
+    # keyboard keys
     elif code in key_actions:
         act = key_actions[code].key
+    # any other key F-keys, Up/Down Pg, etc
     else:
         print("unrecognized command")
     
-    while term.has_input():
-        term.read()
+    # make sure we clear any inputs before the next action is processed
+    # allows for the program to go slow enough for human playability
+    # while term.has_input(): 
+    #     term.read()
     return keydown(x, y, act)
 
 # should change to movement process
@@ -66,8 +72,15 @@ walkChars = {
     "x": "a post",
     "~": "a river",
 }
-
 walkBlock = "walked into {}"
+
+def onlyOne(container):
+    return len(container) == 1
+
+def eightsquare(x, y):
+    space = namedtuple("Space", ("x","y"))
+    return [space(x+i,y+j) for i, j in list(num_movement.values())]
+
 def key_process(x, y, blockables):
 
     global player, gamelog, units
@@ -102,7 +115,7 @@ def key_process(x, y, blockables):
             #     gamelog.add(walkBlock.format("a wall"))
                 # gamelog.add(f"{player.x+x}, {player.y+y}")
         elif occupied:
-            # ============= START COMBAT LOG =======================
+            # ============= START COMBAT LOG =================================
             unit = positions[(tposx, tposy)]
             if unit.r is not "human": # condition should be more complex
                 unit.h -= 1
@@ -110,7 +123,7 @@ def key_process(x, y, blockables):
                 gamelog.add("The {} has {} left".format(unit.name, unit.h))
                 if unit.h < 1:
                     gamelog.add("You have killed the {}".format(unit.name))
-            # =============== END COMBAD LOG ========================
+            # =============== END COMBAD LOG =================================
             else:
                 gamelog.add(walkBlock.format(unit.r))
         elif outofbounds:
@@ -132,8 +145,10 @@ def key_process(x, y, blockables):
         outofbounds = 0 <= unit.x + x < len(blockables[0]) and 0 <= unit.y + y < len(blockables)
         if not (blocked or occupied or not outofbounds):
             unit.move(x, y)
+    
+    um.build()
 
-def openInventory(x, y, key):
+def openInventory():
     debug=False
     if debug:
         gamelog.add("opening inventory")
@@ -157,44 +172,48 @@ def openInventory(x, y, key):
     if debug:
         gamelog.add("Closing inventoryy")
     term.clear()
-    # status_box()
-    # log_box()
-    # map_box()
 
-def onlyOne(container):
-    return len(container) == 1
 
-def eightsquare(x, y):
-    space = namedtuple("Space", ("x","y"))
-    return [space(x+i,y+j) for i, j in list(num_movement.values())]
-
-'''
-def interactUnit(x, y, key):
-    def talkUnit(x, y, key):
-        gamelog.add("Talking to unit")
+def interactUnit(x, y):
+    """Allows talking with other units"""
+    def talkUnit(x, y):
+        gamelog.add(um.talkTo(x, y))
         
+    print(um.positions())
     interactables = []
     for i, j in eightsquare(x, y):
         # dungeon.has_unit(i, j) -> returns true or false if unit is on the square
-        if (i, j) != (x, y) and dungeon.unit(i, j):
+        if (i, j) != (x, y) and um.unitat(i, j):
             interactables.append((i, j))
 
     # no interactables
     if not interactables:
-        gamelogl.add("No one to talk with")
+        gamelog.add("No one to talk with")
+
     # only one interactable
     elif onlyOne(interactables):
         i, j = interactables.pop()
-        talkToUnit(i, j)
+        talkUnit(i, j)
+
     # many interactables
     else:
-        term.clear()
-        gamelog.add.add("Which direction?")
-'''
-                
+        gamelog.add("Which direction?")   
+        log_box()
+        term.refresh()
+        code = term.read()
 
+        if code in key_movement:
+            cx, cy = key_movement[code]
+        elif code in num_movement:
+            cx, cy = num_movement[code]
+        else:
+            return
 
-def interactDoor(x, y, key):
+        if (x+cx, y+cy) in interactables:
+            talkUnit(x+cx, y+cy)
+
+def interactDoor(x, y, k):
+    """Allows interaction with doors"""
     def openDoor(i, j):
         gamelog.add("Opened door")
         dungeon.open_door(i, j)
@@ -205,7 +224,7 @@ def interactDoor(x, y, key):
         dungeon.close_door(i, j)
         dungeon.reblock(i, j)
 
-    opening = key is "o"
+    opening = k is "o"
     char = "+" if opening else "/"
 
     reachables = []
@@ -218,6 +237,7 @@ def interactDoor(x, y, key):
                 gamelog.add("out of bounds ({},{})".format(i, j))
             if isSquare:
                 reachables.append((i, j))
+
     if not reachables:
         gamelog.add("No {} near you".format("openables" if opening else "closeables"))
     
@@ -227,6 +247,7 @@ def interactDoor(x, y, key):
 
     else:
         gamelog.add("Which direction?")
+        log_box()
         term.refresh()
         code = term.read()
 
@@ -244,20 +265,24 @@ actions={
     'o': interactDoor,
     'c': interactDoor,
     'i': openInventory,
+    't': interactUnit,
     'f1': dungeon._sundown,
     'f2': dungeon._sunup,
 }
 
-def processAction(x, y, key):                        
-    try:
+def processAction(x, y, key):
+    if key in ("o", "c"):
         actions[key](x, y, key)
-    except TypeError:
+    elif key in ("t"):
+        actions[key](x, y)
+    elif key in ("i"):
         actions[key]()
-    except KeyError:
-        print("unknown command")
-            
+    elif key in ("f1, f2"):
+        actions[key]()
+    else:
+        print("unknown command: {} @ ({}, {})".format(key, x, y))            
 
-# End Movement Functions
+# End Keyboard Functions
 # ---------------------------------------------------------------------------------------------------------------------#
 # Graphic functions
 def graphics(integer: int) -> None:
@@ -343,10 +368,13 @@ px, py = 86, 30
 # units = Map.appendUnitList("./unitlist/test_map_colored.png")
 # map = Map(parse("testmap.dat"))
 #dungeon = Map(stringify("./assets/testmap.png"))
+um = UnitManager()
 player = Character("player", px, py, '@')
 player.inventory[0] = "sword"
 rat = Object("rat", 85, 30, 'r', r="monster")
+rat.message = "I am a rat"
 rat2 = Object("rat", 85, 29, 'R', r="monster")
+rat2.message = "I am a big rat"
 npc = Object("v1", 7, 7, '@', 'orange')
 npc1 = Object("v2", 5, 15, '@', 'orange')
 npc2 = Object("v3", 0, 56, '@', 'orange')
@@ -355,6 +383,8 @@ guard1 = Object("v5", 64, 32, "@", 'orange')
 guard2 = Object("v6", 63, 37, "@", 'orange')
 guard4 = Object("v7", 64, 37, '@', 'orange')
 units = [npc, guard1, guard2, guard3, guard4, npc1, npc2, rat, rat2]
+um.add(units)
+print(um._positions.keys())
 proceed = True
 lr = 5
 # lights = [

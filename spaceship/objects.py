@@ -75,16 +75,20 @@ class Object:
         self.c = c
         self.r = r
         self.h = h
+        self.message = "Im just an object"
 
     def move(self, dx, dy):
         self.x += dx
         self.y += dy
 
+    def talk(self):
+        return self.message
+
     def draw(self):
         return (self.x, self.y, self.i, self.c)
 
     def pos(self):
-        return self.x , self.y
+        return self.x, self.y
 
 class Character(Object):
     def __init__(self, n, x, y, i, c='white', r='human', m=10, s=10, b=6, l=5):
@@ -140,6 +144,7 @@ class Map:
         self.map_display_width = min(self.width, sw-20)
         self.map_display_height = min(self.height, sh-6)
         self.tilemap = self.fill(data, self.width, self.height)
+        self.explore = [[0 for _ in range(self.width)] for _ in range(self.height)]
         
 
     def fill(self, d, w, h):
@@ -301,6 +306,8 @@ class Map:
                 break
 
     def output(self, X, Y, units):
+
+        # character checks
         def isWalls(c): return c in chars_walls
         def isPosts(c): return c in chars_posts
         def isDoors(c): return c in chars_doors
