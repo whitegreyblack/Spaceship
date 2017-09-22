@@ -98,6 +98,20 @@ class Character(Object):
         self.l=l
         self.inventory = Inventory(b)
 
+    def dump(self):
+        print("Writing player dump to [{}]".format("Screen"))
+        print('[Character Sheet -- Spaceship]\n')
+        print("======= Player Stats =========")
+        print('{:<9}: {}'.format("Name", self.m))
+        print('{:<9}: {}'.format("Sex", "Male"))
+        print('{:<9}: {}'.format("Race", "Human"))
+        print('{:<9}: {}'.format("Subrace", "Redskin"))
+        print('{:<9}: {}'.format("Class", "Rogue"))
+        print('{:<9}: {}'.format("Subclass", "Ninja"))
+        print()
+        print('{:<9}: {}'.format("Level", "3"))
+        print('{:<9}: {}'.format("Exp", "25"))
+
 
 class Inventory:
     def __init__(self, n):

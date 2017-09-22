@@ -442,6 +442,8 @@ while proceed:
     else:
         key_process(x, y, dungeon.block)
 
+player.dump()
+
 # End Initiailiation
 # ---------------------------------------------------------------------------------------------------------------------#
 # Start Script 
