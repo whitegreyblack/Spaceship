@@ -82,7 +82,7 @@ class Object:
         self.y += dy
 
     def talk(self):
-        return self.message
+        return self.name + ": " +self.message
 
     def draw(self):
         return (self.x, self.y, self.i, self.c)
@@ -148,6 +148,7 @@ class Map:
         
 
     def fill(self, d, w, h):
+        # Light.Unexplored, Explored, Visible
         tile = namedlist("Tile", "char color visible walkable")
         # char color visible walkable
         tiles = blender(color_tiles) 
@@ -159,26 +160,34 @@ class Map:
         posts = blender(color_posts)
         lamps = blender(color_lamps)
         house = blender(color_house)
-        chars={
-            ".": tile(choice(cm.TILES.chars), choice(cm.TILES.hexcode), Light.Unexplored, "Yes"),
-            ",": tile(choice(cm.GRASS.chars), choice(cm.GRASS.hexcode), Light.Unexplored, "Yes"),
-            "#": tile(choice(cm.WALLS.chars), choice(cm.WALLS.hexcode), Light.Unexplored, "No"),
-            "~": tile(choice(cm.WATER.chars), choice(cm.WATER.hexcode), Light.Unexplored, "No"),
-            "+": tile(choice(cm.DOORS.chars), choice(cm.DOORS.hexcode), Light.Unexplored, "No"),
-            "x": tile(choice(cm.POSTS.chars), choice(cm.POSTS.hexcode), Light.Unexplored, "No"), 
-            "|": tile(choice(cm.PLANT.chars), choice(cm.PLANT.hexcode), Light.Unexplored, "Yes"),
-            "o": tile(choice(cm.LAMPS.chars), choice(cm.LAMPS.hexcode), Light.Unexplored, "No"),
-            ":": tile(choice(cm.ROADS.chars), choice(cm.ROADS.hexcode), Light.Unexplored, "Yes"),
-            "=": tile(choice(cm.HOUSE.chars), choice(cm.HOUSE.hexcode), Light.Unexplored, "Yes"),
+        locchar={
+            ".": (cm.TILES.chars, blender(cm.TILES.hexcode), Light.Unexplored, "Yes"),
+            ",": (cm.GRASS.chars, blender(cm.GRASS.hexcode), Light.Unexplored, "Yes"),
+            "#": (cm.WALLS.chars, blender(cm.WALLS.hexcode), Light.Unexplored, "No"),
+            "~": (cm.WATER.chars, blender(cm.WATER.hexcode), Light.Unexplored, "No"),
+            "+": (cm.DOORS.chars, blender(cm.DOORS.hexcode), Light.Unexplored, "No"),
+            "x": (cm.POSTS.chars, blender(cm.POSTS.hexcode), Light.Unexplored, "No"), 
+            "|": (cm.PLANT.chars, blender(cm.PLANT.hexcode), Light.Unexplored, "Yes"),
+            "o": (cm.LAMPS.chars, blender(cm.LAMPS.hexcode), Light.Unexplored, "No"),
+            ":": (cm.ROADS.chars, blender(cm.ROADS.hexcode), Light.Unexplored, "Yes"),
+            "=": (cm.HOUSE.chars, blender(cm.HOUSE.hexcode), Light.Unexplored, "Yes"),
         }
 
         def evaluate(char):
             try:
-                t = chars[char]
+                t = locchar[char]
             except KeyError:
                 raise
             return t
-        return [[evaluate(col) for col in row] for row in d.split('\n')]
+        
+        rows = []
+        for row in d.split("\n"):
+            cols = []
+            for col in row:
+                chars, hexcodes, light, walkable = evaluate(col)
+                cols.append(tile(choice(chars), choice(hexcodes), light, walkable))
+            rows.append(cols)
+        return rows
 
 
     @staticmethod
@@ -190,12 +199,8 @@ class Map:
         return data, height, width
 
     def square(self, x, y):
-        return self.data[y][x]
-
-
-    def openable(self, x, y, ch):
-        return self.square(x,y) == "+"
-
+        # return self.data[y][x]
+        return self.tilemap[y][x]
 
     def _sunup(self):
         self.SUN=True
@@ -204,15 +209,20 @@ class Map:
     def _sundown(self):
         self.SUN=False
 
-
     def open_door(self, x, y):
-        if self.square(x, y) == "+":
-            self.data[y][x] = "/"
-    
+        # if self.square(x, y) == "+":
+        #     self.data[y][x] = "/"
+        openable = self.tilemap[y][x].char == "+"
+        if openable:
+            self.tilemap[y][x].char = "/"
 
+    
     def close_door(self, x, y):
-        if self.square(x, y) == "/":
-            self.data[y][x] = "+"
+        # if self.square(x, y) == "/":
+        #     self.data[y][x] = "+"
+        closeable = self.tilemap[y][x].char == "/"
+        if closeable:
+            self.tilemap[y][x].char = "+"
 
     def reblock(self, x, y):
         self.block[y][x] = True
@@ -380,12 +390,12 @@ class Map:
 
                     else:
                         level = "" if visible else "darkest "
-                        ch = "@" if visible else self.square(x, y)
+                        ch = "@" if visible else self.square(x, y).char
                         lit = "orange" if visible else fg_fog
                     
                 elif (x, y, 10) in self.lamps:
                     level = ""
-                    ch = self.square(x, y)
+                    ch = self.square(x, y).char
                     lit = "white"
 
                 else:

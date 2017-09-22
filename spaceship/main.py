@@ -30,6 +30,15 @@ def setup():
             SCREEN_HEIGHT,
             8, 16))
 
+def refresh(lines=[]):
+    for line in lines:
+        gamelog.add(line)
+    term.clear()
+    border()
+    map_box()
+    status_box()
+    log_box()
+    term.refresh()
 # END SETUP TOOLS
 # ---------------------------------------------------------------------------------------------------------------------#
 # Keyboard input
@@ -60,13 +69,14 @@ def key_in():
     
     # make sure we clear any inputs before the next action is processed
     # allows for the program to go slow enough for human playability
-    # while term.has_input(): 
-    #     term.read()
+    while term.has_input(): 
+        term.read()
     return keydown(x, y, act)
 
 # should change to movement process
 walkChars = {
     "+": "a door",
+    "/": "a door",
     "o": "a lamp",
     "#": "a wall",
     "x": "a post",
@@ -98,7 +108,7 @@ def key_process(x, y, blockables):
 
     try:
         blocked = blockables[tposy][tposx]
-        ch = dungeon.square(tposx, tposy)
+        ch = dungeon.square(tposx, tposy).char
     except BaseException:
         blocked = False
 
@@ -148,6 +158,18 @@ def key_process(x, y, blockables):
     
     um.build()
 
+inventory_list = [
+    "head       :", 
+    "neck       :", 
+    "body       :", 
+    "back       :", 
+    "left hand  :",
+    "right hand :", 
+    "waist      :",
+    "legs       :",
+    "feet       :",
+    "token      :",
+]
 def openInventory():
     debug=False
     if debug:
@@ -160,7 +182,11 @@ def openInventory():
         border()
         status_box()
         log_box()
-        term.puts(2, 1, "[color=white]Inventory")
+        term.puts(2, 0, "[color=white]Inventory")
+        for i in range(10):
+            if i == 3 and player.inventory[0]:
+                term.puts(2, i+2, inventory_list[i] + " " + str(player.inventory[0].slot))
+            term.puts(2, i+2, inventory_list[i])
         term.refresh()
         code = term.read()
         if code in (term.TK_ESCAPE, term.TK_I,):
@@ -178,8 +204,8 @@ def interactUnit(x, y):
     """Allows talking with other units"""
     def talkUnit(x, y):
         gamelog.add(um.talkTo(x, y))
-        
-    print(um.positions())
+        refresh()
+
     interactables = []
     for i, j in eightsquare(x, y):
         # dungeon.has_unit(i, j) -> returns true or false if unit is on the square
@@ -198,8 +224,7 @@ def interactUnit(x, y):
     # many interactables
     else:
         gamelog.add("Which direction?")   
-        log_box()
-        term.refresh()
+        refresh()
         code = term.read()
 
         if code in key_movement:
@@ -232,7 +257,7 @@ def interactDoor(x, y, k):
         if (i, j) != (x, y):
             isSquare = 0
             try:
-                isSquare = dungeon.square(i, j) is char
+                isSquare = dungeon.square(i, j).char is char
             except IndexError:
                 gamelog.add("out of bounds ({},{})".format(i, j))
             if isSquare:
@@ -416,6 +441,7 @@ while proceed:
         processAction(player.x, player.y, a)
     else:
         key_process(x, y, dungeon.block)
+
 # End Initiailiation
 # ---------------------------------------------------------------------------------------------------------------------#
 # Start Script 
