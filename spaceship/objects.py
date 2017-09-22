@@ -99,18 +99,37 @@ class Character(Object):
         self.inventory = Inventory(b)
 
     def dump(self):
-        print("Writing player dump to [{}]".format("Screen"))
-        print('[Character Sheet -- Spaceship]\n')
-        print("======= Player Stats =========")
-        print('{:<9}: {}'.format("Name", self.m))
-        print('{:<9}: {}'.format("Sex", "Male"))
-        print('{:<9}: {}'.format("Race", "Human"))
-        print('{:<9}: {}'.format("Subrace", "Redskin"))
-        print('{:<9}: {}'.format("Class", "Rogue"))
-        print('{:<9}: {}'.format("Subclass", "Ninja"))
-        print()
-        print('{:<9}: {}'.format("Level", "3"))
-        print('{:<9}: {}'.format("Exp", "25"))
+        GREEN='\x1b[1;32;40m'
+        RED='\x1b[1;31;40m'
+        BLUE='\x1b[0;34;40m'
+        YELLOW='\x1b[0;33;40m'
+        END='\x1b[0m'
+        ISATTY = sys.stdout.isatty()
+        stat = GREEN+"{}"+END if ISATTY else "{}"
+        expe = BLUE+"{}"+END if ISATTY else "{}"
+        dump_template="""
+            [Character Sheet -- Spaceship]
+            ======== Player Stats ========
+            Name     : {}
+            Sex      : {}
+            Race     : {}
+            Subrace  : {}
+            Class    : {}
+            Subclass : {}
+
+            Level    : {}
+            Exp      : {}
+            """[1:]
+        print(dump_template.format(
+            stat.format("Hero"),
+            stat.format("Male"),
+            stat.format("Human"),
+            stat.format("Redskin"),
+            stat.format("Rogue"),
+            stat.format("Ninja"),
+            expe.format("3"),
+            expe.format("25"),
+        ))
 
 
 class Inventory:
