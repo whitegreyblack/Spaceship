@@ -105,8 +105,8 @@ class Character(Object):
         YELLOW='\x1b[0;33;40m'
         END='\x1b[0m'
         ISATTY = sys.stdout.isatty()
-        stat = GREEN+"{}"+END if ISATTY else "{}"
-        expe = BLUE+"{}"+END if ISATTY else "{}"
+        stat = GREEN+"{:<7}"+END if ISATTY else "{}"
+        expe = BLUE+"{:>7}"+END if ISATTY else "{}"
         dump_template="""
             [Character Sheet -- Spaceship]
             ======== Player Stats ========
