@@ -53,4 +53,5 @@ key_actions={
     term.TK_I: action("i", "inventory"),
     term.TK_F1: action("f1", "func_key"),
     term.TK_F2: action("f2", "func_key"),
+    term.TK_COMMA: action(",", "pickup"),
 }

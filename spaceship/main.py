@@ -6,7 +6,7 @@ from spaceship.action import key_movement, num_movement, key_actions, action, ke
 from spaceship.constants import SCREEN_HEIGHT, SCREEN_WIDTH, FOV_RADIUS
 from spaceship.tools import bresenhams, deltanorm, movement
 from spaceship.maps import stringify, hextup, hexone, toInt
-from spaceship.objects import Map, Object, Character
+from spaceship.objects import Map, Object, Character, Item
 from bearlibterminal import terminal as term
 from spaceship.manager import UnitManager
 from spaceship.gamelog import GameLogger
@@ -25,7 +25,7 @@ dungeon = Map(stringify("./assets/testmap_colored.png"))
 def setup():
     term.open()
     term.set(
-        "window: size={}x{}, cellsize={}x{}, title='Main Game'".format(
+        "window: resizeable=true, size={}x{}, cellsize={}x{}, title='Main Game'".format(
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
             8, 16))
@@ -50,10 +50,14 @@ def key_in():
     # movement
     act, x, y = 0, 0, 0
     code = term.read()
+    while code in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
+        code = term.read()
+    if any([term.state(tk) for tk in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT)]):
+        print("CTRL | ALT | SHIFT")
     if code in (term.TK_ESCAPE, term.TK_CLOSE):
         gamelog.dumps()
         proceed = False
-    
+
     # arrow keys
     elif code in key_movement:
         x, y = key_movement[code]
@@ -66,7 +70,6 @@ def key_in():
     # any other key F-keys, Up/Down Pg, etc
     else:
         print("unrecognized command")
-    
     # make sure we clear any inputs before the next action is processed
     # allows for the program to go slow enough for human playability
     while term.has_input(): 
@@ -116,6 +119,8 @@ def key_process(x, y, blockables):
     # (not blocked) and (not occupied) and (inbounds)
     if not (blocked or occupied or not outofbounds):
         player.move(x, y)
+        if dungeon.square(tposx, tposy).items:
+            gamelog.add("There is something here")
     else:
         if blocked:
             gamelog.add(walkBlock.format(walkChars[ch]))
@@ -237,6 +242,29 @@ def interactUnit(x, y):
         if (x+cx, y+cy) in interactables:
             talkUnit(x+cx, y+cy)
 
+def interactItem(x, y, i):
+    def pickItem():
+        item = dungeon.square(x, y).items.pop()
+        player.backpack.add_item(item)
+        gamelog.add("You pick up a {}".format(item.name))
+    
+    if i == ",": # pickup
+        if player.backpack.full():
+            # earlly exit
+            gamelog.add("Backpack is full")
+            return
+        items = dungeon.square(x, y).items
+        if items:
+            if len(items) == 1:
+                pickItem()
+            # TODO                
+            # else:
+            #     glog.add("opening pick up menu")
+            #     pick_menu(items)
+        else:
+            glog.add("Nothing to pick up")
+            refresh()
+
 def interactDoor(x, y, k):
     """Allows interaction with doors"""
     def openDoor(i, j):
@@ -293,10 +321,11 @@ actions={
     't': interactUnit,
     'f1': dungeon._sundown,
     'f2': dungeon._sunup,
+    ',': interactItem,
 }
 
 def processAction(x, y, key):
-    if key in ("o", "c"):
+    if key in ("o", "c", ","):
         actions[key](x, y, key)
     elif key in ("t"):
         actions[key](x, y)
@@ -410,24 +439,9 @@ guard4 = Object("v7", 64, 37, '@', 'orange')
 units = [npc, guard1, guard2, guard3, guard4, npc1, npc2, rat, rat2]
 um.add(units)
 print(um._positions.keys())
+dungeon.add_item(87, 31, Item("sword", "(", "grey"))
 proceed = True
 lr = 5
-# lights = [
-#     (1, 10, lr),
-#     (21, 10, lr),
-#     (41, 10, lr),
-#     (61, 10, lr),
-#     (81, 10, lr),
-#     (101, 10, lr),
-#     (121, 10, lr),
-#     (1, 38, lr),
-#     (21, 38, lr),
-#     (41, 38, lr),
-#     (61, 38, lr),
-#     (81, 38, lr),
-#     (101, 38, lr),
-#     (121, 38, lr),
-# ]
 lights = [(121, 39, 10)]
 while proceed:
     term.clear()

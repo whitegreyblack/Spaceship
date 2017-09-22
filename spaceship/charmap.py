@@ -8,7 +8,7 @@ class Charmap:
     WALLS=charmap(["#"], ("#eacda3", "#d6ae7b"))
     WATER=charmap(["~"], ("#43C6AC", "#191654"))
     DOORS=charmap(["+"], ("#994C00", "#994C00"))
-    PLANT=charmap(["|"], ("#FDFC47", "#24FE41"))
+    PLANT=charmap(["|"], ("#F3E347", "#24FE41"))
     LAMPS=charmap(["o"], ("#ffffff", "#ffffff"))
     BRICK=charmap(["%"], ("#a73737", "#7a2828"))
     ROADS=charmap([":"], ("#808080", "#994C00"))

@@ -46,18 +46,11 @@ color_water=("#43C6AC", "#191654")
 color_doors=("#994C00", "#994C00")
 color_posts=("#9A8478", "#9A8478")
 
-class Slot:
-    def __init__(self, current=None):
-        self._slot = current
-
-    @property
-    def slot(self):
-        return self._slot
-
-    @slot.setter
-    def slot(self, item):
-        self._slot = item
-        print("set slot to {}".format(item))
+class Item:
+    def __init__(self, n, s, c):
+        self.name = n
+        self.char = s
+        self.color = c
 
 
 class Object:
@@ -97,6 +90,7 @@ class Character(Object):
         self.s=s
         self.l=l
         self.inventory = Inventory(b)
+        self.backpack = Backpack()
 
     def dump(self):
         GREEN='\x1b[1;32;40m'
@@ -119,7 +113,11 @@ class Character(Object):
 
             Level    : {}
             Exp      : {}
+
+            ======== Player Items ========
+            {}
             """[1:]
+        print(self.backpack.dump())
         print(dump_template.format(
             stat.format("Hero"),
             stat.format("Male"),
@@ -129,10 +127,24 @@ class Character(Object):
             stat.format("Ninja"),
             expe.format("3"),
             expe.format("25"),
+            self.backpack.dump(),
         ))
 
+class Slot:
+    def __init__(self, current=None):
+        self._slot = current
+
+    @property
+    def slot(self):
+        return self._slot
+
+    @slot.setter
+    def slot(self, item):
+        self._slot = item
+        print("set slot to {}".format(item))
 
 class Inventory:
+    """This is what you'll be holding -- may change this to equipped class name"""
     def __init__(self, n):
         self._inventory = [Slot() for _ in range(n)]
 
@@ -148,6 +160,22 @@ class Inventory:
         except:
             IndexError("Not a valid slot number")
 
+class Backpack:
+    """This is what your inventory will hold -- may change this to inventory class name"""
+    def __init__(self, m=15):
+        self._max = m
+        self._inventory = []
+
+    def full(self):
+        return len(self._inventory) == self._max
+
+    def add_item(self, i):
+        if not self.full():
+            self._inventory.append(i)
+
+    def dump(self):
+        return "\n".join(["{}. {}".format(chr(ord('a')+letter), item.name) 
+            for item, letter in zip(self._inventory, range(len(self._inventory)))])
 
 class Map:
     ''' Ray Tracing Implementation based off of Rogue Basin Python Tutorial '''
@@ -182,28 +210,28 @@ class Map:
 
     def fill(self, d, w, h):
         # Light.Unexplored, Explored, Visible
-        tile = namedlist("Tile", "char color visible walkable")
+        tile = namedlist("Tile", "char color visible walkable items")
         # char color visible walkable
-        tiles = blender(color_tiles) 
-        walls = blender(color_walls)
-        plant = blender(color_plant)
-        grass = blender(color_grass)
-        water = blender(color_water)
-        doors = blender(color_doors)
-        posts = blender(color_posts)
-        lamps = blender(color_lamps)
-        house = blender(color_house)
+        # tiles = blender(color_tiles) 
+        # walls = blender(color_walls)
+        # plant = blender(color_plant)
+        # grass = blender(color_grass)
+        # water = blender(color_water)
+        # doors = blender(color_doors)
+        # posts = blender(color_posts)
+        # lamps = blender(color_lamps)
+        # house = blender(color_house)
         locchar={
-            ".": (cm.TILES.chars, blender(cm.TILES.hexcode), Light.Unexplored, "Yes"),
-            ",": (cm.GRASS.chars, blender(cm.GRASS.hexcode), Light.Unexplored, "Yes"),
-            "#": (cm.WALLS.chars, blender(cm.WALLS.hexcode), Light.Unexplored, "No"),
-            "~": (cm.WATER.chars, blender(cm.WATER.hexcode), Light.Unexplored, "No"),
-            "+": (cm.DOORS.chars, blender(cm.DOORS.hexcode), Light.Unexplored, "No"),
-            "x": (cm.POSTS.chars, blender(cm.POSTS.hexcode), Light.Unexplored, "No"), 
-            "|": (cm.PLANT.chars, blender(cm.PLANT.hexcode), Light.Unexplored, "Yes"),
-            "o": (cm.LAMPS.chars, blender(cm.LAMPS.hexcode), Light.Unexplored, "No"),
-            ":": (cm.ROADS.chars, blender(cm.ROADS.hexcode), Light.Unexplored, "Yes"),
-            "=": (cm.HOUSE.chars, blender(cm.HOUSE.hexcode), Light.Unexplored, "Yes"),
+            ".": (cm.TILES.chars, blender(cm.TILES.hexcode)),
+            ",": (cm.GRASS.chars, blender(cm.GRASS.hexcode)),
+            "#": (cm.WALLS.chars, blender(cm.WALLS.hexcode)),
+            "~": (cm.WATER.chars, blender(cm.WATER.hexcode)),
+            "+": (cm.DOORS.chars, blender(cm.DOORS.hexcode)),
+            "x": (cm.POSTS.chars, blender(cm.POSTS.hexcode)), 
+            "|": (cm.PLANT.chars, blender(cm.PLANT.hexcode)),
+            "o": (cm.LAMPS.chars, blender(cm.LAMPS.hexcode)),
+            ":": (cm.ROADS.chars, blender(cm.ROADS.hexcode)),
+            "=": (cm.HOUSE.chars, blender(cm.HOUSE.hexcode)),
         }
 
         def evaluate(char):
@@ -217,8 +245,10 @@ class Map:
         for row in d.split("\n"):
             cols = []
             for col in row:
-                chars, hexcodes, light, walkable = evaluate(col)
-                cols.append(tile(choice(chars), choice(hexcodes), light, walkable))
+                chars, hexcodes = evaluate(col)
+                light = Light.Unexplored
+                walkable = col in chars_block
+                cols.append(tile(choice(chars), choice(hexcodes), light, walkable, []))
             rows.append(cols)
         return rows
 
@@ -230,6 +260,9 @@ class Map:
         height = len(data)
         width = max(len(col) for col in data)
         return data, height, width
+
+    def add_item(self, x, y, i):
+        self.tilemap[y][x].items.append(i)
 
     def square(self, x, y):
         # return self.data[y][x]
@@ -408,12 +441,14 @@ class Map:
                 visible = daytime or lit
                 #level = fog_levels[max(5-level, 0)] if level else fog_levels[min(0, level)]
 
+                # Current position holds your position
                 if x == X and y == Y:
                     level = ""
                     ch = "@"
                     lit = "white"
                     ## bkgd = "black"
 
+                # Current position holds a unit
                 elif (x, y) in positions.keys():
                     if daytime:
                         level = ""
@@ -425,14 +460,22 @@ class Map:
                         level = "" if visible else "darkest "
                         ch = "@" if visible else self.square(x, y).char
                         lit = "orange" if visible else fg_fog
-                    
+
+                # Current position holds an item
+                elif self.square(x, y).items:
+                    item = choice(self.square(x, y).items)
+                    level = ""
+                    ch = item.char
+                    lit = item.color
+
+                # Current position holds a Lamp
                 elif (x, y, 10) in self.lamps:
                     level = ""
                     ch = self.square(x, y).char
                     lit = "white"
 
                 else:
-                    ch, lit, _, _ = self.tilemap[y][x]
+                    ch, lit, _, _, _ = self.square(x, y)
                     level = ""
                 try:        
                     yield (x-cx, y-cy, level+lit, ch, bkgd)
