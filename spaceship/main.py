@@ -321,7 +321,7 @@ def border():
     border_line =  "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]"
 
     # y axis
-    for i in range(80):
+    for i in range(0, 80, 2):
         if i < 20:
             term.puts(SCREEN_WIDTH-20+i, 0, border_line)
             term.puts(SCREEN_WIDTH-20+i, 10, border_line)
@@ -377,9 +377,44 @@ def map_box():
 
 # End graphics functions
 # ---------------------------------------------------------------------------------------------------------------------#
+# Begin Title Screen Graphics
+def title_screen():
+    def center(text, width):
+        return width//2-len(text)//2
+    proceed = True
+    title_index = 0
+    title_develop = 'Developed by Sam Whang using Python and BearLibTerminal'
+    title_options = ['continue', 'new game', 'options', 'quit']
+    while proceed:
+        term.clear() # probably won't need later but using now to make sure title screen is empty
+        title = 'Working Title Screen'	    
+        x = center(title, SCREEN_WIDTH)
+        term.puts(x, SCREEN_HEIGHT//3, title)
+        for option, i in zip(title_options, range(len(title_options))):
+            text = "[color=blue]{}[/color]".format(option.upper()) if i == title_index else option.upper()
+            term.puts(center(option, SCREEN_WIDTH), SCREEN_HEIGHT//2+i, text)
+        term.puts(center(title_develop, SCREEN_WIDTH), SCREEN_HEIGHT-1, title_develop)
+        term.refresh()
+        code = term.read()
+        if code in (term.TK_UP, term.TK_DOWN):
+            if code == term.TK_UP:
+                title_index -= 1
+            else: 
+                title_index += 1
+            if not 0 <= title_index < len(title_options):
+                title_index = max(0, min(title_index, len(title_options)-1)) 
+        elif code in (term.TK_ENTER,):
+            print(title_index)
+            print("You picked: {}".format(title_options[title_index]))
+        else:
+            proceed = False        
+    
+# End TItle Screen Graphics
+# ---------------------------------------------------------------------------------------------------------------------#
 # Start initializations
 
 setup()
+title_screen()
 gamelog = GameLogger(4)
 # global game variables
 #MAP_WIDTH, MAP_HEIGHT = 24, 48
@@ -450,3 +485,4 @@ player.dump()
 if __name__ == "__main__":
     if len(sys.argv) > 2:
         print(sys.argv)
+    print("script check")

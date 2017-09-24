@@ -2,3 +2,5 @@ bearlibterminal==0.15.4
 pillow==4.2.1
 namedlist
 ptpython
+pytest
+pytest-cov
