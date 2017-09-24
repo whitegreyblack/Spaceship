@@ -407,9 +407,11 @@ def map_box():
 # End graphics functions
 # ---------------------------------------------------------------------------------------------------------------------#
 # Begin Title Screen Graphics
+def center(text, width):
+    return width//2-len(text)//2
+def colored(text):
+    return "[color=blue]{}[/color]".format(text)
 def title_screen():
-    def center(text, width):
-        return width//2-len(text)//2
     proceed = True
     title_index = 0
     title_develop = 'Developed by Sam Whang using Python and BearLibTerminal'
@@ -435,10 +437,57 @@ def title_screen():
         elif code in (term.TK_ENTER,):
             print(title_index)
             print("You picked: {}".format(title_options[title_index]))
-        else:
+            if title_index == 0:
+                continue_screen()
+            elif title_index == 1:
+                new_game_screen()
+            elif title_index == 2:
+                print("going to options menu")
+                options_screen()
+            else:
+                proceed = False
+        elif code in (term.TK_CLOSE, term.TK_ESCAPE):
             proceed = False        
     
 # End TItle Screen Graphics
+# ---------------------------------------------------------------------------------------------------------------------#
+# Begin Options Menu
+def options_screen():
+    option = "options"
+    option_index = 0
+    option_options = ['full screen', 'tile output', 'dynamic coloring']
+    while True:
+        term.clear()
+        term.puts(center(option, SCREEN_WIDTH), 3, option.upper())
+        for option, i in zip(option_options, range(len(option_options))):
+            option = "[color=blue]{}[/color]".format(option) if i == option_index else option
+            term.puts(SCREEN_WIDTH//8, SCREEN_HEIGHT//4+i, option)
+        term.puts(center('back', SCREEN_WIDTH), SCREEN_HEIGHT-2, colored('back') if option_index == 3 else 'back')
+        term.refresh()
+        code = term.read()
+        if code in (term.TK_UP, term.TK_DOWN):
+            if code == term.TK_UP:
+                option_index -= 1
+            else:
+                option_index += 1
+            if not 0 <= option_index < len(option_options)+1:
+                option_index = max(0, min(option_index, len(option_options)))
+        elif code in (term.TK_ENTER,):
+            print(option_index)
+            print("You picked the options for {}".format(option_options[option_index]))
+        elif code in (term.TK_CLOSE, term.TK_ESCAPE):
+            break
+# End Options Menu
+# ---------------------------------------------------------------------------------------------------------------------#
+# Begin New Game Menu
+def new_game_screen():
+    pass
+# End New Game Menu
+# ---------------------------------------------------------------------------------------------------------------------#
+# Begin continue Menu
+def continue_screen():
+    pass
+# End Continue Menu
 # ---------------------------------------------------------------------------------------------------------------------#
 # Start initializations
 
