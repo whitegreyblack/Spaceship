@@ -14,7 +14,7 @@ race_descriptions=[
     "Dwarves are hardy creatures",
     "The elven folk are skinny people",
     "Ishtahari are oldest race",
-    "Orcs are brutish creatures",
+    "Orcs are brutish creatures. Born in clans",
     "Goblins are short but quick creatures",
     "Trolls are large and lumbering creatures",
 ]
@@ -69,6 +69,31 @@ def join(string, length):
     return "\n".join(wrap(string, length))
 
 def create_character():
+
+    def unselected(x, y, text):
+        term.puts(x, y, text)
+
+    def selected(x, y, text):
+        term.bkcolor("white")
+        term.puts(x, y, "[color=black]{}[/color]".format(text))
+        term.bkcolor("black")
+
+    def passed(x, y, text):
+        term.bkcolor("grey")
+        term.puts(x, y, text)
+        term.bkcolor("black")      
+
+    def title_text(i):
+        text = "Choose your {}"
+        if i == 0:
+            return text.format("race")
+        elif i == 1:
+            return text.format("subclass")
+        elif i == 2:
+            return text.format("class")
+        else:
+            return "Press (ENTER) to finish"
+
     def modify(increment, index, options):
         mods = namedtuple("modify", "increment index options")
         index += increment
@@ -78,7 +103,7 @@ def create_character():
         return index
     races = namedtuple("Race", "race subraces")
     character_title = "Character Creation"
-    character_help = """Press [?] for info on a race or class"""[1:]
+    character_help = "Press (?) for info on a selected race, subrace or class"
     race_title = "Choose your race"
     class_title = "Choose your class"
     character_index = 0
@@ -90,7 +115,7 @@ def create_character():
         races("Dwarf", ["Ironborn", "Goldbeard", "Stonekeep"]),
         races("Elf", ["Highborn", "Woodland", "Drow"]),
         races("Ishtahari", ["Ishma", "Ishta"]),
-        races("Orc", ["Mountain Orc", "Greenskin", "Grayskin"]),
+        races("Orc", ["Mountain", "Greenskin", "Grayskin"]),
         races("Goblin", ["Normal", "Hobgoblin"]),
         races("Troll", ["Cave", "Forest", "Ice"]),
     ]
@@ -104,46 +129,48 @@ def create_character():
     length = SCREEN_WIDTH//2
     while True:
         term.clear()
-        term.puts(center(race_title, SCREEN_WIDTH), 1, race_title)
-        term.puts(SCREEN_WIDTH//2-1, 3, join(race_descriptions[race_index] if character_index > 0 else "", length))
-        term.puts(SCREEN_WIDTH//2-1, 6, join(subrace_descriptions[race_index][subrace_index] if character_index > 1 else "", length))
-        term.puts(SCREEN_WIDTH//2-1, 9, join(class_descriptions[class_index] if character_index > 2 else "", length))
+        term.puts(center(character_title, SCREEN_WIDTH), 1, character_title)
+        term.puts(center(race_title, SCREEN_WIDTH), 2, race_title)
+        term.puts(SCREEN_WIDTH//2-1, 4, join(race_descriptions[race_index] if character_index >= 0 else "", length))
+        term.puts(SCREEN_WIDTH//2-1, 7, join(subrace_descriptions[race_index][subrace_index] if character_index >= 1 else "", length))
+        term.puts(SCREEN_WIDTH//2-1, 10, join(class_descriptions[class_index] if character_index >= 2 else "", length))
 
-        # human
+        # races
         for option, i in zip(race_options, range(len(race_options))):
             race, _ = option
             if i == race_index:
-                term.bkcolor("grey")
-            term.puts(3, 3+i*2, race)
-            term.bkcolor("black")
-
+                selected(3, 4+i*2, race) if character_index == 0 else passed(3, 4+i*2, race)
+            else:
+                unselected(3, 4+i*2, race)
         # sub races
         subraces = race_options[race_index].subraces
         if character_index > 0:
             for subrace, i in zip(subraces, range(len(subraces))):
                 if i == subrace_index:
-                    term.bkcolor("grey")
-                term.puts(15, 3+i*2, subrace)
-                term.bkcolor("black")
+                    selected(15, 4+i*2, subrace) if character_index == 1 else passed(15, 4+i*2, subrace)
+                else:
+                    unselected(15, 4+i*2, subrace)
 
         # class list
         if character_index > 1:
             for classes, i in zip(class_options, range(len(class_options))):
                 if i == class_index:
-                    term.bkcolor("grey")
-                term.puts(27, 3+i*2, classes)
-                term.bkcolor("black")
+                    selected(27, 4+i*2, classes) if character_index == 2 else passed(27, 4+i*2, classes)
+                else:
+                    unselected(27, 4+i*2, classes)
 
         # finish button
         if character_index > 2:
-            term.bkcolor("white")
-            term.puts(SCREEN_WIDTH-len('finish')-3, SCREEN_HEIGHT-2, '[color=black]FINISH[/color]')
-            term.bkcolor("black")
+            selected(SCREEN_WIDTH-len('finish')-3, SCREEN_HEIGHT-3, 'FINISH')
         else:
-            term.puts(SCREEN_WIDTH-len('finish')-3, SCREEN_HEIGHT-2, 'FINISH')
+            term.puts(SCREEN_WIDTH-len('finish')-3, SCREEN_HEIGHT-3, 'FINISH')
+
+        # footer
+        term.puts(center(character_help, SCREEN_WIDTH), SCREEN_HEIGHT-1, character_help)
 
         term.refresh()
         code = term.read()
+
         if code == term.TK_UP:
             increment = -1
             if character_index == 0:
@@ -152,6 +179,7 @@ def create_character():
                 subrace_index = modify(increment, subrace_index, len(race_options[race_index].subraces))
             elif character_index == 2:
                 class_index = modify(increment, class_index, len(class_options))
+
         elif code == term.TK_DOWN:
             increment = 1
             if character_index == 0:
@@ -162,6 +190,8 @@ def create_character():
                 class_index = modify(increment, class_index, len(class_options))
 
         elif code in (term.TK_ENTER, term.TK_RIGHT):
+            if code == term.TK_ENTER and character_index == 3:
+                break
             character_index = modify(1, character_index, 4)
         
         elif code in (term.TK_LEFT,):
@@ -172,10 +202,10 @@ def create_character():
             elif character_index == 2:
                 class_index = 0
             character_index = modify(-1, character_index, 4)
+
         elif code in (term.TK_ESCAPE):
             break
-        if character_index == 2:
-            print('end')
+
 if __name__ == "__main__":
     setup()
     try:
