@@ -113,9 +113,21 @@ class Character(Object):
 
             Level    : {}
             Exp      : {}
-
+            ========   Equipment  ========
+            Head     :
+            Neck     : 
+            Torso    : Peasant garb
+            Ring(L)  :
+            Hand(L)  : Sword
+            Ring(R)  :
+            Hand(R)  : 
+            Waist    : Thin rope
+            Legs     : Common pants
+            Feet     : Sandals
             ======== Player Items ========
             {}
+            ========  Alignments  ========
+            ========  Relations   ========
             """[1:]
         print(self.backpack.dump())
         print(dump_template.format(
@@ -396,8 +408,11 @@ class Map:
         def isFloor(c): return c in chars_floor
 
         def scroll(p, s, m):
-            """@p: current position of player 1D
+            """
+            @p: current position of player 1D axis
+            
             @s: size of the screen
+            
             @m: size of the map           
             """
             hs = s//2
