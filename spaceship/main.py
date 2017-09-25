@@ -6,8 +6,8 @@ from spaceship.start import start
 
 # Start initializations
 if __name__ == "__main__":
-    if len(sys.argv) > 2:
-        print(sys.argv)
-    print("script check")
+    # if len(sys.argv) > 2:
+    #     print(sys.argv)
+    # print("script check")
     start()
 # End Initiailiation
