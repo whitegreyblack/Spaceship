@@ -98,12 +98,11 @@ def create_character():
             return "Press (ENTER) to finish"
 
     def modify(increment, index, options):
-        mods = namedtuple("modify", "increment index options")
         index += increment
         if not 0 <= index < options:
             index = max(0, min(index, options-1))
-        print(mods(increment, index, options))
         return index
+
     races = namedtuple("Race", "race subraces")
     character_title = "Character Creation"
     character_help = "Press (?) for info on a selected race, subrace or class"

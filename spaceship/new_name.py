@@ -12,7 +12,8 @@ def new_name(character) -> (int, str):
     x = SCREEN_WIDTH//2
     w = SCREEN_WIDTH//5
     y = SCREEN_HEIGHT//2
-    term.clear_area(x-w, y-3, x, 6)
+    #term.clear_(x-w, y-3, x, 6)area
+    term.clear()
     term.puts(center(direction, x*2), y-4, direction)
     for i in range(x-w, x+w):
         term.puts(i, y-2, "{}".format(chr(toInt('2550'))))
