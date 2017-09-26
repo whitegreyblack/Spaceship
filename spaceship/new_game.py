@@ -384,7 +384,7 @@ def new_game(player, name):
             else:
                 try:
                     if ch == 57389:
-                        term.bkcolor(bkgd if bkgd else "black")
+                        term.bkcolor("black")
                         term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
                     else:
                         term.bkcolor(bkgd if bkgd else "black")

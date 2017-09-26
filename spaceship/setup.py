@@ -13,6 +13,7 @@ palette = {
     '+': "E02B",
     '/': "E02F",
     'O': "E07F",
+    '|': "E0E7",
 }
 
 def setup():
@@ -23,7 +24,7 @@ def setup():
             SCREEN_HEIGHT,
             FONT_WIDTH, 
             FONT_HEIGHT))
-    term.set("U+E000: ./fonts/cga88.png, size=8x8, align=center")
+    term.set("U+E000: ./fonts/cga88_black.png, size=8x8, align=center")
     term.composition(False)
 if __name__ == "__main__":
     setup()

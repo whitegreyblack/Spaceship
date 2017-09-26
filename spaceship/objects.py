@@ -235,8 +235,8 @@ class Map:
         # lamps = blender(color_lamps)
         # house = blender(color_house)
         locchar={
-            ".": (cm.TILES.chars, blender(cm.TILES.hexcode, "black")),
-            ",": (cm.GRASS.chars, blender(cm.GRASS.hexcode, "brown")),
+            ".": (cm.TILES.chars, blender(cm.TILES.hexcode)),
+            ",": (cm.GRASS.chars, blender(cm.GRASS.hexcode)),
             "#": (cm.WALLS.chars, blender(cm.WALLS.hexcode)),
             "~": (cm.WATER.chars, blender(cm.WATER.hexcode)),
             "+": (cm.DOORS.chars, blender(cm.DOORS.hexcode)),
