@@ -191,7 +191,7 @@ def create_character():
 
         elif code in (term.TK_ENTER, term.TK_RIGHT):
             if code == term.TK_ENTER and character_index == 3:
-                break
+                return 1
             character_index = modify(1, character_index, 4)
         
         elif code in (term.TK_LEFT,):
@@ -203,8 +203,9 @@ def create_character():
                 class_index = 0
             character_index = modify(-1, character_index, 4)
 
-        elif code in (term.TK_ESCAPE):
+        elif code in (term.TK_ESCAPE,):
             break
+    return None
 
 if __name__ == "__main__":
     setup()

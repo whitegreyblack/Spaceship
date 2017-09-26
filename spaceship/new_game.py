@@ -33,7 +33,7 @@ def new_game():
     # Keyboard input
 
 
-    def key_in():
+    def key_in(proceed):
         keydown = namedtuple("Key_Down", ("x", "y", "a"))
         # movement
         act, x, y = 0, 0, 0
@@ -62,7 +62,7 @@ def new_game():
         # allows for the program to go slow enough for human playability
         while term.has_input(): 
             term.read()
-        return keydown(x, y, act)
+        return keydown(x, y, act), proceed
 
     # should change to movement process
     walkChars = {
@@ -387,6 +387,7 @@ def new_game():
                     print(lit, ch, bkgd)
                     raise
         term.refresh()
+    # Before anything happens we create our character
     # LIMIT_FPS = 30 -- later used in sprite implementation
     blocked = []
     dungeon = Map(stringify("./assets/testmap_colored.png"))
@@ -433,7 +434,8 @@ def new_game():
         log_box()
         inventory_box()
         map_box()
-        x, y, a = key_in()
+        key, proceed = key_in(proceed)
+        x, y, a = key
         if a:
             processAction(player.x, player.y, a)
         else:

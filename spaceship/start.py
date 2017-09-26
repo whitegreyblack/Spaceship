@@ -4,8 +4,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.constants import SCREEN_HEIGHT, SCREEN_WIDTH
 from bearlibterminal import terminal as term
 from spaceship.screen_functions import *
+from spaceship.options import options
 from spaceship.continue_game import continue_game
-from spaceship.newgame import new_game
+from spaceship.create_character import create_character
+from spaceship.new_game import new_game
 from spaceship.setup import setup
 
 def start():
@@ -16,7 +18,7 @@ def start():
     title_options = ["(C) continue", '(N) new game', '(O) options', '(Q) quit']
     while proceed:
 
-        # term.clear() # probably won't need later but using now to make sure title screen is empty
+        term.clear() # probably won't need later but using now to make sure title screen is empty
         title = 'Working Title Screen'	    
         x = center(title, SCREEN_WIDTH)
         # title header
@@ -46,10 +48,11 @@ def start():
             if title_index == 0:
                 proceed = continue_screen()
             elif title_index == 1:
-                proceed = new_game_screen()
+                player = create_character()
+                if player is not None:
+                    proceed = new_game()
             elif title_index == 2:
-                print("going to options menu")
-                options_screen()
+                options()
             else:
                 proceed = False
         elif code in (term.TK_CLOSE, term.TK_ESCAPE):
