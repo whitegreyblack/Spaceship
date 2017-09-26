@@ -11,7 +11,6 @@ from spaceship.constants import SCREEN_HEIGHT as sh
 from spaceship.constants import SCREEN_WIDTH as sw
 from spaceship.maps import hextup, hexone, output, blender, gradient, evaluate_blocks
 from spaceship.charmap import Charmap as cm
-from spaceship.maps import toInt
 # TODO: Maybe move map to a new file called map and create a camera class?
 
 errormessage=namedtuple("ErrMsg", "x y ch lvl vis lit")
@@ -44,7 +43,7 @@ color_plant=("#FDFC47", "#24FE41")
 color_brick=("#a73737", "#7a2828")
 color_tiles=("#808080", "#C0C0C0")
 color_water=("#43C6AC", "#191654")
-color_doors=("#994C00", "#994C00")
+color_doors=("#993F3A", "#994C00")
 color_posts=("#9A8478", "#9A8478")
 
 class Item:
@@ -223,35 +222,20 @@ class Map:
 
     def fill(self, d, w, h):
         # Light.Unexplored, Explored, Visible
-        tile = namedlist("Tile", "char color visible walkable items")
-        # char color visible walkable
-        # tiles = blender(color_tiles) 
-        # walls = blender(color_walls)
-        # plant = blender(color_plant)
-        # grass = blender(color_grass)
-        # water = blender(color_water)
-        # doors = blender(color_doors)
-        # posts = blender(color_posts)
-        # lamps = blender(color_lamps)
-        # house = blender(color_house)
+        tile = namedlist("Tile", "char color bkgd visible walkable items")
         locchar={
-            ".": (cm.TILES.chars, blender(cm.TILES.hexcode)),
-            ",": (cm.GRASS.chars, blender(cm.GRASS.hexcode)),
-            "#": (cm.WALLS.chars, blender(cm.WALLS.hexcode)),
-            "~": (cm.WATER.chars, blender(cm.WATER.hexcode)),
-            "+": (cm.DOORS.chars, blender(cm.DOORS.hexcode)),
-            "x": (cm.POSTS.chars, blender(cm.POSTS.hexcode)), 
-            "|": (cm.PLANT.chars, blender(cm.PLANT.hexcode)),
-            "o": (cm.LAMPS.chars, blender(cm.LAMPS.hexcode)),
-            ":": (cm.ROADS.chars, blender(cm.ROADS.hexcode)),
-            "=": (cm.HOUSE.chars, blender(cm.HOUSE.hexcode)),
+            ".": (cm.TILES.chars, blender(cm.TILES.hexcode), "black"),
+            ",": (cm.GRASS.chars, blender(cm.GRASS.hexcode), "black"),
+            "#": (cm.WALLS.chars, blender(cm.WALLS.hexcode), "black"),
+            "~": (cm.WATER.chars, blender(cm.WATER.hexcode), "black"),
+            "+": (cm.DOORS.chars, blender(cm.DOORS.hexcode), "black"),
+            "x": (cm.POSTS.chars, blender(cm.POSTS.hexcode), "black"), 
+            "|": (cm.PLANT.chars, blender(cm.PLANT.hexcode), "black"),
+            "o": (cm.LAMPS.chars, blender(cm.LAMPS.hexcode), "black"),
+            ":": (cm.ROADS.chars, blender(cm.ROADS.hexcode), "black"),
+            "=": (cm.HOUSE.chars, blender(cm.HOUSE.hexcode), "black"),
         }
 
-        def fontmap(char):
-            if char == ".":
-                return hex(toInt("E000") + 7)
-            else:
-                return char
         def evaluate(char):
             try:
                 t = locchar[char]
@@ -263,10 +247,10 @@ class Map:
         for row in d.split("\n"):
             cols = []
             for col in row:
-                chars, hexcodes = evaluate(col)
+                chars, hexcodes, bkgd = evaluate(col)
                 light = Light.Unexplored
                 walkable = col in chars_block
-                cols.append(tile(fontmap(choice(chars)), choice(hexcodes), light, walkable, []))
+                cols.append(tile(choice(chars), choice(hexcodes), bkgd, light, walkable, []))
             rows.append(cols)
         return rows
 
@@ -465,8 +449,7 @@ class Map:
                 # Current position holds your position
                 if x == X and y == Y:
                     level = ""
-                    ch =  hex(toInt("E000") + 4 * 16)
-                    print(ch)
+                    ch = "@"
                     lit = "white"
                     ## bkgd = "black"
 
@@ -497,7 +480,7 @@ class Map:
                     lit = "white"
 
                 else:
-                    ch, lit, _, _, _ = self.square(x, y)
+                    ch, lit, bkgd, _, _, _ = self.square(x, y)
                     level = ""
                 try:        
                     yield (x-cx, y-cy, level+lit, ch, bkgd)

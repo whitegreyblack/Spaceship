@@ -6,14 +6,24 @@ from bearlibterminal import terminal as term
 from collections import namedtuple
 
 palette = {
-    ',': "E02C",
-    '`': "E027",
-    '.': "E007",
+    # ',': "E02C",
+    ',': "E0F9",
+    # '`': "E027",
+    ',': "E0F9",
+    '.': "E0F9",
     '#': "E023",
     '+': "E02B",
     '/': "E02F",
-    'O': "E07F",
-    '|': "E0E7",
+    'o': "E07F",
+    # '|': "E0E7",
+    '|': "E007",
+    # ';': "E03B",
+    ';': "E0F9",
+    # ':': "E03A",
+    ':': "E0F9",
+    '@': "E040",
+    # 'x': "E078",
+    'x': "E0F9",
 }
 
 def setup():

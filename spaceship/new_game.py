@@ -13,7 +13,7 @@ from spaceship.gamelog import GameLogger
 from random import randint, choice
 from collections import namedtuple
 from namedlist import namedlist
-from spaceship.setup import setup
+from spaceship.setup import setup, palette
 from time import clock
 
 def new_game(player, name):
@@ -380,12 +380,18 @@ def new_game(player, name):
         for x, y, lit, ch, bkgd in list(dungeon.output(player.x, player.y, units)):
             # term.bkcolor(bgkd)
             if len(str(ch)) < 2:
-                term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
+                if ch in palette.keys():
+                    term.bkcolor(bkgd)
+                    term.puts(x, y, "[color={}]".format(lit)+chr(toInt(palette[ch]))+"[/color]")
+                    term.bkcolor("black")
+                else:
+                    term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
             else:
                 try:
-                    if ch == 57389:
+                    if ch in palette.keys():
+                        print("pallete")
                         term.bkcolor("black")
-                        term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
+                        term.puts(x, y, "[color={}]{}[/color]".format(lit, palette[ch]))
                     else:
                         term.bkcolor(bkgd if bkgd else "black")
                         term.puts(x, y, "[color={}]".format(lit)+chr(toInt(ch))+"[/color]")
