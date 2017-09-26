@@ -378,26 +378,13 @@ def new_game(player, name):
         term.composition(False)
         dungeon.fov_calc(lights+[(player.x, player.y, player.l)])
         for x, y, lit, ch, bkgd in list(dungeon.output(player.x, player.y, units)):
-            # term.bkcolor(bgkd)
-            if len(str(ch)) < 2:
-                if ch in palette.keys():
-                    term.bkcolor(bkgd)
-                    term.puts(x, y, "[color={}]".format(lit)+chr(toInt(palette[ch]))+"[/color]")
-                    term.bkcolor("black")
-                else:
-                    term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
-            else:
-                try:
-                    if ch in palette.keys():
-                        print("pallete")
-                        term.bkcolor("black")
-                        term.puts(x, y, "[color={}]{}[/color]".format(lit, palette[ch]))
-                    else:
-                        term.bkcolor(bkgd if bkgd else "black")
-                        term.puts(x, y, "[color={}]".format(lit)+chr(toInt(ch))+"[/color]")
-                except:
-                    print(lit, ch, bkgd)
-                    raise
+            try:
+                ch = chr(toInt(ch if len(str(ch)) > 1 else palette[ch]))
+            except:
+                print(ch)
+            term.bkcolor("black")
+            term.puts(x, y, "[color={}]".format(lit)+ch+"[/color]")
+            term.bkcolor("black")
         term.refresh()
     # Before anything happens we create our character
     # LIMIT_FPS = 30 -- later used in sprite implementation

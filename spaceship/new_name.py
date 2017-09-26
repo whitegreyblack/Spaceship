@@ -29,6 +29,7 @@ def new_name(character) -> (int, str):
     if result:
         term.bkcolor("white")
         term.puts(x-w+1, y-1, "[color=black]{}[/color]".format(text))
+        term.bkcolor("black")
     return result, text
 
 

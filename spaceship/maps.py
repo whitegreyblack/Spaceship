@@ -75,6 +75,8 @@ def toInt(hexval):
         return int(hexval, 16)
     except TypeError:
         print("TOINT ERROR:", hexval)
+        raise
+
 def picturfy(string, filename="picturfy-img.png", folder="./", debug=False):
     """Takes in a list of string lists and three positional parameters.
     Filename and folder are used to determine the output path after 
