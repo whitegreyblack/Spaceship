@@ -11,6 +11,7 @@ from spaceship.constants import SCREEN_HEIGHT as sh
 from spaceship.constants import SCREEN_WIDTH as sw
 from spaceship.maps import hextup, hexone, output, blender, gradient, evaluate_blocks
 from spaceship.charmap import Charmap as cm
+from spaceship.maps import toInt
 # TODO: Maybe move map to a new file called map and create a camera class?
 
 errormessage=namedtuple("ErrMsg", "x y ch lvl vis lit")
@@ -234,8 +235,8 @@ class Map:
         # lamps = blender(color_lamps)
         # house = blender(color_house)
         locchar={
-            ".": (cm.TILES.chars, blender(cm.TILES.hexcode)),
-            ",": (cm.GRASS.chars, blender(cm.GRASS.hexcode)),
+            ".": (cm.TILES.chars, blender(cm.TILES.hexcode, "black")),
+            ",": (cm.GRASS.chars, blender(cm.GRASS.hexcode, "brown")),
             "#": (cm.WALLS.chars, blender(cm.WALLS.hexcode)),
             "~": (cm.WATER.chars, blender(cm.WATER.hexcode)),
             "+": (cm.DOORS.chars, blender(cm.DOORS.hexcode)),
@@ -246,6 +247,11 @@ class Map:
             "=": (cm.HOUSE.chars, blender(cm.HOUSE.hexcode)),
         }
 
+        def fontmap(char):
+            if char == ".":
+                return hex(toInt("E000") + 7)
+            else:
+                return char
         def evaluate(char):
             try:
                 t = locchar[char]
@@ -260,7 +266,7 @@ class Map:
                 chars, hexcodes = evaluate(col)
                 light = Light.Unexplored
                 walkable = col in chars_block
-                cols.append(tile(choice(chars), choice(hexcodes), light, walkable, []))
+                cols.append(tile(fontmap(choice(chars)), choice(hexcodes), light, walkable, []))
             rows.append(cols)
         return rows
 
@@ -459,7 +465,8 @@ class Map:
                 # Current position holds your position
                 if x == X and y == Y:
                     level = ""
-                    ch = "@"
+                    ch =  hex(toInt("E000") + 4 * 16)
+                    print(ch)
                     lit = "white"
                     ## bkgd = "black"
 

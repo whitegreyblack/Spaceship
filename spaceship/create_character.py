@@ -9,6 +9,9 @@ from spaceship.setup import setup
 from textwrap import wrap
 from collections import namedtuple
 
+
+character = namedtuple("Character", "race subrace classe")
+
 race_descriptions=[
     "Humans are the most versitile blah blah",
     "Dwarves are hardy creatures",
@@ -163,7 +166,7 @@ def create_character():
         if character_index > 2:
             selected(SCREEN_WIDTH-len('finish')-3, SCREEN_HEIGHT-3, 'FINISH')
         else:
-            term.puts(SCREEN_WIDTH-len('finish')-3, SCREEN_HEIGHT-3, 'FINISH')
+            unselected(SCREEN_WIDTH-len('finish')-3, SCREEN_HEIGHT-3, 'FINISH')
 
         # footer
         term.puts(center(character_help, SCREEN_WIDTH), SCREEN_HEIGHT-1, character_help)
@@ -189,9 +192,15 @@ def create_character():
             elif character_index == 2:
                 class_index = modify(increment, class_index, len(class_options))
 
+
         elif code in (term.TK_ENTER, term.TK_RIGHT):
+            # this is the finalized output if sucessful
             if code == term.TK_ENTER and character_index == 3:
-                return 1
+                return character(
+                        race_options[race_index].race, 
+                        race_options[race_index].subraces[subrace_index],
+                        class_options[class_index]
+                )
             character_index = modify(1, character_index, 4)
         
         elif code in (term.TK_LEFT,):
@@ -204,8 +213,7 @@ def create_character():
             character_index = modify(-1, character_index, 4)
 
         elif code in (term.TK_ESCAPE,):
-            break
-    return None
+            return
 
 if __name__ == "__main__":
     setup()

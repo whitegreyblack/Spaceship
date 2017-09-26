@@ -9,6 +9,7 @@ from spaceship.continue_game import continue_game
 from spaceship.create_character import create_character
 from spaceship.new_game import new_game
 from spaceship.setup import setup
+from spaceship.new_name import new_name
 
 def start():
     setup()
@@ -28,8 +29,8 @@ def start():
         length, option = longest(title_options)
         x = center(length, SCREEN_WIDTH)
         for option, i in zip(title_options, range(len(title_options))):
-            text = "[color=blue]{}[/color]".format(option) if i == title_index else option
-            term.puts(x, SCREEN_HEIGHT//2+i, text)
+            text = "[color=orange]{}[/color]".format(option) if i == title_index else option
+            term.puts(x, SCREEN_HEIGHT//2+i*2, text)
         
         # footer 
         term.puts(center(title_develop, SCREEN_WIDTH), SCREEN_HEIGHT-2, title_develop)
@@ -49,8 +50,10 @@ def start():
                 proceed = continue_screen()
             elif title_index == 1:
                 player = create_character()
-                if player is not None:
-                    proceed = new_game()
+                if player:
+                    res, name = new_name(player)
+                if player and res:
+                    proceed = new_game(name, player)
             elif title_index == 2:
                 options()
             else:

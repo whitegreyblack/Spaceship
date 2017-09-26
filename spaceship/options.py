@@ -5,11 +5,21 @@ from spaceship.constants import SCREEN_HEIGHT, SCREEN_WIDTH
 from spaceship.screen_functions import *
 from bearlibterminal import terminal as term
 from spaceship.setup import setup
+from collections import namedtuple
 
 def options():
+    options = namedtuple("Options", "fs to dc")
+    full_screen = False
+    tile_output = "8x16"
+    full_colors = False
+
     option_title = "options"
     option_index = 0
     option_options = ['full screen', 'tile output', 'dynamic coloring']
+    '''
+    (o) fullscreen [unchecked] 
+    (v) fullscreen [checked]
+    '''
     while True:
 
         term.clear()
@@ -18,8 +28,8 @@ def options():
 
         # options
         for option, i in zip(option_options, range(len(option_options))):
-            option = "[color=blue]{}[/color]".format(option) if i == option_index else option
-            term.puts(SCREEN_WIDTH//8, SCREEN_HEIGHT//4+i, option)
+            option = "[color=orange]{}[/color]".format(option) if i == option_index else option
+            term.puts(SCREEN_WIDTH//8, SCREEN_HEIGHT//4+i*2, option)
 
         # back option
         term.puts(center('back', SCREEN_WIDTH), SCREEN_HEIGHT-2, colored('back') if option_index == 3 else 'back')
@@ -37,12 +47,18 @@ def options():
             print(option_index)
             if option_index == 3:
                 print("You picked the options for {}".format('Quit'))
-                break
+                return options(
+                        full_screen,
+                        tile_output,
+                        full_colors,)
             else:
                 print("You picked the options for {}".format(option_options[option_index]))
         elif code in (term.TK_CLOSE, term.TK_ESCAPE):
-            break
+            return options(
+                full_screen,
+                tile_output,
+                full_colors,)
 
 if __name__ == "__main__":
     setup()
-    options()
+    print(options())

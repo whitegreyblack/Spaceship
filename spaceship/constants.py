@@ -1,5 +1,6 @@
 '''Constants used in main and other modules -- equivalent to globals'''
-SCREEN_WIDTH, SCREEN_HEIGHT = 80, 24
+SCREEN_WIDTH, SCREEN_HEIGHT = 80, 48
+FONT_WIDTH, FONT_HEIGHT = 8, 8
 FOV_RADIUS = 25
 
 

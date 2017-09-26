@@ -16,7 +16,8 @@ from namedlist import namedlist
 from spaceship.setup import setup
 from time import clock
 
-def new_game():
+def new_game(player, name):
+    print(name, player)
     dungeon = Map(stringify("./assets/testmap_colored.png"))
 
     def refresh(lines=[]):
@@ -33,7 +34,8 @@ def new_game():
     # Keyboard input
 
 
-    def key_in(proceed):
+    def key_in():
+        nonlocal proceed
         keydown = namedtuple("Key_Down", ("x", "y", "a"))
         # movement
         act, x, y = 0, 0, 0
@@ -62,7 +64,7 @@ def new_game():
         # allows for the program to go slow enough for human playability
         while term.has_input(): 
             term.read()
-        return keydown(x, y, act), proceed
+        return keydown(x, y, act)
 
     # should change to movement process
     walkChars = {
@@ -381,8 +383,12 @@ def new_game():
                 term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
             else:
                 try:
-                    term.bkcolor(bkgd if bkgd else "black")
-                    term.puts(x, y, "[color={}]".format(lit)+chr(toInt(ch))+"[/color]")
+                    if ch == 57389:
+                        term.bkcolor(bkgd if bkgd else "black")
+                        term.puts(x, y, "[color={}]{}[/color]".format(lit, ch))
+                    else:
+                        term.bkcolor(bkgd if bkgd else "black")
+                        term.puts(x, y, "[color={}]".format(lit)+chr(toInt(ch))+"[/color]")
                 except:
                     print(lit, ch, bkgd)
                     raise
@@ -434,8 +440,7 @@ def new_game():
         log_box()
         inventory_box()
         map_box()
-        key, proceed = key_in(proceed)
-        x, y, a = key
+        x, y, a = key_in()
         if a:
             processAction(player.x, player.y, a)
         else:
@@ -447,4 +452,4 @@ def new_game():
 
 if __name__ == "__main__":
     setup()
-    new_game()
+    new_game(None, None)
