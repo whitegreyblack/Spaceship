@@ -1,7 +1,8 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
-from spaceship.constants import SCREEN_HEIGHT, SCREEN_WIDTH
+from spaceship.constants import MENU_SCREEN_WIDTH as SCREEN_WIDTH
+from spaceship.constants import MENU_SCREEN_HEIGHT as SCREEN_HEIGHT
 from bearlibterminal import terminal as term
 from spaceship.screen_functions import *
 from spaceship.setup import setup

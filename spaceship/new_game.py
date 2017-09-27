@@ -3,7 +3,10 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.action import key_movement, num_movement, key_actions, action, keypress
-from spaceship.constants import SCREEN_HEIGHT, SCREEN_WIDTH, FOV_RADIUS
+from spaceship.constants import FOV_RADIUS
+from spaceship.constants import GAME_SCREEN_WIDTH as SCREEN_WIDTH
+from spaceship.constants import GAME_SCREEN_HEIGHT as SCREEN_HEIGHT
+from spaceship.setup import setup_game
 from spaceship.tools import bresenhams, deltanorm, movement
 from spaceship.maps import stringify, hextup, hexone, toInt
 from spaceship.objects import Map, Object, Character, Item
@@ -17,6 +20,7 @@ from spaceship.setup import setup, palette
 from time import clock
 
 def new_game(player, name):
+    setup_game()
     print(name, player)
     dungeon = Map(stringify("./assets/testmap_colored.png"))
 

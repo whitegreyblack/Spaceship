@@ -1,77 +1,76 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
-from spaceship.constants import SCREEN_HEIGHT, SCREEN_WIDTH
+from spaceship.constants import MENU_SCREEN_WIDTH as SCREEN_WIDTH
+from spaceship.constants import MENU_SCREEN_HEIGHT as SCREEN_HEIGHT
 from bearlibterminal import terminal as term
 from spaceship.screen_functions import *
 from spaceship.continue_game import continue_game
-from spaceship.setup import setup
+from spaceship.setup import setup, alphabetize, toInt, toChr
 from textwrap import wrap
 from collections import namedtuple
 
+def create_character():
+    character = namedtuple("Character", "race subrace classe")
 
-character = namedtuple("Character", "race subrace classe")
-
-race_descriptions=[
-    "Humans are the most versitile blah blah",
-    "Dwarves are hardy creatures",
-    "The elven folk are skinny people",
-    "Ishtahari are oldest race",
-    "Orcs are brutish creatures. Born in clans",
-    "Goblins are short but quick creatures",
-    "Trolls are large and lumbering creatures",
-]
-
-subrace_descriptions=[
-    [
-        "Citizen servents residing in the Rodash Empire", 
-        "Travelers who wander the continent of Auriel", 
-        "Humans living outside of the borders of the Rodash Empire",
-        "Sadukar are those who live in the Icy Gaze north of the Empire",
-    ],
-    [
-        "Family name for mining dwarves from the clan in the Iron Hills",
-        "Family name for the royal dwarves from the Triple Shining Mountain",
-        "Family name for the military dwarf clan from Stone Keep",
-    ],
-    [
-        "Family name for the elite elven family residing in the Emerald Forest",
-        "Local elven family name for the elves residing in the woods of Arundel",
-        "Drow are banished elves residing in the forest hills of the Dark Forest",
-    ],
-    [
-        "Ishma are the titles for light-element users of magic",
-        "Ishta are the titles for void-element users of magic",
-    ],
-    [
-        "Mountain orcs reside in the Shadows of Mount Huron",
-        "Greenskins reside in swamplands East of Ravenflow",
-        "Grayskins are found everywhere on the continent of Auriel",
-    ],
-    [
-        "Goblins live in the caves and hills along the Storm-wrought hills and caves",
-        "Hobgoblins are a special type of goblin born among goblins but with more strength",
-    ],
-    [
-        "Cave trolls live among the many shelters provided by the Storm-wrought Ridge",
-        "Forest trolls reside in the northern and colder area of the Dark Forest",
-        "Ice trolls prefer to live in the coldest areas of the Icy Gaze",
+    race_descriptions=[
+        "Humans are the most versitile blah blah",
+        "Dwarves are hardy creatures",
+        "The elven folk are skinny people",
+        "Ishtahari are oldest race",
+        "Orcs are brutish creatures. Born in clans",
+        "Goblins are short but quick creatures",
+        "Trolls are large and lumbering creatures",
     ]
 
-]
+    subrace_descriptions=[
+        [
+            "Citizen servents residing in the Rodash Empire", 
+            "Travelers who wander the continent of Auriel", 
+            "Humans living outside of the borders of the Rodash Empire",
+            "Sadukar are those who live in the Icy Gaze north of the Empire",
+        ],
+        [
+            "Family name for mining dwarves from the clan in the Iron Hills",
+            "Family name for the royal dwarves from the Triple Shining Mountain",
+            "Family name for the military dwarf clan from Stone Keep",
+        ],
+        [
+            "Family name for the elite elven family residing in the Emerald Forest",
+            "Local elven family name for the elves residing in the woods of Arundel",
+            "Drow are banished elves residing in the forest hills of the Dark Forest",
+        ],
+        [
+            "Ishma are the titles for light-element users of magic",
+            "Ishta are the titles for void-element users of magic",
+        ],
+        [
+            "Mountain orcs reside in the Shadows of Mount Huron",
+            "Greenskins reside in swamplands East of Ravenflow",
+            "Grayskins are found everywhere on the continent of Auriel",
+        ],
+        [
+            "Goblins live in the caves and hills along the Storm-wrought hills and caves",
+            "Hobgoblins are a special type of goblin born among goblins but with more strength",
+        ],
+        [
+            "Cave trolls live among the many shelters provided by the Storm-wrought Ridge",
+            "Forest trolls reside in the northern and colder area of the Dark Forest",
+            "Ice trolls prefer to live in the coldest areas of the Icy Gaze",
+        ]
 
-class_descriptions=[
-    "Warriors are skilled in melee combat",
-    "Hunters are proeficient with ranged combat",
-    "Mages use elemental magic to vanquish their foes",
-    "Assassins are quick and silent killers in the dark",
-    "Mercenaries are suited with any type of physical combat",   
-]
+    ]
 
-def join(string, length):
-    return "\n".join(wrap(string, length))
+    class_descriptions=[
+        "Warriors are skilled in melee combat",
+        "Hunters are proeficient with ranged combat",
+        "Mages use elemental magic to vanquish their foes",
+        "Assassins are quick and silent killers in the dark",
+        "Mercenaries are suited with any type of physical combat",   
+    ]
 
-def create_character():
+    def join(string, length):
+        return "\n".join(wrap(string, length))
 
     def unselected(x, y, text):
         term.puts(x, y, text)
@@ -108,6 +107,7 @@ def create_character():
     character_help = "Press (?) for info on a selected race, subrace or class"
     race_title = "Choose your race"
     class_title = "Choose your class"
+    finish = "FINISH"
     character_index = 0
     race_index = 0
     subrace_index = 0
@@ -132,14 +132,18 @@ def create_character():
     while True:
         term.clear()
         term.puts(center(character_title, SCREEN_WIDTH), 1, character_title)
-        term.puts(center(race_title, SCREEN_WIDTH), 2, race_title)
-        term.puts(SCREEN_WIDTH//2-1, 4, join(race_descriptions[race_index] if character_index >= 0 else "", length))
-        term.puts(SCREEN_WIDTH//2-1, 7, join(subrace_descriptions[race_index][subrace_index] if character_index >= 1 else "", length))
-        term.puts(SCREEN_WIDTH//2-1, 10, join(class_descriptions[class_index] if character_index >= 2 else "", length))
+        term.puts(center(title_text(character_index), SCREEN_WIDTH), 2, title_text(character_index))
+        term.puts(SCREEN_WIDTH//2-1, 4, 
+            join(race_descriptions[race_index] if character_index >= 0 else "", length))
+        term.puts(SCREEN_WIDTH//2-1, 7, 
+            join(subrace_descriptions[race_index][subrace_index] if character_index >= 1 else "", length))
+        term.puts(SCREEN_WIDTH//2-1, 10, 
+            join(class_descriptions[class_index] if character_index >= 2 else "", length))
 
         # races
         for option, i in zip(race_options, range(len(race_options))):
             race, _ = option
+            race = race.upper()
             if i == race_index:
                 selected(3, 4+i*2, race) if character_index == 0 else passed(3, 4+i*2, race)
             else:
@@ -163,12 +167,12 @@ def create_character():
 
         # finish button
         if character_index > 2:
-            selected(SCREEN_WIDTH-len('finish')-3, SCREEN_HEIGHT-3, 'FINISH')
+            selected(SCREEN_WIDTH-len(finish)-3, SCREEN_HEIGHT-3, finish)
         else:
-            unselected(SCREEN_WIDTH-len('finish')-3, SCREEN_HEIGHT-3, 'FINISH')
+            unselected(SCREEN_WIDTH-len(finish)-3, SCREEN_HEIGHT-3, finish)
 
         # footer
-        term.puts(center(character_help, SCREEN_WIDTH), SCREEN_HEIGHT-1, character_help)
+        term.puts(center(character_help, SCREEN_WIDTH), SCREEN_HEIGHT-2, character_help)
 
         term.refresh()
         code = term.read()
@@ -212,7 +216,10 @@ def create_character():
             character_index = modify(-1, character_index, 4)
 
         elif code in (term.TK_ESCAPE,):
-            return
+            if character_index == 0:
+                return
+            else:
+                character_index -= 1
 
 if __name__ == "__main__":
     setup()

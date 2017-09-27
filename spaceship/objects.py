@@ -7,8 +7,8 @@ from spaceship.imports import *
 from spaceship.colors import color, COLOR, SHIP_COLOR
 from random import randint, choice
 from math import sqrt
-from spaceship.constants import SCREEN_HEIGHT as sh
-from spaceship.constants import SCREEN_WIDTH as sw
+from spaceship.constants import GAME_SCREEN_HEIGHT as sh
+from spaceship.constants import GAME_SCREEN_WIDTH as sw
 from spaceship.maps import hextup, hexone, output, blender, gradient, evaluate_blocks
 from spaceship.charmap import Charmap as cm
 # TODO: Maybe move map to a new file called map and create a camera class?
