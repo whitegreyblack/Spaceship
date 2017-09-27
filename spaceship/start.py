@@ -20,7 +20,7 @@ def start():
     title_index = 0
     title_develop = 'Developed by WGB using Python and BearLibTerminal'
     title_options = ["(C) continue", '(N) new game', '(O) options', '(Q) quit']
-    width, height = SCREEN_WIDTH, SCREEN_WIDTH
+    width, height = SCREEN_WIDTH, SCREEN_HEIGHT
     
     while proceed:
         term.clear() # probably won't need later but using now to make sure title screen is empty

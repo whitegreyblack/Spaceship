@@ -261,12 +261,11 @@ def create_character():
                 class_index = 0
         # ESCAPE exists if on the first list else moves back one
         elif code in (term.TK_ESCAPE,):
-            if term.state in (term.TK_SHIFT,):
-                return "Exit Program"
             if character_index == 0:
-                return "Exit Program"
+                return
             else:
                 character_index -= 1
+
         
 
 if __name__ == "__main__":
