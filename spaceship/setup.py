@@ -5,6 +5,13 @@ from spaceship.constants import *
 from bearlibterminal import terminal as term
 from collections import namedtuple
 
+output = namedtuple("Out", "proceed value")
+opout = namedtuple("Out", "proceed options")
+ccout = namedtuple("Out", "proceed player")
+nnout = namedtuple("Out", "proceed name")
+ngout = namedtuple("Out", "proceed error")
+cgout = namedtuple("Out", "proceed error")
+
 alphabet = {
     '(': "E028",
     ')': "E029",

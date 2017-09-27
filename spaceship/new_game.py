@@ -16,7 +16,7 @@ from spaceship.gamelog import GameLogger
 from random import randint, choice
 from collections import namedtuple
 from namedlist import namedlist
-from spaceship.setup import setup, palette
+from spaceship.setup import setup, palette, output
 from time import clock
 
 def new_game(player, name):

@@ -6,7 +6,7 @@ from spaceship.constants import MENU_SCREEN_HEIGHT as SCREEN_HEIGHT
 from bearlibterminal import terminal as term
 from spaceship.screen_functions import *
 from spaceship.continue_game import continue_game
-from spaceship.setup import setup, alphabet, toChr
+from spaceship.setup import setup, alphabet, toChr, output
 from textwrap import wrap
 from collections import namedtuple
 
@@ -15,7 +15,7 @@ def create_character():
     character = namedtuple("Character", "race subrace classe")
     indices = namedtuple("Index", "Character Race Subrace Class")
     race_descriptions=[
-        "Humans are the most versitile blah blah",
+        "Humans are the youngest race on the continent of Auriel. However their versatility have helped them thrive.",
         "Dwarves are hardy creatures",
         "The elven folk are skinny people",
         "Ishtahari are oldest race",
@@ -73,7 +73,7 @@ def create_character():
     def join(string, length):
         return "\n".join(wrap(string, length))
 
-    def pad(string, center=False, length=9):
+    def pad(string, center=True, length=9):
         padding = length - len(string)
         if center:
             return padding//2 * " " + string.upper() + (padding+1)//2 * " " if padding else string.upper()
@@ -115,7 +115,10 @@ def create_character():
             term.puts(x, SCREEN_HEIGHT-2, toChr("2550"))
 
     def arrow(x, y):
-        term.puts(x, y, ">")
+        term.puts(x-2, y, ">")
+
+    def point(x, y):
+        term.puts(x-2, y, "*")
 
     races = namedtuple("Race", "race subraces")
     character_title = "Character Creation"
@@ -155,22 +158,29 @@ def create_character():
         term.puts(x, 2, subtitle)
 
         # RACE | SUBRACE | CLASS Descriptions
-        term.puts(SCREEN_WIDTH//2-1, 4, 
-            join(race_descriptions[race_index] if character_index >= 0 else "", length))
-        term.puts(SCREEN_WIDTH//2-1, 7, 
-            join(subrace_descriptions[race_index][subrace_index] if character_index >= 1 else "", length))
-        term.puts(SCREEN_WIDTH//2-1, 10, 
-            join(class_descriptions[class_index] if character_index >= 2 else "", length))
+        x = SCREEN_WIDTH//2-1
+        if character_index >= 0:
+            y = 4
+            point(x, y)
+            term.puts(x, y, join(race_descriptions[race_index], length))
+        if character_index >= 1:
+            y = 8
+            point(x, y)
+            term.puts(x, y, join(subrace_descriptions[race_index][subrace_index], length))
+        if character_index >= 2:
+            y = 12
+            point(x, y)
+            term.puts(x, y, join(class_descriptions[class_index], length))
 
         # races
         x = 3
         for option, i in zip(race_options, range(len(race_options))):
             y = 4+i*2
             race, _ = option
-            race = pad(race, center=True)
+            race = pad(race)
             if i == race_index:
                 if character_index == 0:
-                    arrow(x-2, y)
+                    arrow(x, y)
                     selected(x, y, race)
                 else:
                     passed(x, y, race)
@@ -184,10 +194,10 @@ def create_character():
             subraces = race_options[race_index].subraces
             for subrace, i in zip(subraces, range(len(subraces))):
                 y = 4+i*2
-                subrace = pad(subrace, center=True)
+                subrace = pad(subrace)
                 if i == subrace_index:
                     if character_index == 1:
-                        arrow(x-2, y)
+                        arrow(x, y)
                         selected(x, y, subrace)
                     else:
                         passed(x, y, subrace)
@@ -199,10 +209,10 @@ def create_character():
             x = 27
             for classes, i in zip(class_options, range(len(class_options))):
                 y = 4+i*2
-                classes = pad(classes, center=True)
+                classes = pad(classes)
                 if i == class_index:
                     if character_index == 2:
-                        arrow(x-2, y)
+                        arrow(x, y)
                         selected(x, y, classes)
                     else:
                         passed(x, y, classes)
@@ -211,7 +221,8 @@ def create_character():
 
         # FINISH button
         if character_index > 2:
-            selected(center(finish, SCREEN_WIDTH), SCREEN_HEIGHT-3, finish)
+            x = pad(finish)
+            selected(center(x, SCREEN_WIDTH), SCREEN_HEIGHT-3, x)
         # else:
         #     unselected(SCREEN_WIDTH-len(finish)-3, SCREEN_HEIGHT-3, finish)
 
@@ -245,11 +256,12 @@ def create_character():
         elif code in (term.TK_ENTER, term.TK_RIGHT):
             # this is the finalized output if sucessful
             if code == term.TK_ENTER and character_index == 3:
-                return character(
-                        race_options[race_index].race, 
-                        race_options[race_index].subraces[subrace_index],
-                        class_options[class_index]
-                )
+                return output(proceed=True, 
+                              value=character(
+                                        race_options[race_index].race, 
+                                        race_options[race_index].subraces[subrace_index],
+                                        class_options[class_index]))
+
             character_index = modify(1, character_index, 4)
         
         # LEFT key moves back
@@ -262,9 +274,13 @@ def create_character():
         # ESCAPE exists if on the first list else moves back one
         elif code in (term.TK_ESCAPE,):
             if term.state in (term.TK_SHIFT,):
-                return "Exit Program"
+                return output(
+                        proceed=False,
+                        value="Exit to Desktop")
             if character_index == 0:
-                return "Exit Program"
+                return output(
+                        proceed=False,
+                        value="Exit to Menu")
             else:
                 character_index -= 1
         

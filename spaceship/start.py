@@ -54,11 +54,11 @@ def start():
             if title_index == 0:
                 proceed = continue_game()
             elif title_index == 1:
-                player = create_character()
-                if player:
-                    res, name = new_name(player)
-                if player and res:
-                    proceed = new_game(name, player)
+                cc = create_character()
+                if cc.proceed:
+                    nn = new_name(cc.value)
+                    if nn.proceed:
+                        proceed = new_game(name, player)
             elif title_index == 2:
                 options()
             else:

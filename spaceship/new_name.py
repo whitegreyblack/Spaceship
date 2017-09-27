@@ -5,7 +5,7 @@ from spaceship.constants import MENU_SCREEN_WIDTH as SCREEN_WIDTH
 from spaceship.constants import MENU_SCREEN_HEIGHT as SCREEN_HEIGHT
 from bearlibterminal import terminal as term
 from spaceship.screen_functions import *
-from spaceship.setup import setup
+from spaceship.setup import setup, output
 from spaceship.maps import toInt
 
 def new_name(character) -> (int, str):
@@ -32,7 +32,7 @@ def new_name(character) -> (int, str):
         term.bkcolor("white")
         term.puts(x-w+1, y-1, "[color=black]{}[/color]".format(text))
         term.bkcolor("black")
-    return result, text
+    return output(proceed=result, value=text)
 
 
 if __name__ == "__main__":
