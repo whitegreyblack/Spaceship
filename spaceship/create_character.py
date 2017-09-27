@@ -114,6 +114,9 @@ def create_character():
             term.puts(x, 3, toChr("2550"))
             term.puts(x, SCREEN_HEIGHT-2, toChr("2550"))
 
+    def arrow(x, y):
+        term.puts(x, y, ">")
+
     races = namedtuple("Race", "race subraces")
     character_title = "Character Creation"
     character_help = "Press (?) for info on a selected race, subrace or class"
@@ -144,51 +147,67 @@ def create_character():
     while True:
         term.clear()
         border()
+
+        # title and subtitle
         term.puts(center(character_title, SCREEN_WIDTH), 1, character_title)
         subtitle = subtitle_text(character_index)
         x = center(subtitle, SCREEN_WIDTH)
         term.puts(x, 2, subtitle)
 
         # RACE | SUBRACE | CLASS Descriptions
-        try:
-            term.puts(SCREEN_WIDTH//2-1, 4, 
-                join(race_descriptions[race_index] if character_index >= 0 else "", length))
-            term.puts(SCREEN_WIDTH//2-1, 7, 
-                join(subrace_descriptions[race_index][subrace_index] if character_index >= 1 else "", length))
-            term.puts(SCREEN_WIDTH//2-1, 10, 
-                join(class_descriptions[class_index] if character_index >= 2 else "", length))
-        except IndexError:
-            print(indices(character_index, race_index, subrace_index, class_index))
-            raise
+        term.puts(SCREEN_WIDTH//2-1, 4, 
+            join(race_descriptions[race_index] if character_index >= 0 else "", length))
+        term.puts(SCREEN_WIDTH//2-1, 7, 
+            join(subrace_descriptions[race_index][subrace_index] if character_index >= 1 else "", length))
+        term.puts(SCREEN_WIDTH//2-1, 10, 
+            join(class_descriptions[class_index] if character_index >= 2 else "", length))
+
         # races
-        x = 2
+        x = 3
         for option, i in zip(race_options, range(len(race_options))):
+            y = 4+i*2
             race, _ = option
             race = pad(race, center=True)
             if i == race_index:
-                selected(x, 4+i*2, race) if character_index == 0 else passed(x, 4+i*2, race)
+                if character_index == 0:
+                    arrow(x-2, y)
+                    selected(x, y, race)
+                else:
+                    passed(x, y, race)
             else:
-                unselected(x, 4+i*2, race)
+                unselected(x, y, race)
+        
+
         # sub races
-        x = 13
-        subraces = race_options[race_index].subraces
         if character_index > 0:
+            x = 15
+            subraces = race_options[race_index].subraces
             for subrace, i in zip(subraces, range(len(subraces))):
+                y = 4+i*2
                 subrace = pad(subrace, center=True)
                 if i == subrace_index:
-                    selected(x, 4+i*2, subrace) if character_index == 1 else passed(x, 4+i*2, subrace)
+                    if character_index == 1:
+                        arrow(x-2, y)
+                        selected(x, y, subrace)
+                    else:
+                        passed(x, y, subrace)
                 else:
-                    unselected(x, 4+i*2, subrace)
+                    unselected(x, y, subrace)
 
         # class list
-        x = 24
         if character_index > 1:
+            x = 27
             for classes, i in zip(class_options, range(len(class_options))):
+                y = 4+i*2
                 classes = pad(classes, center=True)
                 if i == class_index:
-                    selected(x, 4+i*2, classes) if character_index == 2 else passed(x, 4+i*2, classes)
+                    if character_index == 2:
+                        arrow(x-2, y)
+                        selected(x, y, classes)
+                    else:
+                        passed(x, y, classes)
                 else:
-                    unselected(x, 4+i*2, classes)
+                    unselected(x, y, classes)
 
         # FINISH button
         if character_index > 2:
