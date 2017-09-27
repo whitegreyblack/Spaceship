@@ -12,8 +12,6 @@ from collections import namedtuple
 
 def create_character():
     # DEBUG tuples
-    character = namedtuple("Character", "race subrace classe")
-    indices = namedtuple("Index", "Character Race Subrace Class")
     race_descriptions=[
         "Humans are the youngest race on the continent of Auriel. However their versatility have helped them thrive.",
         "Dwarves are hardy creatures",
@@ -120,11 +118,11 @@ def create_character():
     def point(x, y):
         term.puts(x-2, y, "*")
 
+    character = namedtuple("Character", "race subrace classe")
+    indices = namedtuple("Index", "Character Race Subrace Class")
     races = namedtuple("Race", "race subraces")
     character_title = "Character Creation"
     character_help = "Press (?) for info on a selected race, subrace or class"
-    race_title = "Choose your race"
-    class_title = "Choose your class"
     finish = "FINISH"
     character_index = 0
     race_index = 0
@@ -176,8 +174,7 @@ def create_character():
         x = 3
         for option, i in zip(race_options, range(len(race_options))):
             y = 4+i*2
-            race, _ = option
-            race = pad(race)
+            race = pad(option.race)
             if i == race_index:
                 if character_index == 0:
                     arrow(x, y)
