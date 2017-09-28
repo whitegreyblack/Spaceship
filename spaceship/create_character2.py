@@ -19,9 +19,9 @@ _race="RACE  : {:>10}"
 _subrace="Subrace: {:>11}"
 _class="CLASS : {:>10}"
 _place="PLACE : {:>10}"
-_mod=" (+{})"
+_mod=" ([c=light blue]+{}[/c])"
 _sts="   TOTAL  RB   CB"
-_str="STR:  {:>2}"
+_str="STR:  {:>02}"
 _con="CON:  {:>2}"
 _cha="CHA:  {:>2}"
 _per="PER:  {:>2}"
@@ -187,10 +187,11 @@ def create_character():
     while True:
         term.layer(0)
         # term.clear()
+        border(BORDER_WIDTH, [0], "#")
         border(BORDER_WIDTH, BORDER_HEIGHT, toChr("2550"))
 
         # title and subtitle
-        term.puts(center(_title, SCREEN_WIDTH), 0, _title)
+        term.puts(center(" "+_title+" ", SCREEN_WIDTH), 0," "+ _title + " ")
         subtitle = subtitle_text(character_index)
         x = center(subtitle, SCREEN_WIDTH)
         # term.clear_area(0, 1, BORDER_WIDTH, 1)
@@ -209,13 +210,14 @@ def create_character():
         term.puts(1, 8, _place.format(location))
         term.puts(1, 9, _class.format(""))
         # Stats
+        lblue = "[c=light blue]{}[/c]"
         term.puts(1, 11, _sts)
-        term.puts(1, 12, _str.format(stats.str+rbonus.str) + (_mod.format(rbonus.str) if rbonus.str else ""))
-        term.puts(1, 13, _dex.format(stats.dex+rbonus.dex) + (_mod.format(rbonus.dex) if rbonus.dex else ""))
-        term.puts(1, 14, _con.format(stats.con+rbonus.con) + (_mod.format(rbonus.con) if rbonus.con else ""))
-        term.puts(1, 15, _int.format(stats.int+rbonus.int) + (_mod.format(rbonus.int) if rbonus.int else ""))
-        term.puts(1, 16, _wis.format(stats.wis+rbonus.wis) + (_mod.format(rbonus.wis) if rbonus.wis else ""))
-        term.puts(1, 17, _cha.format(stats.cha+rbonus.cha) + (_mod.format(rbonus.cha) if rbonus.cha else ""))
+        term.puts(1, 12, _str.format(lblue.format(stats.str+rbonus.str)) + (_mod.format(rbonus.str) if rbonus.str else ""))
+        term.puts(1, 13, _dex.format(lblue.format(stats.dex+rbonus.dex)) + (_mod.format(rbonus.dex) if rbonus.dex else ""))
+        term.puts(1, 14, _con.format(lblue.format(stats.con+rbonus.con)) + (_mod.format(rbonus.con) if rbonus.con else ""))
+        term.puts(1, 15, _int.format(lblue.format(stats.int+rbonus.int)) + (_mod.format(rbonus.int) if rbonus.int else ""))
+        term.puts(1, 16, _wis.format(lblue.format(stats.wis+rbonus.wis)) + (_mod.format(rbonus.wis) if rbonus.wis else ""))
+        term.puts(1, 17, _cha.format(lblue.format(stats.cha+rbonus.cha)) + (_mod.format(rbonus.cha) if rbonus.cha else ""))
         # Traits
         # Equipment
         term.puts(22, 7, _head.format("Leather Helmet"))
@@ -230,6 +232,7 @@ def create_character():
         term.puts(22, 16, _legs.format("Common Pants"))
         term.puts(22, 17, _feet.format("Boots"))
 
+        term.puts(55, 7, "GOLD: ")
         # Description
         term.puts(1, 19, join(race_descriptions[race_index], SCREEN_WIDTH-2))
         # RACE | SUBRACE | CLASS Descriptions
@@ -285,9 +288,9 @@ def create_character():
             term.puts(1, 15, _int.format(stats.int+rbonus.int+cbonus.int) + (_mod.format(rbonus.int) if rbonus.int else "     ") + (_mod.format(cbonus.int) if cbonus.int else ""))
             term.puts(1, 16, _wis.format(stats.wis+rbonus.wis+cbonus.wis) + (_mod.format(rbonus.wis) if rbonus.wis else "     ") + (_mod.format(cbonus.wis) if cbonus.wis else ""))
             term.puts(1, 17, _cha.format(stats.cha+rbonus.cha+cbonus.cha) + (_mod.format(rbonus.cha) if rbonus.cha else "     ") + (_mod.format(cbonus.cha) if cbonus.cha else ""))
-            term.clear_area(40, 7, SCREEN_WIDTH-41, 21)
-            term.puts(40, 7, class_descriptions[class_index])
-
+            term.clear_area(1, 19, SCREEN_WIDTH-1, SCREEN_HEIGHT-19)
+            term.puts(1, 19, join(class_descriptions[class_index], SCREEN_WIDTH-2))
+            
             for option, i in zip(class_options, range(len(class_options))):
                 x, y = 13+11*i, 5
                 option = pad(option.classes, length=8)
