@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.constants import MENU_SCREEN_WIDTH as SCREEN_WIDTH
 from spaceship.constants import MENU_SCREEN_HEIGHT as SCREEN_HEIGHT
@@ -10,13 +11,32 @@ from spaceship.setup import setup, alphabet, toChr, output
 from textwrap import wrap
 from collections import namedtuple
 
+desc_human="""
+The youngest race on the continent of Auriel, humans were the last to arrive from across the Endless Water and, yet
+with their ingenuity, versatility, and endurance, they have thrived and become a dominant force throughout the land. 
+The Empire of Rodash and the Free States are the fruits of their labor. Through quick learning they have become the 
+masters of the element of LIGHTNING."""[1:]
+
+desc_dwarf="""
+A hardy race, dwarves are most famous for their impenetrable fortresses and mass earthly wealth. Their vast fortune
+allows their people to pursue trades and crafts such as blacksmithing, jewelry, and weaponforging, which would not
+be possible otherwise. The dwarven race are masters of the EARTH element and use this to their advantage. Dwarves
+met outside their underground castles are fine traders and merchants as well as formidable in battle. They start
+with either an axe or a pick, both deadly in the hands of a dwarf."""[1:]
+
+desc_ishtahari="""
+Among all the races that live across Auriel, the Ishtahari are the oldest. Yet having lived on the continent hundreds
+of years before any of the other races, they are now as rare to meet as their magic is to learn. They are the only 
+race to master two elements of the seven, LIGHT and VOID"""[1:]
+
+
 def create_character():
     # DEBUG tuples
     race_descriptions=[
-        "Humans are the youngest race on the continent of Auriel. However their versatility have helped them thrive.",
-        "Dwarves are hardy creatures",
+        desc_human,
+        desc_dwarf,
         "The elven folk are skinny people",
-        "Ishtahari are oldest race",
+        desc_ishtahari,
         "Orcs are brutish creatures. Born in clans",
         "Goblins are short but quick creatures",
         "Trolls are large and lumbering creatures",
@@ -69,6 +89,7 @@ def create_character():
     ]
 
     def join(string, length):
+        # use regex to replace [*]
         return "\n".join(wrap(string, length))
 
     def pad(string, center=True, length=9):
@@ -110,7 +131,7 @@ def create_character():
     def border():
         for x in range(SCREEN_WIDTH):
             term.puts(x, 3, toChr("2550"))
-            term.puts(x, SCREEN_HEIGHT-2, toChr("2550"))
+            term.puts(x, SCREEN_HEIGHT-3, toChr("2550"))
 
     def arrow(x, y):
         term.puts(x-2, y, ">")
@@ -224,7 +245,7 @@ def create_character():
         #     unselected(SCREEN_WIDTH-len(finish)-3, SCREEN_HEIGHT-3, finish)
 
         # footer
-        term.puts(center(character_help, SCREEN_WIDTH), SCREEN_HEIGHT-1, character_help)
+        term.puts(center(character_help, SCREEN_WIDTH), SCREEN_HEIGHT-2, character_help)
 
         term.refresh()
         code = term.read()
