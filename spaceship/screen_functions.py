@@ -26,7 +26,7 @@ def join(string, length):
 def split(string, length):
     return wrap(string, length)
 
-def pad(string, center=True, length=9):
+def pad(string, center=True, length=0):
     padding = length - len(string)
     if center:
         return padding//2 * " " + string.upper() + (padding+1)//2 * " " if padding else string.upper()
@@ -61,3 +61,6 @@ def arrow(x, y):
 
 def point(x, y):
     term.puts(x-2, y, "*")
+
+def barrow(x, y):
+    term.puts(x+2, y, "<")

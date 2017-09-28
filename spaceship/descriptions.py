@@ -1,7 +1,7 @@
 race_human="""
 The youngest race on the continent of Auriel, humans were the last to arrive from across the Endless Water and, yet
 with their ingenuity, versatility, and endurance, they have thrived and become a dominant force throughout the land. 
-The Empire of Rodash and the Free States are the fruits of their labor. Through quick learning they have become the 
+The Empire of Renmar and the Free States are the fruits of their labor. Through quick learning they have become the 
 masters of the element of LIGHTNING.
 """[1:]
 
