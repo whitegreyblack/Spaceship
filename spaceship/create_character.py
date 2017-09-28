@@ -15,10 +15,10 @@ import descriptions as desc
 def create_character():
     # DEBUG tuples
     race_descriptions=[
-        desc.human,
-        desc.dwarf,
-        desc.elven,
-        desc.ishtahari,
+        desc.race_human,
+        desc.race_dwarf,
+        desc.race_elven,
+        desc.race_ishtahari,
         "Orcs are brutish creatures. Born in clans",
         "Goblins are short but quick creatures",
         "Trolls are large and lumbering creatures",
@@ -154,9 +154,9 @@ def create_character():
         border()
 
         # title and subtitle
-        term.puts(center(character_title, SCREEN_WIDTH), 1, character_title)
+        term.puts(center(character_title, SCREEN_WIDTH//2), 1, character_title)
         subtitle = subtitle_text(character_index)
-        x = center(subtitle, SCREEN_WIDTH)
+        x = center(subtitle, SCREEN_WIDTH//2)
         term.puts(x, 2, subtitle)
 
         # RACE | SUBRACE | CLASS Descriptions
