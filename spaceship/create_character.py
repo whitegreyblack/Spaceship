@@ -10,33 +10,15 @@ from spaceship.continue_game import continue_game
 from spaceship.setup import setup, alphabet, toChr, output
 from textwrap import wrap
 from collections import namedtuple
-
-desc_human="""
-The youngest race on the continent of Auriel, humans were the last to arrive from across the Endless Water and, yet
-with their ingenuity, versatility, and endurance, they have thrived and become a dominant force throughout the land. 
-The Empire of Rodash and the Free States are the fruits of their labor. Through quick learning they have become the 
-masters of the element of LIGHTNING."""[1:]
-
-desc_dwarf="""
-A hardy race, dwarves are most famous for their impenetrable fortresses and mass earthly wealth. Their vast fortune
-allows their people to pursue trades and crafts such as blacksmithing, jewelry, and weaponforging, which would not
-be possible otherwise. The dwarven race are masters of the EARTH element and use this to their advantage. Dwarves
-met outside their underground castles are fine traders and merchants as well as formidable in battle. They start
-with either an axe or a pick, both deadly in the hands of a dwarf."""[1:]
-
-desc_ishtahari="""
-Among all the races that live across Auriel, the Ishtahari are the oldest. Yet having lived on the continent hundreds
-of years before any of the other races, they are now as rare to meet as their magic is to learn. They are the only 
-race to master two elements of the seven, LIGHT and VOID"""[1:]
-
+import descriptions as desc
 
 def create_character():
     # DEBUG tuples
     race_descriptions=[
-        desc_human,
-        desc_dwarf,
-        "The elven folk are skinny people",
-        desc_ishtahari,
+        desc.human,
+        desc.dwarf,
+        desc.elven,
+        desc.ishtahari,
         "Orcs are brutish creatures. Born in clans",
         "Goblins are short but quick creatures",
         "Trolls are large and lumbering creatures",
@@ -167,6 +149,7 @@ def create_character():
     ]
     length = SCREEN_WIDTH//2
     while True:
+        term.layer(0)
         term.clear()
         border()
 
@@ -182,6 +165,7 @@ def create_character():
             y = 4
             point(x, y)
             term.puts(x, y, join(race_descriptions[race_index], length))
+            #term.printf(x, y, race_descriptions[race_index])
         if character_index >= 1:
             y = 8
             point(x, y)
@@ -302,7 +286,16 @@ def create_character():
             else:
                 character_index -= 1
         
-
+        # handles the questionmark key inputs
+        elif code in (term.TK_SHIFT,) and (term.read() in (term.TK_SLASH,) and term.state(term.TK_SHIFT)):
+            print('shfited')
+            term.layer(1)
+            term.puts(0, 0, 'asdfffffff')
+            term.puts(SCREEN_WIDTH//2, SCREEN_HEIGHT//2, 'asf')
+            term.refresh()
+            term.read()
+            
+	
 if __name__ == "__main__":
     setup()
     try:
