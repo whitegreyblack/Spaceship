@@ -13,7 +13,6 @@ from collections import namedtuple
 import descriptions as desc
 
 def create_character():
-    # DEBUG tuples
     race_descriptions=[
         desc.race_human,
         desc.race_dwarf,

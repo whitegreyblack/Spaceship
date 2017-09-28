@@ -4,6 +4,8 @@ import re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.constants import MENU_SCREEN_WIDTH as SCREEN_WIDTH
 from spaceship.constants import MENU_SCREEN_HEIGHT as SCREEN_HEIGHT
+from spaceship.constants import CM_BORDER_HEIGHT as BORDER_HEIGHT
+from spaceship.constants import CM_BORDER_WIDTH as BORDER_WIDTH
 from bearlibterminal import terminal as term
 from spaceship.screen_functions import *
 from spaceship.continue_game import continue_game
@@ -12,13 +14,29 @@ from textwrap import wrap
 from collections import namedtuple
 import descriptions as desc
 
+character_template="""
+Character Info
+Race: {race:>8}
+Subrace: {subrace:>5}
+Class: {classes:>7}
+
+STR
+CON
+CHA
+PER
+DEX
+WIL
+WIS
+LUC
+"""[1:]
+print(character_template.format(race='aa',subrace='bb',classes='cc'))
 def create_character():
-    # DEBUG tuples
+
     race_descriptions=[
-        desc.human,
-        desc.dwarf,
-        desc.elven,
-        desc.ishtahari,
+        desc.race_human,
+        desc.race_dwarf,
+        desc.race_elven,
+        desc.race_ishtahari,
         "Orcs are brutish creatures. Born in clans",
         "Goblins are short but quick creatures",
         "Trolls are large and lumbering creatures",
@@ -63,35 +81,17 @@ def create_character():
     ]
 
     class_descriptions=[
-        "Warriors are skilled in melee combat",
-        "Hunters are proeficient with ranged combat",
-        "Mages use elemental magic to vanquish their foes",
-        "Assassins are quick and silent killers in the dark",
-        "Mercenaries are suited with any type of physical combat",   
+        desc.knight, 
+        desc.barbarian,
+        desc.cleric,
+        desc.druid,
+        # desc.fighter,
+        desc.paladin,
+        desc.ranger,
+        desc.sorcerer,
+        desc.rogue,
+        desc.wizard,
     ]
-
-    def join(string, length):
-        # use regex to replace [*]
-        return "\n".join(wrap(string, length))
-
-    def pad(string, center=True, length=9):
-        padding = length - len(string)
-        if center:
-            return padding//2 * " " + string.upper() + (padding+1)//2 * " " if padding else string.upper()
-        return string.upper() + padding * " " if padding else string.upper()
-
-    def unselected(x, y, text):
-        term.puts(x, y, text)
-
-    def selected(x, y, text):
-        term.bkcolor("white")
-        term.puts(x, y, "[color=black]{}[/color]".format(text))
-        term.bkcolor("black")
-
-    def passed(x, y, text):
-        term.bkcolor("grey")
-        term.puts(x, y, text)
-        term.bkcolor("black")      
 
     def subtitle_text(i):
         text = "Choose your {}"
@@ -104,26 +104,10 @@ def create_character():
         else:
             return "Press (ENTER) to finish"
 
-    def modify(increment, index, options):
-        index += increment
-        if not 0 <= index < options:
-            index = max(0, min(index, options-1))
-        return index
-
-    def border():
-        for x in range(SCREEN_WIDTH):
-            term.puts(x, 3, toChr("2550"))
-            term.puts(x, SCREEN_HEIGHT-3, toChr("2550"))
-
-    def arrow(x, y):
-        term.puts(x-2, y, ">")
-
-    def point(x, y):
-        term.puts(x-2, y, "*")
-
     character = namedtuple("Character", "race subrace classe")
     indices = namedtuple("Index", "Character Race Subrace Class")
     races = namedtuple("Race", "race subraces")
+    classes = namedtuple("Class", "classes description")
     character_title = "Character Creation"
     character_help = "Press (?) for info on a selected race, subrace or class"
     finish = "FINISH"
@@ -131,6 +115,16 @@ def create_character():
     race_index = 0
     subrace_index = 0
     class_index = 0
+    bonuses = {
+        "STR": "+{} to Strength",
+        "CON": "+{} to Constitution",
+        "WIS": "+{} to Wisdom",
+        "DEX": "+{} to Dexterity",
+        "CHA": "+{} to Charisma",
+        "WIL": "+{} to Willpower",
+        "PER": "+{} to Perception",
+        "LUC": "+{} to Luck"
+    }
     race_options = [
         races("Human", ["Empire", "Nomad", "Fremen", "Sadurkar"]),
         races("Dwarf", ["Ironborn", "Goldbeard", "Stonekeep"]),
@@ -141,42 +135,55 @@ def create_character():
         races("Troll", ["Cave", "Forest","Ice"]),
     ]
     class_options = [
-        "Warrior",
-        "Hunter",
-        "Mage",
-        "Assassin",
-        "Mercenary",
+        "Knight",
+        "Barbarian",
+        "Cleric",
+        "Druid",
+        # "Fighter",
+        "Paladin",
+        "Ranger",
+        "Sorcerer",
+        "Rogue",
+        "Wizard",
     ]
     length = SCREEN_WIDTH//2
     while True:
         term.layer(0)
-        term.clear()
-        border()
+        # term.clear()
+        border(BORDER_WIDTH, BORDER_HEIGHT, toChr("2550"))
 
         # title and subtitle
-        term.puts(center(character_title, SCREEN_WIDTH), 1, character_title)
+        term.puts(center(character_title, SCREEN_WIDTH//2), 1, character_title)
         subtitle = subtitle_text(character_index)
-        x = center(subtitle, SCREEN_WIDTH)
+        x = center(subtitle, SCREEN_WIDTH//2)
+        term.clear_area(0, 2, BORDER_WIDTH, 1)
         term.puts(x, 2, subtitle)
 
-        # RACE | SUBRACE | CLASS Descriptions
-        x = SCREEN_WIDTH//2-1
-        if character_index >= 0:
-            y = 4
-            point(x, y)
-            term.puts(x, y, join(race_descriptions[race_index], length))
-            #term.printf(x, y, race_descriptions[race_index])
-        if character_index >= 1:
-            y = 8
-            point(x, y)
-            term.puts(x, y, join(subrace_descriptions[race_index][subrace_index], length))
-        if character_index >= 2:
-            y = 12
-            point(x, y)
-            term.puts(x, y, join(class_descriptions[class_index], length))
+        # Bonuses
+        # x, y = SCREEN_WIDTH//2-1, 1
+        # # point(x, y)
+        # term.puts(x, y, bonuses["STR"].format(2)+"; "+bonuses["CON"].format(1))
 
+        # RACE | SUBRACE | CLASS Descriptions
+        x, y = SCREEN_WIDTH//2-1, 1
+        term.clear_area(x, y, SCREEN_WIDTH-x, SCREEN_HEIGHT)
+        term.puts(x, y, character_template.format(
+            race=race_options[race_index].race,
+            subrace=(race_options[race_index].subraces[subrace_index] if character_index >= 1 else ""), 
+            classes=(class_options[class_index] if character_index >= 2 else "")))
+        # if character_index == 0:
+        #     # point(x, y)
+        #     term.puts(x, y, join(race_descriptions[race_index], length))
+        #     #term.printf(x, y, race_descriptions[race_index])
+        # if character_index == 1:
+        #     # point(x, y)
+        #     term.puts(x, y, join(subrace_descriptions[race_index][subrace_index], length))
+        # if character_index == 2:
+        #     # point(x, y)
+        #     term.puts(x, y, join(class_descriptions[class_index], length))
         # races
         x = 3
+        term.clear_area(x-2, 4, 11, BORDER_HEIGHT[1]-BORDER_HEIGHT[0]-2)
         for option, i in zip(race_options, range(len(race_options))):
             y = 4+i*2
             race = pad(option.race)
@@ -195,7 +202,7 @@ def create_character():
             x = 15
             subraces = race_options[race_index].subraces
             for subrace, i in zip(subraces, range(len(subraces))):
-                y = 4+i*2
+                y = 4+i*2+race_index*2
                 subrace = pad(subrace)
                 if i == subrace_index:
                     if character_index == 1:
@@ -220,19 +227,22 @@ def create_character():
                         passed(x, y, classes)
                 else:
                     unselected(x, y, classes)
+        # footer
+        lines = split(character_help, SCREEN_WIDTH//2-3)
+        for text, i in zip(lines, range(len(lines))):
+            term.puts(center(text, 37)+1, 22+i, text)
 
         # FINISH button
         if character_index > 2:
             x = pad(finish)
-            selected(center(x, SCREEN_WIDTH), SCREEN_HEIGHT-3, x)
+            selected(center(x, 20), SCREEN_HEIGHT-3, x)
         # else:
         #     unselected(SCREEN_WIDTH-len(finish)-3, SCREEN_HEIGHT-3, finish)
 
-        # footer
-        term.puts(center(character_help, SCREEN_WIDTH), SCREEN_HEIGHT-2, character_help)
-
         term.refresh()
         code = term.read()
+        while code in (term.TK_SHIFT, term.TK_ALT, term.TK_CONTROL,):
+            code = term.read()
 
         # UP key
         if code == term.TK_UP:
@@ -275,7 +285,7 @@ def create_character():
                 class_index = 0
         # ESCAPE exists if on the first list else moves back one
         elif code in (term.TK_ESCAPE,):
-            if term.state in (term.TK_SHIFT,):
+            if term.state(term.TK_SHIFT,):
                 return output(
                         proceed=False,
                         value="Exit to Desktop")
@@ -294,7 +304,6 @@ def create_character():
             term.puts(SCREEN_WIDTH//2, SCREEN_HEIGHT//2, 'asf')
             term.refresh()
             term.read()
-            
 	
 if __name__ == "__main__":
     setup()
