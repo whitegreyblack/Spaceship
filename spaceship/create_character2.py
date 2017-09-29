@@ -19,30 +19,30 @@ _race="RACE  : {:>10}"
 _subrace="Subrace: {:>11}"
 _class="CLASS : {:>10}"
 _place="PLACE : {:>10}"
-_mod=" ([c=light blue]+{}[/c])"
+_mod=" ([c=light green]+{}[/c])"
 _sts="   TOTAL  RB   CB"
-_str="STR:  {:>02}"
-_con="CON:  {:>2}"
-_cha="CHA:  {:>2}"
-_per="PER:  {:>2}"
-_dex="DEX:  {:>2}"
-_int="INT:  {:>2}"
-_wis="WIS:  {:>2}"
-_luc="LUC:  {:>2}"
-_head="HEAD  : {}"
-_neck="NECK  : {:10}"
-_body="BODY  : {:10}"
-_arms="ARMS  : {:10}"
-_hand="HANDS : {:10}"
-_wpn1="LHAND : {:10}"
-_wpn2="RHAND : {:10}"
-_wpn3="THROW : {:10}"
-_rng1="RING1 : {:10}"
-_rng2="RING2 : {:10}"
-_wais="WAIST : {:10}"
-_legs="LEGS  : {:10}"
-_feet="FEET  : {:10}"
-_misc="MISC  : {:10}"
+_str="STR:  [c=lighter blue]{:>2}[/c]"
+_con="CON:  [c=lighter blue]{:>2}[/c]"
+_cha="CHA:  [c=lighter blue]{:>2}[/c]"
+_per="PER:  [c=lighter blue]{:>2}[/c]"
+_dex="DEX:  [c=lighter blue]{:>2}[/c]"
+_int="INT:  [c=lighter blue]{:>2}[/c]"
+_wis="WIS:  [c=lighter blue]{:>2}[/c]"
+_luc="LUC:  [c=lighter blue]{:>2}[/c]"
+_head="HEAD  : {:>20}"
+_neck="NECK  : {:>20}"
+_body="BODY  : {:>20}"
+_arms="ARMS  : {:>20}"
+_hand="HANDS : {:>20}"
+_wpn1="LHAND : {:>20}"
+_wpn2="RHAND : {:>20}"
+_wpn3="THROW : {:>20}"
+_rng1="RING1 : {:>20}"
+_rng2="RING2 : {:>20}"
+_wais="WAIST : {:>20}"
+_legs="LEGS  : {:>20}"
+_feet="FEET  : {:>20}"
+_misc="MISC  : {:>20}"
 
 _template="""
 Character Info
@@ -133,12 +133,14 @@ def create_character():
             return text.format("class")
         else:
             return "Press (ENTER) to finish"
-
+    
+    skills = namedtuple("Skills", "skills")
+    equipment = namedtuple("Equipment", "hd nk bd ar hn lh rh th wa lg ft")
     character = namedtuple("Character", "race subrace classe")
     indices = namedtuple("Index", "Character Race Subrace Class")
     stats = namedtuple("Stats", "str dex con int wis cha")
     races = namedtuple("Race", "race location stats bonus")
-    classes = namedtuple("Class", "classes bonuses")
+    classes = namedtuple("Class", "classes bonuses equipment")
     _title = "Character Creation"
     _help = "Press (?) for info on a selected race, subrace or class"
     finish = "FINISH"
@@ -173,15 +175,15 @@ def create_character():
     ]
     class_options = [
         # "Barbarian",
-        classes("Druid", stats(0, 0, 1, 0, 1, 0)),
-        classes("Cleric", stats(0, 0, 0, 0, 2, 0)),
+        classes("Druid", stats(0, 0, 1, 0, 1, 0), equipment(0,0,0,0,0,0,0,0,0,0,0)),
+        classes("Cleric", stats(0, 0, 0, 0, 2, 0), equipment(0,0,0,0,0,0,0,0,0,0,0)),
         # "Fighter",
         # "Paladin",
-        classes("Ranger", stats(0, 2, 0, 0, 0, 0)),
+        classes("Bowman", stats(0, 2, 0, 0, 0, 0), equipment(0,0,0,0,0,0,0,0,0,0,0)),
         # "Sorcerer",
         # "Rogue",
-        classes("Wizard", stats(0, 0, 0, 2, 0, 0)),
-        classes("Warrior", stats(1, 0, 1, 0, 0, 0)),
+        classes("Wizard", stats(0, 0, 0, 2, 0, 0), equipment(0,0,0,0,0,0,0,0,0,0,0)),
+        classes("Squire", stats(1, 0, 1, 0, 0, 0), equipment(0,0,0,0,0,0,0,0,0,0,0)),
     ]
     length = SCREEN_WIDTH//2
     while True:
@@ -189,6 +191,7 @@ def create_character():
         # term.clear()
         border(BORDER_WIDTH, [0], "#")
         border(BORDER_WIDTH, BORDER_HEIGHT, toChr("2550"))
+        row = 7
 
         # title and subtitle
         term.puts(center(" "+_title+" ", SCREEN_WIDTH), 0," "+ _title + " ")
@@ -203,40 +206,55 @@ def create_character():
         # term.puts(x, y, bonuses["STR"].format(2)+"; "+bonuses["CON"].format(1))
 
         # Race Details
+        col1 = 3
         term.clear_area(0, 7, SCREEN_WIDTH, 21)
         race, location, stats, rbonus = race_options[race_index]
-        occu, cbonus = class_options[class_index]
-        term.puts(1, 7, _race.format(race))
-        term.puts(1, 8, _place.format(location))
-        term.puts(1, 9, _class.format(""))
+        occu, cbonus, _ = class_options[class_index]
+        term.puts(col1, 7, _race.format(race))
+        term.puts(col1, 8, _place.format(location))
+        term.puts(col1, 9, _class.format(""))
+
+        # Level Details
+        term.puts(col1, 11, "LEVEL : {:>10}".format(1))
+        term.puts(col1, 12, "EXP   : {:>10}".format(80))
+        term.puts(col1, 13, "GOLD  : {:>10}".format(250))
+        term.puts(col1, 15, "Skills:")
+        term.puts(col1+3, 16, "Skill 1")
+        term.puts(col1+3, 17, "Skill 1")
+
+
         # Stats
+        col2 = 26
+        term.puts(col2, row+0, "HP: ")
+        term.puts(col2, row+1, "MP: ")
+        term.puts(col2, row+2, "SP: ")
         lblue = "[c=light blue]{}[/c]"
-        term.puts(1, 11, _sts)
-        term.puts(1, 12, _str.format(lblue.format(stats.str+rbonus.str)) + (_mod.format(rbonus.str) if rbonus.str else ""))
-        term.puts(1, 13, _dex.format(lblue.format(stats.dex+rbonus.dex)) + (_mod.format(rbonus.dex) if rbonus.dex else ""))
-        term.puts(1, 14, _con.format(lblue.format(stats.con+rbonus.con)) + (_mod.format(rbonus.con) if rbonus.con else ""))
-        term.puts(1, 15, _int.format(lblue.format(stats.int+rbonus.int)) + (_mod.format(rbonus.int) if rbonus.int else ""))
-        term.puts(1, 16, _wis.format(lblue.format(stats.wis+rbonus.wis)) + (_mod.format(rbonus.wis) if rbonus.wis else ""))
-        term.puts(1, 17, _cha.format(lblue.format(stats.cha+rbonus.cha)) + (_mod.format(rbonus.cha) if rbonus.cha else ""))
+        term.puts(col2, row+4, _sts)
+        term.puts(col2, row+5, _str.format(stats.str+rbonus.str) + (_mod.format(rbonus.str) if rbonus.str else ""))
+        term.puts(col2, row+6, _dex.format(stats.dex+rbonus.dex) + (_mod.format(rbonus.dex) if rbonus.dex else ""))
+        term.puts(col2, row+7, _con.format(stats.con+rbonus.con) + (_mod.format(rbonus.con) if rbonus.con else ""))
+        term.puts(col2, row+8, _int.format(stats.int+rbonus.int) + (_mod.format(rbonus.int) if rbonus.int else ""))
+        term.puts(col2, row+9, _wis.format(stats.wis+rbonus.wis) + (_mod.format(rbonus.wis) if rbonus.wis else ""))
+        term.puts(col2, row+10, _cha.format(stats.cha+rbonus.cha) + (_mod.format(rbonus.cha) if rbonus.cha else ""))
         # Traits
         # Equipment
-        term.puts(22, 7, _head.format("Leather Helmet"))
-        term.puts(22, 8, _neck.format(""))
-        term.puts(22, 9, _body.format("Leather Armor"))
-        term.puts(22, 10, _arms.format("Leather Bracers"))
-        term.puts(22, 11, _hand.format(""))
-        term.puts(22, 12, _wpn1.format("Short Sword"))
-        term.puts(22, 13, _wpn2.format(""))
-        term.puts(22, 14, _wpn3.format("Wooden Arrows(x25)"))
-        term.puts(22, 15, _wais.format(""))
-        term.puts(22, 16, _legs.format("Common Pants"))
-        term.puts(22, 17, _feet.format("Boots"))
+        col3 = 48
+        term.puts(col3, 7, _head.format("Leather Helmet"))
+        term.puts(col3, 8, _neck.format(""))
+        term.puts(col3, 9, _body.format("Leather Armor"))
+        term.puts(col3, 10, _arms.format("Leather Bracers"))
+        term.puts(col3, 11, _hand.format(""))
+        term.puts(col3, 12, _wpn1.format("Short Sword"))
+        term.puts(col3, 13, _wpn2.format(""))
+        term.puts(col3, 14, _wpn3.format("Wooden Arrows(x25)"))
+        term.puts(col3, 15, _wais.format(""))
+        term.puts(col3, 16, _legs.format("Common Pants"))
+        term.puts(col3, 17, _feet.format("Boots"))
 
-        term.puts(50, 7, "LEVEL: ")
-        term.puts(50, 8, "EXP  : ")
-        term.puts(50, 9, "GOLD : ")
+
         # Description
         term.puts(1, 19, join(race_descriptions[race_index], SCREEN_WIDTH-2))
+
         # RACE | SUBRACE | CLASS Descriptions
         # x, y = SCREEN_WIDTH//2-1, 1
         # term.clear_area(x, y, SCREEN_WIDTH-x, SCREEN_HEIGHT)
@@ -277,21 +295,21 @@ def create_character():
             unselected(x, y, option)
 
         if character_index > 0:
-            term.puts(1, 9, _class.format(occu))
+            term.clear_area(1, 19, SCREEN_WIDTH-1, SCREEN_HEIGHT-19)
+            term.puts(1, 19, join(class_descriptions[class_index], SCREEN_WIDTH-2))
+            term.puts(col1, 9, _class.format(occu))
             # term.puts(1, 12, _str.format(stats.str+rbonus.str+cbonus.str) + (_mod.format(rbonus.str+cbonus.str) if rbonus.str+cbonus.str else ""))
             # term.puts(1, 13, _dex.format(stats.dex+rbonus.dex+cbonus.dex) + (_mod.format(rbonus.dex+cbonus.dex) if rbonus.dex+cbonus.dex else ""))
             # term.puts(1, 14, _con.format(stats.con+rbonus.con+cbonus.con) + (_mod.format(rbonus.con+cbonus.con) if rbonus.con+cbonus.con else ""))
             # term.puts(1, 15, _int.format(stats.int+rbonus.int+cbonus.int) + (_mod.format(rbonus.int+cbonus.int) if rbonus.int+cbonus.int else ""))
             # term.puts(1, 16, _wis.format(stats.wis+rbonus.wis+cbonus.wis) + (_mod.format(rbonus.wis+cbonus.wis) if rbonus.wis+cbonus.wis else ""))
             # term.puts(1, 17, _cha.format(stats.cha+rbonus.cha+cbonus.cha) + (_mod.format(rbonus.cha+cbonus.cha) if rbonus.cha+cbonus.cha else ""))
-            term.puts(1, 12, _str.format(stats.str+rbonus.str+cbonus.str) + (_mod.format(rbonus.str) if rbonus.str else "     ") + (_mod.format(cbonus.str) if cbonus.str else ""))
-            term.puts(1, 13, _dex.format(stats.dex+rbonus.dex+cbonus.dex) + (_mod.format(rbonus.dex) if rbonus.dex else "     ") + (_mod.format(cbonus.dex) if cbonus.dex else ""))
-            term.puts(1, 14, _con.format(stats.con+rbonus.con+cbonus.con) + (_mod.format(rbonus.con) if rbonus.con else "     ") + (_mod.format(cbonus.con) if cbonus.con else ""))
-            term.puts(1, 15, _int.format(stats.int+rbonus.int+cbonus.int) + (_mod.format(rbonus.int) if rbonus.int else "     ") + (_mod.format(cbonus.int) if cbonus.int else ""))
-            term.puts(1, 16, _wis.format(stats.wis+rbonus.wis+cbonus.wis) + (_mod.format(rbonus.wis) if rbonus.wis else "     ") + (_mod.format(cbonus.wis) if cbonus.wis else ""))
-            term.puts(1, 17, _cha.format(stats.cha+rbonus.cha+cbonus.cha) + (_mod.format(rbonus.cha) if rbonus.cha else "     ") + (_mod.format(cbonus.cha) if cbonus.cha else ""))
-            term.clear_area(1, 19, SCREEN_WIDTH-1, SCREEN_HEIGHT-19)
-            term.puts(1, 19, join(class_descriptions[class_index], SCREEN_WIDTH-2))
+            term.puts(col2, row+5, _str.format(stats.str+rbonus.str+cbonus.str) + (_mod.format(rbonus.str) if rbonus.str else "     ") + (_mod.format(cbonus.str) if cbonus.str else ""))
+            term.puts(col2, row+6, _dex.format(stats.dex+rbonus.dex+cbonus.dex) + (_mod.format(rbonus.dex) if rbonus.dex else "     ") + (_mod.format(cbonus.dex) if cbonus.dex else ""))
+            term.puts(col2, row+7, _con.format(stats.con+rbonus.con+cbonus.con) + (_mod.format(rbonus.con) if rbonus.con else "     ") + (_mod.format(cbonus.con) if cbonus.con else ""))
+            term.puts(col2, row+8, _int.format(stats.int+rbonus.int+cbonus.int) + (_mod.format(rbonus.int) if rbonus.int else "     ") + (_mod.format(cbonus.int) if cbonus.int else ""))
+            term.puts(col2, row+9, _wis.format(stats.wis+rbonus.wis+cbonus.wis) + (_mod.format(rbonus.wis) if rbonus.wis else "     ") + (_mod.format(cbonus.wis) if cbonus.wis else ""))
+            term.puts(col2, row+10, _cha.format(stats.cha+rbonus.cha+cbonus.cha) + (_mod.format(rbonus.cha) if rbonus.cha else "     ") + (_mod.format(cbonus.cha) if cbonus.cha else ""))
             
             for option, i in zip(class_options, range(len(class_options))):
                 x, y = 13+11*i, 5
@@ -358,7 +376,7 @@ def create_character():
 
         # FINISH button
         if character_index > 1:
-            x = pad(finish)
+            x = pad(finish, length=8)
             selected(center(x, 20), SCREEN_HEIGHT-3, x)
         # else:
         #     unselected(SCREEN_WIDTH-len(finish)-3, SCREEN_HEIGHT-3, finish)
