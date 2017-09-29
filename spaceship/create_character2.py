@@ -194,7 +194,7 @@ def create_character():
         term.puts(center(" "+_title+" ", SCREEN_WIDTH), 0," "+ _title + " ")
         subtitle = subtitle_text(character_index)
         x = center(subtitle, SCREEN_WIDTH)
-        # term.clear_area(0, 1, BORDER_WIDTH, 1)
+        term.clear_area(0, 1, BORDER_WIDTH, 1)
         term.puts(x, 1, subtitle)
 
         # Bonuses
@@ -232,7 +232,9 @@ def create_character():
         term.puts(22, 16, _legs.format("Common Pants"))
         term.puts(22, 17, _feet.format("Boots"))
 
-        term.puts(55, 7, "GOLD: ")
+        term.puts(50, 7, "LEVEL: ")
+        term.puts(50, 8, "EXP  : ")
+        term.puts(50, 9, "GOLD : ")
         # Description
         term.puts(1, 19, join(race_descriptions[race_index], SCREEN_WIDTH-2))
         # RACE | SUBRACE | CLASS Descriptions
