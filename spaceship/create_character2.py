@@ -9,7 +9,7 @@ from spaceship.constants import CM_BORDER_WIDTH as BORDER_WIDTH
 from bearlibterminal import terminal as term
 from spaceship.screen_functions import *
 from spaceship.continue_game import continue_game
-from spaceship.setup import setup, alphabet, toChr, output
+from spaceship.setup import setup, alphabet, toChr, output, setup_menu
 from textwrap import wrap
 from collections import namedtuple
 import descriptions as desc
@@ -21,7 +21,7 @@ _class="CLASS : {:>10}"
 _place="PLACE : {:>10}"
 _mod=" +[c=green]{}[/c]"
 _sts="   TOTAL RB  CB "
-_str="STR:  [c=green]{:>2}[/c]"
+_str="STR:  [c=#00ff00]{:>2}[/c]"
 _con="CON:  [c=blue]{:>2}[/c]"
 _cha="CHA:  [c=blue]{:>2}[/c]"
 _per="PER:  [c=blue]{:>2}[/c]"
@@ -61,7 +61,7 @@ LUC
 """[1:]
 print(_template.format(race='aa',subrace='bb',classes='cc'))
 def create_character():
-    
+    setup_menu()
     race_descriptions=[
         desc.race_human,
         desc.race_dwarf,
@@ -186,7 +186,7 @@ def create_character():
         classes("Squire", stats(1, 0, 1, 0, 0, 0), equipment(0,0,0,0,0,0,0,0,0,0,0)),
     ]
     length = SCREEN_WIDTH//2
-    row = 7
+    row = 5
     col1 = 3
     col2 = 26
     col3 = 48 
@@ -195,7 +195,6 @@ def create_character():
         # term.clear()
         border(BORDER_WIDTH, [0], "#")
         border(BORDER_WIDTH, BORDER_HEIGHT, toChr("2550"))
-        row = 7
 
         # title and subtitle
         term.puts(center(" "+_title+" ", SCREEN_WIDTH), 0," "+ _title + " ")
@@ -213,17 +212,17 @@ def create_character():
         term.clear_area(0, 7, SCREEN_WIDTH, 21)
         race, location, stats, rbonus = race_options[race_index]
         occu, cbonus, _ = class_options[class_index]
-        term.puts(col1, 7, _race.format(race))
-        term.puts(col1, 8, _place.format(location))
-        term.puts(col1, 9, _class.format(""))
+        term.puts(col1, row+0, _race.format(race))
+        term.puts(col1, row+1, _place.format(location))
+        term.puts(col1, row+2, _class.format(""))
 
         # Level Details
-        term.puts(col1, 11, "LEVEL : {:>10}".format(1))
-        term.puts(col1, 12, "EXP   : {:>10}".format(80))
-        term.puts(col1, 13, "GOLD  : {:>10}".format(250))
-        term.puts(col1, 15, "Skills:")
-        term.puts(col1+3, 16, "Skill 1")
-        term.puts(col1+3, 17, "Skill 1")
+        term.puts(col1, row+4, "LEVEL : {:>10}".format(1))
+        term.puts(col1, row+5, "EXP   : {:>10}".format(80))
+        term.puts(col1, row+6, "GOLD  : {:>10}".format(250))
+        term.puts(col1, row+7, "Skills:")
+        term.puts(col1+3, row+8, "Skill 1")
+        term.puts(col1+3, row+9, "Skill 1")
 
 
         # Stats
@@ -279,7 +278,7 @@ def create_character():
         term.clear_area(0, 3, SCREEN_WIDTH, 3)
         # Classes
         for option, i in zip(race_options, range(len(race_options))):
-            x, y = 13+11*i, 3
+            x, y = 13+11*i, 2
             race = pad(option.race, length=8)
             if i == race_index:
                 if character_index == 0:
@@ -291,7 +290,7 @@ def create_character():
                 unselected(x, y, race)
 
         for option, i in zip(class_options, range(len(class_options))):
-            x, y = 13+11*i, 5
+            x, y = 13+11*i, 4
             option = pad(option.classes, length=8)
             unselected(x, y, option)
 
@@ -313,7 +312,7 @@ def create_character():
             term.puts(col2, row+10, _cha.format(stats.cha+rbonus.cha+cbonus.cha) + (_mod.format(rbonus.cha) if rbonus.cha else "    ") + (_mod.format(cbonus.cha) if cbonus.cha else ""))
             
             for option, i in zip(class_options, range(len(class_options))):
-                x, y = 13+11*i, 5
+                x, y = 13+11*i, 4
                 option = pad(option.classes, length=8)
                 if i == class_index:
                     if character_index == 1:

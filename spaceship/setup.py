@@ -124,6 +124,9 @@ def setup_game():
             GAME_FONT_WIDTH, 
             GAME_FONT_HEIGHT))
 
+def setup_font(font, cx, cy):
+    term.set("font: ./fonts/{}.ttf, size{}x{}".format(font, cx, cy))
+
 if __name__ == "__main__":
     setup()
     term.refresh()

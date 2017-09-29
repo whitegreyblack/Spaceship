@@ -382,11 +382,12 @@ def new_game(player, name):
         term.composition(False)
         dungeon.fov_calc(lights+[(player.x, player.y, player.l)])
         for x, y, lit, ch, bkgd in list(dungeon.output(player.x, player.y, units)):
-            ch = chr(toInt(ch if len(str(ch)) > 1 else palette[ch]))
+            ch = ch if len(str(ch)) > 1 else chr(toInt(palette[ch]))
             term.bkcolor("black")
             term.puts(x, y, "[color={}]".format(lit)+ch+"[/color]")
             term.bkcolor("black")
         term.refresh()
+        
     # Before anything happens we create our character
     # LIMIT_FPS = 30 -- later used in sprite implementation
     blocked = []
