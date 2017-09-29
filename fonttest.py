@@ -1,0 +1,16 @@
+from bearlibterminal import terminal as t
+
+t.open()
+t.set("window: size=80x25, title='Font Test'; font: ./fonts/Courier.ttf, size=12")
+t.puts(5,5, "hello world")
+t.puts(5,6, 'HELLO WORLD')
+t.puts(5,9, 'HELLO WORLD')
+t.puts(5,7, "Hello World")
+t.refresh()
+t.read()
+t.set("font: default")
+t.puts(5,8, "hello world")
+t.puts(5,9, 'HELLO WORLD')
+t.puts(5,10, "Hello World")
+t.refresh()
+t.read()
