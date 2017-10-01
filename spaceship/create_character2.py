@@ -19,16 +19,16 @@ _race="RACE  : {:>10}"
 _subrace="Subrace: {:>11}"
 _class="CLASS : {:>10}"
 _place="PLACE : {:>10}"
-_mod=" +[c=green]{}[/c]"
+_mod=" +[c=#00ffff]{}[/c]"
 _sts="   TOTAL RB  CB "
-_str="STR:  [c=#00ff00]{:>2}[/c]"
-_con="CON:  [c=blue]{:>2}[/c]"
-_cha="CHA:  [c=blue]{:>2}[/c]"
-_per="PER:  [c=blue]{:>2}[/c]"
-_dex="DEX:  [c=blue]{:>2}[/c]"
-_int="INT:  [c=blue]{:>2}[/c]"
-_wis="WIS:  [c=blue]{:>2}[/c]"
-_luc="LUC:  [c=blue]{:>2}[/c]"
+_str="STR:  [c=#00ffff]{:>2}[/c]"
+_con="CON:  [c=#00ffff]{:>2}[/c]"
+_cha="CHA:  [c=#00ffff]{:>2}[/c]"
+_per="PER:  [c=#00ffff]{:>2}[/c]"
+_dex="DEX:  [c=#00ffff]{:>2}[/c]"
+_int="INT:  [c=#00ffff]{:>2}[/c]"
+_wis="WIS:  [c=#00ffff]{:>2}[/c]"
+_luc="LUC:  [c=#00ffff]{:>2}[/c]"
 _head="HEAD  : {:>20}"
 _neck="NECK  : {:>20}"
 _body="BODY  : {:>20}"
@@ -229,7 +229,6 @@ def create_character():
         term.puts(col2, row+0, "HP: ")
         term.puts(col2, row+1, "MP: ")
         term.puts(col2, row+2, "SP: ")
-        lblue = "[c=light blue]{}[/c]"
         term.puts(col2, row+4, _sts)
         term.puts(col2, row+5, _str.format(stats.str+rbonus.str) + (_mod.format(rbonus.str) if rbonus.str else ""))
         term.puts(col2, row+6, _dex.format(stats.dex+rbonus.dex) + (_mod.format(rbonus.dex) if rbonus.dex else ""))
