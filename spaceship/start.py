@@ -27,7 +27,7 @@ def start():
     width, height = SCREEN_WIDTH, SCREEN_HEIGHT
     title_height = 1
     option_height = 5
-    print(splitter(1, SCREEN_HEIGHT-3, 4))
+    print(splitter(3, SCREEN_HEIGHT, 4))
     while proceed:
         term.clear() # probably won't need later but using now to make sure title screen is empty
         
