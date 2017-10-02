@@ -14,22 +14,23 @@ from spaceship.continue_game import continue_game
 from spaceship.create_character import create_character as create_character
 from spaceship.create_character2 import create_character as create_character2
 from spaceship.new_game import new_game
-from spaceship.setup import setup, setup_game, setup_menu, setup_font
+from spaceship.setup import setup, setup_game, setup_menu, setup_font, toChr
 from spaceship.new_name import new_name
 from spaceship.screen_functions import center, longest, colored
 
 def start():
+    def border():
+        for k in range(SCREEN_WIDTH):
+            term.puts(k, 3, toChr("2550"))
+            term.puts(k, SCREEN_HEIGHT-3, toChr("2550"))
+
     def splitter(x, y):
         return [z for z in range(x, y, 2)]
     
     def start_new_game():
         cc = create_character()
         if "Exit" not in cc.value:
-            nn = new_name(cc.value)
-            print(nn)
-            if nn.proceed > 0:
-                return new_game(nn.value, cc.value)
-            return True
+            return new_game(cc.value)
         return cc.proceed
 
     setup()
@@ -45,7 +46,7 @@ def start():
     option_height = 5
     while proceed:
         term.clear() # probably won't need later but using now to make sure title screen is empty
-        
+        border()
         # title header
         term.puts(center('a'*(TITLE_WIDTH-1), SCREEN_WIDTH), title_height, TITLE)
 

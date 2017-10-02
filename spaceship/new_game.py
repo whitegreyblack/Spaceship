@@ -19,7 +19,7 @@ from namedlist import namedlist
 from spaceship.setup import setup, palette, output
 from time import clock
 
-def new_game(player, name):
+def new_game(player=None, name=None):
     setup_game()
     print(name, player)
     dungeon = Map(stringify("./assets/testmap_colored.png"))
