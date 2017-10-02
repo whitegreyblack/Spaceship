@@ -11,7 +11,8 @@ from spaceship.constants import GAME_TITLE as TITLE
 from spaceship.constants import GAME_TITLE_VERSION as VERSION
 from spaceship.options import options
 from spaceship.continue_game import continue_game
-from spaceship.create_character import create_character
+from spaceship.create_character import create_character as create_character
+from spaceship.create_character2 import create_character as create_character2
 from spaceship.new_game import new_game
 from spaceship.setup import setup, setup_game, setup_menu, setup_font
 from spaceship.new_name import new_name
@@ -21,11 +22,21 @@ def start():
     def splitter(x, y):
         return [z for z in range(x, y, 2)]
     
+    def start_new_game():
+        cc = create_character()
+        if "Exit" not in cc.value:
+            nn = new_name(cc.value)
+            print(nn)
+            if nn.proceed > 0:
+                return new_game(nn.value, cc.value)
+            return True
+        return cc.proceed
+
     setup()
     setup_menu()
     setup_font('Fira', 8, 16)
     proceed = True
-    title_index = 0
+    title_index = -1
     title_develop = 'Developed by WGB using Python and BearLibTerminal'
     options_height = splitter(9, SCREEN_HEIGHT)
     title_options = ["[[c]] continue", '[[n]] new game', '[[o]] options', '[[q]] quit']
@@ -53,7 +64,17 @@ def start():
         code = term.read()
 
         # key in
-        if code in (term.TK_UP, term.TK_DOWN):
+        if code in (term.TK_C, term.TK_N, term.TK_O, term.TK_Q):
+            # branching
+            if code == term.TK_C:
+                proceed = continue_game()
+            elif code == term.TK_N:
+                proceed = start_new_game()
+            elif code == term.TK_O:
+                options()
+            else:
+                proceed = False
+        elif code in (term.TK_UP, term.TK_DOWN):
             if code == term.TK_UP:
                 title_index -= 1
             else: 
@@ -64,12 +85,7 @@ def start():
             if title_index == 0:
                 proceed = continue_game()
             elif title_index == 1:
-                cc = create_character()
-                if cc.proceed:
-                    nn = new_name(cc.value)
-                    print(nn)
-                    if nn.proceed > 0:
-                        proceed = new_game(nn.value, cc.value)
+                proceed = start_new_game()
             elif title_index == 2:
                 options()
             else:

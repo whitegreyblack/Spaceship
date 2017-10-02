@@ -280,7 +280,7 @@ def create_character():
                         value="Exit to Desktop")
             if character_index == 0:
                 return output(
-                        proceed=False,
+                        proceed=True,
                         value="Exit to Menu")
             else:
                 character_index -= 1
