@@ -47,10 +47,15 @@ class GameLogger:
         self.setupFileWriting()
 
     def setupFileWriting(self):
+        if not os.path.isdir('logs'):
+            print('Log folder does not exist -- Creating "./logs')
+            os.makedirs('logs')
+
         self.filename = "logs/log_"+"_".join(filter(lambda x: ":" not in x, ctime().split(" ")))+".txt"
         print("Setup log file in {}".format(self.filename))
         with open(self.filename, 'w') as f:
             pass
+
     def getHeader(self):
         return "["+"-".join(filter(lambda x: ":" in x, ctime().split(" ")))+"]:- "
 
