@@ -14,28 +14,34 @@ from spaceship.new_name import new_name
 from spaceship.screen_functions import center, longest, colored
 
 def start():
+    def splitter(x, y, i):
+        return [z for z in range(x, y-x, (y-x)//(i+1))][1:(i+2)]
+    
     setup()
     setup_menu()
     proceed = True
     title_index = 0
     title_develop = 'Developed by WGB using Python and BearLibTerminal'
-    title_options = ["(C) continue", '(N) new game', '(O) options', '(Q) quit']
+    options_height = splitter(1, SCREEN_HEIGHT-1, 4)
+    title_options = ["[[C]]ontinue", '[[N]]ew game', '[[O]]ptions', '[[Q]]uit']
     width, height = SCREEN_WIDTH, SCREEN_HEIGHT
-    
+    title_height = 1
+    option_height = 5
+    print(splitter(1, SCREEN_HEIGHT-3, 4))
     while proceed:
         term.clear() # probably won't need later but using now to make sure title screen is empty
         
         # title header
         title = 'Working Title Screen'	    
         x = center(title, width)
-        term.puts(x, height//3, title)
+        term.puts(x, title_height, title)
 
         # options
         length, option = longest(title_options)
         x = center(length, width)
         for option, i in zip(title_options, range(len(title_options))):
             text = "[color=orange]{}[/color]".format(option) if i == title_index else option
-            term.puts(x, height//2+i*2, text)
+            term.puts(x, options_height[i], text)
         
         # footer 
         term.puts(center(title_develop, width), height-2, title_develop)
