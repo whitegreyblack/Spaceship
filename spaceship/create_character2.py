@@ -135,7 +135,7 @@ def create_character():
             return "Press (ENTER) to finish"
     
     skills = namedtuple("Skills", "skills")
-    equipment = namedtuple("Equipment", "hd nk bd ar hn lh rh th wa lg ft")
+    equipment = namedtuple("Equipment", "hd nk bd ar hn lh rh lr rr wa lg ft")
     character = namedtuple("Character", "race subrace classe")
     indices = namedtuple("Index", "Character Race Subrace Class")
     stats = namedtuple("Stats", "str dex con int wis cha")
@@ -173,17 +173,83 @@ def create_character():
         # Lok Gurrah, Capital of Oggrahgar
         races("Orc", "Lok Gurrah", stats(17, 12, 13, 8, 7, 6), stats(1, 0, 1, 0, 0, 0)),
     ]
+    # "hd nk bd ar hn lh rh th wa lg ft"
     class_options = [
         # "Barbarian",
-        classes("Druid", stats(0, 0, 1, 0, 1, 0), equipment(0,0,0,0,0,0,0,0,0,0,0)),
-        classes("Cleric", stats(0, 0, 0, 0, 2, 0), equipment(0,0,0,0,0,0,0,0,0,0,0)),
+        classes("Druid", stats(0, 0, 1, 0, 1, 0), 
+            equipment(
+                "",
+                "",
+                "thick fur coat",
+                "thick fur bracers",
+                "",
+                "wooden staff",
+                "",
+                "ring of nature",
+                "ring of earth",
+                "leather belt",
+                "",
+                "leather boots")),
+        classes("Cleric", stats(0, 0, 0, 0, 2, 0), 
+            equipment(
+                "hood",
+                "holy symbol",
+                "light robe",
+                "",
+                "",
+                "mace",
+                "small shield",
+                "ring of power",
+                "ring of light",
+                "rope belt",
+                "",
+                "leather sandals")),
         # "Fighter",
         # "Paladin",
-        classes("Bowman", stats(0, 2, 0, 0, 0, 0), equipment(0,0,0,0,0,0,0,0,0,0,0)),
+        classes("Bowman", stats(0, 2, 0, 0, 0, 0),
+            equipment(
+                "hood",
+                "whistle",
+                "heavy cloak",
+                "leather bracers",
+                "cloth gloves",
+                "short sword",
+                "small dagger",
+                "",
+                "",
+                "leather belt",
+                "common pants",
+                "leather boots")),
         # "Sorcerer",
         # "Rogue",
-        classes("Wizard", stats(0, 0, 0, 2, 0, 0), equipment(0,0,0,0,0,0,0,0,0,0,0)),
-        classes("Squire", stats(1, 0, 1, 0, 0, 0), equipment(0,0,0,0,0,0,0,0,0,0,0)),
+        classes("Wizard", stats(0, 0, 0, 2, 0, 0),            
+            equipment(
+                "hood",
+                "amulet of power",
+                "light robe",
+                "",
+                "",
+                "quarterstaff",
+                "",
+                "ring of water",
+                "ring of fire",
+                "rope belt",
+                "",
+                "leather sandals")),
+        classes("Squire", stats(1, 0, 1, 0, 0, 0),             
+            equipment(
+                "leather cap",
+                "",
+                "leather armor",
+                "leather bracers",
+                "cloth gloves",
+                "long sword",
+                "medium shield",
+                "",
+                "",
+                "leather belt",
+                "common pants",
+                "leather boots")),
     ]
     length = SCREEN_WIDTH//2
     row = 5
@@ -203,15 +269,10 @@ def create_character():
         term.clear_area(0, 1, BORDER_WIDTH, 1)
         term.puts(x, 1, subtitle)
 
-        # Bonuses
-        # x, y = SCREEN_WIDTH//2-1, 1
-        # # point(x, y)
-        # term.puts(x, y, bonuses["STR"].format(2)+"; "+bonuses["CON"].format(1))
-
         # Race Details
         term.clear_area(0, 7, SCREEN_WIDTH, 21)
         race, location, stats, rbonus = race_options[race_index]
-        occu, cbonus, _ = class_options[class_index]
+        occu, cbonus, eq = class_options[class_index]
         term.puts(col1, row+0, _race.format(race))
         term.puts(col1, row+1, _place.format(location))
         term.puts(col1, row+2, _class.format(""))
@@ -236,42 +297,25 @@ def create_character():
         term.puts(col2, row+8, _int.format(stats.int+rbonus.int) + (_mod.format(rbonus.int) if rbonus.int else ""))
         term.puts(col2, row+9, _wis.format(stats.wis+rbonus.wis) + (_mod.format(rbonus.wis) if rbonus.wis else ""))
         term.puts(col2, row+10, _cha.format(stats.cha+rbonus.cha) + (_mod.format(rbonus.cha) if rbonus.cha else ""))
-        # Traits
-        # Equipment
-        term.puts(col3, 7, _head.format("Leather Helmet"))
-        term.puts(col3, 8, _neck.format(""))
-        term.puts(col3, 9, _body.format("Leather Armor"))
-        term.puts(col3, 10, _arms.format("Leather Bracers"))
-        term.puts(col3, 11, _hand.format(""))
-        term.puts(col3, 12, _wpn1.format("Short Sword"))
-        term.puts(col3, 13, _wpn2.format(""))
-        term.puts(col3, 14, _wpn3.format("Wooden Arrows(x25)"))
-        term.puts(col3, 15, _wais.format(""))
-        term.puts(col3, 16, _legs.format("Common Pants"))
-        term.puts(col3, 17, _feet.format("Boots"))
 
+        # Traits
+
+        # Equipment "hd nk bd ar hn lh rh lr rr wa lg ft"
+        term.puts(col3, row+1, _head.format(""))
+        term.puts(col3, row+2, _neck.format(""))
+        term.puts(col3, row+3, _body.format(""))
+        term.puts(col3, row+4, _arms.format(""))
+        term.puts(col3, row+5, _hand.format(""))
+        term.puts(col3, row+6, _wpn1.format(""))
+        term.puts(col3, row+7, _wpn2.format(""))
+        term.puts(col3, row+8, _rng1.format(""))
+        term.puts(col3, row+9, _rng2.format(""))
+        term.puts(col3, row+10, _wais.format(""))
+        term.puts(col3, row+11, _legs.format(""))
+        term.puts(col3, row+12, _feet.format(""))
 
         # Description
         term.puts(1, 19, join(race_descriptions[race_index], SCREEN_WIDTH-2))
-
-        # RACE | SUBRACE | CLASS Descriptions
-        # x, y = SCREEN_WIDTH//2-1, 1
-        # term.clear_area(x, y, SCREEN_WIDTH-x, SCREEN_HEIGHT)
-        # term.puts(x, y, character_template.format(
-        #     race=race_options[race_index].race,
-        #     subrace=(race_options[race_index].subraces[subrace_index] if character_index >= 1 else ""), 
-        #     classes=(class_options[class_index] if character_index >= 2 else "")))
-        # if character_index == 0:
-        #     # point(x, y)
-        #     term.puts(x, y, join(race_descriptions[race_index], length))
-        #     #term.printf(x, y, race_descriptions[race_index])
-        # if character_index == 1:
-        #     # point(x, y)
-        #     term.puts(x, y, join(subrace_descriptions[race_index][subrace_index], length))
-        # if character_index == 2:
-        #     # point(x, y)
-        #     term.puts(x, y, join(class_descriptions[class_index], length))
-        # races
 
         # Clears one row on the terminal
         term.clear_area(0, 3, SCREEN_WIDTH, 3)
@@ -297,12 +341,6 @@ def create_character():
             term.clear_area(1, 19, SCREEN_WIDTH-1, SCREEN_HEIGHT-19)
             term.puts(1, 19, join(class_descriptions[class_index], SCREEN_WIDTH-2))
             term.puts(col1, 9, _class.format(occu))
-            # term.puts(1, 12, _str.format(stats.str+rbonus.str+cbonus.str) + (_mod.format(rbonus.str+cbonus.str) if rbonus.str+cbonus.str else ""))
-            # term.puts(1, 13, _dex.format(stats.dex+rbonus.dex+cbonus.dex) + (_mod.format(rbonus.dex+cbonus.dex) if rbonus.dex+cbonus.dex else ""))
-            # term.puts(1, 14, _con.format(stats.con+rbonus.con+cbonus.con) + (_mod.format(rbonus.con+cbonus.con) if rbonus.con+cbonus.con else ""))
-            # term.puts(1, 15, _int.format(stats.int+rbonus.int+cbonus.int) + (_mod.format(rbonus.int+cbonus.int) if rbonus.int+cbonus.int else ""))
-            # term.puts(1, 16, _wis.format(stats.wis+rbonus.wis+cbonus.wis) + (_mod.format(rbonus.wis+cbonus.wis) if rbonus.wis+cbonus.wis else ""))
-            # term.puts(1, 17, _cha.format(stats.cha+rbonus.cha+cbonus.cha) + (_mod.format(rbonus.cha+cbonus.cha) if rbonus.cha+cbonus.cha else ""))
             term.puts(col2, row+5, _str.format(stats.str+rbonus.str+cbonus.str) + (_mod.format(rbonus.str) if rbonus.str else "    ") + (_mod.format(cbonus.str) if cbonus.str else ""))
             term.puts(col2, row+6, _dex.format(stats.dex+rbonus.dex+cbonus.dex) + (_mod.format(rbonus.dex) if rbonus.dex else "    ") + (_mod.format(cbonus.dex) if cbonus.dex else ""))
             term.puts(col2, row+7, _con.format(stats.con+rbonus.con+cbonus.con) + (_mod.format(rbonus.con) if rbonus.con else "    ") + (_mod.format(cbonus.con) if cbonus.con else ""))
@@ -310,6 +348,8 @@ def create_character():
             term.puts(col2, row+9, _wis.format(stats.wis+rbonus.wis+cbonus.wis) + (_mod.format(rbonus.wis) if rbonus.wis else "    ") + (_mod.format(cbonus.wis) if cbonus.wis else ""))
             term.puts(col2, row+10, _cha.format(stats.cha+rbonus.cha+cbonus.cha) + (_mod.format(rbonus.cha) if rbonus.cha else "    ") + (_mod.format(cbonus.cha) if cbonus.cha else ""))
             
+
+            # CLASS OPTIONS
             for option, i in zip(class_options, range(len(class_options))):
                 x, y = 13+11*i, 4
                 option = pad(option.classes, length=8)
@@ -321,57 +361,20 @@ def create_character():
                         passed(x, y, option)
                 else:
                     unselected(x, y, option)
-        # x = 3
-        # term.clear_area(x-2, 4, 11, BORDER_HEIGHT[1]-BORDER_HEIGHT[0]-2)
-        # for option, i in zip(race_options, range(len(race_options))):
-        #     y = 4+i*2
-        #     race = pad(option.race)
-        #     if i == race_index:
-        #         if character_index == 0:
-        #             arrow(x, y)
-        #             selected(x, y, race)
-        #         else:
-        #             passed(x, y, race)
-        #     else:
-        #         unselected(x, y, race)
-        
 
-        # # sub races
-        # if character_index > 0:
-        #     x = 15
-        #     subraces = race_options[race_index].subraces
-        #     for subrace, i in zip(subraces, range(len(subraces))):
-        #         y = 4+i*2+race_index*2
-        #         subrace = pad(subrace)
-        #         if i == subrace_index:
-        #             if character_index == 1:
-        #                 arrow(x, y)
-        #                 selected(x, y, subrace)
-        #             else:
-        #                 passed(x, y, subrace)
-        #         else:
-        #             unselected(x, y, subrace)
-
-        # # class list
-        # if character_index > 1:
-        #     x = 27
-        #     for classes, i in zip(class_options, range(len(class_options))):
-        #         y = 4+i*2
-        #         classes = pad(classes)
-        #         if i == class_index:
-        #             if character_index == 2:
-        #                 arrow(x, y)
-        #                 selected(x, y, classes)
-        #             else:
-        #                 passed(x, y, classes)
-        #         else:
-        #             unselected(x, y, classes)
-
-        # footer
-        # lines = split(character_help, SCREEN_WIDTH//2-3)
-        # for text, i in zip(lines, range(len(lines))):
-        #     term.puts(center(text, 37)+1, 22+i, text)
-        # term.puts(center(_help, SCREEN_WIDTH), SCREEN_HEIGHT-1, _help)
+            # EQUIPMENT LIST
+            term.puts(col3, row+1, _head.format(eq.hd))
+            term.puts(col3, row+2, _neck.format(eq.nk))
+            term.puts(col3, row+3, _body.format(eq.bd))
+            term.puts(col3, row+4, _arms.format(eq.ar))
+            term.puts(col3, row+5, _hand.format(eq.hn))
+            term.puts(col3, row+6, _wpn1.format(eq.lh))
+            term.puts(col3, row+7, _wpn2.format(eq.rh))
+            term.puts(col3, row+8, _rng1.format(eq.lr))
+            term.puts(col3, row+9, _rng2.format(eq.rr))
+            term.puts(col3, row+10, _wais.format(eq.wa))
+            term.puts(col3, row+11, _legs.format(eq.lg))
+            term.puts(col3, row+12, _feet.format(eq.ft))
 
         # FINISH button
         if character_index > 1:
@@ -402,47 +405,6 @@ def create_character():
 
         elif code == term.TK_DOWN:
             character_index = modify(1, character_index, 3)
-
-        
-        # # UP key
-        # if code == term.TK_UP:
-        #     increment = -1
-        #     if character_index == 0:
-        #         race_index = modify(increment, race_index, len(race_options))
-        #     elif character_index == 1:
-        #         subrace_index = modify(increment, subrace_index, len(race_options[race_index].subraces))
-        #     elif character_index == 2:
-        #         class_index = modify(increment, class_index, len(class_options))
-
-        # # DOWN key
-        # elif code == term.TK_DOWN:
-        #     increment = 1
-        #     if character_index == 0:
-        #         race_index = modify(increment, race_index, len(race_options))
-        #     elif character_index == 1:
-        #         subrace_index = modify(increment, subrace_index, len(race_options[race_index].subraces))
-        #     elif character_index == 2:
-        #         class_index = modify(increment, class_index, len(class_options))
-
-        # # ENTER and RIGHT keys move forward
-        # elif code in (term.TK_ENTER, term.TK_RIGHT):
-        #     # this is the finalized output if sucessful
-        #     if code == term.TK_ENTER and character_index == 3:
-        #         return output(proceed=True, 
-        #                       value=character(
-        #                                 race_options[race_index].race, 
-        #                                 race_options[race_index].subraces[subrace_index],
-        #                                 class_options[class_index]))
-
-        #     character_index = modify(1, character_index, 4)
-        
-        # # LEFT key moves back
-        # elif code in (term.TK_LEFT,):
-        #     character_index = modify(-1, character_index, 4)
-        #     if character_index == 0:
-        #         subrace_index = 0
-        #     elif character_index == 1:
-        #         class_index = 0
 
         # ESCAPE exists if on the first list else moves back one
         if code in (term.TK_ESCAPE,):
