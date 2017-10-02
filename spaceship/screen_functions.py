@@ -64,3 +64,6 @@ def point(x, y):
 
 def barrow(x, y):
     term.puts(x+2, y, "<")
+
+def color(text, color):
+    return "[c={}]{}[/c]".format(color, text)
