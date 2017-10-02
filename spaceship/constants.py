@@ -31,3 +31,15 @@ ROOM_MIN_PLACE=0
 ROOM_MAX_PLACE=0
 ROOM_HALL_SIZE=2
 ROOM_DOOR_RATE=0
+
+GAME_TITLE_VERSION="v 0.0.4"
+GAME_TITLE_WIDTH=46
+GAME_TITLE_HEIGHT=6
+GAME_TITLE=''' \
+ ___                           _     _       
+/  _\_ __   __ _  ___ ___  ___| |__ (_)_ __  
+\  \| '_ \ / _` |/ __/ _ \/ __| '_ \| | '_ \ 
+_\  \ |_) | (_| | (_|  __/\__ \ | | | | |_) |
+\___/ .__/ \__,_|\___\___||___/_| |_|_| .__/ 
+    |_|                               |_|    
+'''[1:]
