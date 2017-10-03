@@ -245,21 +245,6 @@ def create_character():
             # EQUIPMENT LIST
             eq, inv = form_equipment(req, ceq)
             term.puts(col3, row+1, _equipment.format(*(e if len(e) > 0 else "" for e in eq)))
-            # if character_index >= 2:
-            #     items = list((req[character_index-2], ceq[character_index-2]))
-            #     if '' in items:
-            #         items.remove('')
-            #     print(items)
-            #     if character_index == 2 and items:
-            #         term.bkcolor("white")
-            #         term.puts(col3+8, row+1, "[c=black]{}[/c]".format(items[0]))
-            #         term.bkcolor("black")
-            #     elif character_index != 2 and items:
-            #         term.puts(col3+8, row+1, items[0])
-            #     else:
-            #         term.puts(col3+8, row+1, "None")
-                
-            # term.puts(col3, row+1, _equipment.format(*eq))
 
         term.refresh()
 
