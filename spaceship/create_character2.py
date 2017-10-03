@@ -20,7 +20,6 @@ _race="RACE  : {:>10}"
 _subrace="Subrace: {:>11}"
 _class="CLASS : {:>10}"
 _place="PLACE : {:>10}"
-_mod=" [c=#00ffff]{:>2}[/c]"
 _sts="""
       TOTAL  RB  CB 
 STR    : [c=#00ffff]{:>2}[/c] 
@@ -145,6 +144,9 @@ def create_character():
         else:
             return "Press (ENTER) to finish"
     
+    def transform_values(values):
+        return tuple("+[c=#00ff00]"+str(v)+"[/c]" if v > 0 else "-[c=#ff0000]"+str(abs(v))+"[/c]" if v < 0 else v for v in values) 
+
     character = namedtuple("Character", "race subrace classe")
     indices = namedtuple("Index", "Character Race Subrace Class")
     stats = namedtuple("Stats", "str dex con int wis cha")
@@ -298,35 +300,27 @@ def create_character():
         race, location, stats, rbonus, skills = race_options[race_index]
         occu, cbonus, eq = class_options[class_index]
         total = tuple(s+r for s, r in zip(stats, rbonus))
-        term.puts(col1, row+0, _race.format(race))
-        term.puts(col1, row+1, _place.format(location))
-        term.puts(col1, row+2, _class.format(""))
+        term.puts(col1, row+1, _race.format(race))
+        term.puts(col1, row+2, _place.format(location))
+        term.puts(col1, row+3, _class.format(""))
 
         # Level Details
-        term.puts(col1, row+4, "LEVEL : {:>10}".format(1))
-        term.puts(col1, row+5, "EXP   : {:>10}".format(80))
-        term.puts(col1, row+6, "GOLD  : {:>10}".format(250))
+        term.puts(col1, row+5, "LEVEL : {:>10}".format(1))
+        term.puts(col1, row+6, "EXP   : {:>10}".format(80))
+        term.puts(col1, row+7, "GOLD  : {:>10}".format(250))
         term.puts(col1, row+8, "Skills: \n  {}\n  {}".format(*skills))
 
 
 
         # Player Data
         srow = row
-        term.puts(col2, srow+1, "Health :     {:>2}".format(stats.str+rbonus.str+(stats.con+rbonus.con)*2))
-        term.puts(col2, srow+2, "Mana   :     {:>2}".format((stats.int+rbonus.int)*2+stats.wis+rbonus.wis))
-        term.puts(col2, srow+3, "Speed  :     {:>2}".format(1+(stats.dex+rbonus.dex)//3))
+        term.puts(col2, srow+1, "Health :         {:>2}".format(stats.str+rbonus.str+(stats.con+rbonus.con)*2))
+        term.puts(col2, srow+2, "Mana   :         {:>2}".format((stats.int+rbonus.int)*2+stats.wis+rbonus.wis))
+        term.puts(col2, srow+3, "Speed  :         {:>2}".format(1+(stats.dex+rbonus.dex)//3))
 
         # Player Stats
         term.puts(col2, row+5, _sts.format(*total))
-        term.puts(col2+13, row+6, _bon.format(*rbonus))
-        # term.puts(col2, srow+5, _sts)
-        # term.puts(col2, srow+6, _str.format(stats.str+rbonus.str) + _mod.format(rbonus.str))
-        # term.puts(col2, srow+7, _con.format(stats.con+rbonus.con) + _mod.format(rbonus.con))
-        # term.puts(col2, srow+8, _dex.format(stats.dex+rbonus.dex) + _mod.format(rbonus.dex))
-        # term.puts(col2, srow+9, _int.format(stats.int+rbonus.int) + _mod.format(rbonus.int))
-        # term.puts(col2, srow+10, _wis.format(stats.wis+rbonus.wis) + _mod.format(rbonus.wis))
-        # term.puts(col2, srow+11, _cha.format(stats.cha+rbonus.cha) + _mod.format(rbonus.cha))
-
+        term.puts(col2+13, row+6, _bon.format(*transform_values(rbonus)))
         # Traits
 
         # Equipment "hd nk bd ar hn lh rh lr rr wa lg ft"
@@ -359,21 +353,18 @@ def create_character():
 
         if character_index > 0:
             term.clear_area(1, 19, SCREEN_WIDTH-1, SCREEN_HEIGHT-19)
+
             # class/job to stats
-            term.puts(col1, 9, _class.format(occu))
+            term.puts(col1, 8, _class.format(occu))
+
             # Writes Description to Footer
             term.puts(1, 19, join(class_descriptions[class_index], SCREEN_WIDTH-2))
+
+            # builds totals including cbonus this time
             total = tuple(s+r+c for s, r, c in zip(stats, rbonus, cbonus))
             term.puts(col2, row+5, _sts.format(*total))
-            term.puts(col2+13, row+6, _bon.format(*rbonus))
-            term.puts(col2+17, row+6, _bon.format(*cbonus))
-            # term.puts(col2, row+6, _str.format(stats.str+rbonus.str+cbonus.str) + _mod.format(rbonus.str) + " " + (_mod.format(cbonus.str)))
-            # term.puts(col2, row+7, _con.format(stats.con+rbonus.con+cbonus.con) + _mod.format(rbonus.con) + " " + (_mod.format(cbonus.con)))
-            # term.puts(col2, row+8, _dex.format(stats.dex+rbonus.dex+cbonus.dex) + _mod.format(rbonus.dex) + " " + (_mod.format(cbonus.dex)))
-            # term.puts(col2, row+9, _int.format(stats.int+rbonus.int+cbonus.int) + _mod.format(rbonus.int) + " " + (_mod.format(cbonus.int)))
-            # term.puts(col2, row+10, _wis.format(stats.wis+rbonus.wis+cbonus.wis) + _mod.format(rbonus.wis) + " " + (_mod.format(cbonus.wis)))
-            # term.puts(col2, row+11, _cha.format(stats.cha+rbonus.cha+cbonus.cha) + _mod.format(rbonus.cha) + " " + (_mod.format(cbonus.cha)))
-            
+            term.puts(col2+13, row+6, _bon.format(*transform_values(rbonus)))
+            term.puts(col2+17, row+6, _bon.format(*transform_values(cbonus)))
 
             # CLASS OPTIONS
             for option, i in zip(class_options, range(len(class_options))):
