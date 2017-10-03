@@ -9,40 +9,41 @@ from spaceship.constants import CM_BORDER_WIDTH as BORDER_WIDTH
 from bearlibterminal import terminal as term
 from spaceship.screen_functions import *
 from spaceship.continue_game import continue_game
-from spaceship.setup import setup, alphabet, toChr, output, setup_menu
+from spaceship.setup import setup, alphabet, toChr, output, setup_menu, setup_font
 from textwrap import wrap
 from collections import namedtuple
 import descriptions as desc
+from d2 import *
 
 _world="Calabaston"
 _race="RACE  : {:>10}"
 _subrace="Subrace: {:>11}"
 _class="CLASS : {:>10}"
 _place="PLACE : {:>10}"
-_mod=" +[c=#00ffff]{}[/c]"
-_sts="   TOTAL RB  CB "
-_str="STR:  [c=#00ffff]{:>2}[/c]"
-_con="CON:  [c=#00ffff]{:>2}[/c]"
-_cha="CHA:  [c=#00ffff]{:>2}[/c]"
-_per="PER:  [c=#00ffff]{:>2}[/c]"
-_dex="DEX:  [c=#00ffff]{:>2}[/c]"
-_int="INT:  [c=#00ffff]{:>2}[/c]"
-_wis="WIS:  [c=#00ffff]{:>2}[/c]"
-_luc="LUC:  [c=#00ffff]{:>2}[/c]"
-_head="HEAD  : {:>20}"
-_neck="NECK  : {:>20}"
-_body="BODY  : {:>20}"
-_arms="ARMS  : {:>20}"
-_hand="HANDS : {:>20}"
-_wpn1="LHAND : {:>20}"
-_wpn2="RHAND : {:>20}"
-_wpn3="THROW : {:>20}"
-_rng1="RING1 : {:>20}"
-_rng2="RING2 : {:>20}"
-_wais="WAIST : {:>20}"
-_legs="LEGS  : {:>20}"
-_feet="FEET  : {:>20}"
-_misc="MISC  : {:>20}"
+_mod=" [c=#00ffff]{:>2}[/c]"
+_sts="      TOTAL  RB  CB "
+_str="STR    : [c=#00ffff]{:>2}[/c] "
+_con="CON    : [c=#00ffff]{:>2}[/c] "
+_cha="CHA    : [c=#00ffff]{:>2}[/c] "
+_per="PER    : [c=#00ffff]{:>2}[/c] "
+_dex="DEX    : [c=#00ffff]{:>2}[/c] "
+_int="INT    : [c=#00ffff]{:>2}[/c] "
+_wis="WIS    : [c=#00ffff]{:>2}[/c] "
+_luc="LUC    : [c=#00ffff]{:>2}[/c] "
+_head="HEAD  : {:<5}"
+_neck="NECK  : {:<5}"
+_body="BODY  : {:<5}"
+_arms="ARMS  : {:<5}"
+_hand="HANDS : {:<5}"
+_wpn1="LHAND : {:<5}"
+_wpn2="RHAND : {:<5}"
+_wpn3="THROW : {:<5}"
+_rng1="RING1 : {:<5}"
+_rng2="RING2 : {:<5}"
+_wais="WAIST : {:<5}"
+_legs="LEGS  : {:<5}"
+_feet="FEET  : {:<5}"
+_misc="MISC  : {:<5}"
 
 _template="""
 Character Info
@@ -59,7 +60,8 @@ WIL
 WIS
 LUC
 """[1:]
-print(_template.format(race='aa',subrace='bb',classes='cc'))
+
+# print(_template.format(race='aa',subrace='bb',classes='cc'))
 def create_character():
     setup_menu()
     race_descriptions=[
@@ -162,21 +164,21 @@ def create_character():
         # "str dex con int wis cha"
 
         #Tiphmore -- Largest Free City in Calabaston
-        races("Beast", "Tiphmore", stats(15, 10, 12, 9, 10, 7), stats(1, 0, 0, 1, 0, 0)),
+        races("Beast", "Tiphmore", HUMAN, BEAST_BONUS),
         # Capital of Yugahdahrum
-        races("Dwarf", "Dun Badur", stats(13, 11, 14, 10, 9, 6), stats(1, 0, 1, 0 ,0 ,0)),
+        races("Dwarf", "Dun Badur", HUMAN, DWARF_BONUS),
         # Aurundel -- Capital of Auriel in the Emerald Forest
-        races("Elf", "Aurundel", stats(13, 13, 10, 10, 9, 8), stats(0, 1, 0, 0, 1, 0)),
+        races("Elf", "Aurundel", HUMAN, ELVEN_BONUS),
         # races("Ishtahari", ["Ishma", "Ishta"]),
         # Renmar -- Capital of Rodash Empire
-        races("Human", "Renmar", stats(13, 11, 12, 10, 9, 8), stats(0, 1, 1, 0, 0, 0)),
+        races("Human", "Renmar", HUMAN, HUMAN_BONUS),
         # Lok Gurrah, Capital of Oggrahgar
-        races("Orc", "Lok Gurrah", stats(17, 12, 13, 8, 7, 6), stats(1, 0, 1, 0, 0, 0)),
+        races("Orc", "Lok Gurrah", HUMAN, ORCEN_BONUS),
     ]
     # "hd nk bd ar hn lh rh th wa lg ft"
     class_options = [
         # "Barbarian",
-        classes("Druid", stats(0, 0, 1, 0, 1, 0), 
+        classes("druid", DRUIDS, 
             equipment(
                 "",
                 "",
@@ -190,7 +192,7 @@ def create_character():
                 "leather belt",
                 "",
                 "leather boots")),
-        classes("Cleric", stats(0, 0, 0, 0, 2, 0), 
+        classes("cleric", CLERIC, 
             equipment(
                 "hood",
                 "holy symbol",
@@ -206,7 +208,7 @@ def create_character():
                 "leather sandals")),
         # "Fighter",
         # "Paladin",
-        classes("Bowman", stats(0, 2, 0, 0, 0, 0),
+        classes("archer", ARCHER,
             equipment(
                 "hood",
                 "whistle",
@@ -222,7 +224,7 @@ def create_character():
                 "leather boots")),
         # "Sorcerer",
         # "Rogue",
-        classes("Wizard", stats(0, 0, 0, 2, 0, 0),            
+        classes("wizard", WIZARD,            
             equipment(
                 "hood",
                 "amulet of power",
@@ -236,7 +238,7 @@ def create_character():
                 "rope belt",
                 "",
                 "leather sandals")),
-        classes("Squire", stats(1, 0, 1, 0, 0, 0),             
+        classes("squire", SQUIRE,             
             equipment(
                 "leather cap",
                 "",
@@ -251,6 +253,7 @@ def create_character():
                 "common pants",
                 "leather boots")),
     ]
+    setup_font('unscii-8-thin', 8, 16)
     length = SCREEN_WIDTH//2
     row = 5
     col1 = 3
@@ -281,38 +284,41 @@ def create_character():
         term.puts(col1, row+4, "LEVEL : {:>10}".format(1))
         term.puts(col1, row+5, "EXP   : {:>10}".format(80))
         term.puts(col1, row+6, "GOLD  : {:>10}".format(250))
-        term.puts(col1, row+7, "Skills:")
-        term.puts(col1+3, row+8, "Skill 1")
+        term.puts(col1, row+8, "Skills:")
         term.puts(col1+3, row+9, "Skill 1")
+        term.puts(col1+3, row+10, "Skill 1")
 
 
         # Stats
-        term.puts(col2, row+0, "HP: ")
-        term.puts(col2, row+1, "MP: ")
-        term.puts(col2, row+2, "SP: ")
-        term.puts(col2, row+4, _sts)
-        term.puts(col2, row+5, _str.format(stats.str+rbonus.str) + (_mod.format(rbonus.str) if rbonus.str else ""))
-        term.puts(col2, row+6, _dex.format(stats.dex+rbonus.dex) + (_mod.format(rbonus.dex) if rbonus.dex else ""))
-        term.puts(col2, row+7, _con.format(stats.con+rbonus.con) + (_mod.format(rbonus.con) if rbonus.con else ""))
-        term.puts(col2, row+8, _int.format(stats.int+rbonus.int) + (_mod.format(rbonus.int) if rbonus.int else ""))
-        term.puts(col2, row+9, _wis.format(stats.wis+rbonus.wis) + (_mod.format(rbonus.wis) if rbonus.wis else ""))
-        term.puts(col2, row+10, _cha.format(stats.cha+rbonus.cha) + (_mod.format(rbonus.cha) if rbonus.cha else ""))
+        srow = row
+        term.puts(col2, srow+1, "Health :     {:>2}".format(stats.str+rbonus.str+(stats.con+rbonus.con)*2))
+        term.puts(col2, srow+2, "Mana   :     {:>2}".format((stats.int+rbonus.int)*2+stats.wis+rbonus.wis))
+        term.puts(col2, srow+3, "Speed  :     {:>2}".format(1+(stats.dex+rbonus.dex)//3))
+
+        term.puts(col2, srow+5, _sts)
+        term.puts(col2, srow+6, _str.format(stats.str+rbonus.str) + _mod.format(rbonus.str))
+        term.puts(col2, srow+7, _con.format(stats.con+rbonus.con) + _mod.format(rbonus.con))
+        term.puts(col2, srow+8, _dex.format(stats.dex+rbonus.dex) + _mod.format(rbonus.dex))
+        term.puts(col2, srow+9, _int.format(stats.int+rbonus.int) + _mod.format(rbonus.int))
+        term.puts(col2, srow+10, _wis.format(stats.wis+rbonus.wis) + _mod.format(rbonus.wis))
+        term.puts(col2, srow+11, _cha.format(stats.cha+rbonus.cha) + _mod.format(rbonus.cha))
 
         # Traits
 
         # Equipment "hd nk bd ar hn lh rh lr rr wa lg ft"
-        term.puts(col3, row+1, _head.format(""))
-        term.puts(col3, row+2, _neck.format(""))
-        term.puts(col3, row+3, _body.format(""))
-        term.puts(col3, row+4, _arms.format(""))
-        term.puts(col3, row+5, _hand.format(""))
-        term.puts(col3, row+6, _wpn1.format(""))
-        term.puts(col3, row+7, _wpn2.format(""))
-        term.puts(col3, row+8, _rng1.format(""))
-        term.puts(col3, row+9, _rng2.format(""))
-        term.puts(col3, row+10, _wais.format(""))
-        term.puts(col3, row+11, _legs.format(""))
-        term.puts(col3, row+12, _feet.format(""))
+        erow = row
+        term.puts(col3, erow+1, _head.format(""))
+        term.puts(col3, erow+2, _neck.format(""))
+        term.puts(col3, erow+3, _body.format(""))
+        term.puts(col3, erow+4, _arms.format(""))
+        term.puts(col3, erow+5, _hand.format(""))
+        term.puts(col3, erow+6, _wpn1.format(""))
+        term.puts(col3, erow+7, _wpn2.format(""))
+        term.puts(col3, erow+8, _rng1.format(""))
+        term.puts(col3, erow+9, _rng2.format(""))
+        term.puts(col3, erow+10, _wais.format(""))
+        term.puts(col3, erow+11, _legs.format(""))
+        term.puts(col3, erow+12, _feet.format(""))
 
         # Description
         term.puts(1, 19, join(race_descriptions[race_index], SCREEN_WIDTH-2))
@@ -341,12 +347,12 @@ def create_character():
             term.clear_area(1, 19, SCREEN_WIDTH-1, SCREEN_HEIGHT-19)
             term.puts(1, 19, join(class_descriptions[class_index], SCREEN_WIDTH-2))
             term.puts(col1, 9, _class.format(occu))
-            term.puts(col2, row+5, _str.format(stats.str+rbonus.str+cbonus.str) + (_mod.format(rbonus.str) if rbonus.str else "    ") + (_mod.format(cbonus.str) if cbonus.str else ""))
-            term.puts(col2, row+6, _dex.format(stats.dex+rbonus.dex+cbonus.dex) + (_mod.format(rbonus.dex) if rbonus.dex else "    ") + (_mod.format(cbonus.dex) if cbonus.dex else ""))
-            term.puts(col2, row+7, _con.format(stats.con+rbonus.con+cbonus.con) + (_mod.format(rbonus.con) if rbonus.con else "    ") + (_mod.format(cbonus.con) if cbonus.con else ""))
-            term.puts(col2, row+8, _int.format(stats.int+rbonus.int+cbonus.int) + (_mod.format(rbonus.int) if rbonus.int else "    ") + (_mod.format(cbonus.int) if cbonus.int else ""))
-            term.puts(col2, row+9, _wis.format(stats.wis+rbonus.wis+cbonus.wis) + (_mod.format(rbonus.wis) if rbonus.wis else "    ") + (_mod.format(cbonus.wis) if cbonus.wis else ""))
-            term.puts(col2, row+10, _cha.format(stats.cha+rbonus.cha+cbonus.cha) + (_mod.format(rbonus.cha) if rbonus.cha else "    ") + (_mod.format(cbonus.cha) if cbonus.cha else ""))
+            term.puts(col2, row+6, _str.format(stats.str+rbonus.str+cbonus.str) + _mod.format(rbonus.str) + " " + (_mod.format(cbonus.str)))
+            term.puts(col2, row+7, _con.format(stats.con+rbonus.con+cbonus.con) + _mod.format(rbonus.con) + " " + (_mod.format(cbonus.con)))
+            term.puts(col2, row+8, _dex.format(stats.dex+rbonus.dex+cbonus.dex) + _mod.format(rbonus.dex) + " " + (_mod.format(cbonus.dex)))
+            term.puts(col2, row+9, _int.format(stats.int+rbonus.int+cbonus.int) + _mod.format(rbonus.int) + " " + (_mod.format(cbonus.int)))
+            term.puts(col2, row+10, _wis.format(stats.wis+rbonus.wis+cbonus.wis) + _mod.format(rbonus.wis) + " " + (_mod.format(cbonus.wis)))
+            term.puts(col2, row+11, _cha.format(stats.cha+rbonus.cha+cbonus.cha) + _mod.format(rbonus.cha) + " " + (_mod.format(cbonus.cha)))
             
 
             # CLASS OPTIONS
