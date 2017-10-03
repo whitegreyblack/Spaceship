@@ -1,27 +1,40 @@
 race_human="""
-The youngest race on the continent of Auriel, humans were the last to arrive from across the Endless Water and, yet
-with their ingenuity, versatility, and endurance, they have thrived and become a dominant force throughout the land. 
-The Empire of Renmar and the Free States are the fruits of their labor. Through quick learning they have become the 
-masters of the element of LIGHTNING.
+The youngest race on the continent of Calabaston, humans were the last to arrive from across the Endless Water and, yet
+they have thrived and proved to be a dominant force throughout the land. Within less than a hundred years, they have
+built Renmar, the current capital city of the human empire of Rane. Humans can be skilled with a wide array of different
+weaponry and magic and are useful in any class.
 """[1:]
 
 race_dwarf="""
 A hardy race, dwarves are most famous for their impenetrable fortresses and mass earthly wealth. Their vast fortune
 allows their people to pursue trades and crafts such as blacksmithing, jewelry, and weaponforging, which would not
-be possible otherwise. The dwarven race are masters of the EARTH element and use this to their advantage. Dwarves
-met outside their underground castles are fine traders and merchants as well as formidable in battle. They start
-with either an axe or a pick, both deadly in the hands of a dwarf.
+be possible otherwise. Dwarves seen outside their Yugahdah, the dwarven territory, are most often skilled traders
+and merchants or mercenaries. Dwarven soldiers prefer melee weapons but can also use magic and ranged weapons.
+"""[1:]
+
+race_beast="""
+Beasts have physical differences that set them apart from other races as they are born with a combination of fur, scales,
+horns, and tails. After being driven out of the plains of Tempest, they settled near the north west of the wetlands and
+now call Tiphmore, a gigantic trade city, their new home. Beasts have unusually high mana and health pools and are
+suited for either magic or melee classes.
 """[1:]
 
 race_elven="""
-The long-lived, mysterious race of elves reside deep within the forests of Auriel. Though they seem frail at first 
-to those who have yet met an elf, their appearances betray them as they have a stronger fortitude than meets the
-untrained eye. Elves boast the strongest attunment to the element WATER which they use to nurture the trees and living
-creatures within the forests they dwell in.
+The long-lived, mysterious race of elves reside deep within the forests of Aurendel. Though they may look frail, their
+appearances betray them as they are more dextereous than other races. They live in accordance to the law of the forest
+and dissaprove of any attempt by other races that try to exploit the forest for its resources. Elven warriors are most
+often seen using magic or ranged weaponry but can be skilled in melee as well.
 """[1:] 
 
+race_orcen="""
+Brutish and violent, the race of orcs are feared by other races, including the beast folk, due to their warring nature
+and the need to constantly engage in battle. They are split into many different tribal clans and factions that struggle
+to take power over their rivals and claim the blood bone crown which signifies the strongest clan in Calabaston. The
+bone crown is currently located in Lok Gurrah, the largest city in the Burning Hands territory.
+"""[1:]
+
 race_ishtahari="""
-Among all the races that live across Auriel, the Ishtahari are the oldest. Yet having lived on the continent hundreds
+Among all the races that live across Calabaston, the Ishtahari are the oldest. Yet having lived on the continent hundreds
 of years before any of the other races, they are now as rare to meet as their magic is to learn. They are the only 
 race to master two elements of the seven, LIGHT and VOID
 """[1:]
@@ -47,13 +60,16 @@ Barbarians are fearless warriors on the battlefield. Their tendency to fight wit
 experienced soldiers hesitant to fight them.
 """[1:]
 
-cleric="""
-Clerics are masters of the LIGHT element, using their magic to bring healing to the injured and wounded on the battlefield.
-Their spells are particularly effective in eradicating the undead and ghoulish creatures of the night
+class_cleric="""
+Clerics are holy men who use their magic abilities heal their wounded and injured allies. Their spells are particularly 
+effective in eradicating the undead and ghoulish creatures of the night. They prefer using ranged magic but are no
+strangers to melee combat.
 """[1:]
 
-druid="""
-Druid is blah blah blah
+class_druid="""
+Druids are sages worship the ancient forces of nature which gives them a mystical connection to earth and natural 
+abilities. They have a deep relationship with creatures of land and water. Druids are proficient in both physical and 
+magical combat as they can use magic to strengthen their phyiscal prowess.
 """[1:]
 
 fighter="""
@@ -76,8 +92,22 @@ rogue="""
 Rogue is blah blah blah
 """[1:]
 
-wizard="""
-Wizard is blah blah blah
+class_archer="""
+Archers are skilled in ranged combat, being able to use an assortment of different ranged weaponry that include bows,
+throwing daggers, and javalins. If needed they can use their weapons for melee combat as well. They carry very little, as
+their equipment is light and can use sneak and steal abilities on their enemies to stealthily replenish their supplies.
+"""[1:]
+
+class_wizard="""
+Wizards are students of elemental and arcane magic. Their educational background allows them to read ancient scrolls
+as well as use spellbooks. Throught study and memorization they can learn new spells through reading and learning. They
+have the largest number of upgradable classes available to them including elementalist, sorcerer, and summoner.
+"""[1:]
+
+class_squire="""
+Squires are the most basic melee class offered to newly created adventurers. They are the most proficient in melee 
+weapons and combat but can be skilled in ranged combat as well. With enough experience and money, squires have to choice
+of upgrading their class statuses to the Knight and Paladin class.
 """[1:]
 
 """
@@ -87,3 +117,51 @@ Scout, Berserker, Pathfinder, Runemaster, Sentinal, Lord, Dragonguard, Explorer,
 Marksman, sharpshooter, captain, champion, marshal, rider, shaman, enchantress, rider, duelist, fencer, mauler,
 pikeman, halberdier, spearman, assassin, trapper, warden, arbiter, enforcer, blademaster, 
 """
+
+subrace_descriptions=[
+    [
+        "Citizen servents residing in the Rodash Empire", 
+        "Travelers who wander the continent of Auriel", 
+        "Humans living outside of the borders of the Rodash Empire",
+        "Sadukar are those who live in the Icy Gaze north of the Empire",
+    ],
+    [
+        "Family name for mining dwarves from the clan in the Iron Hills",
+        "Family name for the royal dwarves from the Triple Shining Mountain",
+        "Family name for the military dwarf clan from Stone Keep",
+    ],
+    [
+        "Family name for the elite elven family residing in the Emerald Forest",
+        "Local elven family name for the elves residing in the woods of Arundel",
+        "Drow are banished elves residing in the forest hills of the Dark Forest",
+    ],
+    [
+        "Ishma are the titles for light-element users of magic",
+        "Ishta are the titles for void-element users of magic",
+    ],
+    [
+        "Mountain orcs reside in the Shadows of Mount Huron",
+        "Greenskins reside in swamplands East of Ravenflow",
+        "Grayskins are found everywhere on the continent of Auriel",
+    ],
+    [
+        "Goblins live in the caves and hills along the Storm-wrought hills and caves",
+        "Hobgoblins are a special type of goblin born among goblins but with more strength",
+    ],
+    [
+        "Cave trolls live among the many shelters provided by the Storm-wrought Ridge",
+        "Forest trolls reside in the northern and colder area of the Dark Forest",
+        "Ice trolls prefer to live in the coldest areas of the Icy Gaze",
+    ]
+
+]
+bonuses = {
+    "STR": "+{} to Strength",
+    "CON": "+{} to Constitution",
+    "WIS": "+{} to Wisdom",
+    "DEX": "+{} to Dexterity",
+    "CHA": "+{} to Charisma",
+    "WIL": "+{} to Willpower",
+    "PER": "+{} to Perception",
+    "LUC": "+{} to Luck"
+}

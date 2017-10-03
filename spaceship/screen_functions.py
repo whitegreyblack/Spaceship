@@ -67,3 +67,11 @@ def barrow(x, y):
 
 def color(text, color):
     return "[c={}]{}[/c]".format(color, text)
+
+def box(x, y, dx, dy, c):
+    for i in range(x, x+dx+1):
+        term.puts(i, y, c)
+        term.puts(i, y+dy, c)
+    for j in range(y, y+dy+1):
+        term.puts(x, j, c)
+        term.puts(x+dx, j, c)
