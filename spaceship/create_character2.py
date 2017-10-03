@@ -7,6 +7,7 @@ from spaceship.constants import MENU_SCREEN_HEIGHT as SCREEN_HEIGHT
 from spaceship.constants import CM_BORDER_HEIGHT as BORDER_HEIGHT
 from spaceship.constants import CM_BORDER_WIDTH as BORDER_WIDTH
 from bearlibterminal import terminal as term
+from spaceship.new_name import new_name
 from spaceship.screen_functions import *
 from spaceship.continue_game import continue_game
 from spaceship.setup import setup, alphabet, toChr, output, setup_menu, setup_font
@@ -16,10 +17,7 @@ import descriptions as desc
 from d2 import *
 
 _world="Calabaston"
-_race="RACE    : {:>10}"
-_subrace="Subrace: {:>11}"
-_class="CLASS   : {:>10}"
-_place="PLACE   : {:>10}"
+_background="""RACE    : {:>10}\nCLASS   : {:>10}\nPLACE   : {:>10}"""
 _sts="""      TOTAL  RB  CB 
 STR    : [c=#00ffff]{:>2}[/c] 
 CON    : [c=#00ffff]{:>2}[/c] 
@@ -34,36 +32,21 @@ _equipment="""
 HEAD  : {:<5}\nNECK  : {:<5}\nBODY  : {:<5}\nARMS  : {:<5}\nHANDS : {:<5}\nLHAND : {:<5}
 RHAND : {:<5}\nRING1 : {:<5}\nRING2 : {:<5}\nWAIST : {:<5}\nLEGS  : {:<5}\nFEET  : {:<5}"""[1:]
 
-# print(_template.format(race='aa',subrace='bb',classes='cc'))
 def create_character():
     setup_menu()
-    race_descriptions=[
-        desc.race_beast,
-        desc.race_dwarf,
-        desc.race_elven,
-        desc.race_human,
-        desc.race_orcen,
-    ]
-
-    class_descriptions=[
-        desc.class_druid,
-        desc.class_cleric,
-        desc.class_wizard,
-        desc.class_archer,
-        desc.class_squire,
-    ]
+    race_descriptions=[desc.race_beast, desc.race_dwarf, desc.race_elven, desc.race_human, desc.race_orcen,]
+    class_descriptions=[desc.class_druid, desc.class_cleric, desc.class_wizard, desc.class_archer, desc.class_squire,]
 
     race_index = 0
     class_index = 0
     character_index = 0
     str_title = "Character Creation"
     str_help = "Press (?) for info on a selected race, subrace or class"
-    indices = [0 for _ in range(15)]
     races = namedtuple("Race", "race location stats bonus gold skills eq")
     stats = namedtuple("Stats", "str dex con int wis cha")
     equipment = namedtuple("Equipment", "hd nk bd ar hn lh rh lr rr wa lg ft")
     classes = namedtuple("Class", "classes bonuses equipment")
-
+    character = namedtuple("Character", "name race_opt class_opt") 
     race_options = [
         #Tiphmore -- Largest Free City in Calabaston
         races("Beast", "Tiphmore", HUMAN, BEAST_BONUS, 300, ("thick fur", "animal senses"),             
@@ -171,7 +154,7 @@ def create_character():
         inv = []
         for r, c in zip(req, ceq):
             inv.append(get_eq(r)+get_eq(c))
-        eqp = [i.pop() if len(i) > 0 else [] for i in inv]
+        eqp = [i.pop(0) if len(i) > 0 else [] for i in inv]
         return eqp, flatten(inv)
     # FONT OPTION
     setup_font('unscii-8-thin', 8, 16)
@@ -198,9 +181,8 @@ def create_character():
         race, location, stats, rbonus, gold, skills, req = race_options[race_index]
         occu, cbonus, ceq = class_options[class_index]
         total = tuple(s+r for s, r in zip(stats, rbonus))
-        term.puts(col1, row+1, _race.format(race))
-        term.puts(col1, row+2, _place.format(location))
-        term.puts(col1, row+3, _class.format(""))
+
+        term.puts(col1, row+1, _background.format(race, location, "" if not character_index else occu))
 
         # Level Details
         term.puts(col1, row+5, "LEVEL   : {:>10}".format(1))
@@ -225,9 +207,6 @@ def create_character():
             term.puts(1, 19, join(race_descriptions[race_index], SCREEN_WIDTH-2))
 
         else:
-            # class/job to stats
-            term.puts(col1, 8, _class.format(occu))
-
             # Writes Description to Footer
             term.puts(1, 19, join(class_descriptions[class_index], SCREEN_WIDTH-2))
 
@@ -248,7 +227,9 @@ def create_character():
 
         term.refresh()
 
-# ============================== KEYBOARD INPUT =================================
+        # ===============================================================================#
+        # ============================== KEYBOARD INPUT =================================#
+        # ===============================================================================#
         code = term.read()
         while code in (term.TK_SHIFT, term.TK_ALT, term.TK_CONTROL,):
             code = term.read()
@@ -272,7 +253,15 @@ def create_character():
             character_index = modify(1, character_index, 3)
 
         elif code == term.TK_ENTER:
-            character_index += 1
+            if character_index == 2:
+                name = new_name((race_options[race_index].race, class_options[class_index].classes))
+                if name.proceed > -1:
+                    return output(
+                            proceed=True,
+                            value=character(name.value, race_options[race_index], class_options[class_index])) 
+            else:
+                character_index += 1
+
         # ESCAPE exists if on the first list else moves back one
         elif code in (term.TK_ESCAPE,):
             if character_index == 0:
