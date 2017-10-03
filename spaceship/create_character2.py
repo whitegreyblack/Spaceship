@@ -20,38 +20,19 @@ _race="RACE    : {:>10}"
 _subrace="Subrace: {:>11}"
 _class="CLASS   : {:>10}"
 _place="PLACE   : {:>10}"
-_sts="""
-      TOTAL  RB  CB 
+_sts="""      TOTAL  RB  CB 
 STR    : [c=#00ffff]{:>2}[/c] 
 CON    : [c=#00ffff]{:>2}[/c] 
 DEX    : [c=#00ffff]{:>2}[/c] 
 INT    : [c=#00ffff]{:>2}[/c] 
 WIS    : [c=#00ffff]{:>2}[/c] 
 CHA    : [c=#00ffff]{:>2}[/c] 
-"""[1:]
-_bon="""
-{:>2}
-{:>2}
-{:>2}
-{:>2}
-{:>2}
-{:>2}
-"""[1:]
+"""
+_bon="""{:>2}\n{:>2}\n{:>2}\n{:>2}\n{:>2}\n{:>2}"""
 
 _equipment="""
-HEAD  : {:<5}
-NECK  : {:<5}
-BODY  : {:<5}
-ARMS  : {:<5}
-HANDS : {:<5}
-LHAND : {:<5}
-RHAND : {:<5}
-RING1 : {:<5}
-RING2 : {:<5}
-WAIST : {:<5}
-LEGS  : {:<5}
-FEET  : {:<5}
-"""[1:]
+HEAD  : {:<5}\nNECK  : {:<5}\nBODY  : {:<5}\nARMS  : {:<5}\nHANDS : {:<5}\nLHAND : {:<5}
+RHAND : {:<5}\nRING1 : {:<5}\nRING2 : {:<5}\nWAIST : {:<5}\nLEGS  : {:<5}\nFEET  : {:<5}"""[1:]
 
 # print(_template.format(race='aa',subrace='bb',classes='cc'))
 def create_character():
@@ -72,34 +53,12 @@ def create_character():
         desc.class_squire,
     ]
 
-    def subtitle_text(i):
-        text = "Choose your {}"
-        if i == 0:
-            return text.format("race")
-        # elif i == 1:
-        #     return text.format("subclass")
-        elif i == 1:
-            return text.format("class")
-        elif 1 < i < 15:
-            return text.format("equipment")
-        else:
-            return "Press (ENTER) to finish"
-    
-    def transform_values(values):
-        return tuple("+[c=#00ff00]"+str(v)+"[/c]" if v > 0 else "-[c=#ff0000]"+str(abs(v))+"[/c]" if v < 0 else v for v in values) 
-
-    character = namedtuple("Character", "race subrace classe")
-    indices = namedtuple("Index", "Character Race Subrace Class")
-    stats = namedtuple("Stats", "str dex con int wis cha")
-
-    _title = "Character Creation"
-    _help = "Press (?) for info on a selected race, subrace or class"
-    finish = "FINISH"
-    character_index = 0
     race_index = 0
-    subrace_index = 0
     class_index = 0
-
+    character_index = 0
+    str_title = "Character Creation"
+    str_help = "Press (?) for info on a selected race, subrace or class"
+    indices = [0 for _ in range(15)]
     races = namedtuple("Race", "race location stats bonus gold skills eq")
     stats = namedtuple("Stats", "str dex con int wis cha")
     equipment = namedtuple("Equipment", "hd nk bd ar hn lh rh lr rr wa lg ft")
@@ -108,159 +67,46 @@ def create_character():
     race_options = [
         #Tiphmore -- Largest Free City in Calabaston
         races("Beast", "Tiphmore", HUMAN, BEAST_BONUS, 300, ("thick fur", "animal senses"),             
-            equipment(
-                "",
-                "",
-                "",
-                "",
-                "",
-                ("long spear", "silver sword"),
-                "",
-                "",
-                "",
-                "",
-                "",
-                "")),
+            equipment("", "", "", "", "", ("long spear", "silver sword"), "", "", "", "", "", "")),
         # Capital of Yugahdahrum
         races("Dwarf", "Dun Badur", HUMAN, DWARF_BONUS, 250, ("dark vision", "dwarven fortitude"),
-            equipment(
-                "horned helmet",
-                "gold necklace",
-                "",
-                "",
-                "",
-                ("battle axe", "copper pick"),
-                "",
-                "",
-                "",
-                "",
-                "",
-                "")),
+            equipment("horned helmet", "gold necklace", "", "", "", ("battle axe", "copper pick"), "", "", "", "", "", "")),
         # Aurundel -- Capital of Auriel in the Emerald Forest
         races("Elf", "Aurundel", HUMAN, ELVEN_BONUS, 250, ("forest spirit", "nimble"),
-            equipment(
-                "",
-                "",
-                "elven chainmail",
-                "",
-                "",
-                "mithril dagger",
-                "mithril dagger",
-                "",
-                "",
-                "",
-                "",
-                "")),
-        # races("Ishtahari", ["Ishma", "Ishta"]),
+            equipment("", "", "elven chainmail", "", "", "mithril dagger", "mithril dagger", "", "", "", "", "")),
         # Renmar -- Capital of Rane Empire
         races("Human", "Renmar", HUMAN, HUMAN_BONUS, 200, ("", ""),
-            equipment(
-                "",
-                "",
-                "",
-                "",
-                "",
-                "broadsword",
-                "medium shield",
-                "",
-                "",
-                "",
-                "",
-                "")),
+            equipment("", "", "", "", "", "broadsword", "medium shield", "", "", "", "", "")),
         # Lok Gurrah, Capital of Oggrahgar
         races("Orc", "Lok Gurrah", HUMAN, ORCEN_BONUS, 150, ("thick skin", "bloodrage"),
-            equipment(
-                "metal cap",
-                "",
-                "metal armor",
-                "",
-                "",
-                "warhammer",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "")),
+            equipment("metal cap", "", "metal armor", "", "", ("mace", "warhammer"), "", "", "", "", "", "")),
     ]
-    # "hd nk bd ar hn lh rh th wa lg ft"
+
     class_options = [
-        # "Barbarian",
-        classes("druid", DRUIDS, 
-            equipment(
-                "",
-                "",
-                "thick fur coat",
-                "thick fur bracers",
-                "",
-                "wooden staff",
-                "",
-                "ring of nature",
-                "ring of earth",
-                "leather belt",
-                "",
-                "leather boots")),
-        classes("cleric", CLERIC, 
-            equipment(
-                "hood",
-                "holy symbol",
-                "light robe",
-                "",
-                "",
-                "mace",
-                "small shield",
-                "ring of power",
-                "ring of light",
-                "rope belt",
-                "",
-                "leather sandals")),
-        # "Fighter",
-        # "Paladin",
-        classes("archer", ARCHER,
-            equipment(
-                "hood",
-                "whistle",
-                "heavy cloak",
-                "leather bracers",
-                "cloth gloves",
-                "short sword",
-                "small dagger",
-                "",
-                "",
-                "leather belt",
-                "common pants",
-                "leather boots")),
-        # "Sorcerer",
-        # "Rogue",
-        classes("wizard", WIZARD,            
-            equipment(
-                "hood",
-                "amulet of power",
-                "light robe",
-                "",
-                "",
-                "quarterstaff",
-                "",
-                "ring of water",
-                "ring of fire",
-                "rope belt",
-                "",
-                "leather sandals")),
-        classes("squire", SQUIRE,             
-            equipment(
-                "leather cap",
-                "",
-                "leather armor",
-                "leather bracers",
-                "cloth gloves",
-                "long sword",
-                "medium shield",
-                "",
-                "",
-                "leather belt",
-                "common pants",
-                "leather boots")),
+        classes("druid", DRUIDS, equipment("", "", "thick fur coat", "thick fur bracers", "", "wooden staff", "", 
+            "ring of nature", "ring of earth", "leather belt", "", "leather boots")),
+        classes("cleric", CLERIC, equipment("hood", "holy symbol", "light robe", "", "", "mace", "small shield", 
+            "ring of power", "ring of light", "rope belt", "", "leather sandals")),
+        classes("archer", ARCHER, equipment("hood", "whistle", "heavy cloak", "leather bracers", "cloth gloves", 
+            "short sword", "small dagger", "", "", "leather belt", "common pants", "leather boots")),
+        classes("wizard", WIZARD, equipment("hood", "amulet of power", "light robe", "", "", "quarterstaff", 
+            "spellbook", "ring of water",  "ring of fire", "rope belt", "", "leather sandals")),
+        classes("squire", SQUIRE, equipment("leather cap", "", "leather armor", "leather bracers", "cloth gloves", 
+            "long sword", "medium shield", "", "", "leather belt", "common pants", "leather boots")),
     ]
+
+    def subtitle_text(i):
+        text = "Choose your {}"
+        if i == 0:
+            return text.format("race")
+        elif i == 1:
+            return text.format("class")
+        else:
+            return "Press (ENTER) to finish"
+    
+    def transform_values(values):
+        return tuple("+[c=#00ff00]"+str(v)+"[/c]" if v > 0 else "-[c=#ff0000]"+str(abs(v))+"[/c]" if v < 0 else v for v in values) 
+
     def cc_border():
         border(BORDER_WIDTH, [0], "#")
         border(BORDER_WIDTH, BORDER_HEIGHT, toChr("2550"))
@@ -269,7 +115,7 @@ def create_character():
         border(SCREEN_WIDTH-24, [row], "#")
 
     def title():
-        term.puts(center(" "+_title+" ", SCREEN_WIDTH), 0," "+ _title + " ")
+        term.puts(center(" "+str_title+" ", SCREEN_WIDTH), 0," "+ str_title + " ")
 
     def subtitle():
         # subtitle -- clears subtitle area to make space for new subtitle text
@@ -296,7 +142,6 @@ def create_character():
             option = pad(option.classes, length=8)
             if i == class_index:
                 if character_index == 1:
-                    # arrow(x, y)
                     selected(x, y, option)
                 elif character_index > 1:
                     passed(x, y, option)
@@ -305,6 +150,29 @@ def create_character():
             else:
                 unselected(x, y, option)
 
+    def form_equipment(req, ceq):
+        def get_eq(x):
+            eq = []
+            if x != "":
+                if isinstance(x, tuple):
+                    for xx in x:
+                        eq.append(xx)
+                else:
+                    eq.append(x)
+            return eq
+
+        def flatten(l):
+            items = []
+            for i in l:
+                for ii in i:
+                    items.append(ii)
+            return items
+
+        inv = []
+        for r, c in zip(req, ceq):
+            inv.append(get_eq(r)+get_eq(c))
+        eqp = [i.pop() if len(i) > 0 else [] for i in inv]
+        return eqp, flatten(inv)
     # FONT OPTION
     setup_font('unscii-8-thin', 8, 16)
     length = SCREEN_WIDTH//2
@@ -349,10 +217,8 @@ def create_character():
             # Player Stats
             term.puts(col2, row+5, _sts.format(*total))
             term.puts(col2+13, row+6, _bon.format(*transform_values(rbonus)))
-            # Traits
 
-            # Equipment "hd nk bd ar hn lh rh lr rr wa lg ft"
-            erow = row
+            # EQUIPMENT -- initially empty until class is chosen
             term.puts(col3, row+1, _equipment.format(*("" for _ in range(12))))
 
             # Description
@@ -377,20 +243,21 @@ def create_character():
             term.puts(col2+17, row+6, _bon.format(*transform_values(cbonus)))
 
             # EQUIPMENT LIST
-            term.puts(col3, row+1, _equipment.format(*("" for _ in range(12))))
-            if character_index >= 2:
-                items = list((req[character_index-2], ceq[character_index-2]))
-                if '' in items:
-                    items.remove('')
-                print(items)
-                if character_index == 2 and items:
-                    term.bkcolor("white")
-                    term.puts(col3+8, row+1, "[c=black]{}[/c]".format(items[0]))
-                    term.bkcolor("black")
-                elif character_index != 2 and items:
-                    term.puts(col3+8, row+1, items[0])
-                else:
-                    term.puts(col3+8, row+1, "None")
+            eq, inv = form_equipment(req, ceq)
+            term.puts(col3, row+1, _equipment.format(*(e if len(e) > 0 else "" for e in eq)))
+            # if character_index >= 2:
+            #     items = list((req[character_index-2], ceq[character_index-2]))
+            #     if '' in items:
+            #         items.remove('')
+            #     print(items)
+            #     if character_index == 2 and items:
+            #         term.bkcolor("white")
+            #         term.puts(col3+8, row+1, "[c=black]{}[/c]".format(items[0]))
+            #         term.bkcolor("black")
+            #     elif character_index != 2 and items:
+            #         term.puts(col3+8, row+1, items[0])
+            #     else:
+            #         term.puts(col3+8, row+1, "None")
                 
             # term.puts(col3, row+1, _equipment.format(*eq))
 
@@ -414,10 +281,10 @@ def create_character():
                 class_index = modify(1, class_index, 5)
 
         elif code == term.TK_UP:
-            character_index = modify(-1, character_index, 15)
+            character_index = modify(-1, character_index, 3)
 
         elif code == term.TK_DOWN:
-            character_index = modify(1, character_index, 15)
+            character_index = modify(1, character_index, 3)
 
         elif code == term.TK_ENTER:
             character_index += 1
