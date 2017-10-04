@@ -26,7 +26,7 @@ Class   : {:>10}
 
 Gold    : {:>10}
 Level   : {:>10}
-Exp     : {:>10}
+Adv Exp : {:>10}
 
 HP      : [c=#00ffff]{:>10}[/c]
 MP      : [c=#00ffff]{:>10}[/c]
@@ -44,6 +44,7 @@ INT : [c=#00ffff]{:>2}[/c]
 WIS : [c=#00ffff]{:>2}[/c] 
 CHA : [c=#00ffff]{:>2}[/c] 
 """[1:]
+_bon="""{:>2}\n{:>2}\n{:>2}\n{:>2}\n{:>2}\n{:>2}"""
 
 _col3="""
 HEAD  : {:<5}\nNECK  : {:<5}\nBODY  : {:<5}\nARMS  : {:<5}\nHANDS : {:<5}\nLHAND : {:<5}
@@ -59,6 +60,7 @@ def create_character():
     col2 = 26
     col3 = 49 
 
+    inv_screen = -1
     race_index = 0
     class_index = 0
     gender_index = 0
@@ -71,7 +73,7 @@ def create_character():
     str_title = "Character Creation"
     str_help = "Press (?) for info on a selected race, subrace or class"
 
-    character = namedtuple("Character", "name race_opt class_opt") 
+    character = namedtuple("Character", "name gender_opt race_opt class_opt") 
     equipment = namedtuple("Equipment", "hd nk bd ar hn lh rh lr rr wa lg ft")
 
     def subtitle_text(i):
@@ -81,7 +83,7 @@ def create_character():
         elif i == 1:
             return text.format("race")
         elif i == 2:
-            return text.format("class")
+            return text.format('class | Press "v" to view your inventory')
         else:
             return "Press (ENTER) to finish"
     
@@ -104,26 +106,27 @@ def create_character():
         x = center(subtitle, SCREEN_WIDTH)
         term.puts(x, 1, subtitle)
 
-    def gender_row():
+    def gender_row(g=False):
         genders = namedtuple("Gender", "gender bonus")
         gender_options = [
             genders("Male", MALE),
             genders("Female", FEMALE),
         ]
-        for option, i in zip(gender_options, range(len(gender_options))):
-            x, y = 24+22*i, 2
-            gender = pad(option.gender, length=8)
-            if i == gender_index:
-                if character_index == 0:
-                    selected(x, y, gender)
+        if not g:
+            for option, i in zip(gender_options, range(len(gender_options))):
+                x, y = 24+22*i, 2
+                gender = pad(option.gender, length=8)
+                if i == gender_index:
+                    if character_index == 0:
+                        selected(x, y, gender)
+                    else:
+                        passed(x, y, gender)
                 else:
-                    passed(x, y, gender)
-            else:
-                unselected(x, y, gender)
+                    unselected(x, y, gender)
 
         return gender_options[gender_index]
-
-    def race_row():
+    
+    def race_row(r=False):
         races = namedtuple("Race", "race location stats bonus gold skills eq")
         race_options = [
             #Tiphmore -- Largest Free City in Calabaston
@@ -142,24 +145,24 @@ def create_character():
             races("Orc", "Lok Gurrah", HUMAN, ORCEN_BONUS, 150, ("thick skin", "bloodrage"),
                 equipment("metal cap", "", "metal armor", "", "", ("mace", "warhammer"), "", "", "", "", "", "")),
         ]
-
         # RACE OPTIONS
-        for option, i in zip(race_options, range(len(race_options))):
-            x, y = 13+11*i, 3
-            race = pad(option.race, length=8)
-            if i == race_index:
-                if character_index == 1:
-                    selected(x, y, race)
-                elif character_index > 1:
-                    passed(x, y, race)
+        if not r:
+            for option, i in zip(race_options, range(len(race_options))):
+                x, y = 13+11*i, 3
+                race = pad(option.race, length=8)
+                if i == race_index:
+                    if character_index == 1:
+                        selected(x, y, race)
+                    elif character_index > 1:
+                        passed(x, y, race)
+                    else:
+                        unselected(x, y, race)
                 else:
                     unselected(x, y, race)
-            else:
-                unselected(x, y, race)
 
         return race_options[race_index]
 
-    def class_row():
+    def class_row(c=False):
         classes = namedtuple("Class", "classes bonuses equipment")
         class_options = [
             classes("Druid", DRUIDS, equipment("", "", "thick fur coat", "thick fur bracers", "", "wooden staff", "", 
@@ -167,7 +170,7 @@ def create_character():
             classes("Cleric", CLERIC, equipment("hood", "holy symbol", "light robe", "", "", "mace", "small shield", 
                 "ring of power", "ring of light", "rope belt", "", "leather sandals")),
             classes("Archer", ARCHER, equipment("hood", "whistle", "heavy cloak", "leather bracers", "cloth gloves", 
-                "short sword", "small dagger", "", "", "leather belt", "common pants", "leather boots")),
+                "short bow", "", "", "", "leather belt", "common pants", "leather boots")),
             classes("Wizard", WIZARD, equipment("hood", "amulet of power", "light robe", "", "", "quarterstaff", 
                 "spellbook", "ring of water",  "ring of fire", "rope belt", "", "leather sandals")),
             classes("Squire", SQUIRE, equipment("leather cap", "", "leather armor", "leather bracers", "cloth gloves", 
@@ -175,18 +178,19 @@ def create_character():
         ]
 
         # CLASS OPTIONS
-        for option, i in zip(class_options, range(len(class_options))):
-            x, y = 13+11*i, 4
-            option = pad(option.classes, length=8)
-            if i == class_index:
-                if character_index == 2:
-                    selected(x, y, option)
-                elif character_index > 2:
-                    passed(x, y, option)
+        if not c:
+            for option, i in zip(class_options, range(len(class_options))):
+                x, y = 13+11*i, 4
+                option = pad(option.classes, length=8)
+                if i == class_index:
+                    if character_index == 2:
+                        selected(x, y, option)
+                    elif character_index > 2:
+                        passed(x, y, option)
+                    else:
+                        unselected(x, y, option)
                 else:
                     unselected(x, y, option)
-            else:
-                unselected(x, y, option)
 
         return class_options[class_index]
 
@@ -196,13 +200,13 @@ def create_character():
             [desc.race_beast, desc.race_dwarf, desc.race_elven, desc.race_human, desc.race_orcen,],
             [desc.class_druid, desc.class_cleric, desc.class_wizard, desc.class_archer, desc.class_squire,]]
         
-        secondary = class_index if character_index == 2 else \
+        primary = min(character_index, 2)
+
+        secondary = class_index if character_index >= 2 else \
                     race_index if character_index == 1 else \
                     character_index
 
-        term.puts(1, 19, join(
-            descriptions[character_index][secondary], 
-            SCREEN_WIDTH-2))
+        term.puts(1, 19, join(descriptions[primary][secondary], SCREEN_WIDTH-2))
 
     def form_equipment(req, ceq):
         def get_eq(x):
@@ -237,20 +241,25 @@ def create_character():
         title()
         subtitle()
         
-        # # Gender Race and Class Varialbes
+        # Gender Race and Class Varialbes
         gender, gbonus = gender_row()
         race, location, stats, rbonus, gold, skills, req = race_row()
         occu, cbonus, ceq = class_row()
 
+        # BONUS
         if character_index == 0:
             total = STATS(*(s+g for s, g in zip(HUMAN, gbonus)))
         elif character_index == 1:
             total = STATS(*(s+g+r for s, g, r in zip(stats, gbonus, rbonus)))
         else:
             total = STATS(*(s+g+r+c for s, g, r, c in zip(stats, gbonus, rbonus, cbonus)))
+
+        # STATUS
         hp = total.str + total.con * 2
         mp = total.int + total.wis * 2
         sp = total.dex // 5 
+
+        # BACKGROUND
         term.puts(col1, row+1, _col1.format(
             gender,
             race if character_index > 0 else "",
@@ -258,78 +267,33 @@ def create_character():
             occu if character_index > 1 else "",
             gold if character_index > 0 else 0,
             1, 80, hp, mp, sp))
+
+        # STATS
         term.puts(col2, row+1, _col2.format(
-            *("" for _ in range(2)),
-            
-        term.puts(col3, row+1, _col3.format(*("" for _ in range(12))))
-        # # Background stuff
-        # term.puts(col1, row+1, 
-        #     _col1.format(
-        #         gender, 
-        #         "" if character_index < 1 else race, 
-        #         "" if character_index < 1 else location, 
-        #         "" if character_index < 2 else occu,
-        #         1,
-        #         80,
-        #         "" if character_index < 2 else gold,
-        #         HUMAN.str+gbonus.str+(HUMAN.con+gbonus.con)*2 if character_index < 1 else "",
-        #         HUMAN.int+gbonus.int+(HUMAN.wis+gbonus.wis)*2 if character_index < 1 else "",
-        #         (HUMAN.dex+gbonus.dex)//5))
+            *("" for _ in range(2)) if character_index < 2 else skills,
+            *(total)))
+        term.puts(col2+10, row+6, _bon.format(*transform_values(gbonus)))
 
-        # if not character_index:
-        #     term.puts(col2, row+1, _skills.format(*("" for _ in range(2))))
+        if character_index > 0:
+            term.puts(col2+14, row+6, _bon.format(*transform_values(rbonus)))
 
-        #     # Player Stats
-        #     total = tuple(h+g for h, g in zip(HUMAN, gbonus))
-        #     term.puts(col2, row+5, _sts.format(*total))
-        #     term.puts(col2+10, row+6, _bon.format(*transform_values(gbonus)))
+        # EQUIPMENT and INVENTORY
+        eq, inv = None, None
+        if character_index > 1:
+            term.puts(col2+18, row+6, _bon.format(*transform_values(cbonus)))
+            eq, inv = form_equipment(req, ceq)
 
-        #     # EQUIPMENT -- initially empty until class is chosen
-        #     term.puts(col3, row+1, _equipment.format(*("" for _ in range(12))))
+            if inv_screen < 0:
+                term.puts(col3, row+1, _col3.format(
+                    *(e if len(e) > 0 else "" for e in eq)))
+            else:
+                for item, i in zip(inv, range(len(inv))):
+                    term.puts(col3, row+1+i, "{}.{}".format(chr(ord('a')+i), item))
+        else:
+            term.puts(col3, row+1, _col3.format(
+                *("" for _ in range(12))))
 
-        #     # Description
-        #     description_row()
-
-        # elif character_index == 1:
-        #     # Player STATUS
-        #     # term.puts(col2, row+1, _status.format(
-        #     #     stats.str+gbonus.str+rbonus.str+(stats.con+gbonus.con+rbonus.con)*2,
-        #     #     stats.int+gbonus.int+rbonus.int+(stats.wis+gbonus.con+rbonus.wis)*2,
-        #     #     1+(stats.dex+gbonus.dex+rbonus.dex)//5,
-        #     # ))
-
-        #     # STATS
-        #     total = tuple(h+g+r for h, g, r in zip(stats, gbonus, rbonus))
-        #     term.puts(col2, row+5, _sts.format(*total))
-        #     term.puts(col2+10, row+6, _bon.format(*transform_values(gbonus)))
-        #     term.puts(col2+14, row+6, _bon.format(*transform_values(rbonus)))
-
-        #     # EQUIPMENT
-        #     term.puts(col3, row+1, _equipment.format(*("" for _ in range(12))))
-
-        #     # DESCRIPTION
-        #     description_row()
-            
-        # else:
-        #     # STATUS
-        #     # term.puts(col2, row+1, _status.format(
-        #     #     stats.str+gbonus.str+rbonus.str+cbonus.str+(stats.con+gbonus.con+rbonus.con)*2,
-        #     #     stats.int+gbonus.int+rbonus.int+cbonus.int+(stats.wis+gbonus.con+rbonus.wis)*2,
-        #     #     1+(stats.dex+gbonus.dex+rbonus.dex+cbonus.dex)//5,
-        #     # ))
-
-        #     # builds totals including cbonus this time
-        #     total = tuple(s+g+r+c for s, g, r, c in zip(stats, gbonus, rbonus, cbonus))
-        #     term.puts(col2, row+5, _sts.format(*total))
-        #     term.puts(col2+10, row+6, _bon.format(*transform_values(gbonus)))
-        #     term.puts(col2+14, row+6, _bon.format(*transform_values(rbonus)))
-        #     term.puts(col2+18, row+6, _bon.format(*transform_values(cbonus)))
-
-        #     # EQUIPMENT LIST
-        #     eq, inv = form_equipment(req, ceq)
-        #     term.puts(col3, row+1, _equipment.format(*(e if len(e) > 0 else "" for e in eq)))
-
-        #     # Writes Description to Footer
+        # FOOTER
         description_row()
         term.refresh()
 
@@ -363,20 +327,25 @@ def create_character():
 
         elif code == term.TK_UP:
             character_index = modify(-1, character_index, 4)
-
+            if character_index <= 1:
+                inv_screen = -1
         elif code == term.TK_DOWN:
             character_index = modify(1, character_index, 4)
 
+        elif code == term.TK_V and character_index > 1:
+            inv_screen *= -1
+
         elif code == term.TK_ENTER:
             if character_index == 3:
-                name = new_name((race_options[race_index].race, class_options[class_index].classes))
+                name = new_name((race, occu))
                 if name.proceed > -1:
                     return output(
                             proceed=True,
                             value=character(
-                                name.value,
-                                race_options[race_index], 
-                                class_options[class_index])) 
+                                    name.value,
+                                    gender_row(1),
+                                    race_row(1), 
+                                    class_row(1))) 
             else:
                 character_index += 1
 
@@ -386,12 +355,16 @@ def create_character():
                 return output(
                         proceed=False,
                         value="Exit to Desktop")
+
             if character_index == 0:
                 return output(
                         proceed=True,
                         value="Exit to Menu")
+
             else:
                 character_index -= 1
+                if character_index <= 1:
+                    inv_screen = -1
         
 	
 if __name__ == "__main__":
