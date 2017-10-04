@@ -17,63 +17,35 @@ import descriptions as desc
 from d2 import *
 
 _world="Calabaston"
-# _equipment="""
-# HEAD  : {:<5}\nNECK  : {:<5}\nBODY  : {:<5}\nARMS  : {:<5}\nHANDS : {:<5}\nLHAND : {:<5}
-# RHAND : {:<5}\nRING1 : {:<5}\nRING2 : {:<5}\nWAIST : {:<5}\nLEGS  : {:<5}\nFEET  : {:<5}"""[1:]
-# col1 4 + 3 + 3 = 10
-# col2 2 + 24 = 26
-# col3 12
-template="""
-GENDER  : {:>10}     Total GB RB CB         HEAD  : {}
-RACE    : {:>10}  STR : [c=#00ffff]{:>2}[/c]  {:>2}  {:>2}  {:>2}      NECK  : {}
-CAPITAL : {:>10}  CON : [c=#00ffff]{:>2}[/c]  {:>2}  {:>2}  {:>2}      BODY  : {}
-CLASS   : {:>10}  DEX : [c=#00ffff]{:>2}[/c]  {:>2}  {:>2}  {:>2}      ARMS  : {}
-                      INT : [c=#00ffff]{:>2}[/c]  {:>2}  {:>2}  {:>2}      HANDS : {}
-LEVEL   : {:>10}  WIS : [c=#00ffff]{:>2}[/c]  {:>2}  {:>2}  {:>2}      LHAND : {}
-EXP     : {:>10}  CHA : [c=#00ffff]{:>2}[/c]  {:>2}  {:>2}  {:>2}      RHAND : {}
-GOLD    : {:>10}                            LRING : {}
-                      Skills:                   RRING : {}
-HEALTH  : [c=#00ffff]{:>10}[/c]  {}                          WAIST : {} 
-MANA    : [c=#00ffff]{:>10}[/c]  {}                          LEGS  : {}
-SPEED   : [c=#00ffff]{:>10}[/c]                            FEET  : {}
-"""[1:]                           
 
 _col1="""
-GENDER  : {:>10}
-RACE    : {:>10}
-CAPITAL : {:>10}
-CLASS   : {:>10}
+Gender  : {:>10}
+Race    : {:>10}
+Capital : {:>10}
+Class   : {:>10}
 
-LEVEL   : {:>10}
-EXP     : {:>10}
-GOLD    : {:>10}
+Gold    : {:>10}
+Level   : {:>10}
+Exp     : {:>10}
 
 HP      : [c=#00ffff]{:>10}[/c]
 MP      : [c=#00ffff]{:>10}[/c]
 SD      : [c=#00ffff]{:>10}[/c]
 """[1:]
 
-_skills="""
+_col2="""
 SKILLS  : \n  {}\n  {}
-"""[1:]
 
-_sts="""   TOTAL  GB  RB  CB 
+   TOTAL  GB  RB  CB 
 STR : [c=#00ffff]{:>2}[/c] 
 CON : [c=#00ffff]{:>2}[/c] 
 DEX : [c=#00ffff]{:>2}[/c] 
 INT : [c=#00ffff]{:>2}[/c] 
 WIS : [c=#00ffff]{:>2}[/c] 
 CHA : [c=#00ffff]{:>2}[/c] 
-"""
-_bon="""{:>2}\n{:>2}\n{:>2}\n{:>2}\n{:>2}\n{:>2}"""
-_background="""GENDER  : {:>10}\nRACE    : {:>10}\nCAPITAL : {:>10}\nCLASS   : {:>10}"""
-_details="""
-LEVEL   : {:>10}
-EXP     : {:>10}
-GOLD    : {:>10}
+"""[1:]
 
-"""
-_equipment="""
+_col3="""
 HEAD  : {:<5}\nNECK  : {:<5}\nBODY  : {:<5}\nARMS  : {:<5}\nHANDS : {:<5}\nLHAND : {:<5}
 RHAND : {:<5}\nRING1 : {:<5}\nRING2 : {:<5}\nWAIST : {:<5}\nLEGS  : {:<5}\nFEET  : {:<5}"""[1:]
 
@@ -85,7 +57,7 @@ def create_character():
     row = 5
     col1 = 3
     col2 = 26
-    col3 = 48 
+    col3 = 49 
 
     race_index = 0
     class_index = 0
@@ -99,7 +71,6 @@ def create_character():
     str_title = "Character Creation"
     str_help = "Press (?) for info on a selected race, subrace or class"
 
-    stats = namedtuple("Stats", "str dex con int wis cha")
     character = namedtuple("Character", "name race_opt class_opt") 
     equipment = namedtuple("Equipment", "hd nk bd ar hn lh rh lr rr wa lg ft")
 
@@ -191,15 +162,15 @@ def create_character():
     def class_row():
         classes = namedtuple("Class", "classes bonuses equipment")
         class_options = [
-            classes("druid", DRUIDS, equipment("", "", "thick fur coat", "thick fur bracers", "", "wooden staff", "", 
+            classes("Druid", DRUIDS, equipment("", "", "thick fur coat", "thick fur bracers", "", "wooden staff", "", 
                 "ring of nature", "ring of earth", "leather belt", "", "leather boots")),
-            classes("cleric", CLERIC, equipment("hood", "holy symbol", "light robe", "", "", "mace", "small shield", 
+            classes("Cleric", CLERIC, equipment("hood", "holy symbol", "light robe", "", "", "mace", "small shield", 
                 "ring of power", "ring of light", "rope belt", "", "leather sandals")),
-            classes("archer", ARCHER, equipment("hood", "whistle", "heavy cloak", "leather bracers", "cloth gloves", 
+            classes("Archer", ARCHER, equipment("hood", "whistle", "heavy cloak", "leather bracers", "cloth gloves", 
                 "short sword", "small dagger", "", "", "leather belt", "common pants", "leather boots")),
-            classes("wizard", WIZARD, equipment("hood", "amulet of power", "light robe", "", "", "quarterstaff", 
+            classes("Wizard", WIZARD, equipment("hood", "amulet of power", "light robe", "", "", "quarterstaff", 
                 "spellbook", "ring of water",  "ring of fire", "rope belt", "", "leather sandals")),
-            classes("squire", SQUIRE, equipment("leather cap", "", "leather armor", "leather bracers", "cloth gloves", 
+            classes("Squire", SQUIRE, equipment("leather cap", "", "leather armor", "leather bracers", "cloth gloves", 
                 "long sword", "medium shield", "", "", "leather belt", "common pants", "leather boots")),
         ]
 
@@ -225,9 +196,6 @@ def create_character():
             [desc.race_beast, desc.race_dwarf, desc.race_elven, desc.race_human, desc.race_orcen,],
             [desc.class_druid, desc.class_cleric, desc.class_wizard, desc.class_archer, desc.class_squire,]]
         
-        # secondary = character_index if not character_index \
-        #             else race_index if character_index == 1 \
-        #             else class_index
         secondary = class_index if character_index == 2 else \
                     race_index if character_index == 1 else \
                     character_index
@@ -248,6 +216,7 @@ def create_character():
             return eq
 
         def flatten(l):
+            # return list(element for iteratable in container for element in iteratable)
             items = []
             for i in l:
                 for ii in i:
@@ -273,11 +242,26 @@ def create_character():
         race, location, stats, rbonus, gold, skills, req = race_row()
         occu, cbonus, ceq = class_row()
 
-        term.puts(col1, row+1, template.format(
-            gender, g
+        if character_index == 0:
+            total = STATS(*(s+g for s, g in zip(HUMAN, gbonus)))
+        elif character_index == 1:
+            total = STATS(*(s+g+r for s, g, r in zip(stats, gbonus, rbonus)))
+        else:
+            total = STATS(*(s+g+r+c for s, g, r, c in zip(stats, gbonus, rbonus, cbonus)))
+        hp = total.str + total.con * 2
+        mp = total.int + total.wis * 2
+        sp = total.dex // 5 
+        term.puts(col1, row+1, _col1.format(
+            gender,
             race if character_index > 0 else "",
             location if character_index > 0 else "",
-            *("" for _ in range(45))))
+            occu if character_index > 1 else "",
+            gold if character_index > 0 else 0,
+            1, 80, hp, mp, sp))
+        term.puts(col2, row+1, _col2.format(
+            *("" for _ in range(2)),
+            
+        term.puts(col3, row+1, _col3.format(*("" for _ in range(12))))
         # # Background stuff
         # term.puts(col1, row+1, 
         #     _col1.format(
@@ -346,7 +330,7 @@ def create_character():
         #     term.puts(col3, row+1, _equipment.format(*(e if len(e) > 0 else "" for e in eq)))
 
         #     # Writes Description to Footer
-        #     description_row()
+        description_row()
         term.refresh()
 
         # ===============================================================================#
