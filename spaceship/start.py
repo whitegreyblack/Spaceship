@@ -21,14 +21,16 @@ from spaceship.screen_functions import center, longest, colored
 def start():
     def border():
         for k in range(SCREEN_WIDTH):
-            term.puts(k, 3, toChr("2550"))
             term.puts(k, SCREEN_HEIGHT-3, toChr("2550"))
+            # term.puts(k, 2, "#")
+            term.puts(k, 3, toChr("2550"))
+            # term.puts(k, 4, "#")
 
     def splitter(x, y):
         return [z for z in range(x, y, 2)]
     
     def start_new_game():
-        cc = create_character()
+        cc = create_character2()
         if "Exit" not in cc.value:
             return new_game(cc.value)
         return cc.proceed
@@ -75,6 +77,7 @@ def start():
                 options()
             else:
                 proceed = False
+
         elif code in (term.TK_UP, term.TK_DOWN):
             if code == term.TK_UP:
                 title_index -= 1
@@ -82,6 +85,7 @@ def start():
                 title_index += 1
             if not 0 <= title_index < len(title_options):
                 title_index = max(0, min(title_index, len(title_options)-1)) 
+                
         elif code in (term.TK_ENTER,):
             if title_index == 0:
                 proceed = continue_game()
