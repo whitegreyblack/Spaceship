@@ -17,6 +17,26 @@ import descriptions as desc
 from d2 import *
 
 _world="Calabaston"
+# _equipment="""
+# HEAD  : {:<5}\nNECK  : {:<5}\nBODY  : {:<5}\nARMS  : {:<5}\nHANDS : {:<5}\nLHAND : {:<5}
+# RHAND : {:<5}\nRING1 : {:<5}\nRING2 : {:<5}\nWAIST : {:<5}\nLEGS  : {:<5}\nFEET  : {:<5}"""[1:]
+# col1 4 + 3 + 3 = 10
+# col2 2 + 24 = 26
+# col3 12
+template="""
+GENDER  : {:>10}     Total GB RB CB         HEAD  : {}
+RACE    : {:>10}  STR : [c=#00ffff]{:>2}[/c]  {:>2}  {:>2}  {:>2}      NECK  : {}
+CAPITAL : {:>10}  CON : [c=#00ffff]{:>2}[/c]  {:>2}  {:>2}  {:>2}      BODY  : {}
+CLASS   : {:>10}  DEX : [c=#00ffff]{:>2}[/c]  {:>2}  {:>2}  {:>2}      ARMS  : {}
+                      INT : [c=#00ffff]{:>2}[/c]  {:>2}  {:>2}  {:>2}      HANDS : {}
+LEVEL   : {:>10}  WIS : [c=#00ffff]{:>2}[/c]  {:>2}  {:>2}  {:>2}      LHAND : {}
+EXP     : {:>10}  CHA : [c=#00ffff]{:>2}[/c]  {:>2}  {:>2}  {:>2}      RHAND : {}
+GOLD    : {:>10}                            LRING : {}
+                      Skills:                   RRING : {}
+HEALTH  : [c=#00ffff]{:>10}[/c]  {}                          WAIST : {} 
+MANA    : [c=#00ffff]{:>10}[/c]  {}                          LEGS  : {}
+SPEED   : [c=#00ffff]{:>10}[/c]                            FEET  : {}
+"""[1:]                           
 
 _col1="""
 GENDER  : {:>10}
@@ -248,80 +268,85 @@ def create_character():
         title()
         subtitle()
         
-        # Gender Race and Class Varialbes
+        # # Gender Race and Class Varialbes
         gender, gbonus = gender_row()
         race, location, stats, rbonus, gold, skills, req = race_row()
         occu, cbonus, ceq = class_row()
 
-        # Background stuff
-        term.puts(col1, row+1, 
-            _col1.format(
-                gender, 
-                "" if character_index < 1 else race, 
-                "" if character_index < 1 else location, 
-                "" if character_index < 2 else occu,
-                1,
-                80,
-                "" if character_index < 2 else gold,
-                HUMAN.str+gbonus.str+(HUMAN.con+gbonus.con)*2 if character_index < 1 else "",
-                HUMAN.int+gbonus.int+(HUMAN.wis+gbonus.wis)*2 if character_index < 1 else "",
-                (HUMAN.dex+gbonus.dex)//5))
+        term.puts(col1, row+1, template.format(
+            gender, g
+            race if character_index > 0 else "",
+            location if character_index > 0 else "",
+            *("" for _ in range(45))))
+        # # Background stuff
+        # term.puts(col1, row+1, 
+        #     _col1.format(
+        #         gender, 
+        #         "" if character_index < 1 else race, 
+        #         "" if character_index < 1 else location, 
+        #         "" if character_index < 2 else occu,
+        #         1,
+        #         80,
+        #         "" if character_index < 2 else gold,
+        #         HUMAN.str+gbonus.str+(HUMAN.con+gbonus.con)*2 if character_index < 1 else "",
+        #         HUMAN.int+gbonus.int+(HUMAN.wis+gbonus.wis)*2 if character_index < 1 else "",
+        #         (HUMAN.dex+gbonus.dex)//5))
 
-        if not character_index:
-            term.puts(col2, row+1, _skills.format(*("" for _ in range(2))))
+        # if not character_index:
+        #     term.puts(col2, row+1, _skills.format(*("" for _ in range(2))))
 
-            # Player Stats
-            total = tuple(h+g for h, g in zip(HUMAN, gbonus))
-            term.puts(col2, row+5, _sts.format(*total))
-            term.puts(col2+10, row+6, _bon.format(*transform_values(gbonus)))
+        #     # Player Stats
+        #     total = tuple(h+g for h, g in zip(HUMAN, gbonus))
+        #     term.puts(col2, row+5, _sts.format(*total))
+        #     term.puts(col2+10, row+6, _bon.format(*transform_values(gbonus)))
 
-            # EQUIPMENT -- initially empty until class is chosen
-            term.puts(col3, row+1, _equipment.format(*("" for _ in range(12))))
+        #     # EQUIPMENT -- initially empty until class is chosen
+        #     term.puts(col3, row+1, _equipment.format(*("" for _ in range(12))))
 
-            # Description
-            description_row()
+        #     # Description
+        #     description_row()
 
-        elif character_index == 1:
-            # Player STATUS
-            # term.puts(col2, row+1, _status.format(
-            #     stats.str+gbonus.str+rbonus.str+(stats.con+gbonus.con+rbonus.con)*2,
-            #     stats.int+gbonus.int+rbonus.int+(stats.wis+gbonus.con+rbonus.wis)*2,
-            #     1+(stats.dex+gbonus.dex+rbonus.dex)//5,
-            # ))
+        # elif character_index == 1:
+        #     # Player STATUS
+        #     # term.puts(col2, row+1, _status.format(
+        #     #     stats.str+gbonus.str+rbonus.str+(stats.con+gbonus.con+rbonus.con)*2,
+        #     #     stats.int+gbonus.int+rbonus.int+(stats.wis+gbonus.con+rbonus.wis)*2,
+        #     #     1+(stats.dex+gbonus.dex+rbonus.dex)//5,
+        #     # ))
 
-            # STATS
-            total = tuple(h+g+r for h, g, r in zip(stats, gbonus, rbonus))
-            term.puts(col2, row+5, _sts.format(*total))
-            term.puts(col2+10, row+6, _bon.format(*transform_values(gbonus)))
-            term.puts(col2+14, row+6, _bon.format(*transform_values(rbonus)))
+        #     # STATS
+        #     total = tuple(h+g+r for h, g, r in zip(stats, gbonus, rbonus))
+        #     term.puts(col2, row+5, _sts.format(*total))
+        #     term.puts(col2+10, row+6, _bon.format(*transform_values(gbonus)))
+        #     term.puts(col2+14, row+6, _bon.format(*transform_values(rbonus)))
 
-            # EQUIPMENT
-            term.puts(col3, row+1, _equipment.format(*("" for _ in range(12))))
+        #     # EQUIPMENT
+        #     term.puts(col3, row+1, _equipment.format(*("" for _ in range(12))))
 
-            # DESCRIPTION
-            description_row()
+        #     # DESCRIPTION
+        #     description_row()
             
-        else:
-            # STATUS
-            # term.puts(col2, row+1, _status.format(
-            #     stats.str+gbonus.str+rbonus.str+cbonus.str+(stats.con+gbonus.con+rbonus.con)*2,
-            #     stats.int+gbonus.int+rbonus.int+cbonus.int+(stats.wis+gbonus.con+rbonus.wis)*2,
-            #     1+(stats.dex+gbonus.dex+rbonus.dex+cbonus.dex)//5,
-            # ))
+        # else:
+        #     # STATUS
+        #     # term.puts(col2, row+1, _status.format(
+        #     #     stats.str+gbonus.str+rbonus.str+cbonus.str+(stats.con+gbonus.con+rbonus.con)*2,
+        #     #     stats.int+gbonus.int+rbonus.int+cbonus.int+(stats.wis+gbonus.con+rbonus.wis)*2,
+        #     #     1+(stats.dex+gbonus.dex+rbonus.dex+cbonus.dex)//5,
+        #     # ))
 
-            # builds totals including cbonus this time
-            total = tuple(s+g+r+c for s, g, r, c in zip(stats, gbonus, rbonus, cbonus))
-            term.puts(col2, row+5, _sts.format(*total))
-            term.puts(col2+10, row+6, _bon.format(*transform_values(gbonus)))
-            term.puts(col2+14, row+6, _bon.format(*transform_values(rbonus)))
-            term.puts(col2+18, row+6, _bon.format(*transform_values(cbonus)))
+        #     # builds totals including cbonus this time
+        #     total = tuple(s+g+r+c for s, g, r, c in zip(stats, gbonus, rbonus, cbonus))
+        #     term.puts(col2, row+5, _sts.format(*total))
+        #     term.puts(col2+10, row+6, _bon.format(*transform_values(gbonus)))
+        #     term.puts(col2+14, row+6, _bon.format(*transform_values(rbonus)))
+        #     term.puts(col2+18, row+6, _bon.format(*transform_values(cbonus)))
 
-            # EQUIPMENT LIST
-            eq, inv = form_equipment(req, ceq)
-            term.puts(col3, row+1, _equipment.format(*(e if len(e) > 0 else "" for e in eq)))
+        #     # EQUIPMENT LIST
+        #     eq, inv = form_equipment(req, ceq)
+        #     term.puts(col3, row+1, _equipment.format(*(e if len(e) > 0 else "" for e in eq)))
 
-            # Writes Description to Footer
-            description_row()
+        #     # Writes Description to Footer
+        #     description_row()
         term.refresh()
 
         # ===============================================================================#
