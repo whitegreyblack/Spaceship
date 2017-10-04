@@ -338,6 +338,7 @@ def create_character():
         # ===============================================================================#
         code = term.read()
         while code in (term.TK_SHIFT, term.TK_ALT, term.TK_CONTROL,):
+            # ignores key modifiers since pressing them makes keyboard think of it as a single key
             code = term.read()
 
         if code == term.TK_LEFT:
@@ -372,15 +373,22 @@ def create_character():
                 if name.proceed > -1:
                     return output(
                             proceed=True,
-                            value=character(name.value, race_options[race_index], class_options[class_index])) 
+                            value=character(
+                                name.value,
+                                race_options[race_index], 
+                                class_options[class_index])) 
             else:
                 character_index += 1
 
         # ESCAPE exists if on the first list else moves back one
         elif code in (term.TK_ESCAPE,):
-            if character_index == 0:
+            if term.state(term.TK_SHIFT):
                 return output(
                         proceed=False,
+                        value="Exit to Desktop")
+            if character_index == 0:
+                return output(
+                        proceed=True,
                         value="Exit to Menu")
             else:
                 character_index -= 1

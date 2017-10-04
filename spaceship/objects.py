@@ -83,6 +83,11 @@ class Object:
     def pos(self):
         return self.x, self.y
 
+class Player:
+    def __init__(self, character):
+        self.character = character
+
+
 class Character(Object):
     def __init__(self, n, x, y, i, c='white', r='human', m=10, s=10, b=6, l=5):
         super().__init__(n, x, y, i, c, r)
