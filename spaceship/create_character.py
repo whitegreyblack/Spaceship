@@ -28,7 +28,6 @@ from spaceship.setup import output, setup, setup_font, setup_menu, toChr
 def create_character():
     # setup stuff
     setup_menu()
-    setup_font('unscii-8-thin', 8, 16)
 
     row = 5
     col1 = 3
@@ -400,6 +399,8 @@ def create_character():
 
 if __name__ == "__main__":
     setup()
+    setup_font('unscii-8-thin', 8, 16)
+
     try:
         print(create_character())
     except KeyboardInterrupt:
