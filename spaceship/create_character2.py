@@ -34,8 +34,16 @@ RHAND : {:<5}\nRING1 : {:<5}\nRING2 : {:<5}\nWAIST : {:<5}\nLEGS  : {:<5}\nFEET 
 
 def create_character():
     setup_menu()
-    race_descriptions=[desc.race_beast, desc.race_dwarf, desc.race_elven, desc.race_human, desc.race_orcen,]
-    class_descriptions=[desc.class_druid, desc.class_cleric, desc.class_wizard, desc.class_archer, desc.class_squire,]
+
+    # FONT OPTION
+    setup_font('unscii-8-thin', 8, 16)
+    length = SCREEN_WIDTH//2
+    grid = [[3, 26, 48], 5]
+
+    row = 5
+    col1 = 3
+    col2 = 26
+    col3 = 48 
 
     race_index = 0
     class_index = 0
@@ -47,6 +55,10 @@ def create_character():
     equipment = namedtuple("Equipment", "hd nk bd ar hn lh rh lr rr wa lg ft")
     classes = namedtuple("Class", "classes bonuses equipment")
     character = namedtuple("Character", "name race_opt class_opt") 
+
+    race_descriptions=[desc.race_beast, desc.race_dwarf, desc.race_elven, desc.race_human, desc.race_orcen,]
+    class_descriptions=[desc.class_druid, desc.class_cleric, desc.class_wizard, desc.class_archer, desc.class_squire,]
+
     race_options = [
         #Tiphmore -- Largest Free City in Calabaston
         races("Beast", "Tiphmore", HUMAN, BEAST_BONUS, 300, ("thick fur", "animal senses"),             
@@ -156,15 +168,6 @@ def create_character():
             inv.append(get_eq(r)+get_eq(c))
         eqp = [i.pop(0) if len(i) > 0 else [] for i in inv]
         return eqp, flatten(inv)
-    # FONT OPTION
-    setup_font('unscii-8-thin', 8, 16)
-    length = SCREEN_WIDTH//2
-    grid = [[3, 26, 48], 5]
-
-    row = 5
-    col1 = 3
-    col2 = 26
-    col3 = 48 
 
     while True:
         term.layer(0)
@@ -180,7 +183,6 @@ def create_character():
         # Race Details
         race, location, stats, rbonus, gold, skills, req = race_options[race_index]
         occu, cbonus, ceq = class_options[class_index]
-        total = tuple(s+r for s, r in zip(stats, rbonus))
 
         term.puts(col1, row+1, _background.format(race, location, "" if not character_index else occu))
 
@@ -197,6 +199,7 @@ def create_character():
             term.puts(col2, row+3, "SPEED  :         {:>2}".format(1+(stats.dex+rbonus.dex)//5))
 
             # Player Stats
+            total = tuple(s+r for s, r in zip(stats, rbonus))
             term.puts(col2, row+5, _sts.format(*total))
             term.puts(col2+13, row+6, _bon.format(*transform_values(rbonus)))
 
@@ -278,4 +281,3 @@ if __name__ == "__main__":
         print(create_character())
     except KeyboardInterrupt:
         print('quit')
-    print('done')
