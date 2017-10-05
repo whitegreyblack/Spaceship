@@ -2,6 +2,7 @@
 Holds the shadow class which implements vision around light/entity objects
 """
 from bearlibterminal import terminal as term
+from setup import setup_font
 FOV_RADIUS = 25
 
 dungeon =  ["###########################################################",
@@ -145,7 +146,8 @@ class Shadow:
 if __name__ == "__main__":
     shadow = Shadow(dungeon)
     term.open()
-    term.set(f'window: size={len(dungeon[0])}x{len(dungeon)}, cellsize=16x16; font: default, size=8x8')
+    term.set(f'window: size={len(dungeon[0])}x{len(dungeon)}, cellsize=8x8')
+    setup_font('unscii-8-thin', 16, 16)
     x, y = 36, 13
     lights = [(1,1), (1, len(dungeon) - 2), (len(dungeon[0]) - 2, 1), (len(dungeon[0])-2, len(dungeon)- 2), (x, y)]
     while True:
