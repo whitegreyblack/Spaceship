@@ -13,12 +13,6 @@ clean: clean-logs
 clean-logs:
 	rm -rf logs/*.txt~
 
-lint-flake-tests:
-	python2.7.exe -m flake8 $(TESTS)
-
-lint-flake-source:
-	python2.7.exe -m flake8 $(SOURCE)
-
 lint-flake: lint-flake-source lint-flake-tests
 
 lint-pep8-tests:
