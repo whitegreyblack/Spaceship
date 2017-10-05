@@ -18,13 +18,13 @@ while True:
     seed = random.randint(0, 99999)
     print(seed)
     random.seed(seed)
-    temp = [[0 for _ in range(width)] for _ in range(height)]
+    temp = [[-1 for _ in range(width)] for _ in range(height)]
     x, y = random.randint(0, width-1), random.randint(0, height-1)
     squares = 0
     percentage = int(width * height * .66)
 
     while squares < percentage:
-        if temp[y][x] == 0:
+        if temp[y][x] == -1:
             temp[y][x] = 1
             squares += 1
         x, y = random.randint(x-1, x+1), random.randint(y-1, y+1)
@@ -108,7 +108,7 @@ if world:
         for i in range(height):
             for j in range(width):
                 if world[i][j] == 1:
-                    world[i][j] = 0
+                    world[i][j] = -1
                 else:
                     world[i][j] = 1
 
@@ -130,23 +130,25 @@ if world:
                                 val += values[(ii, jj)]
                 if val not in removes:
                     world[i][j] = val
-                else:
-                    world[i][j] = 0
+
+                # else:
+                #     world[i][j] = 0
             # considered water
             else:
                 for ii in range(-1, 2):
                     for jj in range(-1, 2):
                         if (ii, jj) != (0, 0):
                             try:
-                                if temp[i+ii][j+jj] == 0:
-                                    val += 1
-                                num += 1
+                                val += temp[i+ii][j+jj]
                             except IndexError:
                                 pass
+
                 # all tiles around center tile is water
                 # so make it into a deep water tile
-                if val == num:
+                if val <= 100:
                     world[i][j] = -1
+                # elif num == 6:
+
 
     # # second pass -- creates forest and really deep water
     # temp = copy.deepcopy(world)
@@ -230,8 +232,8 @@ if world:
     #1e3f7b # dark blue
     #40a4df # light blue
     '''
-    for i in range(height*2//3, height):
-        print(1.0-(i/height/3), i/(height)/3)
+    # for i in range(height*2//3, height):
+    #     print(1.0-(i/height/3), i/(height)/3)
 
     for i in range(height):
         for j in range(width):
@@ -254,11 +256,13 @@ if world:
                     char = "[c=#c2b280]#[/c]"
             else:
                 if world[i][j] == 0:
-                    char = "[c=#40a4df]=[/c]"
-                elif world[i][j] == -1:
-                    char = "[c=#1e3f7b]=[/c]"
-                else:
                     char = "[c=#05267b]=[/c]"
+
+                elif world[i][j] == -1:
+                    char = "[c=#40a4df]=[/c]"
+                else:
+                    char = "[c=#1e3f7b]=[/c]"
+
             t.puts(j, i, char)
     t.refresh()
     
