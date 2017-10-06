@@ -35,21 +35,10 @@ chars_plant= ["2663"]
 chars_posts= ["x"]
 chars_lamps= ["o"]
 
-color_house=("#ffffff", "#ffffff")
-color_lamps=("#ffffff", "#ffffff")
-color_grass=("#56ab2f", "#a8e063")
-color_walls=("#eacda3", "#d6ae7b")
-color_plant=("#FDFC47", "#24FE41")
-color_brick=("#a73737", "#7a2828")
-color_tiles=("#808080", "#C0C0C0")
-color_water=("#43C6AC", "#191654")
-color_doors=("#993F3A", "#994C00")
-color_posts=("#9A8478", "#9A8478")
-
 class Player:
     def __init__(self, character, x, y):
         # unpack everything here
-        self.name = character.name
+        self.name = character.name[0].upper() + character.name[1:]
         self.home = self.location = character.home
         self.gold = character.gold
         self.level = 1

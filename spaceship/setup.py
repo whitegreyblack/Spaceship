@@ -116,13 +116,16 @@ def setup_menu():
 
 def setup_game():
     term.set(
-        "window: size={}x{}, cellsize=auto, title='Spaceship'".format(
+        "window: size={}x{}, cellsize=8x8, title='Spaceship'".format(
             GAME_SCREEN_WIDTH,
             GAME_SCREEN_HEIGHT))
 
-def setup_font(font, cx, cy=None):
-    term.set("window: cellsize=auto")
-    term.set("font: ./fonts/{}.ttf, size={}{}".format(font, cx, 'x'+str(cy) if cy else ''))
+def setup_font(font, cx=8, cy=None):
+    if font == "default":
+        term.set('font: default, size=8')
+    else:
+        term.set("window: cellsize=8x8")
+        term.set("font: ./fonts/{}.ttf, size={}{}".format(font, cx, 'x'+str(cy) if cy else ''))
 
 if __name__ == "__main__":
     setup()

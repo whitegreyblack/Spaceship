@@ -5,7 +5,7 @@ class Charmap:
     GRASS=charmap([",", ";"], ("#56ab2f", "#a8e063"))
     HOUSE=charmap(["="], ("#ffffff", "#ffffff"))
     TILES=charmap(["."], ("#808080", "#C0C0C0"))
-    WALLS=charmap(["#"], ("#eacda3", "#d6ae7b"))
+    WALLS=charmap(["#"], ("#656565", "#656565"))
     WATER=charmap(["~"], ("#43C6AC", "#191654"))
     DOORS=charmap(["+"], ("#994C00", "#994C00"))
     PLANT=charmap(["|"], ("#F3E347", "#24FE41"))

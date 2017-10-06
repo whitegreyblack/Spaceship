@@ -27,7 +27,7 @@ def new_game(character=None):
     setup_game()
     if character==None:
         return output(proceed=False, value="No Character Data Input")
-    dungeon = Map(stringify("./assets/testmap_colored.png"))
+    dungeon = Map(stringify("./assets/testmap_empty.png"))
 
     def refresh(lines=[]):
         for line in lines:
@@ -365,23 +365,25 @@ def new_game(character=None):
     turn = 0
     def status_box():
         col, row = 0, 2
-        term.puts(col, row+0, player.name.upper())
-        term.puts(col, row+1, player.race.upper())
-        term.puts(col, row+2, player.job.upper())
+        term.puts(col, row+0, player.name)
+        term.puts(col, row+1, player.gender + " " + player.race)
+        term.puts(col, row+2, player.job)
 
-        term.puts(col, row+4, "LVL: {}".format(player.level))
-        term.puts(col, row+5, "EXP: {}/{}".format(player.exp, player.advexp))
+        term.puts(col, row+4, "LVL: {:>6}".format(player.level))
+        term.puts(col, row+5, "EXP: {:>6}".format("{}/{}".format(player.exp, player.advexp)))
 
-        term.puts(col, row+7, "HP: {}/{}".format(player.hp, player.total_hp))
-        term.puts(col, row+8, "MP: {}/{}".format(player.mp, player.total_mp))
-        term.puts(col, row+9, "SP: {}".format(player.sp))
+        term.puts(col, row+7, "HP:  {:>6}".format("{}/{}".format(player.hp, player.total_hp)))
+        term.puts(col, row+8, "MP:  {:>6}".format("{}/{}".format(player.mp, player.total_mp)))
+        term.puts(col, row+9, "SP:  {:>6}".format(player.sp))
 
-        term.puts(col, row+10, "STR: {:>7}".format(player.str)) 
-        term.puts(col, row+11, "CON: {:>7}".format(player.con))
-        term.puts(col, row+12, "DEX: {:>7}".format(player.dex))
-        term.puts(col, row+13, "INT: {:>7}".format(player.int))
-        term.puts(col, row+14, "WIS: {:>7}".format(player.wis))
-        term.puts(col, row+15, "CHA: {:>7}".format(player.cha))
+        term.puts(col, row+11, "STR: {:>6}".format(player.str)) 
+        term.puts(col, row+12, "CON: {:>6}".format(player.con))
+        term.puts(col, row+13, "DEX: {:>6}".format(player.dex))
+        term.puts(col, row+14, "INT: {:>6}".format(player.int))
+        term.puts(col, row+15, "WIS: {:>6}".format(player.wis))
+        term.puts(col, row+16, "CHA: {:>6}".format(player.cha))
+
+        term.puts(col, row+18, "GOLD:{:>6}".format(player.gold))
 
 
     def inventory_box():
@@ -411,7 +413,7 @@ def new_game(character=None):
     # Before anything happens we create our character
     # LIMIT_FPS = 30 -- later used in sprite implementation
     blocked = []
-    dungeon = Map(stringify("./assets/testmap_colored.png"))
+    # dungeon = Map(stringify("./assets/testmap_colored.png"))
 
     # End graphics functions
     gamelog = GameLogger(4)
@@ -422,7 +424,7 @@ def new_game(character=None):
     COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
     COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
     #px, py = SCREEN_WIDTH//2, SCREEN_HEIGHT//2
-    px, py = 86, 30
+    px, py = 3, 20
     #px, py = 0, 0
     # units = Map.appendUnitList("./unitlist/test_map_colored.png")
     # map = Map(parse("testmap.dat"))
@@ -430,21 +432,22 @@ def new_game(character=None):
     um = UnitManager()
     player = Player(character, px, py)
     # player.inventory[0] = "sword"
-    rat = Object("rat", 85, 30, 'r', r="monster")
-    rat.message = "I am a rat"
-    rat2 = Object("rat", 85, 29, 'R', r="monster")
-    rat2.message = "I am a big rat"
-    npc = Object("v1", 7, 7, '@', 'orange')
-    npc1 = Object("v2", 5, 15, '@', 'orange')
-    npc2 = Object("v3", 0, 56, '@', 'orange')
-    guard3 = Object("v4", 63, 31, '@', 'orange')
-    guard1 = Object("v5", 64, 32, "@", 'orange')
-    guard2 = Object("v6", 63, 37, "@", 'orange')
-    guard4 = Object("v7", 64, 37, '@', 'orange')
-    units = [npc, guard1, guard2, guard3, guard4, npc1, npc2, rat, rat2]
+    # rat = Object("rat", 85, 30, 'r', r="monster")
+    # rat.message = "I am a rat"
+    # rat2 = Object("rat", 85, 29, 'R', r="monster")
+    # rat2.message = "I am a big rat"
+    # npc = Object("v1", 7, 7, '@', 'orange')
+    # npc1 = Object("v2", 5, 15, '@', 'orange')
+    # npc2 = Object("v3", 0, 56, '@', 'orange')
+    # guard3 = Object("v4", 63, 31, '@', 'orange')
+    # guard1 = Object("v5", 64, 32, "@", 'orange')
+    # guard2 = Object("v6", 63, 37, "@", 'orange')
+    # guard4 = Object("v7", 64, 37, '@', 'orange')
+    # units = [npc, guard1, guard2, guard3, guard4, npc1, npc2, rat, rat2]
+    units = []
     um.add(units)
     print(um._positions.keys())
-    dungeon.add_item(87, 31, Item("sword", "(", "grey"))
+    # dungeon.add_item(87, 31, Item("sword", "(", "grey"))
     proceed = True
     lr = 5
     lights = [(121, 39, 10)]
@@ -468,5 +471,9 @@ def new_game(character=None):
 if __name__ == "__main__":
     setup()
     setup_font('unscii-8-thin', 8, 16)
+    character = create().value
+    setup_game()
+    setup_font('unscii-8', 8, 16)
 
-    new_game(create().value)
+    # setup_font('unscii-8', 8 ,8)
+    new_game(character)
