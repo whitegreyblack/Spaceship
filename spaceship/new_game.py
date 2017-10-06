@@ -11,6 +11,7 @@ from spaceship.tools import bresenhams, deltanorm, movement
 from spaceship.maps import stringify, hextup, hexone, toInt
 from spaceship.objects import Map, Object, Character, Item, Player
 from spaceship.create_character import create_character as create
+from spaceship.screen_functions import center
 from bearlibterminal import terminal as term
 from spaceship.manager import UnitManager
 from spaceship.gamelog import GameLogger
@@ -161,34 +162,43 @@ def new_game(character=None):
         um.build()
 
     inventory_list = [
-        "head       :", 
-        "neck       :", 
-        "body       :", 
-        "back       :", 
-        "left hand  :",
-        "right hand :", 
-        "waist      :",
-        "legs       :",
-        "feet       :",
-        "token      :",
+        "Head       : ", 
+        "Neck       : ", 
+        "Body       : ", 
+        "Arms       : ",
+        'Hands      : ', 
+        "Left hand  : ",
+        "Right hand : ", 
+        "Left ring  : ",
+        "Right ring : ",
+        "Waist      : ",
+        "Legs       : ",
+        "Feet       : ",
     ]
     def openInventory():
+        def inventory():
+            term.clear()
+            for i in range(SCREEN_WIDTH):
+                term.puts(i, 1, '#')
+            term.puts(center(' inventory ', SCREEN_WIDTH), 1, ' Inventory ')
+            col, row = 1, 3
+            print(player.equipment)
+            for i, l, e in zip(range(len(inventory_list)), inventory_list, player.equipment):
+                term.puts(col, row+i*2, chr(ord('a')+i)+'. '+ l+(e if isinstance(e, str) else ''))
         debug=False
         if debug:
             gamelog.add("opening inventory")
+
         playscreen = False
 
         current_range = 0
         while True:
             term.clear()
             # border()
-            status_box()
-            log_box()
-            term.puts(2, 0, "[color=white]Inventory")
-            for i in range(10):
-                if i == 3 and player.inventory[0]:
-                    term.puts(2, i+2, inventory_list[i] + " " + str(player.inventory[0].slot))
-                term.puts(2, i+2, inventory_list[i])
+            # status_box()
+            # log_box()
+            # term.puts(2, 0, "[color=white]Inventory")
+            inventory()
             term.refresh()
             code = term.read()
             if code in (term.TK_ESCAPE, term.TK_I,):
@@ -385,11 +395,6 @@ def new_game(character=None):
 
         term.puts(col, row+18, "GOLD:{:>6}".format(player.gold))
 
-
-    def inventory_box():
-        # term.puts(61, 11, "{}".format(player.inventory[0].slot))
-        pass
-
     def log_box():
         messages = gamelog.write().messages
         if messages:
@@ -446,7 +451,7 @@ def new_game(character=None):
     # units = [npc, guard1, guard2, guard3, guard4, npc1, npc2, rat, rat2]
     units = []
     um.add(units)
-    print(um._positions.keys())
+    # print(um._positions.keys())
     # dungeon.add_item(87, 31, Item("sword", "(", "grey"))
     proceed = True
     lr = 5
@@ -456,7 +461,6 @@ def new_game(character=None):
         status_box()
         # border()
         log_box()
-        inventory_box()
         map_box()
         x, y, a = key_in()
         if a:

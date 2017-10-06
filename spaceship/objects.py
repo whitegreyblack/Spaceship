@@ -83,6 +83,8 @@ class Item:
         self.char = s
         self.color = c
 
+    def classifier(self):
+        pass
 
 class Object:
     def __init__(self, n, x, y, i, c='white', r="human", h=10):
@@ -230,7 +232,7 @@ class Map:
             ]
 
     colors_block = ["#ffc0c0c0", "#ffa0a0a0", "#ff808080", "#ff606060", "#ff404040"]
-    colors_water = blender(color_water, 20)
+    # colors_water = blender(color_water, 20)
 
     def __init__(self, data):
         self.SUN = True
@@ -241,9 +243,9 @@ class Map:
         self.fogofwar=[[0 for _ in range(self.width)] for _ in range(self.height)]
         # self.block only blocks movements
         self.block = [[self.data[y][x] in chars_block for x in range(self.width)] for y in range(self.height)]
-        self.walls = gradient(self.width, self.height, chars_walls, color_walls)
-        self.grass = gradient(self.width, self.height, chars_grass, color_grass)
-        self.plant = gradient(self.width, self.height, chars_plant, color_plant)
+        # self.walls = gradient(self.width, self.height, chars_walls, color_walls)
+        # self.grass = gradient(self.width, self.height, chars_grass, color_grass)
+        # self.plant = gradient(self.width, self.height, chars_plant, color_plant)
         self.flag = 0
         self.map_display_width = min(self.width, sw-12)
         self.map_display_height = min(self.height, sh-2)
