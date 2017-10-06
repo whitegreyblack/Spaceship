@@ -9,26 +9,31 @@ from spaceship.constants import GAME_SCREEN_HEIGHT as SCREEN_HEIGHT
 from spaceship.setup import setup_game
 from spaceship.tools import bresenhams, deltanorm, movement
 from spaceship.maps import stringify, hextup, hexone, toInt
-from spaceship.objects import Map, Object, Character, Item
+from spaceship.objects import Map, Object, Character, Item, Player
+from spaceship.create_character import create_character as create
 from bearlibterminal import terminal as term
 from spaceship.manager import UnitManager
 from spaceship.gamelog import GameLogger
 from random import randint, choice
 from collections import namedtuple
 from namedlist import namedlist
-from spaceship.setup import setup, palette, output
+from spaceship.setup import setup, palette, output, setup_font
 from time import clock
+    
 
-def new_game(player=None, name=None):
+def new_game(character=None):
+    # if character is None then improperly accessed new_game
+    # else unpack the character
     setup_game()
-    print(name, player)
+    if character==None:
+        return output(proceed=False, value="No Character Data Input")
     dungeon = Map(stringify("./assets/testmap_colored.png"))
 
     def refresh(lines=[]):
         for line in lines:
             gamelog.add(line)
         term.clear()
-        border()
+        # border()
         map_box()
         status_box()
         log_box()
@@ -71,15 +76,6 @@ def new_game(player=None, name=None):
         return keydown(x, y, act)
 
     # should change to movement process
-    walkChars = {
-        "+": "a door",
-        "/": "a door",
-        "o": "a lamp",
-        "#": "a wall",
-        "x": "a post",
-        "~": "a river",
-    }
-    walkBlock = "walked into {}"
 
     def onlyOne(container):
         return len(container) == 1
@@ -89,6 +85,15 @@ def new_game(player=None, name=None):
         return [space(x+i,y+j) for i, j in list(num_movement.values())]
 
     def key_process(x, y, blockables, units):
+        walkChars = {
+            "+": "a door",
+            "/": "a door",
+            "o": "a lamp",
+            "#": "a wall",
+            "x": "a post",
+            "~": "a river",
+        }
+        walkBlock = "walked into {}"
         tposx = player.x + x
         tposy = player.y + y
         positions = {}
@@ -176,7 +181,7 @@ def new_game(player=None, name=None):
         current_range = 0
         while True:
             term.clear()
-            border()
+            # border()
             status_box()
             log_box()
             term.puts(2, 0, "[color=white]Inventory")
@@ -359,14 +364,29 @@ def new_game(player=None, name=None):
 
     turn = 0
     def status_box():
-        term.puts(61, 1, "[color=red]HP[/color]: {}".format(player.h))
-        term.puts(61, 3, "[color=blue]MP[/color]: {}".format(player.m))
-        term.puts(61, 5, "[color=green]SP[/color]: {}".format(player.s))
-        term.puts(61, 7, "[color=yellow]{}[/color]".format('day' if dungeon._sun() else 'night'))
-        term.puts(61, 9, "[color=orange]{}[/color]".format(turn))
+        col, row = 0, 2
+        term.puts(col, row+0, player.name.upper())
+        term.puts(col, row+1, player.race.upper())
+        term.puts(col, row+2, player.job.upper())
+
+        term.puts(col, row+4, "LVL: {}".format(player.level))
+        term.puts(col, row+5, "EXP: {}/{}".format(player.exp, player.advexp))
+
+        term.puts(col, row+7, "HP: {}/{}".format(player.hp, player.total_hp))
+        term.puts(col, row+8, "MP: {}/{}".format(player.mp, player.total_mp))
+        term.puts(col, row+9, "SP: {}".format(player.sp))
+
+        term.puts(col, row+10, "STR: {:>7}".format(player.str)) 
+        term.puts(col, row+11, "CON: {:>7}".format(player.con))
+        term.puts(col, row+12, "DEX: {:>7}".format(player.dex))
+        term.puts(col, row+13, "INT: {:>7}".format(player.int))
+        term.puts(col, row+14, "WIS: {:>7}".format(player.wis))
+        term.puts(col, row+15, "CHA: {:>7}".format(player.cha))
+
 
     def inventory_box():
-        term.puts(61, 11, "{}".format(player.inventory[0].slot))
+        # term.puts(61, 11, "{}".format(player.inventory[0].slot))
+        pass
 
     def log_box():
         messages = gamelog.write().messages
@@ -380,11 +400,11 @@ def new_game(player=None, name=None):
                 Then print units/interactables?
                 Finally light sources and player?"""
         term.composition(False)
-        dungeon.fov_calc(lights+[(player.x, player.y, player.l)])
+        dungeon.fov_calc(lights+[(player.x, player.y, player.sight)])
         for x, y, lit, ch, bkgd in list(dungeon.output(player.x, player.y, units)):
             ch = ch if len(str(ch)) > 1 else chr(toInt(palette[ch]))
             term.bkcolor("black")
-            term.puts(x, y, "[color={}]".format(lit)+ch+"[/color]")
+            term.puts(x+12, y+2, "[color={}]".format(lit)+ch+"[/color]")
             term.bkcolor("black")
         term.refresh()
         
@@ -408,8 +428,8 @@ def new_game(player=None, name=None):
     # map = Map(parse("testmap.dat"))
     #dungeon = Map(stringify("./assets/testmap.png"))
     um = UnitManager()
-    player = Character("player", px, py, '@')
-    player.inventory[0] = "sword"
+    player = Player(character, px, py)
+    # player.inventory[0] = "sword"
     rat = Object("rat", 85, 30, 'r', r="monster")
     rat.message = "I am a rat"
     rat2 = Object("rat", 85, 29, 'R', r="monster")
@@ -431,7 +451,7 @@ def new_game(player=None, name=None):
     while proceed:
         term.clear()
         status_box()
-        border()
+        # border()
         log_box()
         inventory_box()
         map_box()
@@ -447,4 +467,6 @@ def new_game(player=None, name=None):
 
 if __name__ == "__main__":
     setup()
-    new_game(None, None)
+    setup_font('unscii-8-thin', 8, 16)
+
+    new_game(create().value)

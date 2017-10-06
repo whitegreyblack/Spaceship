@@ -369,13 +369,28 @@ def create_character():
             if character_index == 3:
                 name = new_name((race, occu))
                 if name.proceed > -1:
+                    player=namedtuple("Player",
+                        "name home gold stats gender gbonus race rbonus job \
+                         jbonus skills eq inv")
+                    gender = gender_row(1)
+                    race = race_row(1)
+                    job = class_row(1)
                     return output(
                             proceed=True,
-                            value=character(
-                                    name.value,
-                                    gender_row(1),
-                                    race_row(1),
-                                    class_row(1)))
+                            value=player(
+                                name.value,
+                                race.location,
+                                race.gold,
+                                race.stats,
+                                gender.gender,
+                                gender.bonus,
+                                race.race,
+                                race.bonus,
+                                job.classes,
+                                job.bonuses,
+                                race.skills,
+                                eq,
+                                inv))
             else:
                 character_index += 1
 

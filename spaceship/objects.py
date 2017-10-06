@@ -46,6 +46,48 @@ color_water=("#43C6AC", "#191654")
 color_doors=("#993F3A", "#994C00")
 color_posts=("#9A8478", "#9A8478")
 
+class Player:
+    def __init__(self, character, x, y):
+        # unpack everything here
+        self.name = character.name
+        self.home = self.location = character.home
+        self.gold = character.gold
+        self.level = 1
+        self.exp = 0
+        self.advexp = 80
+        self.x, self.y = x, y
+        self.base_stats = character.stats
+        self.gender = character.gender
+        self.gender_bonus = character.gbonus
+        self.race = character.race
+        self.race_bonus = character.rbonus
+        self.job = character.job
+        self.job_bonus = character.jbonus
+        self.skills = character.skills
+        self.equipment = character.eq
+        self.inventory = character.inv
+        self.sight = 25
+        self.calculate_initial_stats()
+
+    def calculate_initial_stats(self):
+        stats = tuple(s+g+r+c for s , g, r, c 
+                            in zip(self.base_stats,
+                                   self.gender_bonus,
+                                   self.race_bonus,
+                                   self.job_bonus))
+        
+        self.str, self.con, self.dex, self.int, self.wis, self.cha = stats
+        self.hp = self.total_hp = self.str+self.con*2
+        self.mp = self.total_mp = self.int*self.wis*2
+        self.sp = self.dex//5
+
+    def move(self, dx, dy):
+        self.x += dx
+        self.y += dy
+
+    def pos(self):
+        return self.x, self.y
+
 class Item:
     def __init__(self, n, s, c):
         self.name = n
@@ -82,11 +124,6 @@ class Object:
 
     def pos(self):
         return self.x, self.y
-
-class Player:
-    def __init__(self, character):
-        self.character = character
-
 
 class Character(Object):
     def __init__(self, n, x, y, i, c='white', r='human', m=10, s=10, b=6, l=5):
@@ -219,8 +256,8 @@ class Map:
         self.grass = gradient(self.width, self.height, chars_grass, color_grass)
         self.plant = gradient(self.width, self.height, chars_plant, color_plant)
         self.flag = 0
-        self.map_display_width = min(self.width, sw-20)
-        self.map_display_height = min(self.height, sh-6)
+        self.map_display_width = min(self.width, sw-12)
+        self.map_display_height = min(self.height, sh-2)
         self.tilemap = self.fill(data, self.width, self.height)
         self.explore = [[0 for _ in range(self.width)] for _ in range(self.height)]
         

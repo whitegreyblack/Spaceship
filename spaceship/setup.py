@@ -110,19 +110,15 @@ def setup():
 
 def setup_menu():
     term.set(
-        "window: size={}x{}, cellsize={}x{}, title='Spaceship'".format(
+        "window: size={}x{}, cellsize=auto, title='Spaceship'".format(
             MENU_SCREEN_WIDTH,
-            MENU_SCREEN_HEIGHT,
-            MENU_FONT_WIDTH, 
-            MENU_FONT_HEIGHT))
+            MENU_SCREEN_HEIGHT))
 
 def setup_game():
     term.set(
-        "window: size={}x{}, cellsize={}x{}, title='Spaceship'".format(
+        "window: size={}x{}, cellsize=auto, title='Spaceship'".format(
             GAME_SCREEN_WIDTH,
-            GAME_SCREEN_HEIGHT,
-            GAME_FONT_WIDTH, 
-            GAME_FONT_HEIGHT))
+            GAME_SCREEN_HEIGHT))
 
 def setup_font(font, cx, cy=None):
     term.set("window: cellsize=auto")
@@ -130,5 +126,6 @@ def setup_font(font, cx, cy=None):
 
 if __name__ == "__main__":
     setup()
+    setup_font('unscii-8-thin', 8)
     term.refresh()
     term.read()
