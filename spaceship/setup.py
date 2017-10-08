@@ -108,6 +108,11 @@ def setup():
     term.set("U+E000: ./fonts/cga88_black.png, size=8x8, align=center")
     term.composition(False)
 
+def setup_ext(sx, sy, cx="auto", cy=None):
+    term.set(
+        "window: size={}x{}, cellsize={}{}, title='Spaceship'".format(
+            sx, sy, cx, "x"+cy if cy else ""))
+
 def setup_menu():
     term.set(
         "window: size={}x{}, cellsize=auto, title='Spaceship'".format(

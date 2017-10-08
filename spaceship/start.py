@@ -37,8 +37,8 @@ def start():
 
     # Terminal Setup
     setup()
-    setup_menu()
     setup_font('Fira', 8, 16)
+    setup_menu()
 
     proceed = True
     title_index = -1
