@@ -111,7 +111,7 @@ def setup():
 def setup_ext(sx, sy, cx="auto", cy=None):
     term.set(
         "window: size={}x{}, cellsize={}{}, title='Spaceship'".format(
-            sx, sy, cx, "x"+cy if cy else ""))
+            sx, sy, cx, "x"+str(cy) if cy else ""))
 
 def setup_menu():
     term.set(

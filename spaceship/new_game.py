@@ -25,7 +25,7 @@ from time import clock
 def new_game(character=None):
     # if character is None then improperly accessed new_game
     # else unpack the character
-    setup_game()
+    # setup_game()
     if character==None:
         return output(proceed=False, value="No Character Data Input")
     dungeon = Map(stringify("./assets/testmap_empty.png"))

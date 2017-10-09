@@ -96,7 +96,7 @@ def start():
             elif title_index == 2:
                 options()
             else:
-                proceed = False
+                title_index = 0
         elif code in (term.TK_CLOSE, term.TK_ESCAPE):
             proceed = False        
     

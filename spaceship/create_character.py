@@ -22,12 +22,14 @@ from spaceship.constants import MENU_SCREEN_WIDTH as SCREEN_WIDTH
 from spaceship.continue_game import continue_game
 from spaceship.new_name import new_name
 from spaceship.screen_functions import *
-from spaceship.setup import output, setup, setup_font, setup_menu, toChr
+from spaceship.setup import output, setup, setup_font, setup_menu, toChr, setup_ext
 
 
 def create_character():
     # setup stuff
-    setup_menu()
+    # setup_menu()
+    setup_ext(SCREEN_WIDTH, SCREEN_HEIGHT, 8, 16)
+    # setup_font('unscii-8-thin', 8, 16)
 
     row = 5
     col1 = 3
@@ -354,7 +356,7 @@ def create_character():
 
         elif code == term.TK_UP:
             character_index = modify(-1, character_index, 4)
-            if character_index <= 1:
+            if character_index <= 2:
                 inv_screen = -1
 
         elif code == term.TK_DOWN:

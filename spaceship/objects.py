@@ -439,13 +439,16 @@ class Map:
             @m: size of the map           
             """
             hs = s//2
+            # less than half the screen - nothing
             if p < hs:
                 return 0
             elif p >= m - hs:
                 return m - s
             else:
                 return p - hs
-
+        print(X, Y)
+        print(self.map_display_height, self.map_display_width)
+        print(self.height, self.width)
         cx = scroll(X, self.map_display_width, self.width)
         cy = scroll(Y, self.map_display_height, self.height)
         cxe = cx + self.map_display_width
