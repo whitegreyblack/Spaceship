@@ -5,19 +5,19 @@ from spaceship.constants import MENU_SCREEN_WIDTH as SCREEN_WIDTH
 from spaceship.constants import MENU_SCREEN_HEIGHT as SCREEN_HEIGHT
 from bearlibterminal import terminal as term
 from spaceship.screen_functions import *
-from spaceship.setup import setup, output, toChr
+from spaceship.setup import setup, output, toChr, setup_font
 from spaceship.maps import toInt
 
 def new_name(character) -> (int, str):
     def text():
-        term.puts(center(direction_name, xhalf*2), yhalf-4, direction_name)
-        term.puts(center(direction_exit[2:], xhalf*2), yhalf+2, direction_exit)
-        term.puts(center(direction_exit_program[2:], xhalf*2), yhalf+3, direction_exit_program)
+        term.puts(center(direction_name, xhalf*2), yhalf-5, direction_name)
+        term.puts(center(direction_exit[2:], xhalf*2), yhalf+4, direction_exit)
+        term.puts(center(direction_exit_program[2:], xhalf*2), yhalf+8, direction_exit_program)
 
     def border():
-        for k in range(SCREEN_WIDTH):
-            term.puts(k, 3, toChr("2550"))
-            term.puts(k, SCREEN_HEIGHT-3, toChr("2550"))
+        # for k in range(SCREEN_WIDTH):
+        #     term.puts(k, 3, toChr("2550"))
+        #     term.puts(k, SCREEN_HEIGHT-3, toChr("2550"))
         for i in range(xhalf-fifth, xhalf+fifth):
             term.puts(i, yhalf-2, "{}".format(chr(toInt('2550'))))
             term.puts(i, yhalf, "{}".format(chr(toInt('2550'))))
@@ -37,22 +37,52 @@ def new_name(character) -> (int, str):
     xhalf = SCREEN_WIDTH//2
     yhalf = SCREEN_HEIGHT//2
     fifth = SCREEN_WIDTH//5
+    # result, text = term.read_str(xhalf-fifth+1, yhalf-1, "", 30)
 
-    term.clear()
-    border()
-    text()
-    result, text = term.read_str(xhalf-fifth+1, yhalf-1, "", 30)
-
-    if result:
-        term.bkcolor("white")
-        term.puts(xhalf-fifth+1, yhalf-1, "[color=black]{}[/color]".format(text))
-        term.bkcolor("black")
+    string = ''
+    invalid = False
+    while True:
+        term.clear()
+        border()
+        text()
+        term.puts(xhalf-fifth+1, yhalf-1, string)
+        if invalid:
+            term.puts(
+                xhalf-fifth-5, 
+                yhalf+1, 
+                '[c=red]{} is not a valid character for name creation[/c]'.format(
+                    chr(term.state(term.TK_WCHAR))))
         term.refresh()
-        
-    return output(proceed=result, value=text)
+        invalid = False
+        key = term.read()
+        if key == term.TK_ESCAPE:
+            if term.state(term.TK_SHIFT):
+                exit(output(-2, 'exit to desktop'))
+            elif not string:
+                    exit(output(-1, 'exit to previous screen'))
+            else:
+                string = string[0:len(string)-1]
 
+        elif key == term.TK_ENTER:
+            if not string:
+                string = 'some random name'
+            else:
+                return output(0, string)
+    
+        elif key == term.TK_BACKSPACE:
+            if string:
+                string = string[0:len(string)-1]
+
+        elif term.check(term.TK_WCHAR) and len(string) < 30:
+            if chr(term.state(term.TK_WCHAR)) not in (
+                '1234567890!@#$%^&&*()-=_+,./<>?\'"[]{}\|~`'):
+                string += chr(term.state(term.TK_WCHAR))
+            else:
+                invalid = True
 
 if __name__ == "__main__":
-    setup()
+    term.open()
+    setup_font('Ibm_cga', 8, 8)
+    term.set('window: size=80x50, cellsize=auto, title="Spaceship"')    
     name = new_name(None)
     term.refresh()

@@ -474,10 +474,10 @@ def new_game(character=None):
 
 if __name__ == "__main__":
     setup()
-    setup_font('unscii-8-thin', 8, 16)
+    setup_font('unscii-8', 8, 16)
     character = create().value
     setup_game()
-    setup_font('unscii-8', 8, 16)
+    setup_font('unscii-8-thin', 8, 16)
 
     # setup_font('unscii-8', 8 ,8)
     new_game(character)

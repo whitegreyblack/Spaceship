@@ -21,7 +21,7 @@ def longest(options):
 
 def join(string, length):
     # use regex to replace [*]
-    return "\n".join(wrap(string, length))
+    return "\n\n".join(wrap(string, length))
 
 def split(string, length):
     return wrap(string, length)

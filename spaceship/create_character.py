@@ -9,12 +9,7 @@ from textwrap import wrap
 
 from bearlibterminal import terminal as term
 
-import spaceship.descriptions as desc
-from spaceship.cc_strings import (ARCHER, BEAST, BEAST_BONUS, CLERIC, DRUIDS,
-                                  DWARF, DWARF_BONUS, ELVEN, ELVEN_BONUS,
-                                  FEMALE, HUMAN, HUMAN_BONUS, MALE, ORCEN,
-                                  ORCEN_BONUS, SQUIRE, STATS, WIZARD, _bon,
-                                  _col1, _col2, _col3)
+import spaceship.cc_strings as strings
 from spaceship.constants import CM_BORDER_HEIGHT as BORDER_HEIGHT
 from spaceship.constants import CM_BORDER_WIDTH as BORDER_WIDTH
 from spaceship.constants import MENU_SCREEN_HEIGHT as SCREEN_HEIGHT
@@ -26,13 +21,7 @@ from spaceship.setup import output, setup, setup_font, setup_menu, toChr, setup_
 
 
 def create_character():
-    # setup stuff
-    # setup_menu()
-    # setup_font('unscii-8-thin', 8, 16)
-    # setup_ext(SCREEN_WIDTH, SCREEN_HEIGHT, 8, 16)
-    # setup_font('unscii-8-thin', 8, 16)
-
-    row = 5
+    row = 11
     col1 = 3
     col2 = 26
     col3 = 49
@@ -71,33 +60,45 @@ def create_character():
 
     def cc_border():
         '''Border for Create Character Screen'''
-        border(BORDER_WIDTH, [0], "#")
-        border(BORDER_WIDTH, [5, 18], toChr("2550"))
-
+        # border(BORDER_WIDTH, [0], "#")
+        # border(BORDER_WIDTH, [10, 39], toChr("2550"))
+        term.bkcolor('darkest grey')
+        for i in range(BORDER_WIDTH-2):
+            term.puts(i+1, 1, ' ')
+            term.puts(i+1, 35, ' ')
+        for i in range(35):
+            term.puts(1, i+1, ' ')
+            term.puts(BORDER_WIDTH-2, i+1, ' ')
+        term.bkcolor('dark brown')
+        for i in range(20):
+            term.puts(BORDER_WIDTH//2-10+i, 1, ' ')
+        term.bkcolor('black')
+        
     def title():
         '''Adds the title to top of screen'''
-        term.puts(
-            center(" " + str_title + " ", SCREEN_WIDTH),
-            0,
-            " " + str_title + " ")
+        title = " " + str_title + " "
+        term.bkcolor('brown')
+        term.puts(center(title, SCREEN_WIDTH), 1, "[c=black]"+title+"[/c]")
+        term.bkcolor('black')
 
     def subtitle():
         '''Adds text underneath the title'''
         # subtitle -- clears subtitle area to make space for new subtitle text
         subtitle = subtitle_text(character_index)
         x = center(subtitle, SCREEN_WIDTH)
-        term.puts(x, 1, subtitle)
+        term.puts(x, 3, subtitle)
+        term.bkcolor('black')
 
     def gender_row(g=False):
         '''Returns a tuple "gender" according to the gender_index'''
         genders = namedtuple("Gender", "gender bonus")
         gender_options = [
-            genders("Male", MALE),
-            genders("Female", FEMALE),
+            genders("Male", strings.MALE),
+            genders("Female", strings.FEMALE),
         ]
         if not g:
             for option, i in zip(gender_options, range(len(gender_options))):
-                x, y = 24+22*i, 2
+                x, y = 24+22*i, 5
                 gender = pad(option.gender, length=8)
                 if i == gender_index:
                     if character_index == 0:
@@ -114,29 +115,29 @@ def create_character():
         races = namedtuple("Race", "race location stats bonus gold skills eq")
         race_options = [
             # Tiphmore -- Largest Free City in Calabaston
-            races("Beast", "Tiphmore", HUMAN, BEAST_BONUS, 300,
+            races("Beast", "Tiphmore", strings.HUMAN, strings.BEAST_BONUS, 300,
                   ("thick fur", "animal senses"),
                   equipment("", "", "", "", "", ("long spear", "silver sword"),
                             "", "", "", "", "", "")),
             # Capital of Yugahdahrum
-            races("Dwarf", "Dun Badur", HUMAN, DWARF_BONUS, 250,
+            races("Dwarf", "Dun Badur", strings.HUMAN, strings.DWARF_BONUS, 250,
                   ("dark vision", "dwarven fortitude"),
                   equipment("horned helmet", "gold necklace", "", "", "",
                             ("battle axe", "copper pick"), "", "", "",
                             "", "", "")),
             # Aurundel -- Capital of Auriel in the Emerald Forest
-            races("Elf", "Aurundel", HUMAN, ELVEN_BONUS, 250,
+            races("Elf", "Aurundel", strings.HUMAN, strings.ELVEN_BONUS, 250,
                   ("forest spirit", "nimble"),
                   equipment("", "", "elven chainmail", "", "",
                             "mithril dagger", "mithril dagger",
                             "", "", "", "", "")),
             # Renmar -- Capital of Rane Empire
-            races("Human", "Renmar", HUMAN, HUMAN_BONUS, 200,
+            races("Human", "Renmar", strings.HUMAN, strings.HUMAN_BONUS, 200,
                   ("", ""),
                   equipment("", "", "", "", "", "broadsword", "medium shield",
                             "", "", "", "", "")),
             # Lok Gurrah, Capital of Oggrahgar
-            races("Orc", "Lok Gurrah", HUMAN, ORCEN_BONUS, 150,
+            races("Orc", "Lok Gurrah", strings.HUMAN, strings.ORCEN_BONUS, 150,
                   ("thick skin", "bloodrage"),
                   equipment("metal cap", "", "metal armor", "", "",
                             ("mace", "warhammer"), "", "", "", "", "", "")),
@@ -144,7 +145,7 @@ def create_character():
         # RACE OPTIONS
         if not r:
             for option, i in zip(race_options, range(len(race_options))):
-                x, y = 13+11*i, 3
+                x, y = 13+11*i, 7
                 race = pad(option.race, length=8)
                 if i == race_index:
                     if character_index == 1:
@@ -162,31 +163,31 @@ def create_character():
         '''Returns a tuple "class" according to class_index'''
         classes = namedtuple("Class", "classes bonuses equipment")
         class_options = [
-            classes("Druid", DRUIDS,
+            classes("Druid", strings.DRUIDS,
                     equipment("", "", "thick fur coat", "thick fur bracers",
                               "", "wooden staff", "", "ring of nature",
                               "ring of earth", "leather belt", "",
                               "leather boots")),
 
-            classes("Cleric", CLERIC,
+            classes("Cleric", strings.CLERIC,
                     equipment("hood", "holy symbol", "light robe", "", "",
                               "mace", "small shield", "ring of power",
                               "ring of light", "rope belt", "",
                               "leather sandals")),
 
-            classes("Archer", ARCHER,
+            classes("Archer", strings.ARCHER,
                     equipment("hood", "whistle", "heavy cloak",
                               "leather bracers", "cloth gloves", "short bow",
                               "", "", "", "leather belt", "common pants",
                               "leather boots")),
 
-            classes("Wizard", WIZARD,
+            classes("Wizard", strings.WIZARD,
                     equipment("hood", "amulet of power", "light robe", "", "",
                               "quarterstaff", "spellbook", "ring of water",
                               "ring of fire", "rope belt", "",
                               "leather sandals")),
 
-            classes("Squire", SQUIRE,
+            classes("Squire", strings.SQUIRE,
                     equipment("leather cap", "", "leather armor",
                               "leather bracers", "cloth gloves", "long sword",
                               "medium shield", "", "", "leather belt",
@@ -196,7 +197,7 @@ def create_character():
         # CLASS OPTIONS
         if not c:
             for option, i in zip(class_options, range(len(class_options))):
-                x, y = 13+11*i, 4
+                x, y = 13+11*i, 9
                 option = pad(option.classes, length=8)
                 if i == class_index:
                     if character_index == 2:
@@ -213,11 +214,11 @@ def create_character():
     def description_row():
         '''Returns the descriptions according to character_index'''
         descriptions = [
-            [desc.start],
-            [desc.race_beast, desc.race_dwarf, desc.race_elven,
-                desc.race_human, desc.race_orcen, ],
-            [desc.class_druid, desc.class_cleric, desc.class_wizard,
-                desc.class_archer, desc.class_squire, ]]
+            [strings.start],
+            [strings.race_beast, strings.race_dwarf, strings.race_elven,
+                strings.race_human, strings.race_orcen, ],
+            [strings.class_druid, strings.class_cleric, strings.class_wizard,
+                strings.class_archer, strings.class_squire, ]]
 
         primary = min(character_index, 2)
 
@@ -225,7 +226,7 @@ def create_character():
             else race_index if character_index == 1 \
             else character_index
 
-        term.puts(1, 19, join(
+        term.puts(1, 37, join(
             descriptions[primary][secondary],
             SCREEN_WIDTH-2))
 
@@ -271,11 +272,11 @@ def create_character():
 
         # BONUS
         if character_index == 0:
-            total = STATS(*(s+g for s, g in zip(HUMAN, gbonus)))
+            total = strings.STATS(*(s+g for s, g in zip(strings.HUMAN, gbonus)))
         elif character_index == 1:
-            total = STATS(*(s+g+r for s, g, r in zip(stats, gbonus, rbonus)))
+            total = strings.STATS(*(s+g+r for s, g, r in zip(stats, gbonus, rbonus)))
         else:
-            total = STATS(*(s+g+r+c for s, g, r, c in zip(
+            total = strings.STATS(*(s+g+r+c for s, g, r, c in zip(
                                                         stats,
                                                         gbonus,
                                                         rbonus,
@@ -287,7 +288,7 @@ def create_character():
         sp = total.dex // 5
 
         # BACKGROUND
-        term.puts(col1, row+1, _col1.format(
+        term.puts(col1, row+1, strings._col1.format(
             gender,
             race if character_index > 0 else "",
             location if character_index > 0 else "",
@@ -296,23 +297,23 @@ def create_character():
             1, 80, hp, mp, sp))
 
         # STATS
-        term.puts(col2, row+1, _col2.format(
+        term.puts(col2, row+1, strings._col2.format(
             *("" for _ in range(2)) if character_index < 1 else skills,
             *(total)))
 
-        term.puts(col2+10, row+6, _bon.format(*transform_values(gbonus)))
+        term.puts(col2+10, row+11, strings._bon.format(*transform_values(gbonus)))
 
         if character_index > 0:
-            term.puts(col2+14, row+6, _bon.format(*transform_values(rbonus)))
+            term.puts(col2+14, row+11, strings._bon.format(*transform_values(rbonus)))
 
         # EQUIPMENT and INVENTORY
         eq, inv = None, None
         if character_index > 1:
-            term.puts(col2+18, row+6, _bon.format(*transform_values(cbonus)))
+            term.puts(col2+18, row+11, strings._bon.format(*transform_values(cbonus)))
             eq, inv = form_equipment(req, ceq)
             # if var is -1 then shows eq else shows inv
             if inv_screen < 0:
-                term.puts(col3, row+1, _col3.format(
+                term.puts(col3, row+1, strings._col3.format(
                     *(e if len(e) > 0 else "" for e in eq)))
             else:
                 for item, i in zip(inv, range(len(inv))):
@@ -320,7 +321,7 @@ def create_character():
                                                         chr(ord('a')+i),
                                                         item))
         else:
-            term.puts(col3, row+1, _col3.format(
+            term.puts(col3, row+1, strings._col3.format(
                 *("" for _ in range(12))))
 
         # FOOTER
@@ -418,9 +419,9 @@ def create_character():
 
 
 if __name__ == "__main__":
-    setup()
-    setup_font('unscii-8-thin', 8, 16)
-
+    term.open()
+    setup_font('Ibm_cga', 8, 8)
+    term.set('window: size=80x50, cellsize=auto, title="Spaceship"')
     try:
         print(create_character())
     except KeyboardInterrupt:
