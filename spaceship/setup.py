@@ -108,6 +108,9 @@ def setup():
     term.set("U+E000: ./fonts/cga88_black.png, size=8x8, align=center")
     term.composition(False)
 
+def setup_charsheet():
+    term.set("U+E000: ./fonts/cga88_black.png, size=8x8, align=center")
+
 def setup_ext(sx, sy, cx="auto", cy=None):
     term.set(
         "window: size={}x{}, cellsize={}{}, title='Spaceship'".format(

@@ -9,8 +9,8 @@ from spaceship.constants import GAME_TITLE as TITLE
 from spaceship.constants import GAME_TITLE_HEIGHT as TITLE_HEIGHT
 from spaceship.constants import GAME_TITLE_VERSION as VERSION
 from spaceship.constants import GAME_TITLE_WIDTH as TITLE_WIDTH
-from spaceship.constants import MENU_SCREEN_HEIGHT as SCREEN_HEIGHT
-from spaceship.constants import MENU_SCREEN_WIDTH as SCREEN_WIDTH
+from spaceship.constants import GAME_SCREEN_HEIGHT as SCREEN_HEIGHT
+from spaceship.constants import GAME_SCREEN_WIDTH as SCREEN_WIDTH
 from spaceship.continue_game import continue_game
 from spaceship.create_character import create_character as create_character
 from spaceship.new_game import new_game
@@ -27,7 +27,7 @@ def start():
             term.puts(k, 5, toChr("2550"))
 
     def splitter(x, y):
-        return [z for z in range(x, y, 2)]
+        return [z for z in range(x, y, 3)]
     
     def start_new_game():
         cc = create_character()
@@ -35,14 +35,9 @@ def start():
             return new_game(cc.value)
         return cc.proceed
 
-    # Terminal Setup
-    setup()
-    setup_font('unscii-8-thin', 8, 16)
-    setup_menu()
-
     proceed = True
     title_index = -1
-    options_height = splitter(10, SCREEN_HEIGHT)
+    options_height = splitter(25, SCREEN_HEIGHT)
     title_develop = 'Developed by WGB using Python and BearLibTerminal'
     title_options = ["[[c]] continue", '[[n]] new game', '[[o]] options', '[[q]] quit']
     width, height = SCREEN_WIDTH, SCREEN_HEIGHT
@@ -51,7 +46,7 @@ def start():
     while proceed:
         # setup_font('Fira', 8, 16)
         term.clear() # probably won't need later but using now to make sure title screen is empty
-        border()
+        # border()
         # title header
         term.puts(center('a'*(TITLE_WIDTH-1), SCREEN_WIDTH), title_height+3, TITLE)
 
@@ -62,8 +57,7 @@ def start():
             text = "[color=orange]{}[/color]".format(option) if i == title_index else option
             term.puts(x, options_height[i], text)
         
-        # footer 
-        # VERSION
+        # FOOTER and VERSION
         term.puts(center(VERSION, SCREEN_WIDTH), SCREEN_HEIGHT-4, VERSION)
         term.puts(center(title_develop, width), height-2, title_develop)
         term.refresh()
@@ -102,4 +96,7 @@ def start():
             proceed = False        
     
 if __name__ == "__main__":
+    term.open()
+    setup_font('Ibm_cga', 8, 8)
+    term.set('window: size=80x50, cellsize=auto, title="Spaceship"')    
     start()

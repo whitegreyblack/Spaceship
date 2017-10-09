@@ -8,45 +8,26 @@ from collections import namedtuple
 _world = "Calabaston"
 
 _col1 = """
-Gender  : {:>10}
-
-Race    : {:>10}
-
-Capital : {:>10}
-
-Class   : {:>10}
-
-
-Gold    : {:>10}
-
-Level   : {:>10}
-
-Adv Exp : {:>10}
-
-
-HP      : [c=#00ffff]{:>10}[/c]
-
-MP      : [c=#00ffff]{:>10}[/c]
-
-SP      : [c=#00ffff]{:>10}[/c]
+Gender  : {:>10}\n
+Race    : {:>10}\n
+Capital : {:>10}\n
+Class   : {:>10}\n\n
+Gold    : {:>10}\n
+Level   : {:>10}\n
+Adv Exp : {:>10}\n\n
+HP      : [c=#00ffff]{:>10}[/c]\n
+MP      : [c=#00ffff]{:>10}[/c]\n
+SP      : [c=#00ffff]{:>10}[/c]\n
 """[1:]
 
 _col2 = """
-SKILLS  : \n\n  {}\n\n  {}\n
-
-
-   TOTAL  GB  RB  CB
-
-STR : [c=#00ffff]{:>2}[/c]
-
-CON : [c=#00ffff]{:>2}[/c]
-
-DEX : [c=#00ffff]{:>2}[/c]
-
-INT : [c=#00ffff]{:>2}[/c]
-
-WIS : [c=#00ffff]{:>2}[/c]
-
+SKILLS  : \n\n  {}\n\n  {}\n\n\n
+   TOTAL  GB  RB  CB\n
+STR : [c=#00ffff]{:>2}[/c]\n
+CON : [c=#00ffff]{:>2}[/c]\n
+DEX : [c=#00ffff]{:>2}[/c]\n
+INT : [c=#00ffff]{:>2}[/c]\n
+WIS : [c=#00ffff]{:>2}[/c]\n
 CHA : [c=#00ffff]{:>2}[/c]
 """[1:]
 
