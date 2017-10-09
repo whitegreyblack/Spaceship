@@ -24,7 +24,6 @@ def build(x, y):
                             dungeon[i+ii+1][j+jj+1] = 1
                         except:
                             pass
-    print(dungeon)
     return dungeon
 
 def smooth(dungeon):
