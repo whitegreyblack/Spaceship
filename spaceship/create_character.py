@@ -373,8 +373,7 @@ def create_character():
             if character_index == 3:
                 name = new_name((race, occu))
                 print(name)
-                if name.proceed > 0:
-                    print('going to game')
+                if name.proceed == 0:
                     player=namedtuple("Player",
                         "name home gold stats gender gbonus race rbonus job \
                          jbonus skills eq inv")

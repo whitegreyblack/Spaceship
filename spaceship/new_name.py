@@ -57,9 +57,9 @@ def new_name(character) -> (int, str):
         key = term.read()
         if key == term.TK_ESCAPE:
             if term.state(term.TK_SHIFT):
-                exit(output(-2, 'exit to desktop'))
+                return(output(-2, 'EXIT'))
             elif not string:
-                    exit(output(-1, 'exit to previous screen'))
+                return(output(-1, 'BACK'))
             else:
                 string = string[0:len(string)-1]
 
