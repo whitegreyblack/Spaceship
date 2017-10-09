@@ -12,6 +12,7 @@ def new_name(character) -> (int, str):
     def text():
         term.puts(center(direction_name, xhalf*2), yhalf-4, direction_name)
         term.puts(center(direction_exit[2:], xhalf*2), yhalf+2, direction_exit)
+        term.puts(center(direction_exit_program[2:], xhalf*2), yhalf+3, direction_exit_program)
 
     def border():
         for k in range(SCREEN_WIDTH):
@@ -32,6 +33,7 @@ def new_name(character) -> (int, str):
 
     direction_name = 'Enter in your name or leave blank for a random name'
     direction_exit = 'Press [[ESC]] if you wish to exit character creation'
+    direction_exit_program = 'Press [[Shift]]+[[ESC]] to exit to main menu'
     xhalf = SCREEN_WIDTH//2
     yhalf = SCREEN_HEIGHT//2
     fifth = SCREEN_WIDTH//5

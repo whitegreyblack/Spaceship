@@ -28,7 +28,8 @@ from spaceship.setup import output, setup, setup_font, setup_menu, toChr, setup_
 def create_character():
     # setup stuff
     # setup_menu()
-    setup_ext(SCREEN_WIDTH, SCREEN_HEIGHT, 8, 16)
+    # setup_font('unscii-8-thin', 8, 16)
+    # setup_ext(SCREEN_WIDTH, SCREEN_HEIGHT, 8, 16)
     # setup_font('unscii-8-thin', 8, 16)
 
     row = 5
@@ -370,7 +371,9 @@ def create_character():
         elif code == term.TK_ENTER:
             if character_index == 3:
                 name = new_name((race, occu))
-                if name.proceed > -1:
+                print(name)
+                if name.proceed > 0:
+                    print('going to game')
                     player=namedtuple("Player",
                         "name home gold stats gender gbonus race rbonus job \
                          jbonus skills eq inv")

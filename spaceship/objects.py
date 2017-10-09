@@ -251,7 +251,8 @@ class Map:
         self.map_display_height = min(self.height, sh-2)
         self.tilemap = self.fill(data, self.width, self.height)
         self.explore = [[0 for _ in range(self.width)] for _ in range(self.height)]
-        
+        print("MAP: {} {}".format(self.map_display_width, self.map_display_height))
+        print("MAP: {} {}".format(self.width, self.height))
 
     def fill(self, d, w, h):
         # Light.Unexplored, Explored, Visible
@@ -430,29 +431,29 @@ class Map:
         def isHouse(c): return c in chars_house
         def isFloor(c): return c in chars_floor
 
-        def scroll(p, s, m):
+        def scroll(position, screen, worldmap):
             """
-            @p: current position of player 1D axis
+            @position: current position of player 1D axis
             
-            @s: size of the screen
+            @screen  : size of the screen
             
-            @m: size of the map           
+            @worldmap: size of the map           
             """
-            hs = s//2
+            halfscreen = screen//2
             # less than half the screen - nothing
-            if p < hs:
+            if position < halfscreen:
                 return 0
-            elif p >= m - hs:
-                return m - s
+            elif position >= worldmap - halfscreen:
+                return worldmap - screen
             else:
-                return p - hs
+                return position - halfscreen
         print(X, Y)
-        print(self.map_display_height, self.map_display_width)
-        print(self.height, self.width)
+        # print(self.map_display_height, self.map_display_width)
+        # print(self.height, self.width)
         cx = scroll(X, self.map_display_width, self.width)
         cy = scroll(Y, self.map_display_height, self.height)
         cxe = cx + self.map_display_width
-        cye = cy + self.map_display_height
+        cye = cy + self.map_display_height-8
 
         #fg_fog = "#ff202020"
         daytime= True if self._sun() else False
