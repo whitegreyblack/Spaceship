@@ -5,10 +5,11 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from bearlibterminal import terminal as term
 from copy import deepcopy
-from random import choice, choices, randint
+from random import choice, choices, randint, choice
 from collections import namedtuple
 from tools import bresenhams
 from spaceship.setup import setup_font
+import math
 X_MIN_ROOM_SIZE=80
 X_MAX_ROOM_SIZE=100
 Y_MIN_ROOM_SIZE=25
@@ -16,28 +17,116 @@ Y_MAX_ROOM_SIZE=75
 X_TEMP, Y_TEMP = 80, 50
 WALL, FLOOR = -1, 1
 
-box = namedtuple("BOX", "x1 y1 x2 y2")
+box = namedtuple("Box", "x1 y1 x2 y2")
+
+def circle():
+    term.open()
+    term.set('window: size=160x100, cellsize=8x8')
+    setup_font('Ibm_cga', 4, 4)
+    dungeon = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
+    cx, cy = X_TEMP//2-1, Y_TEMP//2-1
+    cr = min(cx, cy)
+    print(cr)
+    f = 1 - cr
+    fx = 1
+    fy = -2 * cr
+    x = 0
+    y = cr
+    dungeon[cy-cr][cx] = '.'
+    dungeon[cy+cr][cx] = '.'
+    dungeon[cy][cx-cr] = '.'
+    dungeon[cy][cx+cr] = '.'
+    while x < y:
+        if f >= 0: 
+            y -= 1
+            fy += 2
+            f += fy
+        x += 1
+        fx += 2
+        f += fx    
+        dungeon[cy+y][cx+x] = '.'
+        dungeon[cy+y][cx-x] = '.'
+        dungeon[cy-y][cx+x] = '.'
+        dungeon[cy-y][cx-x] = '.'
+        dungeon[cy+x][cx+y] = '.'
+        dungeon[cy+x][cx-y] = '.'
+        dungeon[cy-x][cx+y] = '.'
+        dungeon[cy-x][cx-y] = '.'
+    for i in range(Y_TEMP):
+        for j in range(X_TEMP):
+            term.puts(j, i, dungeon[i][j])
+    term.refresh()
+    term.read()
+
+def ellipse():
+    term.open()
+    term.set('window: size=160x100, cellsize=8x8')
+    setup_font('Ibm_cga', 4, 4)
+    dungeon = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
+    xr, yr = cx, cy = X_TEMP//2-1, Y_TEMP//2-1
+    t = 0
+    step = 1
+    group = set()
+    dungeon[cy-yr][cx] = '.'
+    dungeon[cy-yr][cx] = '.'
+    dungeon[cy][cx-xr] = '.'
+    dungeon[cy][cx+xr] = '.'
+    while t <= 360:
+        x = int(round(cx + xr*math.cos(t)))
+        y = int(round(cy + yr*math.sin(t)))
+        if (x,y) not in group:
+            dungeon[y][x] = '.'
+            group.add((x,y))
+        t += step    
+    for i in range(Y_TEMP):
+        for j in range(X_TEMP):
+            term.puts(j, i, dungeon[i][j])
+    term.refresh()
+    term.read()
 
 def intersect(b1, b2):
     return (b1.x1 <= b2.x2 and b1.x2 >= b2.x1 and 
             b1.y1 <= b2.y2 and b1.y2 >= b2.y1)
 
+def center(box):
+    return (box.x1 + box.x2)//2, (box.y1 + box.y2)//2
+
+def volume(box):
+    return (box.x2-box.x1) * (box.y2-box.y1)
+
 def rotate(box):
     return list(zip(*box[::-1]))
 
 def oob(box):
-    return box.x1 < 0 or box.y1 < 0 or box.x2 >= 80 or box.y2 >= 50
+    return box.x1 < 1 or box.y1 < 1 or box.x2 >= X_TEMP-1 or box.y2 >= Y_TEMP-1
+
+def ooe(i, j):
+    h = rx = X_TEMP//2-1
+    k = ry = Y_TEMP//2-1
+    return ((i-h)**2)/(rx**2) + ((j-k)**2)/(ry**2) <= 1
 
 def build():
     term.open()
-    term.set('window: size=80x50')
+    term.set('window: size={}x{}, cellsize=4x4'.format(X_TEMP, Y_TEMP))
     setup_font('Ibm_cga', 8, 8)
     # constructor -- (-1 = impassable) start with a map of walls
     # dungeon = [[-1 for _ in range(x)] for _ in range(y)]
     dungeon = [[0 for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
-    numrooms = 0
+    volrooms = 0
     rooms = []
-    while numrooms < 25:
+    tries = 0
+    directions = [
+        [1, 0], [-1, 0], [0,  1], [0, -1], 
+        [1, 1], [1, -1], [-1, 1], [-1,-1],
+        [1, 2], [1, -2], [-1, 2], [-1,-2],
+        [2, 1], [-2, 1], [2, -1], [-2,-1]]
+    distribution = [
+        .5, .5, .5, .5, 
+        .25, .25, .25, .25, 
+        .125, .125, .125, .125, 
+        .125, .125, .125, .125
+        ]
+    while volrooms < X_TEMP * Y_TEMP * .85 and tries < 300:
         for i in range(len(dungeon)):
             for j in range(len(dungeon[0])):
                 if dungeon[i][j] == 1:
@@ -54,104 +143,94 @@ def build():
                 term.puts(0, i, "{}".format(i//10))
            
         term.refresh()
-        # key = term.read()
-        # if key in (term.TK_ESCAPE, term.TK_CLOSE):
-        #     break
-        # else:
         x, y = randint(4, 12), randint(4, 12)
+        ox, oy = randint(-1,2), randint(-1, 2)
         tx, ty = X_TEMP//2-x//2, Y_TEMP//2-y//2 # <-- the upper left point of the box starts near center
-        if numrooms == 0:
+        if volrooms == 0:
             # center the first box
-            print('Box{} : {}x{} start @ {}x{}'.format(numrooms+1, x, y, tx, ty))
-            room = box(X_TEMP//2-x//2, Y_TEMP//2-y//2, tx+x, ty+y)
+            room = box(tx, ty, tx+x, ty+y)
             rooms.append(room)
-            print('found a spot at {}x{}'.format(tx, ty))
-            print(room)
             for i in range(y):
                 for j in range(x):
-                    dungeon[Y_TEMP//2-y//2+i][X_TEMP//2-x//2+j] = 1
-            numrooms += 1
+                    dungeon[ty+i][tx+j] = 1
+            volrooms += x * y
 
         else:
             case1 = False
-            directions = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1],[1, 2],[1, -2],[-1, 2],[-1,-2]]
-            direction = directions[randint(0, len(directions)-1)]
-            room = None
-            print('Box{} : {}x{} start @ {}x{}'.format(numrooms+1, x, y, tx, ty))
-            
+            direction = choices(population=directions, weights=distribution, k=1)[0]
             while True:
+                tx, ty = tx + randint(-2,3), ty + randint(-2, 3)
                 tx, ty = tx + direction[0], ty + direction[1]
                 temp = box(tx, ty, tx+x, ty+y)
-
                 intersects = any(intersect(room, temp) for room in rooms)
-                
                 # only checks for out of bounds if no intersections
                 # needs to be both free of intersectiosn and within bounds
                 if not intersects:
                     if not oob(temp):
                         rooms.append(temp)
-                        print(temp)
                         for i in range(y):
                             for j in range(x):
                                 dungeon[ty+i][tx+j] += 1
-                        numrooms += 1
+                        volrooms += x * y
+                        case1 = True
+                    else:
+                        tries += 1
                     break
                 
+            if not case1:
+                tx, ty = X_TEMP//2-x//2, Y_TEMP//2-y//2 # <-- the upper left point of the box starts near center
+                while True:
+                    tx, ty = tx + randint(-2,3), ty + randint(-2, 3)        
+                    tx, ty = tx + direction[0], ty + direction[1]
+                    temp = box(tx, ty, tx+x, ty+y)
+                    intersects = any(intersect(room, temp) for room in rooms)
+                    if not intersects:
+                        if not oob(temp):
+                            rooms.append(temp)
+                            for i in range(y):
+                                for j in range(x):
+                                    dungeon[ty+i][tx+j] += 1
+                            volrooms += x * y
+                        else:
+                            tries += 1
+                        break                
 
-                # while intersects:
-                #     tx, ty = tx + direction[0], ty + direction[1]
-                #     temp = box(tx, ty, tx+x, ty+y)
-                #     for room, i in zip(rooms, range(len(rooms))):
-                #         print('Comparing ({}){} and {} | {}'.format(i, room, temp, not intersect(room, temp)))
-                #         if not intersect(room, temp):
-                #             print('found a spot at {}x{}'.format(tx, ty))
-                #             intersects = False
-                #             room = temp
-                #             break
-                #     if oob(temp):
-                #         break
-                # if not intersects and not oob(room):
-                #     rooms.append(room)
-                #     print(room)
-                #     for i in range(y):
-                #         for j in range(x):
-                #             dungeon[ty+i][tx+j] += 1
-                #     numrooms += 1
-                #     case1 = True
-                
-                # # tries a second time with rotate box
-                # if not case1:
-                #     print('Trying rotation')
-                #     x, y, = y, x
-                #     tx, ty = X_TEMP//2-x//2, Y_TEMP//2-y//2
-                #     print('Box{} : {}x{} start @ {}x{}'.format(numrooms+1, x, y, tx, ty))
-
-                #     while intersects:
-                #         tx, ty = tx + direction[0], ty + direction[1]
-                #         temp = box(tx, ty, tx+x, ty+y)
-                #         for room in rooms:
-                #             if not intersect(room, temp):
-                #                 print('found a spot at {}x{}'.format(tx, ty))
-                #                 intersects = False
-                #                 room = temp
-                #         if oob(temp):
-                #             break
-                #     if not intersects and not oob(room):
-                #         rooms.append(room)
-                #         print(room)
-                #         for i in range(y):
-                #             for j in range(x):
-                #                 dungeon[ty+i][tx+j] += 1
-                #         numrooms += 1
     print('-------------------------\nBOXES:')
     for r in rooms:
         print(r)
     print('-------------------------')
+
     term.read()
-
-
-
-                    
+    term.clear()
+    for  r in rooms:
+        for x in range(r.x1, r.x2):
+            for y in range(r.y1, r.y2):
+                if ooe(*(center(r))):
+                    # (r.x2-r.x1 >= 12 or r.y2-r.y1 >= 12)    
+                    if volume(r) >= 85:
+                        term.bkcolor('dark green')
+                    else:
+                        term.bkcolor('dark blue')
+                else:
+                    term.bkcolor('dark red')
+                term.puts(x, y, '[c=grey].[/c]')
+            term.bkcolor('black')
+    term.refresh()
+    term.read()
+    term.clear()
+    large_rooms = []
+    for  r in rooms:
+        inside_ellipse = ooe(*(center(r)))
+        # long_enough = (r.x2-r.x1 >= 12 or r.y2-r.y1 >= 12)
+        large_enough = volume(r) >= 70
+        if  inside_ellipse and large_enough:
+            term.bkcolor('dark green')
+            for x in range(r.x1, r.x2):
+                for y in range(r.y1, r.y2):
+                    term.puts(x, y, '[c=grey].[/c]')
+            term.bkcolor('black')
+    term.refresh()
+    term.read()
 
 def smooth(dungeon):
     def neighbor(x, y):
@@ -176,7 +255,7 @@ def smooth(dungeon):
             return WALL if val < 5 else FLOOR
         else:
             return FLOOR if val > 4 else WALL
-    
+            
     newmap = deepcopy(dungeon)
     for i in range(len(dungeon)):
         for j in range(len(dungeon[0])):
@@ -187,6 +266,7 @@ def smooth(dungeon):
 
 if __name__ == "__main__":
     build()
+    # circle()
     # print(intersect(box(36, 16, 45, 25), box(37, 8, 43, 14)))
     # print(intersect(box(37, 8, 43, 14), box(36, 16, 45, 25)))
     # print(intersect(box(35, 16, 45, 22), box(35,9, 44, 15)))
