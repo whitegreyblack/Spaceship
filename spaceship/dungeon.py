@@ -14,9 +14,10 @@ X_MIN_ROOM_SIZE=80
 X_MAX_ROOM_SIZE=100
 Y_MIN_ROOM_SIZE=25
 Y_MAX_ROOM_SIZE=75
-X_TEMP, Y_TEMP = 160, 100
+X_TEMP, Y_TEMP = 80, 40
+# X_TEMP, Y_TEMP = 160, 100
 WALL, FLOOR = -1, 1
-
+MULTIPLIER = 8
 box = namedtuple("Box", "x1 y1 x2 y2")
 point = namedtuple("Point", "x y")
 
@@ -147,7 +148,7 @@ def smooth(dungeon):
 
 def build():
     term.open()
-    term.set('window: size={}x{}, cellsize=4x4'.format(X_TEMP, Y_TEMP))
+    term.set('window: size={}x{}, cellsize=4x4'.format(X_TEMP, Y_TEMP+10))
     setup_font('Ibm_cga', 8, 8)
     # constructor -- (-1 = impassable) start with a map of walls
     # dungeon = [[-1 for _ in range(x)] for _ in range(y)]
@@ -166,7 +167,8 @@ def build():
         .125, .125, .125, .125, 
         .125, .125, .125, .125
         ]
-    while volrooms < X_TEMP * Y_TEMP * .85 and tries < 300:
+    # while volrooms < X_TEMP * Y_TEMP * .85 and tries < 300:
+    while len(rooms) < 11:
         # for i in range(len(dungeon)):
         #     for j in range(len(dungeon[0])):
         #         if dungeon[i][j] == 1:
@@ -182,7 +184,7 @@ def build():
         #     if i % 10 == 0:
         #         term.puts(0, i, "{}".format(i//10))
         # term.refresh()
-        x, y = randint(5, 12), randint(5, 12)
+        x, y = randint(6, 12), randint(4, 8)
         ox, oy = randint(-1,2), randint(-1, 2)
         tx, ty = X_TEMP//2-x//2, Y_TEMP//2-y//2 # <-- the upper left point of the box starts near center
         if volrooms == 0:
@@ -199,7 +201,7 @@ def build():
             direction = choices(population=directions, weights=distribution, k=1)[0]
             while True:
                 tx, ty = tx + randint(-2,3), ty + randint(-2, 3)
-                tx, ty = tx + direction[0], ty + direction[1]
+                tx, ty = tx + direction[0] * MULTIPLIER, ty + direction[1] * MULTIPLIER
                 temp = box(tx, ty, tx+x, ty+y)
                 intersects = any(intersect(room, temp) for room in rooms)
                 # only checks for out of bounds if no intersections
@@ -247,7 +249,7 @@ def build():
             for y in range(r.y1, r.y2):
                 if ooe(*(center(r))):
                     # (r.x2-r.x1 >= 12 or r.y2-r.y1 >= 12)    
-                    if volume(r) >= 85:
+                    if volume(r) >= 70:
                         term.bkcolor('dark green')
                     else:
                         term.bkcolor('dark blue')
@@ -265,7 +267,7 @@ def build():
     for  r in rooms:
         inside_ellipse = ooe(*(center(r)))
         # long_enough = (r.x2-r.x1 >= 12 or r.y2-r.y1 >= 12)
-        large_enough = volume(r) >= 85
+        large_enough = volume(r) >= 70
         if large_enough:
             large_rooms.add((r, center(r)))
             term.bkcolor('dark green')
