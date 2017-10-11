@@ -8,7 +8,9 @@ from namedlist import namedlist
 from time import clock
 from sys import path as syspath
 from os import path as ospath
-syspath.insert(0, ospath.dirname(ospath.abspath(__file__))+'/../')
+# syspath.insert(0, ospath.dirname(ospath.abspath(__file__))+'/../')
+
+from tools import bresenhams
 
 # from spaceship.action import (action, key_actions, key_movement, keypress,
 #                               num_movement)
@@ -24,7 +26,7 @@ syspath.insert(0, ospath.dirname(ospath.abspath(__file__))+'/../')
 # from spaceship.setup import output, palette, setup, setup_font, setup_game
 # from spaceship.tools import bresenhams, deltanorm, movement
 
-OVERWORLD_PATH = "../assets/worldmap.png"
+OVERWORLD_PATH = "./assets/worldmap.png"
 
 # stringify_map()
 # stringify_world()
@@ -63,13 +65,18 @@ OVERWORLD_PATH = "../assets/worldmap.png"
 #     return "\n".join(lines)
 class Map:
     def __init__(self, path):
-        self.world = Map.stringify_world(path)
+        self.world, self.h, self.w = Map.stringify_world(path)
 
     @staticmethod
     def stringify_world(path):
         # double for loop and build
         lines = []
         colors = set()
+        map_keys = {
+            (0,0,0): ',', # coastborder
+            (0, 162, 232): ' ', # water
+            (34, 177, 76): '.', # land
+        }
         with Image.open(path) as img:
             pixels = img.load()
             w, h = img.size
@@ -88,12 +95,31 @@ class Map:
                 except KeyError:
                     print((r, g, b))
             lines.append(list(line))
-        return lines
+        return lines, h, w
 
     def draw(self):
+        def ooe1(i, j):
+            rx = self.w*3//4
+            ry = self.h*3//4
+            h, k = self.w*3//4, self.h*1//4
+            return ((i-h)**2)/(rx**2) + ((j-k)**2)/(ry**2) <= 1
+        def ooe2(i, j):
+            rx = self.w//2
+            ry = self.h*3//4
+            h, k = self.w*3//4, self.h*1//4
+            return ((i-h)**2)/(rx**2) + ((j-k)**2)/(ry**2) <= 1
+
+        cities = ((5,5), (11, 16), (38, 30))
         term.clear()
-        for i in range(self.world):
-            for j in range(self.world[i]):
+        for i in range(len(self.world)):
+            for j in range(len(self.world[i])):
+                if (j, i) in cities:
+                    self.world[i][j] = '*'
+                elif i < self.h//2+10 and j > self.w//4 and self.world[i][j] == '.':
+                    if not ooe1(i, j) and choice([True, True, True, False]):
+                        self.world[i][j] = '^'
+                    elif ooe1(i, j) and not ooe2(i, j) and choice([True, False]):
+                        self.world[i][j] = '%'
                 term.puts(j, i, self.world[i][j])
         term.refresh()
         term.read()
@@ -104,6 +130,9 @@ class Map:
 
 def overworld(character=None):
     world = Map(OVERWORLD_PATH) 
+    term.open()
+    term.set('window: size={}x{}, cellsize={}x{}'.format(world.w, world.h, 8, 8))
+    term.set('font: ./fonts/unscii-8.ttf, size=12')
     world.draw()
 
 if __name__ == "__main__":
