@@ -14,7 +14,7 @@ X_MIN_ROOM_SIZE=80
 X_MAX_ROOM_SIZE=100
 Y_MIN_ROOM_SIZE=25
 Y_MAX_ROOM_SIZE=75
-X_TEMP, Y_TEMP = 80, 50
+X_TEMP, Y_TEMP = 160, 100
 WALL, FLOOR = -1, 1
 
 box = namedtuple("Box", "x1 y1 x2 y2")
@@ -22,7 +22,7 @@ point = namedtuple("Point", "x y")
 
 def circle():
     term.open()
-    term.set('window: size=160x100, cellsize=8x8')
+    term.set('window: size=160x100, cellsize=2x2')
     setup_font('Ibm_cga', 4, 4)
     dungeon = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
     cx, cy = X_TEMP//2-1, Y_TEMP//2-1
@@ -114,6 +114,37 @@ def ooe(i, j):
     k = ry = Y_TEMP//2-1
     return ((i-h)**2)/(rx**2) + ((j-k)**2)/(ry**2) <= 1
 
+def smooth(dungeon):
+    def neighbor(x, y):
+        val = 0
+        wall = dungeon[x][y] == WALL
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                if (x, y) != (x+i, y+j):
+                    if wall:
+                        try:
+                            if  dungeon[x+i][y+j] == FLOOR:
+                                val += 1
+                        except:
+                            pass
+                    else:
+                        try:
+                            if dungeon[x+i][y+j] == FLOOR:
+                                val += 1
+                        except:
+                            pass
+        if wall:
+            return WALL if val < 5 else FLOOR
+        else:
+            return FLOOR if val > 4 else WALL
+            
+    newmap = deepcopy(dungeon)
+    for i in range(len(dungeon)):
+        for j in range(len(dungeon[0])):
+            newmap[i][j] = neighbor(i, j)
+
+    return newmap
+
 def build():
     term.open()
     term.set('window: size={}x{}, cellsize=4x4'.format(X_TEMP, Y_TEMP))
@@ -136,23 +167,22 @@ def build():
         .125, .125, .125, .125
         ]
     while volrooms < X_TEMP * Y_TEMP * .85 and tries < 300:
-        for i in range(len(dungeon)):
-            for j in range(len(dungeon[0])):
-                if dungeon[i][j] == 1:
-                    term.bkcolor('blue')
-                elif dungeon[i][j] == 2:
-                    term.bkcolor('green')
-                elif dungeon[i][j] == 3:
-                     term.bkcolor('red')
-                term.puts(j, i, '[c=grey]'+('.' if dungeon[i][j] > 0 else '#')+'[/c]')
-                term.bkcolor('black')
-                if j % 10 == 0:
-                    term.puts(j, 0, "{}".format(j//10))
-            if i % 10 == 0:
-                term.puts(0, i, "{}".format(i//10))
-           
-        term.refresh()
-        x, y = randint(4, 12), randint(4, 12)
+        # for i in range(len(dungeon)):
+        #     for j in range(len(dungeon[0])):
+        #         if dungeon[i][j] == 1:
+        #             term.bkcolor('blue')
+        #         elif dungeon[i][j] == 2:
+        #             term.bkcolor('green')
+        #         elif dungeon[i][j] == 3:
+        #              term.bkcolor('red')
+        #         term.puts(j, i, '[c=grey]'+('.' if dungeon[i][j] > 0 else '#')+'[/c]')
+        #         term.bkcolor('black')
+        #         if j % 10 == 0:
+        #             term.puts(j, 0, "{}".format(j//10))
+        #     if i % 10 == 0:
+        #         term.puts(0, i, "{}".format(i//10))
+        # term.refresh()
+        x, y = randint(5, 12), randint(5, 12)
         ox, oy = randint(-1,2), randint(-1, 2)
         tx, ty = X_TEMP//2-x//2, Y_TEMP//2-y//2 # <-- the upper left point of the box starts near center
         if volrooms == 0:
@@ -229,70 +259,80 @@ def build():
     term.read()
     # -- Prints only the large rooms
     term.clear()
-    large_rooms = []
+    wallmap = [[0 for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
+    large_rooms = set()
+    other_rooms = set()
     for  r in rooms:
         inside_ellipse = ooe(*(center(r)))
         # long_enough = (r.x2-r.x1 >= 12 or r.y2-r.y1 >= 12)
-        large_enough = volume(r) >= 70
-        if  inside_ellipse and large_enough:
-            large_rooms.append((r, center(r)))
+        large_enough = volume(r) >= 85
+        if large_enough:
+            large_rooms.add((r, center(r)))
             term.bkcolor('dark green')
             for x in range(r.x1, r.x2):
                 for y in range(r.y1, r.y2):
                     term.puts(x, y, '[c=grey].[/c]')
+                    wallmap[y][x] = 2
+            for x in range(r.x1-1, r.x2+1):
+                wallmap[r.y1-1][x] = 1
+                wallmap[r.y2][x] = 1
+            for y in range(r.y1-1, r.y2+1):
+                wallmap[y][r.x1-1] = 1
+                wallmap[y][r.x2] = 1
+            term.bkcolor('black')
+        else:
+            # save smaller rooms for later
+            other_rooms.add((r, center(r)))
+    term.refresh()
+    term.read()
+    term.clear()
+    for i in range(len(wallmap)):
+        for j in range(len(wallmap[0])):
+            if wallmap[i][j] == 1:
+                term.bkcolor('grey')
+                char = '#'
+            elif wallmap[i][j] == 2:
+                char = '.'
+            else:
+                char = ' '
+            term.puts(j, i, char)
             term.bkcolor('black')
     term.refresh()
     term.read()
     term.clear()
     # edges
     edges = set()
-    print('checking breshams')
+    vertices = set()
+    print('creating minimum graph')
+    # create the edges
     for room, p1 in large_rooms:
         for other, p2 in large_rooms:
-            if p1 != p2 and distance(p1, p2) <= 20:
-                edges.add(((p1, p2), (p2, p1)))
-                term.bkcolor('yellow')
-                for x, y in bresenhams(p1, p2):
-                    term.puts(x, y, 'X')
-        term.bkcolor('dark green')                  
-        for x in range(room.x1, room.x2):
-            for y in range(room.y1, room.y2):
-                term.puts(x, y, '[c=grey].[/c]')
-        term.bkcolor('black')
-    term.refresh()
-    print(edges)
-    term.read()
+            dis = distance(p1, p2)
+            if p1 != p2 and (p1 in vertices and p2 in vertices):
+                # distance ,pt-pt, rev
+                edges.add((dis, (p1, p2), (p2, p1)))
+                vertices.add(p1)
+                vertices.add(p2)
 
-def smooth(dungeon):
-    def neighbor(x, y):
-        val = 0
-        wall = dungeon[x][y] == WALL
-        for i in range(-1, 2):
-            for j in range(-1, 2):
-                if (x, y) != (x+i, y+j):
-                    if wall:
-                        try:
-                            if  dungeon[x+i][y+j] == FLOOR:
-                                val += 1
-                        except:
-                            pass
-                    else:
-                        try:
-                            if dungeon[x+i][y+j] == FLOOR:
-                                val += 1
-                        except:
-                            pass
-        if wall:
-            return WALL if val < 5 else FLOOR
-        else:
-            return FLOOR if val > 4 else WALL
-            
-    newmap = deepcopy(dungeon)
-    for i in range(len(dungeon)):
-        for j in range(len(dungeon[0])):
-            newmap[i][j] = neighbor(i, j)
-
-    return newmap
+    #     # print('checking breshams')
+    # for room, p1 in large_rooms:
+    #     for other, p2 in large_rooms:
+    #         if p1 != p2:
+    #             edges.add((distance(p1, p2), (p1, p2), (p2, p1)))
+    #             term.bkcolor('yellow')
+    #             for x, y in bresenhams(p1, p2):
+    #                 term.puts(x, y, 'X')
+    #     term.bkcolor('dark green')                  
+    #     for x in range(room.x1, room.x2):
+    #         for y in range(room.y1, room.y2):
+    #             term.puts(x, y, '[c=grey].[/c]')
+    #     term.bkcolor('black')
+    # term.refresh()
+    # # print(edges)
+    # for i in sorted(edges):
+    #     print(i)
+    # term.read()
+    # while True:
 
 
 if __name__ == "__main__":
