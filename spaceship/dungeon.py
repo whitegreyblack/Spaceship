@@ -18,6 +18,7 @@ X_TEMP, Y_TEMP = 80, 50
 WALL, FLOOR = -1, 1
 
 box = namedtuple("Box", "x1 y1 x2 y2")
+point = namedtuple("Point", "x y")
 
 def circle():
     term.open()
@@ -84,12 +85,20 @@ def ellipse():
     term.refresh()
     term.read()
 
+def lpath(p1, p2):
+    points = []
+    xhalf = (p2.x+p1.y)//2
+    yhalf = (p2.y+p1.y)//2
+
+def distance(p1, p2):
+    return math.sqrt((p2.x-p1.x)**2+(p2.y-p1.y)**2)
+
 def intersect(b1, b2):
     return (b1.x1 <= b2.x2 and b1.x2 >= b2.x1 and 
             b1.y1 <= b2.y2 and b1.y2 >= b2.y1)
 
 def center(box):
-    return (box.x1 + box.x2)//2, (box.y1 + box.y2)//2
+    return point((box.x1 + box.x2)//2, (box.y1 + box.y2)//2)
 
 def volume(box):
     return (box.x2-box.x1) * (box.y2-box.y1)
@@ -200,6 +209,7 @@ def build():
         print(r)
     print('-------------------------')
 
+    # -- Seperates boxes inside vs outside ellipse
     term.read()
     term.clear()
     for  r in rooms:
@@ -217,6 +227,7 @@ def build():
             term.bkcolor('black')
     term.refresh()
     term.read()
+    # -- Prints only the large rooms
     term.clear()
     large_rooms = []
     for  r in rooms:
@@ -224,12 +235,32 @@ def build():
         # long_enough = (r.x2-r.x1 >= 12 or r.y2-r.y1 >= 12)
         large_enough = volume(r) >= 70
         if  inside_ellipse and large_enough:
+            large_rooms.append((r, center(r)))
             term.bkcolor('dark green')
             for x in range(r.x1, r.x2):
                 for y in range(r.y1, r.y2):
                     term.puts(x, y, '[c=grey].[/c]')
             term.bkcolor('black')
     term.refresh()
+    term.read()
+    term.clear()
+    # edges
+    edges = set()
+    print('checking breshams')
+    for room, p1 in large_rooms:
+        for other, p2 in large_rooms:
+            if p1 != p2 and distance(p1, p2) <= 20:
+                edges.add(((p1, p2), (p2, p1)))
+                term.bkcolor('yellow')
+                for x, y in bresenhams(p1, p2):
+                    term.puts(x, y, 'X')
+        term.bkcolor('dark green')                  
+        for x in range(room.x1, room.x2):
+            for y in range(room.y1, room.y2):
+                term.puts(x, y, '[c=grey].[/c]')
+        term.bkcolor('black')
+    term.refresh()
+    print(edges)
     term.read()
 
 def smooth(dungeon):
