@@ -10,9 +10,9 @@ Try hometown of humans first then build outwards
 The main game is to defeat the five legends that aim to bring the factions
 to total war leading to annihalation.
 These five legends are:
-    Zorn - King of Wrath (German) -> Located in Beast Territory
-    Ko Mun - The Torturer (Korean) -> Ork Territory (vainglory?)
-    Edochas - The King of Despair (Irish?) -> Elf Forest/Dark Forest (sorrow)
-    Dekay - the Rotten King -> Dwarf (pun) (greed)
-    Crassus Regulus - the Fat King Gluttony (king of humans)
+    Zorn - King of Wrath (German) -> Located in Beast Territory | 
+    Ko Mun - The Torturer (Korean) -> Ork Territory (vainglory?) | 
+    Edochas - The King of Despair (Irish?) -> Elf Forest/Dark Forest (sorrow) |
+    Dekay - the Rotten King -> Dwarf (pun) (greed) | 
+    Crassus Regulus - the Fat King Gluttony (king of humans) |
 """
