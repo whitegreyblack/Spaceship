@@ -442,4 +442,180 @@ if __name__ == "__main__":
 
                 bkgd = hextup(color, 4,4,4) if lit else bg_fog
                 all said and done -- return by unit block
-'''
+
+        # if volrooms < X_TEMP * Y_TEMP * .25:
+        #     x, y = randint(8, 12), randint(6, 10)
+        # else:
+        #     x, y = randint(4, 6), randint(3, 5)
+        # ox, oy = randint(-1,2), randint(-1, 2)
+        # tx, ty = X_TEMP//2-x//2, Y_TEMP//2-y//2 # <-- the upper left point of the box starts near center
+        # if volrooms == 0:
+        #     # center the first box
+        #     room = box(tx, ty, tx+x, ty+y)
+        #     rooms.append(room)
+        #     for i in range(y):
+        #         for j in range(x):
+        #             dungeon[ty+i][tx+j] = 1
+        #     volrooms += x * y
+
+        # else:
+        #     case1 = False
+        #     direction = choices(population=directions, weights=distribution, k=1)[0]
+        #     while True:
+        #         tx, ty = tx + randint(-2,3), ty + randint(-2, 3)
+        #         tx, ty = tx + direction[0] * MULTIPLIER, ty + direction[1] * MULTIPLIER
+        #         temp = box(tx, ty, tx+x, ty+y)
+        #         intersects = any(intersect(room, temp) for room in rooms)
+        #         # only checks for out of bounds if no intersections
+        #         # needs to be both free of intersectiosn and within bounds
+        #         if not intersects:
+        #             if not oob(temp):
+        #                 rooms.append(temp)
+        #                 for i in range(y):
+        #                     for j in range(x):
+        #                         dungeon[ty+i][tx+j] += 1
+        #                 volrooms += x * y
+        #                 case1 = True
+        #             else:
+        #                 tries += 1
+        #             break
+                
+        #     if not case1:
+        #         tx, ty = X_TEMP//2-x//2, Y_TEMP//2-y//2 # <-- the upper left point of the box starts near center
+        #         while True:
+        #             tx, ty = tx + randint(-2,3), ty + randint(-2, 3)        
+        #             tx, ty = tx + direction[0], ty + direction[1]
+        #             temp = box(tx, ty, tx+x, ty+y)
+        #             intersects = any(intersect(room, temp) for room in rooms)
+        #             if not intersects:
+        #                 if not oob(temp):
+        #                     rooms.append(temp)
+        #                     for i in range(y):
+        #                         for j in range(x):
+        #                             dungeon[ty+i][tx+j] += 1
+        #                     volrooms += x * y
+        #                 else:
+        #                     tries += 1
+        #                 break               
+    # # -- Prints only the large rooms
+    # term.clear()
+    # wallmap = [[0 for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
+    # large_rooms = set()
+    # other_rooms = set()
+    # for  r in rooms:
+    #     inside_ellipse = ooe(*(center(r)))
+    #     # long_enough = (r.x2-r.x1 >= 12 or r.y2-r.y1 >= 12)
+    #     large_enough = volume(r) >= 80
+    #     if large_enough:
+    #         large_rooms.add((r, center(r)))
+    #         term.bkcolor('dark green')
+    #         for x in range(r.x1, r.x2):
+    #             for y in range(r.y1, r.y2):
+    #                 term.puts(x, y, '[c=grey].[/c]')
+    #                 wallmap[y][x] = 2
+    #         for x in range(r.x1-1, r.x2+1):
+    #             wallmap[r.y1-1][x] = 1
+    #             wallmap[r.y2][x] = 1
+    #         for y in range(r.y1-1, r.y2+1):
+    #             wallmap[y][r.x1-1] = 1
+    #             wallmap[y][r.x2] = 1
+    #         term.bkcolor('black')
+    #     else:
+    #         # save smaller rooms for later
+    #         other_rooms.add((r, center(r)))
+    # term.refresh()
+    # term.read()
+    # term.clear()
+    # for i in range(len(wallmap)):
+    #     for j in range(len(wallmap[0])):
+    #         if wallmap[i][j] == 1:
+    #             term.bkcolor('grey')
+    #             char = '#'
+    #         elif wallmap[i][j] == 2:
+    #             char = '.'
+    #         else:
+    #             char = ' '
+    #         term.puts(j, i, char)
+    #         term.bkcolor('black')
+    # term.refresh()
+    # term.read()
+    # term.clear()
+    # # edges
+    # edges = set()
+    # vertices = set()
+    # print(len(large_rooms))
+    # for lr in large_rooms:
+    #     print(lr)
+    # print('creating minimum graph')
+    # # create the edges
+    # for room, p1 in large_rooms:
+    #     term.clear()
+    #     for other, p2 in large_rooms:
+    #         dis = distance(p1, p2)
+    #         if not equal(p1, p2):
+    #             # distance ,pt-pt, rev
+    #             edges.add((room, other))
+    #     term.bkcolor('dark green')                  
+    #     for x in range(room.x1, room.x2):
+    #         for y in range(room.y1, room.y2):
+    #             term.puts(x, y, '[c=grey].[/c]')
+
+    #     term.bkcolor('black')
+    # print(len(edges))
+    # for e in list(edges):
+    #     print('EDGE: ',e)
+    #     r1, r2 = e
+    #     term.bkcolor('yellow')
+    #     for x, y in lpath(r1, r2):
+    #         term.puts(x, y, 'X')
+    # term.refresh()
+    # term.read()
+
+    # connected = set()
+
+    # edgelist = list(edges)
+    # for e in edgelist:
+    #     print(e)
+    # print('-------------------------\nVertices')
+
+    # # take each individual room
+    # for room, _ in large_rooms:
+    #     curredges = set()
+    #     # check for edges in edge list
+    #     for s, e in edges:
+    #         # if the edge contains itself
+    #         if equal(room, s) and (s, e) not in connected and (e, s) not in connected:
+    #             print('SE', s, e)
+    #             curredges.add((distance(center(s), center(e)), s, e))
+    #     for i in curredges:
+    #         print(i)
+    #     print()
+    #     sortededges = sorted(list(curredges))
+    #     for i in sortededges:
+    #         print(i)
+    #     _, r1, r2 = sortededges[0]
+    #     # connected.add((r1, r2))
+    #     connected.add((r2, r1))
+
+    # print(connected)
+    # print(len(connected))
+    # print('-------------------------\n')
+    # term.read()
+    # term.clear()
+    # # draw the edges first
+    # for e in list(connected):
+    #     r1, r2 = e
+    #     term.bkcolor('yellow')
+    #     for x, y in lpath(r1, r2):
+    #         term.puts(x, y, 'X')
+
+    # # draw rooms
+    # for room, p1 in large_rooms:
+    #     print('ROOM:', room)
+    #     term.bkcolor('dark green')                  
+    #     for x in range(room.x1, room.x2):
+    #         for y in range(room.y1, room.y2):
+    #             term.puts(x, y, '[c=grey].[/c]')
+    #     term.bkcolor('black')   
+
+"""
