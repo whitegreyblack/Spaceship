@@ -14,10 +14,10 @@ X_MIN_ROOM_SIZE=80
 X_MAX_ROOM_SIZE=100
 Y_MIN_ROOM_SIZE=25
 Y_MAX_ROOM_SIZE=75
-X_TEMP, Y_TEMP = 80, 40
+X_TEMP, Y_TEMP = 80, 50
 # X_TEMP, Y_TEMP = 160, 100
 WALL, FLOOR = -1, 1
-MULTIPLIER = 8
+MULTIPLIER = 12
 box = namedtuple("Box", "x1 y1 x2 y2")
 point = namedtuple("Point", "x y")
 
@@ -107,6 +107,16 @@ def volume(box):
 def rotate(box):
     return list(zip(*box[::-1]))
 
+def equal(p1, p2):
+    print(p1, p2)
+    try:
+        return p1.x == p2.x and p1.y == p2.y
+    except AttributeError:
+        return center(p1) == center(p2)
+    except:
+        print(p1, p2)
+        raise
+
 def oob(box):
     return box.x1 < 1 or box.y1 < 1 or box.x2 >= X_TEMP-1 or box.y2 >= Y_TEMP-1
 
@@ -146,9 +156,49 @@ def smooth(dungeon):
 
     return newmap
 
+def lpath(b1, b2):
+    x1, y1 = center(b1)
+    x2, y2 = center(b2)
+
+    # check if xs are on the same axis -- returns a vertical line
+    if x1 == x2 or y1 == y2:
+        return bresenhams((x1, y1), (x2, y2))
+    # return bresenhams((x1, y1), (x2, y2))
+    # check if points are within x bounds of each other == returns the midpoint vertical line
+    elif b2.x1 <= x1 < b2.x2 and b1.x1 <= x2 < b1.x2:
+        x = (x1+x2)//2
+        return bresenhams((x, y1), (x, y2))
+
+    # check if points are within y bounds of each other -- returns the midpoint horizontal line
+    elif b2.y1 <= y1 < b2.x2 and b1.y1 <= y2 < b2.y2:
+        y = (y1+y2)//2
+        return bresenhams((x1, y), (x2, y))
+
+    else:
+        slope = abs((max(y1, y2) - min(y1, y2))/((max(x1, x2) - min(x1, x2)))) <= 1.0
+        short = (b1.x2 - b1.x2) + (b2.x2-b2.x1) + 1 > x2 - x1
+        # low slope -- go horizontal lpath
+        if slope:
+            # width is short enough - make lpath else zpath
+            if short:
+                return bresenhams((x1, y1), (x1, y2)) \
+                    + bresenhams((x1, y2), (x2, y2))
+            return bresenhams((x1, y1), ((x1+x2)//2, y1)) \
+                + bresenhams(((x1+x2)//2, y1), ((x1+x2)//2, y2)) \
+                + bresenhams(((x1+x2)//2, y2), (x2, y2))
+        # high slope -- go vertical
+        else:
+            if short:
+                return bresenhams((x1, y1), (x2, y1)) \
+                    + bresenhams((x2, y1), (x2, y2))
+            return bresenhams((x1, y1), (x1, (y1+y2)//2)) \
+                + bresenhams((x1, (y1+y2)//2), (x2, (y1+y2)//2)) \
+                + bresenhams((x2, (y1+y2)//2), (x2, y2))
+        
+
 def build():
     term.open()
-    term.set('window: size={}x{}, cellsize=4x4'.format(X_TEMP, Y_TEMP+10))
+    term.set('window: size={}x{}, cellsize=4x4'.format(X_TEMP, Y_TEMP))
     setup_font('Ibm_cga', 8, 8)
     # constructor -- (-1 = impassable) start with a map of walls
     # dungeon = [[-1 for _ in range(x)] for _ in range(y)]
@@ -161,88 +211,33 @@ def build():
         [1, 1], [1, -1], [-1, 1], [-1,-1],
         [1, 2], [1, -2], [-1, 2], [-1,-2],
         [2, 1], [-2, 1], [2, -1], [-2,-1]]
-    distribution = [
-        .5, .5, .5, .5, 
-        .25, .25, .25, .25, 
-        .125, .125, .125, .125, 
-        .125, .125, .125, .125
-        ]
+    distribution = [1 for i in range(len(directions))]
+
+    # Expansion Algorithm
     # while volrooms < X_TEMP * Y_TEMP * .85 and tries < 300:
-    while len(rooms) < 11:
-        # for i in range(len(dungeon)):
-        #     for j in range(len(dungeon[0])):
-        #         if dungeon[i][j] == 1:
-        #             term.bkcolor('blue')
-        #         elif dungeon[i][j] == 2:
-        #             term.bkcolor('green')
-        #         elif dungeon[i][j] == 3:
-        #              term.bkcolor('red')
-        #         term.puts(j, i, '[c=grey]'+('.' if dungeon[i][j] > 0 else '#')+'[/c]')
-        #         term.bkcolor('black')
-        #         if j % 10 == 0:
-        #             term.puts(j, 0, "{}".format(j//10))
-        #     if i % 10 == 0:
-        #         term.puts(0, i, "{}".format(i//10))
-        # term.refresh()
-        x, y = randint(6, 12), randint(4, 8)
-        ox, oy = randint(-1,2), randint(-1, 2)
-        tx, ty = X_TEMP//2-x//2, Y_TEMP//2-y//2 # <-- the upper left point of the box starts near center
-        if volrooms == 0:
-            # center the first box
-            room = box(tx, ty, tx+x, ty+y)
-            rooms.append(room)
-            for i in range(y):
-                for j in range(x):
-                    dungeon[ty+i][tx+j] = 1
-            volrooms += x * y
-
+    while len(rooms) < 30 and volrooms < X_TEMP * Y_TEMP * .95 and tries < 300:
+        if volrooms < X_TEMP * Y_TEMP * .25:
+            x, y = randint(12, 18), randint(9, 15)
+            px, py = randint(9, X_TEMP-9), randint(9, Y_TEMP-9)
+        elif volrooms < X_TEMP * Y_TEMP * .50:
+            x, y = randint(8, 12), randint(6, 10)
+            px, py = randint(6, X_TEMP-6), randint(6, Y_TEMP-6)
         else:
-            case1 = False
-            direction = choices(population=directions, weights=distribution, k=1)[0]
-            while True:
-                tx, ty = tx + randint(-2,3), ty + randint(-2, 3)
-                tx, ty = tx + direction[0] * MULTIPLIER, ty + direction[1] * MULTIPLIER
-                temp = box(tx, ty, tx+x, ty+y)
-                intersects = any(intersect(room, temp) for room in rooms)
-                # only checks for out of bounds if no intersections
-                # needs to be both free of intersectiosn and within bounds
-                if not intersects:
-                    if not oob(temp):
-                        rooms.append(temp)
-                        for i in range(y):
-                            for j in range(x):
-                                dungeon[ty+i][tx+j] += 1
-                        volrooms += x * y
-                        case1 = True
-                    else:
-                        tries += 1
-                    break
-                
-            if not case1:
-                tx, ty = X_TEMP//2-x//2, Y_TEMP//2-y//2 # <-- the upper left point of the box starts near center
-                while True:
-                    tx, ty = tx + randint(-2,3), ty + randint(-2, 3)        
-                    tx, ty = tx + direction[0], ty + direction[1]
-                    temp = box(tx, ty, tx+x, ty+y)
-                    intersects = any(intersect(room, temp) for room in rooms)
-                    if not intersects:
-                        if not oob(temp):
-                            rooms.append(temp)
-                            for i in range(y):
-                                for j in range(x):
-                                    dungeon[ty+i][tx+j] += 1
-                            volrooms += x * y
-                        else:
-                            tries += 1
-                        break                
+            x, y = randint(4, 6), randint(3, 5)
+            px, py = randint(3, X_TEMP-3), randint(3, Y_TEMP-3)
 
-    print('-------------------------\nBOXES:')
-    for r in rooms:
-        print(r)
-    print('-------------------------')
+        temp = box(px-int(round(x/2)), py-int(round(y/2)), px-int(round(x/2))+x, py-int(round(y/2))+y)
+        print(temp)
+        intersects = any(intersect(room, temp) for room in rooms)
 
-    # -- Seperates boxes inside vs outside ellipse
-    term.read()
+        if not intersects and not oob(temp):
+                rooms.append(temp)
+                for j in range(y):
+                    for i in range(x):
+                        dungeon[py-int(round(y/2))+j][px-int(round(x/2))+i] 
+                volrooms += x * y
+        else:
+            tries += 1
     term.clear()
     for  r in rooms:
         for x in range(r.x1, r.x2):
@@ -267,7 +262,7 @@ def build():
     for  r in rooms:
         inside_ellipse = ooe(*(center(r)))
         # long_enough = (r.x2-r.x1 >= 12 or r.y2-r.y1 >= 12)
-        large_enough = volume(r) >= 70
+        large_enough = volume(r) >= 80
         if large_enough:
             large_rooms.add((r, center(r)))
             term.bkcolor('dark green')
@@ -305,40 +300,110 @@ def build():
     # edges
     edges = set()
     vertices = set()
+    print(len(large_rooms))
+    for lr in large_rooms:
+        print(lr)
     print('creating minimum graph')
     # create the edges
     for room, p1 in large_rooms:
+        term.clear()
         for other, p2 in large_rooms:
             dis = distance(p1, p2)
-            if p1 != p2 and (p1 in vertices and p2 in vertices):
+            if not equal(p1, p2):
                 # distance ,pt-pt, rev
-                edges.add((dis, (p1, p2), (p2, p1)))
-                vertices.add(p1)
-                vertices.add(p2)
+                edges.add((room, other))
+        term.bkcolor('dark green')                  
+        for x in range(room.x1, room.x2):
+            for y in range(room.y1, room.y2):
+                term.puts(x, y, '[c=grey].[/c]')
 
-    #     # print('checking breshams')
-    # for room, p1 in large_rooms:
-    #     for other, p2 in large_rooms:
-    #         if p1 != p2:
-    #             edges.add((distance(p1, p2), (p1, p2), (p2, p1)))
-    #             term.bkcolor('yellow')
-    #             for x, y in bresenhams(p1, p2):
-    #                 term.puts(x, y, 'X')
-    #     term.bkcolor('dark green')                  
-    #     for x in range(room.x1, room.x2):
-    #         for y in range(room.y1, room.y2):
-    #             term.puts(x, y, '[c=grey].[/c]')
-    #     term.bkcolor('black')
-    # term.refresh()
-    # # print(edges)
-    # for i in sorted(edges):
-    #     print(i)
-    # term.read()
-    # while True:
+        term.bkcolor('black')
+    print(len(edges))
+    for e in list(edges):
+        print('EDGE: ',e)
+        r1, r2 = e
+        term.bkcolor('yellow')
+        for x, y in lpath(r1, r2):
+            term.puts(x, y, 'X')
+    term.refresh()
+    term.read()
 
+    connected = set()
+
+    edgelist = list(edges)
+    for e in edgelist:
+        print(e)
+    print('-------------------------\nVertices')
+
+    # take each individual room
+    for room, _ in large_rooms:
+        curredges = set()
+        # check for edges in edge list
+        for s, e in edges:
+            # if the edge contains itself
+            if equal(room, s) and (s, e) not in connected and (e, s) not in connected:
+                print('SE', s, e)
+                curredges.add((distance(center(s), center(e)), s, e))
+        for i in curredges:
+            print(i)
+        print()
+        sortededges = sorted(list(curredges))
+        for i in sortededges:
+            print(i)
+        _, r1, r2 = sortededges[0]
+        # connected.add((r1, r2))
+        connected.add((r2, r1))
+
+    print(connected)
+    print(len(connected))
+    print('-------------------------\n')
+    term.read()
+    term.clear()
+    # draw the edges first
+    for e in list(connected):
+        r1, r2 = e
+        term.bkcolor('yellow')
+        for x, y in lpath(r1, r2):
+            term.puts(x, y, 'X')
+
+    # draw rooms
+    for room, p1 in large_rooms:
+        print('ROOM:', room)
+        term.bkcolor('dark green')                  
+        for x in range(room.x1, room.x2):
+            for y in range(room.y1, room.y2):
+                term.puts(x, y, '[c=grey].[/c]')
+        term.bkcolor('black')   
+    term.refresh()
+    term.read()
+
+def draw(box):
+    for i in range(box.x1, box.x2):
+        for j in range(box.y1, box.y2):
+            if i == box.x1 or i == box.x2-1 or j == box.y1 or j == box.y2-1:
+                term.bkcolor('grey')
+                char = '#'
+            else:
+                char = '.'
+            term.puts(i, j, char)
+            term.bkcolor('black')
+    term.refresh()
+
+def test_lpath():
+    b1, b2 = box(0,0,5,5), box(30, 45, 35, 60)
+    term.open()
+    term.set('window: size=80x50, cellsize=8x8')
+    term.set('font: ./fonts/Ibm_cga.ttf, size=4')
+    draw(b1)
+    draw(b2)
+    for i, j in lpath(b1, b2):
+        term.puts(i, j, 'X')
+    term.refresh()
+    term.read()
 
 if __name__ == "__main__":
     build()
+    # test_lpath()
     # circle()
     # print(intersect(box(36, 16, 45, 25), box(37, 8, 43, 14)))
     # print(intersect(box(37, 8, 43, 14), box(36, 16, 45, 25)))
