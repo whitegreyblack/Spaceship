@@ -5,11 +5,13 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from bearlibterminal import terminal as term
 from copy import deepcopy
-from random import choice, choices, randint, choice
+from random import choice, choices, randint, choice, shuffle
 from collections import namedtuple
 from tools import bresenhams
 from spaceship.setup import setup_font
 import math
+from copy import deepcopy
+
 X_MIN_ROOM_SIZE=80
 X_MAX_ROOM_SIZE=100
 Y_MIN_ROOM_SIZE=25
@@ -120,8 +122,9 @@ def distance(p1, p2):
     return math.sqrt((p2.x-p1.x)**2+(p2.y-p1.y)**2)
 
 def intersect(b1, b2):
-    return (b1.x1-1 <= b2.x2 and b1.x2+1 >= b2.x1 and 
-            b1.y1-1 <= b2.y2 and b1.y2+1 >= b2.y1)
+    o = offset = 1
+    return (b1.x1+o <= b2.x2 and b1.x2-o >= b2.x1 and 
+            b1.y1+o <= b2.y2 and b1.y2-o >= b2.y1)
 
 def center(box):
     return point((box.x1 + box.x2)//2, (box.y1 + box.y2)//2)
@@ -141,8 +144,11 @@ def equal(p1, p2):
         print(p1, p2)
         raise
 
-def oob(box):
-    return box.x1 < 1 or box.y1 < 1 or box.x2 >= X_TEMP-1 or box.y2 >= Y_TEMP-1
+def box_oob(box):
+    return box.x1 < 0 or box.y1 < 0 or box.x2 >= X_TEMP-1 or box.y2 >= Y_TEMP-1
+
+def point_oob(i, j):
+    return 0 <= i < X_TEMP-1 and 0 <= j < Y_TEMP-1
 
 def ooe(i, j):
     h = rx = X_TEMP//2-1
@@ -221,6 +227,50 @@ def lpath(b1, b2):
             #     + bresenhams((x1, (y1+y2)//2), (x2, (y1+y2)//2)) \
             #     + bresenhams((x2, (y1+y2)//2), (x2, y2))
         
+def decay(dungeon, n=1000):
+    """More of a fantasy concept where a pristine dungeon layout has
+    exprienced years of degeneration along with decay and collapse. This
+    leads to growth of fauna, broken tunnels and such. Should start with 
+    a well-formed dungeon and then start decay for n turns"""
+    def cellauto(i, j):
+        val = 0
+        for ii in range(-1, 2):
+            for jj in range(-1, 2):
+                if (i, j) != (i+ii, j+jj):
+                    if dungeon[j+jj][i+ii] == '%':
+                        val += 1
+        if val == 0:
+            decayed[j][i] = '.'
+        if val >= 3:
+            decayed[j][i] = '.'
+            for ii in range(-1, 2):
+                for jj in range(-1, 2):
+                    if point_oob(i+ii, j+jj) and decayed[j+jj][i+ii] == ' ':
+                        decayed[j+jj][i+ii] = '%'
+                        walls.append((i+ii, j+jj))
+
+    decayed = deepcopy(dungeon)
+    walls, floors, doors, other = [], [], [], []
+    print(len(dungeon[0]), len(dungeon))
+    # get the dungeon features
+    for j in range(len(dungeon)):
+        for i in range(len(dungeon[0])):
+            if dungeon[j][i] == '%':
+                walls.append((i, j))
+            elif dungeon[j][i] == '.':
+                floors.append((i, j))
+            elif dungeon[j][i] == '+':
+                doors.append((i, j))
+            else:
+                other.append((i, j))
+
+    for i in range(n):
+        shuffle(walls)
+        i, j = walls[i%len(walls)]
+        cellauto(i, j)
+
+    return decayed
+
 def build():
     term.open()
     term.set('window: size={}x{}, cellsize=4x4'.format(X_TEMP+12, Y_TEMP+10))
@@ -233,22 +283,22 @@ def build():
     tries = 0
 
     # Expansion Algorithm
-    while len(rooms) < 30 and tries < 2000:
+    while len(rooms) < 35 and tries < 2000:
         key = choice([i for i in range(-1, 5)])
         if key == 0:
-            x, y = randint(12, 18), randint(9, 15)
+            x, y = randint(12, 18), randint(6, 9)
             px, py = randint(9, X_TEMP-9), randint(9, Y_TEMP-9)
         elif key > 0:
-            x, y = randint(8, 12), randint(6, 10)
+            x, y = randint(8, 12), randint(3, 6)
             px, py = randint(6, X_TEMP-6), randint(6, Y_TEMP-6)
         else:
-            x, y = randint(4, 6), randint(3, 5)
+            x, y = randint(4, 6), randint(3, 4)
             px, py = randint(3, X_TEMP-3), randint(3, Y_TEMP-3)
 
         temp = box(px-int(round(x/2)), py-int(round(y/2)), px-int(round(x/2))+x, py-int(round(y/2))+y)
         intersects = any(intersect(room, temp) for room in rooms)
 
-        if not intersects and not oob(temp):
+        if not intersects and not box_oob(temp):
                 rooms.append(temp)
         else:
             tries += 1
@@ -274,6 +324,7 @@ def build():
     # floors then rooms then walls
 
     floor = []
+    # drawing rooms
     for r in rooms:
         for x in range(r.x1, r.x2):
             for y in range(r.y1, r.y2):
@@ -313,8 +364,6 @@ def build():
             dungeon[j][i] = '.'
         paths.remove((i, j))
 
-
-
     for i, j in paths:
         if dungeon[j][i] == '#':
             for ii in range(-1, 2):
@@ -350,7 +399,9 @@ def build():
     for j in range(len(dungeon)):
         for i in range(len(dungeon[0])):
             if dungeon[j][i] == '%':
-                term.puts(i+12, j+2, "[c=#C0C080]{}[/c]".format(dungeon[j][i]))
+                term.puts(i+12, j+2, "[c=#ffffff]{}[/c]".format(dungeon[j][i]))
+            elif dungeon[j][i] == '.':
+                term.puts(i+12, j+2, "[c=#808080]{}[/c]".format(dungeon[j][i]))
             else:
                 term.puts(i+12, j+2, dungeon[j][i])
 
@@ -361,6 +412,20 @@ def build():
     backstory = ""
 
     # the output is more for debugging
+
+    dungeon = decay(dungeon)
+    for j in range(len(dungeon)):
+        for i in range(len(dungeon[0])):
+            if dungeon[j][i] == '%':
+                term.puts(i+12, j+2, "[c=#ffffff]{}[/c]".format(dungeon[j][i]))
+            elif dungeon[j][i] == '.':
+                term.puts(i+12, j+2, "[c=#808080]{}[/c]".format(dungeon[j][i]))
+            else:
+                term.puts(i+12, j+2, dungeon[j][i])
+
+    term.refresh()
+    term.read()
+
     return dungeon
 
 def draw(box):
