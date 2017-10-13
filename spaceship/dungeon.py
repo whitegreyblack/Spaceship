@@ -83,6 +83,9 @@ def ellipse():
     term.refresh()
     term.read()
 
+def path(p1, p2, dungeon):
+    pass
+
 def mst(graph):
     q, p = {}, {}
 
@@ -106,11 +109,14 @@ def mst(graph):
                 if z in q.keys() and 0 < graph[u][z] < q[z]: 
                     p[z] = u
                     q[z] = graph[u][z]  
-    return  p
+    return p
 
 def distance(p1, p2):
-    return math.sqrt((p2.x-p1.x)**2+(p2.y-p1.y)**2)
-
+    try:
+        return math.sqrt((p2.x-p1.x)**2+(p2.y-p1.y)**2)
+    except AttributeError:
+        return math.sqrt((p2[0]-p1[0])**2+(p2[1]-p1[1])**2)
+    
 def intersect(b1, b2):
     o = offset = 1
     return (b1.x1+o <= b2.x2 and b1.x2-o >= b2.x1 and 
@@ -232,16 +238,24 @@ def decay(dungeon, n=1000):
                 if (i, j) != (i+ii, j+jj):
                     if dungeon[j+jj][i+ii] == '%':
                         val += 1
-        if (val >= 3 or val == 0) and point_oob_ext(i+ii, j+jj, (1, X_TEMP-1), (1, Y_TEMP-1)):
-            decayed[j][i] = '.'
+
+        if (val >= 4) and point_oob_ext(i+ii, j+jj, (2, X_TEMP-2), (2, Y_TEMP-2)):
+            if choice([i in range(0, 2)]):
+                decayed[j][i] = '.'
+                floors.append((i, j))
+            else:
+                decayed[j][i] = '~'
+                liquid.append((i, j))
+
             for ii in range(-1, 2):
                 for jj in range(-1, 2):
-                    if point_oob(i+ii, j+jj) and decayed[j+jj][i+ii] == ' ':
+                    within = point_oob_ext(i+ii, j+jj, (0, X_TEMP-1), (0, Y_TEMP-1))
+                    if within and decayed[j+jj][i+ii] == ' ':
                         decayed[j+jj][i+ii] = '%'
-                        walls.append((i+ii, j+jj))
+                        walls.append((i+ii, j+jj))            
 
     decayed = deepcopy(dungeon)
-    walls, floors, doors, other = [], [], [], []
+    walls, floors, doors, liquid, other = [], [], [], [], []
     print(len(dungeon[0]), len(dungeon))
     # get the dungeon features
     for j in range(len(dungeon)):
@@ -255,17 +269,54 @@ def decay(dungeon, n=1000):
             else:
                 other.append((i, j))
 
-    for i in range(n):
+    # decay of walls
+    for i in range(500):
         # decay wall
         shuffle(walls)
         i, j = walls[i%len(walls)]
         cellauto(i, j)
 
-        #condensation?
-        
+    # leads to liquid water/lave poured out
+    liquidmap = {}
+    shuffle(liquid)
+    for i in range(len(liquid)):
+        array = {}
+        for j in range(len(liquid)):
+            array[j] = distance(liquid[i], liquid[j])
+        liquidmap[i] = array
+
+    liquidmap = mst(liquidmap)
+
+    for k in liquidmap.keys():
+        for x, y in bresenhams(liquid[k], liquid[liquidmap[k]]):
+            if decayed[y][x] not in ('%', ' '):
+                if decayed[y][x] == '.':
+                    floors.remove((x, y))
+                elif decayed[y][x] == '+':
+                    doors.remove((x, y))
+                decayed[y][x] = '~'
+                liquid.append((x, y))
+            elif decayed[y][x] == '%':
+                val = 0
+                for i in range(-1, 2):
+                    for j in range(-1, 2):
+                        if decayed[y+j][x+i] == ' ':
+                            val = 1
+                            break
+                if val == 0:
+                    walls.remove((x, y))
+                    liquid.append((x, y))
+                    decayed[y][x] = '~'
+
+    # leads to growth of fauna earth vs fire elementals
+    for i, j in liquid:
+        for ii in range(-2, 3):
+            for jj in range(-2, 3):
+                if decayed[j+jj][i+ii] == '.':
+                    decayed[j+jj][i+ii] = ','
     return decayed
 
-def build():
+def build(rot=0):
     term.open()
     term.set('window: size={}x{}, cellsize=4x4'.format(X_TEMP+12, Y_TEMP+10))
     setup_font('Ibm_cga', 8, 8)
@@ -277,7 +328,7 @@ def build():
     tries = 0
 
     # Expansion Algorithm
-    while len(rooms) < 35 and tries < 2000:
+    while len(rooms) < 40 and tries < 2000:
         key = choice([i for i in range(-1, 5)])
         if key == 0:
             x, y = randint(12, 18), randint(6, 9)
@@ -320,8 +371,8 @@ def build():
     floor = []
     # drawing rooms
     for r in rooms:
-        for x in range(r.x1, r.x2):
-            for y in range(r.y1, r.y2):
+        for x in range(r.x1, r.x2+1):
+            for y in range(r.y1, r.y2+1):
                 dungeon[y][x] = '.'
                 floor.append((x, y))
 
@@ -407,19 +458,9 @@ def build():
 
     # the output is more for debugging
 
-    dungeon = decay(dungeon)
-    for j in range(len(dungeon)):
-        for i in range(len(dungeon[0])):
-            if dungeon[j][i] == '%':
-                term.puts(i+12, j+2, "[c=#ffffff]{}[/c]".format(dungeon[j][i]))
-            elif dungeon[j][i] == '.':
-                term.puts(i+12, j+2, "[c=#808080]{}[/c]".format(dungeon[j][i]))
-            else:
-                term.puts(i+12, j+2, dungeon[j][i])
 
-    term.refresh()
-    term.read()
-
+    if rot:
+        dungeon = decay(dungeon, n=rot)
     return dungeon
 
 def draw(box):
@@ -434,6 +475,36 @@ def draw(box):
             term.bkcolor('black')
     term.refresh()
 
+def test_dungeon():
+    dungeon = build(1000)
+    x, y = 0, 0
+
+    for j in range(len(dungeon)):
+        for i in range(len(dungeon[0])):
+            if dungeon[j][i] == '<':
+                x, y = i+12, j+2
+
+    for j in range(len(dungeon)):
+        for i in range(len(dungeon[0])):
+            if dungeon[j][i] == '%':
+                term.puts(i+12, j+2, "[c=#ffffff]{}[/c]".format(dungeon[j][i]))
+            elif dungeon[j][i] == '.':
+                term.puts(i+12, j+2, "[c=#808080]{}[/c]".format(dungeon[j][i]))
+            elif dungeon[j][i] == '~':
+                term.puts(i+12, j+2, "[c=#0080C0]{}[/c]".format(dungeon[j][i]))
+            elif dungeon[j][i] == '=':
+                term.puts(i+12, j+2, "[c=#D02020]{}[/c]".format(dungeon[j][i]))
+            elif dungeon[j][i] == ',':
+                term.puts(i+12, j+2, "[c=#80C080]{}[/c]".format(dungeon[j][i]))
+            else:
+                term.puts(i+12, j+2, dungeon[j][i])
+            
+    term.puts(x, y, '[c=#00C0C0]@[/c]')
+    term.refresh()
+    term.read()
+        
+
+
 def test_lpath():
     b1, b2 = box(0,0,5,5), box(30, 45, 35, 60)
     term.open()
@@ -447,4 +518,4 @@ def test_lpath():
     term.read()
 
 if __name__ == "__main__":
-    build()
+    test_dungeon()
