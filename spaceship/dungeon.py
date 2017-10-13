@@ -5,7 +5,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from bearlibterminal import terminal as term
 from copy import deepcopy
-from random import choice, choices, randint, choice, shuffle
+from random import choice, randint, shuffle
 from collections import namedtuple
 from tools import bresenhams
 from spaceship.setup import setup_font
@@ -13,7 +13,7 @@ import math
 from copy import deepcopy
 
 # X_TEMP, Y_TEMP = 78, 40
-X_TEMP, Y_TEMP = 200, 100
+X_TEMP, Y_TEMP = 160, 80
 WALL, FLOOR = -1, 1
 box = namedtuple("Box", "x1 y1 x2 y2")
 point = namedtuple("Point", "x y")
@@ -240,22 +240,24 @@ def decay(dungeon, n=1000):
                         val += 1
 
         if (val >= 4) and point_oob_ext(i+ii, j+jj, (2, X_TEMP-2), (2, Y_TEMP-2)):
-            if choice([i in range(0, 2)]):
-                decayed[j][i] = '.'
-                floors.append((i, j))
+            # if choice([i in range(0, 2)]):
+            decayed[j][i] = '.'
+            floors.append((i, j))
+            '''
             else:
                 decayed[j][i] = '~'
                 liquid.append((i, j))
-
+            '''
             for ii in range(-1, 2):
                 for jj in range(-1, 2):
                     within = point_oob_ext(i+ii, j+jj, (0, X_TEMP-1), (0, Y_TEMP-1))
                     if within and decayed[j+jj][i+ii] == ' ':
                         decayed[j+jj][i+ii] = '%'
                         walls.append((i+ii, j+jj))            
-
+    def cellfill(i, j):
+         
     decayed = deepcopy(dungeon)
-    walls, floors, doors, liquid, other = [], [], [], [], []
+    walls, floors, doors, liquid, spaces, other = [], [], [], [], [], []
     print(len(dungeon[0]), len(dungeon))
     # get the dungeon features
     for j in range(len(dungeon)):
@@ -266,6 +268,8 @@ def decay(dungeon, n=1000):
                 floors.append((i, j))
             elif dungeon[j][i] == '+':
                 doors.append((i, j))
+            elif dungeon[j][i] == ' ':
+                spaces.append((i, j))
             else:
                 other.append((i, j))
 
@@ -276,6 +280,14 @@ def decay(dungeon, n=1000):
         i, j = walls[i%len(walls)]
         cellauto(i, j)
 
+    # find 2nd and 3rd largest voids -> pools of water
+    space_copy = spaces
+    space_flood = {}
+    while space_copy:
+        i, j = space_copy.pop()
+        for k in space_flood.keys():
+            if space_flood[k]
+    '''
     # leads to liquid water/lave poured out
     liquidmap = {}
     for i in range(len(liquid)):
@@ -319,7 +331,7 @@ def decay(dungeon, n=1000):
                         decayed[j+jj][i+ii] = ','
                     elif dis <= 3 and choice([-1, 0, 1]) == 1:
                         decayed[j+jj][i+ii] = ','
-
+    '''
     return decayed
 
 def build(rot=0):
