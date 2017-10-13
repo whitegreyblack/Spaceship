@@ -233,17 +233,17 @@ def build():
     tries = 0
 
     # Expansion Algorithm
-    while len(rooms) < 30 and tries < 1000:
-        key = choices(population=[0, 1, 2], weights=[.5, .5, .5] ,k=1)[0]
+    while len(rooms) < 30 and tries < 2000:
+        key = choice([i for i in range(-1, 5)])
         if key == 0:
             x, y = randint(12, 18), randint(9, 15)
             px, py = randint(9, X_TEMP-9), randint(9, Y_TEMP-9)
         elif key > 0:
             x, y = randint(8, 12), randint(6, 10)
             px, py = randint(6, X_TEMP-6), randint(6, Y_TEMP-6)
-        # else:
-        #     x, y = randint(4, 6), randint(3, 5)
-        #     px, py = randint(3, X_TEMP-3), randint(3, Y_TEMP-3)
+        else:
+            x, y = randint(4, 6), randint(3, 5)
+            px, py = randint(3, X_TEMP-3), randint(3, Y_TEMP-3)
 
         temp = box(px-int(round(x/2)), py-int(round(y/2)), px-int(round(x/2))+x, py-int(round(y/2))+y)
         intersects = any(intersect(room, temp) for room in rooms)
@@ -302,11 +302,18 @@ def build():
                 doors.append((i, j))
     
     for i, j in doors:
-        if choice([0, 1]) == 1:
+        skip = False
+        for ii in range(-1, 2):
+            for jj in range(-1, 2):
+                if dungeon[j+jj][i+ii] == '+':
+                    skip = True
+        if not skip and choice([0, 1]):
             dungeon[j][i] = '+'
         else:
             dungeon[j][i] = '.'
         paths.remove((i, j))
+
+
 
     for i, j in paths:
         if dungeon[j][i] == '#':
@@ -328,8 +335,8 @@ def build():
 
     traps = []
     for i in range(3):
-        i, j = choice(floor)
-        floor.remove((i, j))
+        i, j = choice(floor_clear)
+        floor_clear.remove((i, j))
         dungeon[j][i] = '^'
 
     i, j = choice(floor_clear)
@@ -342,11 +349,19 @@ def build():
 
     for j in range(len(dungeon)):
         for i in range(len(dungeon[0])):
-            term.puts(i+12, j+2, dungeon[j][i])
+            if dungeon[j][i] == '%':
+                term.puts(i+12, j+2, "[c=#C0C080]{}[/c]".format(dungeon[j][i]))
+            else:
+                term.puts(i+12, j+2, dungeon[j][i])
 
-    
     term.refresh()
     term.read()
+
+    # create backstory
+    backstory = ""
+
+    # the output is more for debugging
+    return dungeon
 
 def draw(box):
     for i in range(box.x1, box.x2):
