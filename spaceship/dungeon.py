@@ -14,7 +14,7 @@ X_MIN_ROOM_SIZE=80
 X_MAX_ROOM_SIZE=100
 Y_MIN_ROOM_SIZE=25
 Y_MAX_ROOM_SIZE=75
-X_TEMP, Y_TEMP = 80, 50
+X_TEMP, Y_TEMP = 78, 40
 # X_TEMP, Y_TEMP = 160, 100
 WALL, FLOOR = -1, 1
 MULTIPLIER = 12
@@ -103,10 +103,12 @@ def mst(graph):
                 p[z] = u
                 q[z] = graph[u][z]
         q.pop(u)
-        print(q)
-    print('key pair')
-    for k in p:
-        print(k, p[k])
+        if choice([0, 1]) == 1 and q.keys():
+            u = min(k for k in q.keys())
+            for z in graph[u].keys():
+                if z in q.keys() and 0 < graph[u][z] < q[z]: 
+                    p[z] = u
+                    q[z] = graph[u][z]  
     return  p
 
 def lpath(p1, p2):
@@ -118,8 +120,8 @@ def distance(p1, p2):
     return math.sqrt((p2.x-p1.x)**2+(p2.y-p1.y)**2)
 
 def intersect(b1, b2):
-    return (b1.x1 <= b2.x2 and b1.x2 >= b2.x1 and 
-            b1.y1 <= b2.y2 and b1.y2 >= b2.y1)
+    return (b1.x1-1 <= b2.x2 and b1.x2+1 >= b2.x1 and 
+            b1.y1-1 <= b2.y2 and b1.y2+1 >= b2.y1)
 
 def center(box):
     return point((box.x1 + box.x2)//2, (box.y1 + box.y2)//2)
@@ -131,7 +133,6 @@ def rotate(box):
     return list(zip(*box[::-1]))
 
 def equal(p1, p2):
-    print(p1, p2)
     try:
         return p1.x == p2.x and p1.y == p2.y
     except AttributeError:
@@ -199,29 +200,30 @@ def lpath(b1, b2):
 
     else:
         slope = abs((max(y1, y2) - min(y1, y2))/((max(x1, x2) - min(x1, x2)))) <= 1.0
-        short = (b1.x2 - b1.x2) + (b2.x2-b2.x1) + 1 > x2 - x1
+        # short = (b1.x2 - b1.x2) + (b2.x2-b2.x1) + 1 > x2 - x1
         # low slope -- go horizontal lpath
         if slope:
             # width is short enough - make lpath else zpath
-            if short:
-                return bresenhams((x1, y1), (x1, y2)) \
-                    + bresenhams((x1, y2), (x2, y2))
-            return bresenhams((x1, y1), ((x1+x2)//2, y1)) \
-                + bresenhams(((x1+x2)//2, y1), ((x1+x2)//2, y2)) \
-                + bresenhams(((x1+x2)//2, y2), (x2, y2))
+            # if short:
+            return bresenhams((x1, y1), (x1, y2)) \
+                + bresenhams((x1, y2), (x2, y2))
+
+            # return bresenhams((x1, y1), ((x1+x2)//2, y1)) \
+            #     + bresenhams(((x1+x2)//2, y1), ((x1+x2)//2, y2)) \
+            #     + bresenhams(((x1+x2)//2, y2), (x2, y2))
         # high slope -- go vertical
         else:
-            if short:
-                return bresenhams((x1, y1), (x2, y1)) \
-                    + bresenhams((x2, y1), (x2, y2))
-            return bresenhams((x1, y1), (x1, (y1+y2)//2)) \
-                + bresenhams((x1, (y1+y2)//2), (x2, (y1+y2)//2)) \
-                + bresenhams((x2, (y1+y2)//2), (x2, y2))
-        
+            # if short:
+            return bresenhams((x1, y1), (x2, y1)) \
+                + bresenhams((x2, y1), (x2, y2))
 
+            # return bresenhams((x1, y1), (x1, (y1+y2)//2)) \
+            #     + bresenhams((x1, (y1+y2)//2), (x2, (y1+y2)//2)) \
+            #     + bresenhams((x2, (y1+y2)//2), (x2, y2))
+        
 def build():
     term.open()
-    term.set('window: size={}x{}, cellsize=4x4'.format(X_TEMP, Y_TEMP))
+    term.set('window: size={}x{}, cellsize=4x4'.format(X_TEMP+12, Y_TEMP+10))
     setup_font('Ibm_cga', 8, 8)
     # constructor -- (-1 = impassable) start with a map of walls
     # dungeon = [[-1 for _ in range(x)] for _ in range(y)]
@@ -231,17 +233,17 @@ def build():
     tries = 0
 
     # Expansion Algorithm
-    while len(rooms) < 30 and tries < 500:
-        key = choices(population=[0, 1, 2], weights=[.5,.35,.15] ,k=1)[0]
+    while len(rooms) < 30 and tries < 1000:
+        key = choices(population=[0, 1, 2], weights=[.5, .5, .5] ,k=1)[0]
         if key == 0:
             x, y = randint(12, 18), randint(9, 15)
             px, py = randint(9, X_TEMP-9), randint(9, Y_TEMP-9)
-        elif key == 1:
+        elif key > 0:
             x, y = randint(8, 12), randint(6, 10)
             px, py = randint(6, X_TEMP-6), randint(6, Y_TEMP-6)
-        else:
-            x, y = randint(4, 6), randint(3, 5)
-            px, py = randint(3, X_TEMP-3), randint(3, Y_TEMP-3)
+        # else:
+        #     x, y = randint(4, 6), randint(3, 5)
+        #     px, py = randint(3, X_TEMP-3), randint(3, Y_TEMP-3)
 
         temp = box(px-int(round(x/2)), py-int(round(y/2)), px-int(round(x/2))+x, py-int(round(y/2))+y)
         intersects = any(intersect(room, temp) for room in rooms)
@@ -259,38 +261,88 @@ def build():
             other_rooms.append(r)
 
     # create a graph and build mst
-    for i in range(len(large_rooms)):
+    for i in range(len(rooms)):
         array = {}
-        for j in range(len(large_rooms)):
-            array[j] = distance(center(large_rooms[i]), center(large_rooms[j]))
+        for j in range(len(rooms)):
+            array[j] = distance(center(rooms[i]), center(rooms[j]))
         graph[i] = array
 
     graph = mst(graph)
 
-
     # so the boxes and paths have been drawn
     # now append dimensions to the map and create a dungeon
     # floors then rooms then walls
-    for r in large_rooms:
-        # for y in range(r.y1, r.y2):
-        #     for x in (r.x1, r.x2):
-        #         dungeon[y][x] = '%'
-                    
+
+    floor = []
+    for r in rooms:
         for x in range(r.x1, r.x2):
             for y in range(r.y1, r.y2):
                 dungeon[y][x] = '.'
+                floor.append((x, y))
 
-    for k in graph:
-        for x, y in lpath(large_rooms[k], large_rooms[graph[k]]):
-            if dungeon[y][x] == ('%'):
-                dungeon[y][x] == '+'
+            for y in (r.y1, r.y2):
+                dungeon[y][x] = '%'
 
-            if dungeon[y][x] == ' ':
-                dungeon[y][x] == '#'
+        for y in range(r.y1, r.y2+1):
+            for x in (r.x1, r.x2):
+                dungeon[y][x] = '%'
+
+    paths = []
+    for k in graph.keys():
+        for x, y in lpath(rooms[k], rooms[graph[k]]):
+            dungeon[y][x] = '#'
+            paths.append((x, y))
+
+    doors = []
+    for i, j in paths:
+        if dungeon[j][i] == '#':
+            hwalls = (dungeon[j][i+1] == '%' and dungeon[j][i-1] == '%')
+            vwalls = (dungeon[j+1][i] == '%' and dungeon[j-1][i] == '%')
+            if hwalls or vwalls:
+                doors.append((i, j))
+    
+    for i, j in doors:
+        if choice([0, 1]) == 1:
+            dungeon[j][i] = '+'
+        else:
+            dungeon[j][i] = '.'
+        paths.remove((i, j))
+
+    for i, j in paths:
+        if dungeon[j][i] == '#':
+            for ii in range(-1, 2):
+                for jj in range(-1, 2):
+                    if dungeon[j+jj][i+ii] == ' ':
+                        dungeon[j+jj][i+ii] = '%'
+            dungeon[j][i] = '.'
+
+    floor_clear = []
+    for i, j in floor:
+        val = 0
+        for ii in range(-1, 2):
+            for jj in range(-1, 2):
+                if dungeon[j+jj][i+ii] == '.':
+                    val += 1
+        if val == 9:
+            floor_clear.append((i, j))
+
+    traps = []
+    for i in range(3):
+        i, j = choice(floor)
+        floor.remove((i, j))
+        dungeon[j][i] = '^'
+
+    i, j = choice(floor_clear)
+    floor_clear.remove((i, j))
+    dungeon[j][i] = '>'
+
+    i, j = choice(floor_clear)
+    floor_clear.remove((i, j))
+    dungeon[j][i] = '<'
 
     for j in range(len(dungeon)):
         for i in range(len(dungeon[0])):
-            term.puts(i, j, dungeon[j][i])
+            term.puts(i+12, j+2, dungeon[j][i])
 
     
     term.refresh()
