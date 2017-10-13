@@ -12,8 +12,8 @@ from spaceship.setup import setup_font
 import math
 from copy import deepcopy
 
-X_TEMP, Y_TEMP = 78, 40
-# X_TEMP, Y_TEMP = 160, 100
+# X_TEMP, Y_TEMP = 78, 40
+X_TEMP, Y_TEMP = 200, 100
 WALL, FLOOR = -1, 1
 box = namedtuple("Box", "x1 y1 x2 y2")
 point = namedtuple("Point", "x y")
@@ -270,15 +270,14 @@ def decay(dungeon, n=1000):
                 other.append((i, j))
 
     # decay of walls
-    for i in range(500):
+    shuffle(walls)
+    for i in range(2000):
         # decay wall
-        shuffle(walls)
         i, j = walls[i%len(walls)]
         cellauto(i, j)
 
     # leads to liquid water/lave poured out
     liquidmap = {}
-    shuffle(liquid)
     for i in range(len(liquid)):
         array = {}
         for j in range(len(liquid)):
@@ -313,12 +312,19 @@ def decay(dungeon, n=1000):
         for ii in range(-2, 3):
             for jj in range(-2, 3):
                 if decayed[j+jj][i+ii] == '.':
-                    decayed[j+jj][i+ii] = ','
+                    dis = distance((i, j), (i+ii, j+jj))
+                    if dis <= 1:
+                        decayed[j+jj][i+ii] = ','
+                    elif dis <= 2 and choice([0, 1]) == 1:
+                        decayed[j+jj][i+ii] = ','
+                    elif dis <= 3 and choice([-1, 0, 1]) == 1:
+                        decayed[j+jj][i+ii] = ','
+
     return decayed
 
 def build(rot=0):
     term.open()
-    term.set('window: size={}x{}, cellsize=4x4'.format(X_TEMP+12, Y_TEMP+10))
+    term.set('window: size={}x{}, cellsize=4x4'.format(X_TEMP, Y_TEMP))
     setup_font('Ibm_cga', 8, 8)
     # constructor -- (-1 = impassable) start with a map of walls
     # dungeon = [[-1 for _ in range(x)] for _ in range(y)]
@@ -328,7 +334,7 @@ def build(rot=0):
     tries = 0
 
     # Expansion Algorithm
-    while len(rooms) < 40 and tries < 2000:
+    while len(rooms) < 200 and tries < 2000:
         key = choice([i for i in range(-1, 5)])
         if key == 0:
             x, y = randint(12, 18), randint(6, 9)
@@ -441,17 +447,17 @@ def build(rot=0):
     floor_clear.remove((i, j))
     dungeon[j][i] = '<'
 
-    for j in range(len(dungeon)):
-        for i in range(len(dungeon[0])):
-            if dungeon[j][i] == '%':
-                term.puts(i+12, j+2, "[c=#ffffff]{}[/c]".format(dungeon[j][i]))
-            elif dungeon[j][i] == '.':
-                term.puts(i+12, j+2, "[c=#808080]{}[/c]".format(dungeon[j][i]))
-            else:
-                term.puts(i+12, j+2, dungeon[j][i])
+    # for j in range(len(dungeon)):
+    #     for i in range(len(dungeon[0])):
+    #         if dungeon[j][i] == '%':
+    #             term.puts(i, j, "[c=#ffffff]{}[/c]".format(dungeon[j][i]))
+    #         elif dungeon[j][i] == '.':
+    #             term.puts(i, j, "[c=#808080]{}[/c]".format(dungeon[j][i]))
+    #         else:
+    #             term.puts(i, j, dungeon[j][i])
 
-    term.refresh()
-    term.read()
+    # term.refresh()
+    # term.read()
 
     # create backstory
     backstory = ""
@@ -460,7 +466,8 @@ def build(rot=0):
 
 
     if rot:
-        dungeon = decay(dungeon, n=rot)
+        for i in range(1):
+            dungeon = decay(dungeon, n=rot)
     return dungeon
 
 def draw(box):
@@ -482,22 +489,22 @@ def test_dungeon():
     for j in range(len(dungeon)):
         for i in range(len(dungeon[0])):
             if dungeon[j][i] == '<':
-                x, y = i+12, j+2
+                x, y = i, j
 
     for j in range(len(dungeon)):
         for i in range(len(dungeon[0])):
             if dungeon[j][i] == '%':
-                term.puts(i+12, j+2, "[c=#ffffff]{}[/c]".format(dungeon[j][i]))
+                term.puts(i, j, "[c=#ffffff]{}[/c]".format(dungeon[j][i]))
             elif dungeon[j][i] == '.':
-                term.puts(i+12, j+2, "[c=#808080]{}[/c]".format(dungeon[j][i]))
+                term.puts(i, j, "[c=#806040]{}[/c]".format(dungeon[j][i]))
             elif dungeon[j][i] == '~':
-                term.puts(i+12, j+2, "[c=#0080C0]{}[/c]".format(dungeon[j][i]))
+                term.puts(i, j, "[c=#0080C0]{}[/c]".format(dungeon[j][i]))
             elif dungeon[j][i] == '=':
-                term.puts(i+12, j+2, "[c=#D02020]{}[/c]".format(dungeon[j][i]))
+                term.puts(i, j, "[c=#D02020]{}[/c]".format(dungeon[j][i]))
             elif dungeon[j][i] == ',':
-                term.puts(i+12, j+2, "[c=#80C080]{}[/c]".format(dungeon[j][i]))
+                term.puts(i, j, "[c=#80C080]{}[/c]".format(dungeon[j][i]))
             else:
-                term.puts(i+12, j+2, dungeon[j][i])
+                term.puts(i, j, dungeon[j][i])
             
     term.puts(x, y, '[c=#00C0C0]@[/c]')
     term.refresh()
