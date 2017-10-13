@@ -12,14 +12,9 @@ from spaceship.setup import setup_font
 import math
 from copy import deepcopy
 
-X_MIN_ROOM_SIZE=80
-X_MAX_ROOM_SIZE=100
-Y_MIN_ROOM_SIZE=25
-Y_MAX_ROOM_SIZE=75
 X_TEMP, Y_TEMP = 78, 40
 # X_TEMP, Y_TEMP = 160, 100
 WALL, FLOOR = -1, 1
-MULTIPLIER = 12
 box = namedtuple("Box", "x1 y1 x2 y2")
 point = namedtuple("Point", "x y")
 

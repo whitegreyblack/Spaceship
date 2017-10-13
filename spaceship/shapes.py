@@ -20,6 +20,16 @@ class Point:
     def distance(self, other) -> float:
         return sqrt((self.x-other.x)**2+(self.y-self.x)**2)
 
+    def __repr__(self):
+        return "Point: ({}, {})".format(self.x, self.y)
+
+class Line:
+    def __init__(self, pts):
+        self.line = [(x, y) for x, y in pts]
+
+    def endpoints(self):
+        return self.line[0], self.line[-1]
+
 class Box:
     def __init__(self, i, x1, y1, x2, y2):
         self.num = i
@@ -54,12 +64,8 @@ class Box:
     def equal(self, other) -> bool:
         return self.p1 == other.p1 and self.p2 == other.p2
 
-class Room(Box):
-    def __init__(self, i, x1, y1, x2, y2):
-        super().__init__(i, x1, y1, x2, y2)
-        self.features=[]
-        self.doors=[]
-
+    def __repr__(self):
+        return "Box[{}]"
 
 class Graph:
     def __init__(self, rooms):
