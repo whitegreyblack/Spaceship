@@ -113,11 +113,6 @@ def mst(graph):
                     q[z] = graph[u][z]  
     return  p
 
-def lpath(p1, p2):
-    points = []
-    xhalf = (p2.x+p1.y)//2
-    yhalf = (p2.y+p1.y)//2
-
 def distance(p1, p2):
     return math.sqrt((p2.x-p1.x)**2+(p2.y-p1.y)**2)
 
@@ -149,6 +144,9 @@ def box_oob(box):
 
 def point_oob(i, j):
     return 0 <= i < X_TEMP-1 and 0 <= j < Y_TEMP-1
+
+def point_oob_ext(i, j, xlim, ylim):
+    return xlim[0] <= i < xlim[1] and ylim[0] <= j < ylim[1]
 
 def ooe(i, j):
     h = rx = X_TEMP//2-1
@@ -239,9 +237,7 @@ def decay(dungeon, n=1000):
                 if (i, j) != (i+ii, j+jj):
                     if dungeon[j+jj][i+ii] == '%':
                         val += 1
-        if val == 0:
-            decayed[j][i] = '.'
-        if val >= 3:
+        if (val >= 3 or val == 0) and point_oob_ext(i+ii, j+jj, (1, X_TEMP-1), (1, Y_TEMP-1)):
             decayed[j][i] = '.'
             for ii in range(-1, 2):
                 for jj in range(-1, 2):
@@ -265,10 +261,13 @@ def decay(dungeon, n=1000):
                 other.append((i, j))
 
     for i in range(n):
+        # decay wall
         shuffle(walls)
         i, j = walls[i%len(walls)]
         cellauto(i, j)
 
+        #condensation?
+        
     return decayed
 
 def build():
