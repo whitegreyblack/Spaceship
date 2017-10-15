@@ -343,7 +343,7 @@ def decay(dungeon, n=1000):
                         term.puts(i, j, "[c=#806040]{}[/c]".format(decayed[j][i]))
                     elif dungeon[j][i] == '~':
                         term.puts(i, j, "[c=#0080C0]{}[/c]".format(decayed[j][i]))
-                    elif dungeon[j][i] == '=':
+                    elif dungeon[j][i] == '=':f
                         term.puts(i, j, "[c=#D02020]{}[/c]".format(decayed[j][i]))
                     elif dungeon[j][i] == ',':
                         term.puts(i, j, "[c=#80C080]{}[/c]".format(decayed[j][i]))
