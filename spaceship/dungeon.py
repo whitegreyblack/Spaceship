@@ -228,7 +228,7 @@ def path(p1, p2, dungeon):
     openlist = set()
     closelist = []
     openlist.add(node(0, 0, 0, None, p1))
-
+    print(int(distance(p1, p2)*10))
     while openlist:
         nodeq = min(sorted(openlist))
         openlist.remove(nodeq)
@@ -285,9 +285,77 @@ def decay(dungeon, n=1000):
                     within = point_oob_ext(i+ii, j+jj, (0, X_TEMP-1), (0, Y_TEMP-1))
                     if within and decayed[j+jj][i+ii] == ' ':
                         decayed[j+jj][i+ii] = '%'
-                        walls.append((i+ii, j+jj))            
-    def cellfill(i, j):
-         pass
+                        walls.append((i+ii, j+jj))         
+
+    def cellpath(p1, p2):
+        frontier = set()
+        frontier.add((0, p1))
+        camefrom = { p1:None }
+        costfrom = { p1:0 }
+        print(p1, p2)
+        found = False
+        for j in range(len(decayed)):
+            for i in range(len(decayed[0])):
+                if dungeon[j][i] == '%':
+                    term.puts(i, j, "[c=#ffffff]{}[/c]".format(decayed[j][i]))
+                elif dungeon[j][i] == '.':
+                    term.puts(i, j, "[c=#806040]{}[/c]".format(decayed[j][i]))
+                elif dungeon[j][i] == '~':
+                    term.puts(i, j, "[c=#0080C0]{}[/c]".format(decayed[j][i]))
+                elif dungeon[j][i] == '=':
+                    term.puts(i, j, "[c=#D02020]{}[/c]".format(decayed[j][i]))
+                elif dungeon[j][i] == ',':
+                    term.puts(i, j, "[c=#80C080]{}[/c]".format(decayed[j][i]))
+                else:
+                    term.puts(i, j, decayed[j][i])
+        while frontier:
+            current = min(sorted(frontier))
+            frontier.remove(current)
+            curnode = current[1]
+            print(curnode)
+            i, j = curnode
+            if curnode == p2:
+                camefrom[neighbor] = curnode
+                found = True
+                break
+            for ii in range(-1, 2):
+                for jj in range(-1, 2):
+                    ni, nj = i+ii, j+jj
+                    neighbor = (ni, nj)
+                    if (ii, jj) != (0, 0) and decayed[nj][ni] in ('.', '+'):
+                        cost = costfrom[curnode] + distance(curnode, neighbor)
+                        if neighbor not in costfrom.keys() or cost < costfrom[neighbor]:
+                            costfrom[neighbor] = cost
+                            priority = cost + distance(neighbor, p2)
+                            frontier.add((priority, neighbor))
+                            camefrom[neighbor] = curnode
+            for i, j in camefrom.keys():
+                term.puts(i,j,'[c=#00c0c0]/[/c]')
+            term.puts(*p2, '[c=#00c0c0]/[/c]')
+            term.refresh()
+        if found:
+            term.clear()
+            for j in range(len(decayed)):
+                for i in range(len(decayed[0])):
+                    if dungeon[j][i] == '%':
+                        term.puts(i, j, "[c=#ffffff]{}[/c]".format(decayed[j][i]))
+                    elif dungeon[j][i] == '.':
+                        term.puts(i, j, "[c=#806040]{}[/c]".format(decayed[j][i]))
+                    elif dungeon[j][i] == '~':
+                        term.puts(i, j, "[c=#0080C0]{}[/c]".format(decayed[j][i]))
+                    elif dungeon[j][i] == '=':
+                        term.puts(i, j, "[c=#D02020]{}[/c]".format(decayed[j][i]))
+                    elif dungeon[j][i] == ',':
+                        term.puts(i, j, "[c=#80C080]{}[/c]".format(decayed[j][i]))
+                    else:
+                        term.puts(i, j, decayed[j][i])
+            start = p2
+            term.puts(*p1, '[c=#00c0c0]/[/c]')
+            while camefrom[start] != None:
+                term.puts(*(camefrom[start]), '[c=#00c0c0]/[/c]')
+                start = camefrom[start]
+                term.refresh()
+                term.read()
     decayed = deepcopy(dungeon)
     walls, floors, doors, liquid, spaces, other = [], [], [], [], [], []
     print(len(dungeon[0]), len(dungeon))
@@ -307,29 +375,31 @@ def decay(dungeon, n=1000):
 
     # decay of walls
     shuffle(walls)
+    shuffle(floors)
     print(len(walls))
     for i in range(len(walls)):
         # decay wall
         i, j = walls[i%len(walls)]
         cellauto(i, j)
 
+    cellpath(choice(floors), choice(floors))
     # find 2nd and 3rd largest voids -> pools of water
-    space_copy = spaces
-    space_flood = {}
+    # space_copy = spaces
+    # space_flood = {}
     # while space_copy:
     #     i, j = space_copy.pop()
     #     for k in space_flood.keys():
     #         if space_flood[k]
-    liquid = path(choice(floors), choice(floors), decayed)
-    for _, _, _, _, n in liquid:
-        i, j = n
-        decayed[j][i] = '~'
-    for _, _, _, _, n in liquid:
-        i, j = n
-        for ii in range(-2, 3):
-            for jj in range(-2, 3):
-                if (ii, jj) != (0, 0) and decayed[j+jj][i+ii] == '.':
-                    decayed[j+jj][i+ii] = ','
+    # liquid = path(choice(floors), choice(floors), decayed)
+    # for _, _, _, _, n in liquid:
+    #     i, j = n
+    #     decayed[j][i] = '~'
+    # for _, _, _, _, n in liquid:
+    #     i, j = n
+    #     for ii in range(-2, 3):
+    #         for jj in range(-2, 3):
+    #             if (ii, jj) != (0, 0) and decayed[j+jj][i+ii] == '.':
+    #                 decayed[j+jj][i+ii] = ','
     '''
     # leads to liquid water/lave poured out
     liquidmap = {}
@@ -389,7 +459,7 @@ def build(rot=0):
     tries = 0
 
     # Expansion Algorithm
-    while len(rooms) < 200 and tries < 2000:
+    while len(rooms) < 10 and tries < 2000:
         key = choice([i for i in range(-1, 5)])
         if key == 0:
             x, y = randint(12, 18), randint(6, 9)
