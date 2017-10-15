@@ -84,31 +84,38 @@ def ellipse():
     term.read()
 
 def path(p1, p2, dungeon):
-    node = namedtuple("Node", "distance parent node")
+    node = namedtuple("Node", "df dg dh parent node")
     openlist = set()
     nodeslist = set()
     nodeslist.add(p1)
     closelist = []
-    openlist.add(node(0, None, p1))
+    openlist.add(node(0, 0, 0, None, p1))
     while openlist:
         nodeq = min(sorted(openlist))
-        print(nodeq.distance)
         openlist.remove(nodeq)
         for i in range(-1, 2):
             for j in range(-1, 2):
-                if nodeq.node == p2:
-                    closelist.append(nodeq)
-                    return closelist
-                neighbor = nodeq.node[0]+i, nodeq.node[1]+j
-                if dungeon[neighbor[1]][neighbor[0]] in ('.', '+'):
-                    sf = 0
-                    sf += nodeq.distance
-                    sf += distance(nodeq.node, neighbor)
-                    sf += distance(neighbor, p2)
-                    
-                    if sf != nodeq.distance and neighbor not in nodeslist:
-                        openlist.add(node(sf, nodeq.node, neighbor))
-                        nodeslist.add(neighbor)
+                if (i, j) != (0, 0):
+                    neighbor = nodeq.node[0]+i, nodeq.node[1]+j
+
+                    if neighbor == p2:
+
+                        closelist.append(nodeq)
+                        return closelist
+
+                    if dungeon[neighbor[1]][neighbor[0]] in ('.', '+'):
+
+                        sg = nodeq.dg + distance(nodeq.node, neighbor)
+                        sh = distance(neighbor, p2)
+                        sf = sg + sh
+
+                        if any(n.node == neighbor and n.df < sf for n in openlist):
+                            pass
+                        elif any(n.node == neighbor and n.df < sf for n in closelist):
+                            pass
+                        else:
+                            openlist.add(node(sf, sg, sh, nodeq.node, neighbor))
+
         closelist.append(nodeq)
 
         for j in range(len(dungeon)):
@@ -129,7 +136,6 @@ def path(p1, p2, dungeon):
         for i in closelist:
             term.puts(*i.node, '[c=#00c0c0]/[/c]')
         term.refresh()
-    print(closelist)
     return closelist
     # path = set()
     # path.add((distance(p1, p1), p1))
