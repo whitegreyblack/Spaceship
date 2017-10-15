@@ -84,7 +84,86 @@ def ellipse():
     term.read()
 
 def path(p1, p2, dungeon):
-    pass
+    node = namedtuple("Node", "distance parent node")
+    openlist = set()
+    nodeslist = set()
+    nodeslist.add(p1)
+    closelist = []
+    openlist.add(node(0, None, p1))
+    while openlist:
+        nodeq = min(sorted(openlist))
+        print(nodeq.distance)
+        openlist.remove(nodeq)
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                if nodeq.node == p2:
+                    closelist.append(nodeq)
+                    return closelist
+                neighbor = nodeq.node[0]+i, nodeq.node[1]+j
+                if dungeon[neighbor[1]][neighbor[0]] in ('.', '+'):
+                    sf = 0
+                    sf += nodeq.distance
+                    sf += distance(nodeq.node, neighbor)
+                    sf += distance(neighbor, p2)
+                    
+                    if sf != nodeq.distance and neighbor not in nodeslist:
+                        openlist.add(node(sf, nodeq.node, neighbor))
+                        nodeslist.add(neighbor)
+        closelist.append(nodeq)
+
+        for j in range(len(dungeon)):
+            for i in range(len(dungeon[0])):
+                if dungeon[j][i] == '%':
+                    term.puts(i, j, "[c=#ffffff]{}[/c]".format(dungeon[j][i]))
+                elif dungeon[j][i] == '.':
+                    term.puts(i, j, "[c=#806040]{}[/c]".format(dungeon[j][i]))
+                elif dungeon[j][i] == '~':
+                    term.puts(i, j, "[c=#0080C0]{}[/c]".format(dungeon[j][i]))
+                elif dungeon[j][i] == '=':
+                    term.puts(i, j, "[c=#D02020]{}[/c]".format(dungeon[j][i]))
+                elif dungeon[j][i] == ',':
+                    term.puts(i, j, "[c=#80C080]{}[/c]".format(dungeon[j][i]))
+                else:
+                    term.puts(i, j, dungeon[j][i])
+        term.puts(*p2, '[c=#c0c000]/[/c]')
+        for i in closelist:
+            term.puts(*i.node, '[c=#00c0c0]/[/c]')
+        term.refresh()
+    print(closelist)
+    return closelist
+    # path = set()
+    # path.add((distance(p1, p1), p1))
+    # visited = set()
+    # temp = None
+    # while temp != p2:
+    #     temp = path.pop()[1]
+    #     visited.add(temp)
+    #     if temp == p2:
+    #         break
+    #     for i in range(-1, 2):
+    #         for j in range(-1, 2):
+    #             unexplored = (temp[0]+i, temp[1]+j) not in visited 
+    #             validtiles = dungeon[temp[1]+j][temp[0]+i] in ('.', '+') 
+    #             if unexplored and validtiles:
+    #                 path.add((distance(p2, (temp[0]+i, temp[1]+j)) + distance(p1, (temp[0]+i, temp[1]+j)), (temp[0]+i, temp[1]+j)))
+    #     for j in range(len(dungeon)):
+    #         for i in range(len(dungeon[0])):
+    #             if dungeon[j][i] == '%':
+    #                 term.puts(i, j, "[c=#ffffff]{}[/c]".format(dungeon[j][i]))
+    #             elif dungeon[j][i] == '.':
+    #                 term.puts(i, j, "[c=#806040]{}[/c]".format(dungeon[j][i]))
+    #             elif dungeon[j][i] == '~':
+    #                 term.puts(i, j, "[c=#0080C0]{}[/c]".format(dungeon[j][i]))
+    #             elif dungeon[j][i] == '=':
+    #                 term.puts(i, j, "[c=#D02020]{}[/c]".format(dungeon[j][i]))
+    #             elif dungeon[j][i] == ',':
+    #                 term.puts(i, j, "[c=#80C080]{}[/c]".format(dungeon[j][i]))
+    #             else:
+    #                 term.puts(i, j, dungeon[j][i])
+    #     term.puts(*temp, '[c=#00c0c0]/[/c]')
+    #     term.puts(*p2, '[c=#00c0c0]/[/c]')
+    #     term.refresh()
+    #     path = set(sorted(path))
 
 def mst(graph):
     q, p = {}, {}
@@ -255,7 +334,7 @@ def decay(dungeon, n=1000):
                         decayed[j+jj][i+ii] = '%'
                         walls.append((i+ii, j+jj))            
     def cellfill(i, j):
-         
+         pass
     decayed = deepcopy(dungeon)
     walls, floors, doors, liquid, spaces, other = [], [], [], [], [], []
     print(len(dungeon[0]), len(dungeon))
@@ -283,10 +362,11 @@ def decay(dungeon, n=1000):
     # find 2nd and 3rd largest voids -> pools of water
     space_copy = spaces
     space_flood = {}
-    while space_copy:
-        i, j = space_copy.pop()
-        for k in space_flood.keys():
-            if space_flood[k]
+    # while space_copy:
+    #     i, j = space_copy.pop()
+    #     for k in space_flood.keys():
+    #         if space_flood[k]
+    path(choice(floors), choice(floors), decayed)
     '''
     # leads to liquid water/lave poured out
     liquidmap = {}
@@ -346,7 +426,7 @@ def build(rot=0):
     tries = 0
 
     # Expansion Algorithm
-    while len(rooms) < 200 and tries < 2000:
+    while len(rooms) < 20 and tries < 2000:
         key = choice([i for i in range(-1, 5)])
         if key == 0:
             x, y = randint(12, 18), randint(6, 9)
