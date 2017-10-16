@@ -321,6 +321,7 @@ def new_game(character=None):
             if (x+cx, y+cy) in reachables:
                 openDoor(x+cx, y+cy) if opening else closeDoor(x+cx, y+cy)
 
+        map_box()
     actions={
         'o': interactDoor,
         'c': interactDoor,
@@ -455,7 +456,7 @@ def new_game(character=None):
     # dungeon.add_item(87, 31, Item("sword", "(", "grey"))
     proceed = True
     lr = 5
-    lights = [(121, 39, 10)]
+    lights = []
     while proceed:
         term.clear()
         status_box()

@@ -325,6 +325,17 @@ class Map:
     def _sundown(self):
         self.SUN=False
 
+    def darken(self, color):
+        color = color[3:]
+        if color == "656565":
+            return "#323232"
+        elif color == "888888":
+            return "#444444"
+        elif color == "989898":
+            return "#494949"
+        elif color == "b0b0b0":
+            return "#555555"
+
     def open_door(self, x, y):
         # if self.square(x, y) == "+":
         #     self.data[y][x] = "/"
@@ -348,34 +359,39 @@ class Map:
 
     def blocked(self, x, y):
         return (x < 0 or y < 0 or x >= self.width 
-                or y >= self.height or self.data[y][x] in ("#", "+",))
+                or y >= self.height or self.tilemap[y][x].char in ("#", "+", "%"))
+
+    def explored(self, x, y):
+        return self.explore[y][x] > 0
 
     def _sun(self):
         return self.SUN
 
     def lit(self, x, y):
         #return self.light[y][x] == self.flag
-        return self.light[y][x] > 0
-
+        try:
+            return self.light[y][x] > 0
+        except:
+            print(x, y)
+            raise
     def lit_level(self, x, y):
         return self.light[y][x]
-    """
-    def set_lit(self, x, y):
+
+    def set_lit(self, x, y, v):
         if 0 <= x < self.width and 0 <= y < self.height:
-            self.light[y][x] = self.flag
-    """
-    def set_lit(self, x, y, row, radius):
-        if 0 <= x < self.width and 0 <= y < self.height:
-            if self.light[y][x] < radius-row:
-                self.light[y][x] = radius-row
-                self.fogofwar[y][x] = True
+            self.light[y][x] = v
+    # def set_lit(self, x, y, row, radius):
+    #     if 0 <= x < self.width and 0 <= y < self.height:
+    #         if self.light[y][x] < radius-row:
+    #             self.light[y][x] = radius-row
+    #             self.fogofwar[y][x] = True
 
     def lit_reset(self):
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
     
     def fov_calc(self, lights):
         self.lamps = lights
-        self.flag += 1
+        self.flag = 2
         for x, y, radius in lights:
             for o in range(8):
                 self.sight(x, y, 1, 1.0, 0.0, 
@@ -384,7 +400,7 @@ class Map:
                         self.mult[1][o], 
                         self.mult[2][o], 
                         self.mult[3][o], 0)
-
+                
     def sight(self, cx, cy, row, start, end, radius, xx, xy, yx, yy, id):
         if start < end:
             return
@@ -398,6 +414,10 @@ class Map:
             while dx <= 0:
                 dx += 1
                 X, Y = cx + dx * xx + dy * xy, cy + dx * yx + dy * yy
+                # check if it has been seen once, set as splored if true
+                if 0 <= X < self.width and 0 <= Y < self.height:
+                    if self.lit(X,Y) == 2:
+                        self.set_lit(X, Y, 1)
                 l_slope, r_slope = (dx-0.5)/(dy+0.5), (dx+0.5)/(dy-0.5)
                 if start < r_slope:
                     continue
@@ -406,11 +426,11 @@ class Map:
                 else:
                     # Our light beam is touching this square; light it:
                     if dx*dx + dy*dy < radius_squared:
-                        #self.set_lit(X, Y)
-                        lx = (cx - X) * (cx - X)
-                        ly = (cy - Y) * (cy - Y)
-                        lv = int(sqrt(lx+ly))
-                        self.set_lit(X, Y, row, 0)
+                        self.set_lit(X, Y, self.flag)
+                        # lx = (cx - X) * (cx - X)
+                        # ly = (cy - Y) * (cy - Y)
+                        # lv = int(sqrt(lx+ly))
+                        # self.set_lit(X, Y, row, 5)
 
                     if blocked:
                         # we're scanning a row of blocked squares:
@@ -430,7 +450,7 @@ class Map:
             # Row is scanned; do next row unless last square was blocked:
             if blocked:
                 break
-
+            
     def output(self, X, Y, units):
 
         # character checks
@@ -470,14 +490,15 @@ class Map:
         cye = cy + self.map_display_height
 
         #fg_fog = "#ff202020"
-        daytime= True if self._sun() else False
-
+        # daytime= True if self._sun() else False
+        daytime = False
         fg_fog = "grey"
         bg_fog = "#ff000000"
         positions = {}
         for unit in units:
             positions[unit.pos()] = unit
 
+        col = "#ffffff"
         # width should total 80 units
         for x in range(cx, cxe):
 
@@ -491,17 +512,17 @@ class Map:
                 else:
                     # check if the square is lighted and the light strength
                     lit = self.lit(x, y)
-                    level = fog_levels[min(self.lit_level(x, y)//2, 5)]
+                    level = fog_levels[3]
 
                 #blocks are visible if the sun is up or in range of a lightable object
-                visible = daytime or lit
+                visible = lit
                 #level = fog_levels[max(5-level, 0)] if level else fog_levels[min(0, level)]
 
                 # Current position holds your position
                 if x == X and y == Y:
                     level = ""
                     ch = "@"
-                    lit = "white"
+                    col = "white"
                     ## bkgd = "black"
 
                 # Current position holds a unit
@@ -510,31 +531,42 @@ class Map:
                         level = ""
                         unit = positions[(x,y)]
                         ch = unit.i
-                        lit = unit.c
+                        col = unit.c
 
                     else:
                         level = "" if visible else "darkest "
                         ch = "@" if visible else self.square(x, y).char
-                        lit = "orange" if visible else fg_fog
+                        col = "orange" if visible else fg_fog
 
                 # Current position holds an item
                 elif self.square(x, y).items:
-                    item = choice(self.square(x, y).items)
-                    level = ""
-                    ch = item.char
-                    lit = item.color
+                    if self.lit(x, y):
+                        item = choice(self.square(x, y).items)
+                        level = ""
+                        ch = item.char
+                        col = item.color
+                    else:
+                        level = ""
+                        ch = " "
+                        lit = "black"
 
                 # Current position holds a Lamp
                 elif (x, y, 10) in self.lamps:
                     level = ""
                     ch = self.square(x, y).char
-                    lit = "white"
+                    col = "white"
 
                 else:
-                    ch, lit, bkgd, _, _, _ = self.square(x, y)
-                    level = ""
+                    if lit:
+                        if lit == 2:
+                            ch, col, bkgd, _, _, _ = self.square(x, y)
+                        else:
+                            ch, col, bkgd, _, _, _ = self.square(x, y)
+                            col = self.darken(col)
+                    else:
+                        ch, col, bkgd = " ", "black", None
                 try:        
-                    yield (x-cx, y-cy, level+lit, ch, bkgd)
+                    yield (x-cx, y-cy, col, ch, bkgd)
                 except NameError:
-                    yield (x-cx, y-cy, level+lit, ch, None)
-        self.lit_reset()
+                    yield (x-cx, y-cy, col, ch, None)
+        # self.lit_reset()
