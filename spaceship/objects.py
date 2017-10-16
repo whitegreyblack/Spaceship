@@ -222,6 +222,34 @@ class Backpack:
         return "\n".join(["{}. {}".format(chr(ord('a')+letter), item.name) 
             for item, letter in zip(self._inventory, range(len(self._inventory)))])
 
+'''
+TODO: seperate map and dungeon
+Map holds:
+    dungeon class
+    list of items
+    list of units
+    list of sight
+    list of maps(dungeons) below it 
+World holds:
+    list of maps basically a connected linked list?'
+
+For example
+    Overworld 8x8 64 tiles
+    Assume half is water so 32 tiles are land 
+    Each land tile will hold an overworld map
+    for each city in city/village list:
+        draw a city tile on the map
+        read in the city map from the string file
+        these tiles will not be considered land tiles anymore
+    there will also be a list of pyramid dungeons throughout the map which will have their own list of 
+        dungeons
+        these tiles will also not be considered land tiles
+    For each land tile that is not a mountain:
+        it has a chance to hold a dungeon i guess
+
+    
+'''
+
 class Map:
     ''' Ray Tracing Implementation based off of Rogue Basin Python Tutorial '''
     mult = [

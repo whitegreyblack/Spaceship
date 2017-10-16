@@ -121,12 +121,10 @@ def new_game(character=None):
                 gamelog.add("There is something here")
         else:
             if blocked:
+                # =============  START WALK LOG  =================================
                 gamelog.add(walkBlock.format(walkChars[ch]))
-                # if ch == "+":
-                #     gamelog.add(walkBlock.format("a door"))
-                # if ch == "#":
-                #     gamelog.add(walkBlock.format("a wall"))
-                    # gamelog.add(f"{player.x+x}, {player.y+y}")
+                # ===============  END WALK LOG  =================================
+
             elif occupied:
                 # ============= START COMBAT LOG =================================
                 unit = positions[(tposx, tposy)]
@@ -273,7 +271,7 @@ def new_game(character=None):
                 glog.add("Nothing to pick up")
                 refresh()
 
-    def interactDoor(x, y, k):
+    def interactDoor(x, y, key):
         """Allows interaction with doors"""
         def openDoor(i, j):
             gamelog.add("Opened door")
@@ -285,8 +283,7 @@ def new_game(character=None):
             dungeon.close_door(i, j)
             dungeon.reblock(i, j)
 
-        opening = k is "o"
-        char = "+" if opening else "/"
+        char = "+" if key is "o" else "/"
 
         reachables = []
         for i, j in eightsquare(x, y):
@@ -323,11 +320,29 @@ def new_game(character=None):
                 openDoor(x+cx, y+cy) if opening else closeDoor(x+cx, y+cy)
 
         map_box()
+
+    def interactStairs(x, y, k):
+        """Allows interactions with stairs"""
+        def ascend(i, j):
+            gamelog.add("Going up the stairs")
+            exit()
+        def descend(i, j):
+            gamelog.add("Going down the stairs")
+
+        if k is ">":
+            descend(x, y)
+        else:
+            ascend(x, y)
+
+        
+
     actions={
         'o': interactDoor,
         'c': interactDoor,
         'i': openInventory,
         't': interactUnit,
+        '>': descendStairs,
+        '<': ascendStairs,
         # 'f1': dungeon._sundown,
         # 'f2': dungeon._sunup,
         ',': interactItem,
@@ -439,7 +454,7 @@ def new_game(character=None):
     um = UnitManager()
     player = Player(character, px, py)
     # player.inventory[0] = "sword"
-    rat = Object("rat", px-5, py, 'r', c='red', r="monster")
+    rat = Object("rat", px-5, py, 'r', c='#904040', r="monster")
     # rat.message = "I am a rat"
     # rat2 = Object("rat", 85, 29, 'R', r="monster")
     # rat2.message = "I am a big rat"
