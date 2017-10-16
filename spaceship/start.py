@@ -9,6 +9,7 @@ from spaceship.constants import GAME_TITLE as TITLE
 from spaceship.constants import GAME_TITLE_HEIGHT as TITLE_HEIGHT
 from spaceship.constants import GAME_TITLE_VERSION as VERSION
 from spaceship.constants import GAME_TITLE_WIDTH as TITLE_WIDTH
+from spaceship.constants import GAME_TITLE_ALT_SEC as GTAS
 from spaceship.constants import GAME_SCREEN_HEIGHT as SCREEN_HEIGHT
 from spaceship.constants import GAME_SCREEN_WIDTH as SCREEN_WIDTH
 from spaceship.continue_game import continue_game
@@ -48,8 +49,8 @@ def start():
         term.clear() # probably won't need later but using now to make sure title screen is empty
         # border()
         # title header
-        term.puts(center('a'*(TITLE_WIDTH-1), SCREEN_WIDTH), title_height+3, TITLE)
-
+        # term.puts(center('a'*(TITLE_WIDTH-1), SCREEN_WIDTH), title_height+3, TITLE)
+        term.puts(center('a'*(len(GTAS.split('\n')[0])), SCREEN_WIDTH), 1, GTAS)
         # options
         length, option = longest(title_options)
         x = center(length-2, width)

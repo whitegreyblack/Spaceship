@@ -18,6 +18,7 @@ from spaceship.gamelog import GameLogger
 from random import randint, choice
 from collections import namedtuple
 from namedlist import namedlist
+from spaceship.dungeon import build
 from spaceship.setup import setup, palette, output, setup_font
 from time import clock
     
@@ -27,8 +28,8 @@ def new_game(character=None):
     # else unpack the character
     if character==None:
         return output(proceed=False, value="No Character Data Input")
-    dungeon = Map(stringify("./assets/testmap_empty.png"))
-
+    # dungeon = Map(stringify("./assets/testmap_empty.png"))
+    dungeon = Map(build())
     def refresh(lines=[]):
         for line in lines:
             gamelog.add(line)
@@ -325,8 +326,8 @@ def new_game(character=None):
         'c': interactDoor,
         'i': openInventory,
         't': interactUnit,
-        'f1': dungeon._sundown,
-        'f2': dungeon._sunup,
+        # 'f1': dungeon._sundown,
+        # 'f2': dungeon._sunup,
         ',': interactItem,
     }
 

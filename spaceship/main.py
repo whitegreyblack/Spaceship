@@ -9,6 +9,6 @@ from spaceship.start import start
 if __name__ == "__main__":
     'Keep it as simple as possible'
     setup()
-    setup_font('Ibm_cga', 8, 8)
+    setup_font('Andale', 8, 16)
     term.set('window: size=80x50, cellsize=auto, title="Spaceship"')    
     start()

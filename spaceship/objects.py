@@ -236,7 +236,9 @@ class Map:
 
     def __init__(self, data):
         self.SUN = True
-        self.data, self.height, self.width = self.dimensions(data)
+        # self.data, self.height, self.width = self.dimensions(data)
+        self.data = data
+        self.height, self.width = self.dimensions(data)
         # self.block blocks both light (and movement?)
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.lamps = None
@@ -254,6 +256,15 @@ class Map:
         print("MAP: {} {}".format(self.map_display_width, self.map_display_height))
         print("MAP: {} {}".format(self.width, self.height))
 
+    @staticmethod
+    def dimensions(data):
+        '''takes in a string map and returns a 2D list map and map dimensions'''
+        # data = [[col for col in row] for row in data.split('\n')]
+        height = len(data)
+        width = max(len(col) for col in data)
+        # return data, height, width
+        return height, width
+
     def fill(self, d, w, h):
         # Light.Unexplored, Explored, Visible
         tile = namedlist("Tile", "char color bkgd visible walkable items")
@@ -268,6 +279,11 @@ class Map:
             "o": (cm.LAMPS.chars, blender(cm.LAMPS.hexcode), "black"),
             ":": (cm.ROADS.chars, blender(cm.ROADS.hexcode), "black"),
             "=": (cm.HOUSE.chars, blender(cm.HOUSE.hexcode), "black"),
+            " ": (' ', '#000000',"black"),
+            "%": (cm.WALLS.chars, blender(cm.WALLS.hexcode), "black"),
+            "^": (cm.WALLS.chars, blender(cm.WALLS.hexcode), "black"),
+            "<": (cm.WALLS.chars, blender(cm.WALLS.hexcode), "black"),
+            ">": (cm.WALLS.chars, blender(cm.WALLS.hexcode), "black"),
         }
 
         def evaluate(char):
@@ -278,7 +294,8 @@ class Map:
             return t
         
         rows = []
-        for row in d.split("\n"):
+        # for row in d.split('\n')
+        for row in d:
             cols = []
             for col in row:
                 chars, hexcodes, bkgd = evaluate(col)
@@ -287,15 +304,6 @@ class Map:
                 cols.append(tile(choice(chars), choice(hexcodes), bkgd, light, walkable, []))
             rows.append(cols)
         return rows
-
-
-    @staticmethod
-    def dimensions(data):
-        '''takes in a string map and returns a 2D list map and map dimensions'''
-        data = [[col for col in row] for row in data.split('\n')]
-        height = len(data)
-        width = max(len(col) for col in data)
-        return data, height, width
 
     def add_item(self, x, y, i):
         self.tilemap[y][x].items.append(i)

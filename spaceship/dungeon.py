@@ -343,7 +343,7 @@ def decay(dungeon, n=1000):
                         term.puts(i, j, "[c=#806040]{}[/c]".format(decayed[j][i]))
                     elif dungeon[j][i] == '~':
                         term.puts(i, j, "[c=#0080C0]{}[/c]".format(decayed[j][i]))
-                    elif dungeon[j][i] == '=':f
+                    elif dungeon[j][i] == '=':
                         term.puts(i, j, "[c=#D02020]{}[/c]".format(decayed[j][i]))
                     elif dungeon[j][i] == ',':
                         term.puts(i, j, "[c=#80C080]{}[/c]".format(decayed[j][i]))
@@ -355,7 +355,6 @@ def decay(dungeon, n=1000):
                 term.puts(*(camefrom[start]), '[c=#00c0c0]/[/c]')
                 start = camefrom[start]
                 term.refresh()
-                term.read()
     decayed = deepcopy(dungeon)
     walls, floors, doors, liquid, spaces, other = [], [], [], [], [], []
     print(len(dungeon[0]), len(dungeon))
@@ -382,7 +381,6 @@ def decay(dungeon, n=1000):
         i, j = walls[i%len(walls)]
         cellauto(i, j)
 
-    cellpath(choice(floors), choice(floors))
     # find 2nd and 3rd largest voids -> pools of water
     # space_copy = spaces
     # space_flood = {}
