@@ -135,7 +135,7 @@ def new_game(character=None):
                     gamelog.add("You attack the {}".format(unit.name))
                     gamelog.add("The {} has {} left".format(unit.name, unit.h))
                     if unit.h < 1:
-                        gamelog.add("You have killed the {}".format(unit.name))
+                        gamelog.add("You have killed the {}! You gain 15 exp".format(unit.name))
                         units.remove(unit)
                 # =============== END COMBAD LOG =================================
                 else:
