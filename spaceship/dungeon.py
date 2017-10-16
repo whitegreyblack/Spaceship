@@ -446,9 +446,9 @@ def decay(dungeon, n=1000):
     return decayed
 
 def build(rot=0):
-    term.open()
-    term.set('window: size={}x{}, cellsize=4x4'.format(X_TEMP, Y_TEMP))
-    setup_font('Ibm_cga', 8, 8)
+    # term.open()
+    # term.set('window: size={}x{}, cellsize=4x4'.format(X_TEMP, Y_TEMP))
+    # setup_font('Ibm_cga', 8, 8)
     # constructor -- (-1 = impassable) start with a map of walls
     # dungeon = [[-1 for _ in range(x)] for _ in range(y)]
     dungeon = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
@@ -457,7 +457,7 @@ def build(rot=0):
     tries = 0
 
     # Expansion Algorithm
-    while len(rooms) < 10 and tries < 2000:
+    while len(rooms) < 200 and tries < 2000:
         key = choice([i for i in range(-1, 5)])
         if key == 0:
             x, y = randint(12, 18), randint(6, 9)

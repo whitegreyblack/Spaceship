@@ -25,7 +25,7 @@ fog_levels= ["darkest ", "darker ", "dark ","light ","lighter ", "lightest"]
 
 chars_roads= [":"]
 chars_floor= ["."]
-chars_block= ("#", "+", "o", "x", "~")
+chars_block= ("#", "+", "o", "x", "~", "%")
 chars_grass= [",",";",]
 chars_water= ["~"]
 chars_house= ["="]
@@ -250,7 +250,7 @@ class Map:
         # self.plant = gradient(self.width, self.height, chars_plant, color_plant)
         self.flag = 0
         self.map_display_width = min(self.width, sw-12)
-        self.map_display_height = min(self.height, sh-2)
+        self.map_display_height = min(self.height, sh-8)
         self.tilemap = self.fill(data, self.width, self.height)
         self.explore = [[0 for _ in range(self.width)] for _ in range(self.height)]
         print("MAP: {} {}".format(self.map_display_width, self.map_display_height))
@@ -264,6 +264,12 @@ class Map:
         width = max(len(col) for col in data)
         # return data, height, width
         return height, width
+
+    def start_position(self):
+        for i in range(len(self.data)):
+            for j in range(len(self.data[0])):
+                if self.data[i][j] == "<":
+                    return (j, i)
 
     def fill(self, d, w, h):
         # Light.Unexplored, Explored, Visible
@@ -455,13 +461,13 @@ class Map:
                 return worldmap - screen
             else:
                 return position - halfscreen
-        print(X, Y)
+
         # print(self.map_display_height, self.map_display_width)
         # print(self.height, self.width)
         cx = scroll(X, self.map_display_width, self.width)
         cy = scroll(Y, self.map_display_height, self.height)
         cxe = cx + self.map_display_width
-        cye = cy + self.map_display_height-8
+        cye = cy + self.map_display_height
 
         #fg_fog = "#ff202020"
         daytime= True if self._sun() else False

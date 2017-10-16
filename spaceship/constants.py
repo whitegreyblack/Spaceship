@@ -103,3 +103,6 @@ GAME_TITLE_ALT_SEC="""
                                                        `..|'          
 """[1:]                                                       
                                             
+CABAL = [
+    ""
+]                                            
