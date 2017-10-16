@@ -505,13 +505,19 @@ class Map:
                 # visible = lit
                 #level = fog_levels[max(5-level, 0)] if level else fog_levels[min(0, level)]
 
-                # Current position holds your position
                 if x == X and y == Y:
+                    # Current position holds your position
                     ch = "@"
                     col = "white"
 
-                # Current position holds a unit
-                # elif (x, y) in positions.keys():
+                elif (x, y) in positions.keys():
+                    # Current position holds a unit
+                    lit = self.lit(x, y)
+                    unit = positions[(x, y)]
+                    print(unit)
+                    ch = unit.i
+                    col = "orange" if lit == 2 else "black"
+
                 #     if daytime:
                 #         level = ""
                 #         unit = positions[(x,y)]
