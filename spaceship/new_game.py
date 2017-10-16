@@ -136,6 +136,7 @@ def new_game(character=None):
                     gamelog.add("The {} has {} left".format(unit.name, unit.h))
                     if unit.h < 1:
                         gamelog.add("You have killed the {}".format(unit.name))
+                        units.remove(unit)
                 # =============== END COMBAD LOG =================================
                 else:
                     gamelog.add(walkBlock.format(unit.r))
@@ -438,7 +439,7 @@ def new_game(character=None):
     um = UnitManager()
     player = Player(character, px, py)
     # player.inventory[0] = "sword"
-    rat = Object("rat", px-5, py, 'r', r="monster")
+    rat = Object("rat", px-5, py, 'r', c='red', r="monster")
     # rat.message = "I am a rat"
     # rat2 = Object("rat", 85, 29, 'R', r="monster")
     # rat2.message = "I am a big rat"

@@ -513,10 +513,8 @@ class Map:
                 elif (x, y) in positions.keys():
                     # Current position holds a unit
                     lit = self.lit(x, y)
-                    unit = positions[(x, y)]
-                    print(unit)
-                    ch = unit.i
-                    col = "orange" if lit == 2 else "black"
+                    ch = positions[(x, y)].i
+                    col = positions[(x, y)].c if lit == 2 else "black"
 
                 #     if daytime:
                 #         level = ""
