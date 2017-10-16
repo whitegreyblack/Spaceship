@@ -446,9 +446,6 @@ def decay(dungeon, n=1000):
     return decayed
 
 def build(rot=0):
-    # term.open()
-    # term.set('window: size={}x{}, cellsize=4x4'.format(X_TEMP, Y_TEMP))
-    # setup_font('Ibm_cga', 8, 8)
     # constructor -- (-1 = impassable) start with a map of walls
     # dungeon = [[-1 for _ in range(x)] for _ in range(y)]
     dungeon = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
@@ -606,6 +603,11 @@ def draw(box):
     term.refresh()
 
 def test_dungeon():
+    rx1, rx2 = 0, 0
+    ry1, ry2 = 0, 0
+    while rx1 == rx2 and abs(rx1-rx2) < X_TEMP//4:
+        rx1, ry1 = randint(0, X_TEMP), 0
+        rx2, ry2 = randint(0, X_TEMP), Y_TEMP-1
     dungeon = build(1000)
     x, y = 0, 0
 
@@ -618,6 +620,8 @@ def test_dungeon():
         for i in range(len(dungeon[0])):
             if dungeon[j][i] == '%':
                 term.puts(i, j, "[c=#ffffff]{}[/c]".format(dungeon[j][i]))
+            elif dungeon[j][i] == '+':
+                term.puts(i, j, "[c=#602020]{}[/c]".format(dungeon[j][i]))
             elif dungeon[j][i] == '.':
                 term.puts(i, j, "[c=#806040]{}[/c]".format(dungeon[j][i]))
             elif dungeon[j][i] == '~':
@@ -630,6 +634,11 @@ def test_dungeon():
                 term.puts(i, j, dungeon[j][i])
             
     term.puts(x, y, '[c=#00C0C0]@[/c]')
+    term.puts(rx1, ry1, "[c=#0080C0]~[/c]")
+    for i in range(-3, 4):
+        for i,j in bresenhams((rx1+i,ry1), (rx2+i, ry2)):
+            term.puts(i, j, "[c=#0080C0]~[/c]")
+    term.puts(rx2, ry2, "[c=#0080C0]~[/c]")
     term.refresh()
     term.read()
         
@@ -648,4 +657,7 @@ def test_lpath():
     term.read()
 
 if __name__ == "__main__":
+    term.open()
+    term.set('window: size={}x{}, cellsize=4x4'.format(X_TEMP, Y_TEMP))
+    setup_font('Ibm_cga', 8, 8)
     test_dungeon()
