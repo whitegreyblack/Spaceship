@@ -635,10 +635,11 @@ def test_dungeon():
             
     term.puts(x, y, '[c=#00C0C0]@[/c]')
     term.puts(rx1, ry1, "[c=#0080C0]~[/c]")
-    for i in range(-3, 4):
-        for i,j in bresenhams((rx1+i,ry1), (rx2+i, ry2)):
-            term.puts(i, j, "[c=#0080C0]~[/c]")
-    term.puts(rx2, ry2, "[c=#0080C0]~[/c]")
+    if randint(-2, 2) > 0:
+        for i in range(-3, 4):
+            for i,j in bresenhams((rx1+i,ry1), (rx2+i, ry2)):
+                term.puts(i, j, "[c=#0080C0]~[/c]")
+        term.puts(rx2, ry2, "[c=#0080C0]~[/c]")
     term.refresh()
     term.read()
         

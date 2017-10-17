@@ -2,110 +2,147 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from bearlibterminal import terminal as term
+from collections import namedtuple
 from spaceship.setup import setup, setup_font
 from random import choice
 from PIL import Image
-#     def evalValue(x, y):
-#         bit_value=0
-#         increment=1
-#         debug=11
-#         for i, j in ((0,-1), (1,0), (0,1), (-1, 0)):
-#                 try:
-#                     char = data[y+j][x+i]
-#                 except IndexError:
-#                     char = ""
-#                 if char in ("#", "o", "+"):
-#                     bit_value += increment
-#                 increment *= 2
-#         return bit_value
 
-#     unicodes = deepcopy(data)
-#     for i in range(h):
-#         for j in range(w):
-#             if data[i][j] == "#":
-#                 unicodes[i][j] = toInt(unicode_blocks_thin[evalValue(j, i)])
-#     return unicodes
+'''Colors
+"#ff00ff",
+"#ff0088",
+"#ff0000",
+
+"#ff4400",
+"#ff8800",
+
+"#ffCC00",
+"#ffff00",
+
+"#88ff00",
+"#00ff00",
+
+"#00ff88",
+"#00ffff",
+
+"#0088ff",
+"#0000ff",
+'''
+
 class World:
     river_legend = {
-        0: "25D9",
-        1: "25D9",
-        # 2: "25D9",
-        2: "2560",
-        #3: "255A",
-        3: "25D9",
-        4: "25D9",
+        0: "2022",
+        1: "2551",
+        2: "2550",
+        3: "255A",
+        4: "2551",
         5: "2551",
-        #6: "2554",
-        6: "25D9",
+        6: "2554",
         7: "2560",
-        8: "25D9",
-    #   9: "255D",
-        9: "25D9",
+        8: "2550",
+        9: "255D",
         10: "2550",
         11: "2569",
-    #   12: "2557",
-        12: "25D9",
-        13: "2562",
+        12: "2557",
+        13: "2563",
         14: "2566",
         15: "256C",
     }
-    legend = {
-        (255, 242, 0): ("00A5", ("#FFBF00",)),
-        (239, 228, 176): ("2261", ("#FFFFCC", "#FFFFE0")),
-        (34, 177, 76): ("0192", ("#006400","#568203",)),
-        (0, 162, 232): ("2248", ("#3040A0",)),
-        (195, 195, 195): ("n", ("#C0C0C0","#D3D3D3")),
-        (127, 127, 127): ("n", ("#808080", "#A9A9A9",)),
-        (255, 255, 255): ("005E", ("#C0C0C0","#D3D3D3")),
-        (185, 122, 87): ("~", ("#C3B091", "#826644")),
-        (237, 28, 36): ("2302", ("#00E0E0",)),
-        (181, 230, 29): ("0192", ("#228B22", "#74C365")),
-        (255, 201, 14):(".", ("#87A96B","#4B6F44")),
-        (255, 174, 201): ("2022", ("#F0AC82",)), #"#C19A6B", "#6C541E"
-        (136, 0, 21): ("#", ("#00E0E0",)),
-        (200, 191, 231): ("&", ("#00E0E0",)),
-        (112, 146, 190): ("~", ("#3040A0",)),
-        (63, 72, 204): ("2248", ("#3060D0",)),
-        (255, 127, 39): (".", ("#FFBD22",))
+    pol_legend = {
+        (0, 0, 0): "None",
+        (185, 122, 87): "dwarven",
+        (34, 177, 76): "elven",
+        (237, 28, 36): "beast",
+        (181, 230, 29): "elven",
+        (255, 201, 14): "human",
+        (255, 242, 0): "human",
+        (255, 127, 39): "human",
+        (255, 174, 201): "orken",
     }
-    def __init__(self, string):
-        self.stringify(string)
+    pol_color_key ={
+        (0, 0, 0): "black",
+        (185, 122, 87): "#550000",
+        (34, 177, 76): "#228022",
+        (237, 28, 36): "#ff8A22",
+        (181, 230, 29): "#77ff77",
+        (255, 201, 14): "#ffcc00",
+        (255, 242, 0): "#ffcc00",
+        (255, 127, 39): "#ffcc00",
+        (255, 174, 201): "#ff2255",
+    }
+    enterables = ("2302", "#", "&")
 
-    def stringify(self, string):
-        '''Only called once for world load'''
-        with Image.open(string) as img:
-            pixels = img.load()
-            self.w, self.h = img.size
-            print(self.w, self.h)
-        lines = []
+    geo_legend = {
+        (255, 242, 0): ("field", "2261", ("#FFBF00",)),
+        (239, 228, 176): ("shore", "2261", ("#FFFFCC", "#FFFFE0")),
+        (34, 177, 76): ("dark forest", "00A5", ("#006400","#568203",)),
+        (0, 162, 232): ("deep sea", "2248", ("#3040A0",)),
+        (195, 195, 195): ("medium mountains", "2229", ("#C0C0C0","#D3D3D3")),
+        (127, 127, 127): ("low mountains", "2229", ("#808080", "#A9A9A9",)),
+        (255, 255, 255): ("high mountains", "005E", ("#C0C0C0","#D3D3D3")),
+        (185, 122, 87): ("hills", "n", ("#C3B091", "#826644")),
+        (237, 28, 36): ("settlement", "2302", ("#00fF00",)),
+        (181, 230, 29): ("forest", "0192", ("#228B22", "#74C365")),
+        (255, 201, 14):("plains", ".", ("#FFBF00",)),
+        (255, 174, 201): ("dunes", "2022", ("#F0AC82",)), #"#C19A6B", "#6C541E"
+        (136, 0, 21): ("fortress", "#", ("#FF0000",)),
+        (200, 191, 231): ("city", "&", ("#FFFF00",)),
+        (112, 146, 190): ("river", "~", ("#30FFFF",)),
+        (63, 72, 204): ("lake", "2248", ("#3088FF",)),
+        (255, 127, 39): ("hot plains", ".", ("#FFBD22",))
+    }
+    # def __init__(self, land, territory):
+    #     self.geotop(land)
+    #     self.geopol(territory)
+    tile = namedtuple("Tile", "char color land territory tcol enterable")
+
+    def add_world(self, geo, pol):
+        # do some error checking
+        with Image.open(geo) as img:
+            geopix = img.load()
+            gw, gh = img.size
+        with Image.open(pol) as img:
+            polpix = img.load()
+            pw, ph = img.size
+        assert (gw, gh) == (pw, ph)
+
+        # width height should be same for both so just use one
+        self.w, self.h = pw, ph
+        # iterate through maps and pull info from each
+        self.data = []
         for j in range(self.h):
-            line = []
+            row = []
             for i in range(self.w):
-                # sometimes alpha channel is included so test for all values first
                 try:
-                    r, g, b, _ = pixels[i, j]
+                    gr, gg, gb, _ = geopix[i, j]
                 except ValueError:
-                    r, g, b = pixels[i, j]
-                try:
-                    try:
-                        char, colors = self.legend[(r, g, b)]
-                        # if char == "2248":
-                        #     print(colors)
-                    except ValueError:
-                        char = self.legend[(r, g, b)]
-                    if not colors:
-                        colors = ("#ffffff")
-                    if len(colors) > 1:
-                        color = choice(colors)
-                    else:
-                        color = colors[0]
-                    line.append((char, color))
-                except KeyError:
-                    print((r, g, b))
-                    line.append(" ")
-            lines.append(line)
+                    gr, gg, gb = geopix[i, j]
 
-        self.data = lines
+                try:
+                    pr, pg, pb, _ = polpix[i, j]
+                except ValueError:
+                    pr, pg, pb = polpix[i,j]
+
+                # done with geopix/polpix onto namedtuples                
+                land, char, colors = self.geo_legend[(gr, gg, gb)]
+
+                if len(colors) > 1:
+                    color = choice(colors)
+                else:
+                    color = colors[0]
+                try:
+                    territory = self.pol_legend[(pr, pg, pb)]
+                except KeyError:
+                    print(((i, j), (pr, pg, pb)))
+                    raise
+
+                try:
+                    tcolor = self.pol_color_key[(pr, pg, pb)]
+                except KeyError:
+                    raise
+
+                enterable = char in self.enterables
+                row.append(self.tile(char, color, land, territory, tcolor, enterable))
+            self.data.append(row)
         self.colorize()
 
     def colorize(self):
@@ -115,20 +152,23 @@ class World:
                 for jj in range(jlim[0], jlim[1]):
                     if (ii, jj) != (0, 0):
                         try:
-                            if self.data[j+jj][i+ii][0] != v:
+                            if self.data[j+jj][i+ii].char != v:
                                 val += 1
                         except IndexError:
                             pass
             return val > 1
+
         def bitval(i, j):
             bit_value=0 
             increment=1
             for ii, jj in ((0,-1), (1,0), (0,1), (-1, 0)):
                     try:
-                        char = self.data[j+jj][i+ii]
+                        char = self.data[j+jj][i+ii].char
+                        col = self.data[j+jj][i+ii].color
                     except IndexError:
                         char = ""
-                    if char in (("~", "#3040A0"), ("2248","#3040A0"), ("2248","#3060D0")):
+                        col = ""
+                    if (char, col) in (("~", "#30FFFF"), ("2248","#3040A0"), ("2248","#3088FF")):
                         bit_value += increment
                     increment *= 2
             return bit_value
@@ -136,38 +176,75 @@ class World:
 
         water = set()
         river = set()
+        lakes = set()
         for i in range(self.w):
             for j in range(self.h):
-                if self.data[j][i][0] == "2248" and neighbors(i, j, (-1, 2), (-1, 2), "2248"):
+                char, col = self.data[j][i].char, self.data[j][i].color
+                if (char, col) == ("2248", "#3040A0") and neighbors(i, j, (-1, 2), (-1, 2), "2248"):
                     water.add((i, j))
 
-                if self.data[j][i] == ("~", "#3040A0"):
-                    river.add((i,j, self.river_legend[bitval(i, j)]))
+                if (char, col) == ("2248","#3088FF") and neighbors(i, j, (-1, 2), (-1, 2), "2248"):
+                    lakes.add((i, j))
+
+                if (char, col) == ("~", "#30FFFF"):
+                    river.add((i, j, self.river_legend[bitval(i, j)]))
 
         for i, j in water:
-            if self.data[j][i][1] == "#3040A0":
-                self.data[j][i] = ("2248","#3050B0")
+            _, _, l, t, c, e = self.data[j][i]
+            self.data[j][i] = self.tile("2248","#3050B0", l, t, c, e)
+
+        for i, j in lakes:
+            _, _, l, t, c, e = self.data[j][i]
+            self.data[j][i] = self.tile("2248", "#30CCFF", l, t, c, e)
 
         '''Evaluates river tiles'''
         for i, j, c in river:
-            self.data[j][i] = (c, "#3040A0")
+            _, _, l, t, tc, e = self.data[j][i]
+            self.data[j][i] = self.tile(c, "#30FFFF", l, t, tc, e)
 
     def draw(self):
-        while True:
+        def geotop():
             for j in range(len(self.data)):
                 for i in range(len(self.data[j])):
-                    if len(self.data[j][i][0]) > 1:
-                        term.puts(i, j, "[c={}]{}[/c]".format(self.data[j][i][1], chr(int(self.data[j][i][0], 16))))
+                    if len(self.data[j][i].char) > 1:
+                        term.puts(i, j, "[c={}]{}[/c]".format(self.data[j][i].color, chr(int(self.data[j][i].char, 16))))
                     else:
-                        term.puts(i, j, "[c={}]{}[/c]".format(self.data[j][i][1], self.data[j][i][0], 16))
-            term.refresh()
+                        term.puts(i, j, "[c={}]{}[/c]".format(self.data[j][i].color, self.data[j][i].char, 16))
+            term.refresh() 
+
+        def geopol():
+            for j in range(len(self.data)):
+                for i in range(len(self.data[j])):
+                    char, color, _, terr, tcol, _ = self.data[j][i]
+                    if terr != "None":
+                        term.puts(i, j, "[c={}]{}[/c]".format(tcol, chr(int("2022", 16))))
+                    else:
+                        if len(char) > 1:
+                            term.puts(i, j, "[c={}]{}[/c]".format(color, chr(int(char, 16))))
+                        else:
+                            term.puts(i, j, "[c={}]{}[/c]".format(color, char, 16))           
+            term.refresh()        
+
+        current = "g"
+        while True:
+            if current == "g":
+                geotop()
+            else:
+                geopol()
             k = term.read()
+
             if k == term.TK_CLOSE or k == term.TK_ESCAPE or k == term.TK_Q:
                 break
+            elif k == term.TK_P and current == "g":
+                current = "p"
+            elif k == term.TK_G and current == "p":
+                current = "g"
 
 if __name__ == "__main__":
     setup()
     setup_font('Ibm_cga', 8, 8)
     term.set("window: size=100x70, cellsize=auto")
-    world = World("./assets/worldmap.png")
+    # world = World("./assets/worldmap.png", "./assets/worldmap_territories.png")
+    world = World() # empty world
+    world.add_world("./assets/worldmap.png", "./assets/worldmap_territories.png")
     world.draw()
