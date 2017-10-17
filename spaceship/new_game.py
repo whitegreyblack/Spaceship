@@ -335,8 +335,8 @@ def new_game(character=None):
         'c': interactDoor,
         'i': openInventory,
         't': interactUnit,
-        '>': descendStairs,
-        '<': ascendStairs,
+        '>': interactStairs,
+        '<': interactStairs,
         # 'f1': dungeon._sundown,
         # 'f2': dungeon._sunup,
         ',': interactItem,
@@ -426,6 +426,9 @@ def new_game(character=None):
             term.bkcolor("black")
         term.refresh()
         
+
+    def build_world():
+        pass
     # Before anything happens we create our character
     # LIMIT_FPS = 30 -- later used in sprite implementation
     blocked = []
