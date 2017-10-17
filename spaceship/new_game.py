@@ -323,18 +323,12 @@ def new_game(character=None):
 
     def interactStairs(x, y, k):
         """Allows interactions with stairs"""
-        def ascend(i, j):
+        if k is ">":
             gamelog.add("Going up the stairs")
-            exit()
-        def descend(i, j):
+        else:
             gamelog.add("Going down the stairs")
 
-        if k is ">":
-            descend(x, y)
-        else:
-            ascend(x, y)
 
-        
 
     actions={
         'o': interactDoor,
