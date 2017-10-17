@@ -6,6 +6,7 @@ from collections import namedtuple
 from spaceship.setup import setup, setup_font
 from random import choice
 from PIL import Image
+import shelve
 
 '''Colors
 "#ff00ff",
