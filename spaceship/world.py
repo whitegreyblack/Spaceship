@@ -32,6 +32,11 @@ class World:
         15: "256C",
     }
 
+    enterable_legend = {
+        (6, 10): "Some town",
+        (12, 14): "Another Town"
+    }
+
     pol_legend = {
         (0, 0, 0): ("None", "black"),
         (185, 122, 87): ("dwarven","#ff0000"),
@@ -191,8 +196,8 @@ class World:
                 char, col = self.data[j][i].char, self.data[j][i].color
 
                 # evaluate sea tiles
-                if (char, col) == ("2248", "#3040A0") and neighbors(i, j, (-1, 2), (-1, 2), "2248"):
-                    water.add((i, j))
+                # if (char, col) == ("2248", "#3040A0") and neighbors(i, j, (-1, 2), (-1, 2), "2248"):
+                #     water.add((i, j))
 
                 # evaluate lake tiles
                 # if (char, col) == ("2248","#3088FF") and neighbors(i, j, (-1, 2), (-1, 2), "2248"):
@@ -205,7 +210,7 @@ class World:
         # iterate through sea tiles and replace
         for i, j in water:
             _, _, l, t, c, k, kc, e = self.data[j][i]
-            self.data[j][i] = self.tile("=","#3050B0", l, t, c, k, kc, e)
+            self.data[j][i] = self.tile("=","#3050B0", "sea", t, c, k, kc, e)
 
 
         # iterate through lake tiles and replace
@@ -218,8 +223,19 @@ class World:
             _, _, l, t, tc, k, kc, e = self.data[j][i]
             self.data[j][i] = self.tile(c, "#30FFFF", l, t, tc, k, kc, e)
 
+    def enterable(self, i, j):
+        return self.data[j][i].enterable
+
     def accessTile(self, i, j):
         return self.data[j][i]
+
+    def walkable(self, i, j):
+        if 0 <= i < self.w-1 and 0 <= j < self.h-1:
+            for landtype in ("sea", "mountain", "lake"):
+                if landtype in self.data[j][i].land:
+                    return False
+            return True
+        return False
 
     def draw(self, key):
         for j in range(len(self.data)):
@@ -280,16 +296,16 @@ class World:
             term.bkcolor('black')
 
         def geopol():
-            for j in range(cy, cy+GH):
+            for j in range(cy, cy+GH-1):
                 for i in range(cx, cx+GW):
                     char, color, _, terr, tcol, _, _, _ = self.data[j][i]
                     if terr != "None":
-                        term.puts(i, j, "[c={}]{}[/c]".format(tcol, chr(int("2261", 16))))
+                        term.puts(i-cx, j-cy+1, "[c={}]{}[/c]".format(tcol, chr(int("2261", 16))))
                     else:
                         if len(char) > 1:
-                            term.puts(i, j, "[c={}]{}[/c]".format(color, chr(int(char, 16))))
+                            term.puts(i-cx, j-cy+1, "[c={}]{}[/c]".format(color, chr(int(char, 16))))
                         else:
-                            term.puts(i, j, "[c={}]{}[/c]".format(color, char))     
+                            term.puts(i-cx, j-cy+1, "[c={}]{}[/c]".format(color, char))     
             term.bkcolor('white')
             term.puts(0, 0, "#"*GW)
             term.puts(center("Territories of Calabaston  ", GW), 0,
@@ -297,28 +313,27 @@ class World:
             term.bkcolor('black')      
 
         def geoking():
-            for j in range(cy, cy+GH):
+            for j in range(cy, cy+GH-1):
                 for i in range(cx, cx+GW):
                     char, color, _, _, _, k, kc, _ = self.data[j][i]
                     if k != "None":
-                        term.puts(i, j, "[c={}]{}[/c]".format(kc, chr(int("2261", 16))))
+                        term.puts(i-cx, j-cy+1, "[c={}]{}[/c]".format(kc, chr(int("2261", 16))))
                     else:
                         if len(char) > 1:
-                            term.puts(i, j, "[c={}]{}[/c]".format(color, chr(int(char, 16))))
+                            term.puts(i-cx, j-cy+1, "[c={}]{}[/c]".format(color, chr(int(char, 16))))
                         else:
-                            term.puts(i, j, "[c={}]{}[/c]".format(color, char, 16))    
+                            term.puts(i-cx, j-cy+1, "[c={}]{}[/c]".format(color, char, 16))    
             term.bkcolor('white')
             term.puts(0, 0, "#"*GW)
             term.puts(center("Kingdoms of Calabaston  ", GW), 0,
                 "[c=black]Kingdoms of Calabaston[/c]")
             term.bkcolor('black')      
-
+        global GH, GW, FH, FW
         current = "g"
         while True:
             x, y = self.pointer
             cx = scroll(self.pointer[0], GW, self.w)
             cy = scroll(self.pointer[1], GH-1, self.h)
-            print(x, y, cx, cy)
 
             term.clear()
             if current == "g":
@@ -328,7 +343,19 @@ class World:
             else:
                 geoking()
 
-            term.puts(x-cx, y-cy, '[c=white]@[/c]')
+            term.puts(x-cx, y-cy+1, '[c=white]@[/c]')
+
+            if self.enterable(x, y):
+                term.bkcolor('white')
+                term.puts(0, GH-1, "#"*GW)    
+                try:                
+                    term.puts(center("  "+self.enterable_legend[(x, y)], GW), GH-1, 
+                        "[c=black]"+self.enterable_legend[(x, y)]+"[/c]")
+                except KeyError:
+                    term.puts(center("  "+"Some town : to be named", GW), GH-1, 
+                        "[c=black]Some town : to be named[/c]")
+                term.bkcolor("black")
+
             term.refresh()
 
             k = term.read()
@@ -341,14 +368,31 @@ class World:
                 current = "g"
             elif k == term.TK_K and current != "k":
                 current = "k"
+            elif k == term.TK_Z:
+                change = False
+                if term.TK_Z and term.state(term.TK_SHIFT):
+                    if (GH, GW) != (24, 40):
+                        FH, FW, GH, GW = 16, 16, 24, 40
+                        change = True
+                else:   
+                    if (GH, GW) != (48, 80):
+                        FH, FW, GH, GW = 8, 8, 48, 80
+                        change = True
+                if change:
+                    setup_font('Ibm_cga', FW, FH)
+                    term.set("window: size={}x{}, cellsize=auto".format(GW, GH))
             elif k == term.TK_UP:
-                y -= 1
+                if self.walkable(x, y-1):
+                    y -= 1
             elif k == term.TK_DOWN:
-                y += 1
+                if self.walkable(x, y+1):
+                    y += 1
             elif k == term.TK_LEFT:
-                x -= 1
+                if self.walkable(x-1, y):
+                    x -= 1
             elif k == term.TK_RIGHT:
-                x += 1
+                if self.walkable(x+1, y):
+                    x += 1
             self.pointer[0] = max(min(x, self.w-1), 0)
             self.pointer[1] = max(min(y, self.h), 1)
 
