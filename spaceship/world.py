@@ -32,9 +32,42 @@ class World:
         15: "256C",
     }
 
+    # list of city names:
+    # islands are not yet entered
     enterable_legend = {
-        (6, 10): "Some town",
-        (12, 14): "Another Town"
+        (6, 10): "Fragos",
+        (12, 14): "Another Town",
+        (42, 62): "Tiphmore",
+        (16, 46): "Renmar",
+        (41, 20): "Aurundel",
+        (83, 9): "Dun Badur",
+        (55, 14): "Dun Caden",
+        (63, 7): "Dun Baras",
+        (82, 19): "Dun Kaldergen",
+        (93, 25): "Dun Mogan",
+        (33, 7): "Dun Vargar",
+        (31, 18): "Falaeth",
+        (25, 32): "Galaloth",
+        (51, 42): "Aerathalar",
+        (58, 26): "Runagathor",
+        (69, 22): "Lantathor",
+        (78, 34): "Elenos",
+        (91, 40): "Elenloth",
+        (67, 42): "Whitewater",
+        (53, 51): "Dawnvalley",
+        (12, 14): "Houndsbeach",
+        (21, 18): "Yarrin",
+        (7, 43): "Westwatch",
+        (44, 35): "Lakepost",
+        (82, 45): "Lok Zargoth",
+        (72, 51): "Lok Gurrah",
+        (48, 14): "Dun Molbur",
+        (26, 57): "Shadowbarrow",
+        (65, 36): "Eastshore",
+        (69, 62): "Lok Midgoth",
+        (82, 60): "Lok Toragath",
+        (91, 55): "Gom Bashur",
+        (96, 48): "Gorrathah"
     }
 
     pol_legend = {
@@ -73,7 +106,7 @@ class World:
 
     king_legend = {
         (0, 0, 0): ("None", "black"),
-        (34, 177, 76): ("Arundel", "#006400"),
+        (34, 177, 76): ("Emerald Forest", "#006400"),
         (255, 201, 14): ("Zagos", "#FFBF00"),
         (237, 28, 36): ("Frostshield", "#880000"),
         (136, 0, 21): ("Goldbeard", "#FF0000"),
@@ -81,7 +114,7 @@ class World:
         (255, 242, 0): ("Rane", "#FFFF00"),
         (255, 127, 39): ("Tempest", "#FF8800"),
         (239, 228, 176): ("Endless Dunes", "#FFFF88"),
-        (255, 174, 201): ("Fragos", "#ff88ff"),
+        (255, 174, 201): ("Beast Nation", "#ff88ff"),
     }
 
     tile = namedtuple("Tile", "char color land territory tcol kingdom kcol enterable")
@@ -355,7 +388,7 @@ class World:
                     term.puts(center("  "+"Some town : to be named", GW), GH-1, 
                         "[c=black]Some town : to be named[/c]")
                 term.bkcolor("black")
-
+                print(x, y)
             term.refresh()
 
             k = term.read()
@@ -368,6 +401,9 @@ class World:
                 current = "g"
             elif k == term.TK_K and current != "k":
                 current = "k"
+            elif k == term.TK_PERIOD:
+                if term.state(term.TK_SHIFT):
+                    print('entering')                
             elif k == term.TK_Z:
                 change = False
                 if term.TK_Z and term.state(term.TK_SHIFT):
