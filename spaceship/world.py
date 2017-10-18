@@ -11,6 +11,7 @@ import time
 import shelve
 
 class World:
+    # world dictionaries used in map legends
     enterables = ("2302", "#", "&")
     river_legend = {
         0: "2022",
@@ -30,6 +31,7 @@ class World:
         14: "2566",
         15: "256C",
     }
+
     pol_legend = {
         (0, 0, 0): ("None", "black"),
         (185, 122, 87): ("dwarven","#ff0000"),
@@ -43,6 +45,7 @@ class World:
         (136, 0, 21): ("dwarven", "#550000"),
         (239, 228, 176): ("orken", "#dddddd"),
     }
+
     geo_legend = {
         (185, 122, 87): ("hills", "2022", ("#C3B091", "#826644")),
         (239, 228, 176): ("shore", "2261", ("#FFFFCC", "#FFFFE0")),
@@ -76,13 +79,12 @@ class World:
         (255, 174, 201): ("Fragos", "#ff88ff"),
     }
 
-    # def __init__(self, land, territory):
-    #     self.geotop(land)
-    #     self.geopol(territory)
     tile = namedtuple("Tile", "char color land territory tcol kingdom kcol enterable")
 
+    def __init__(self):
+        self.pointer = [15, 15]
+
     def add_world(self, geo, pol, king):
-        t1 = time.time()
         # do some error checking
         with Image.open(geo) as img:
             geopix = img.load()
@@ -152,7 +154,7 @@ class World:
                 row.append(self.tile(char, color, land, territory, tcolor, kingdom, kcolor, enterable))
             self.data.append(row)
         self.colorize()
-        print(time.time()-t1)
+
     def colorize(self):
         def neighbors(i, j, ilim, jlim, v):
             val = 0
@@ -203,7 +205,7 @@ class World:
         # iterate through sea tiles and replace
         for i, j in water:
             _, _, l, t, c, k, kc, e = self.data[j][i]
-            self.data[j][i] = self.tile("2248","#3050B0", l, t, c, k, kc, e)
+            self.data[j][i] = self.tile("=","#3050B0", l, t, c, k, kc, e)
 
 
         # iterate through lake tiles and replace
@@ -247,23 +249,39 @@ class World:
 
     def testdraw(self):
         '''probably should only be called on main script'''
+        def scroll(position, screen, worldmap):
+            """
+            @position: current position of player 1D axis
+            
+            @screen  : size of the screen
+            
+            @worldmap: size of the map           
+            """
+            halfscreen = screen//2
+            # less than half the screen - nothing
+            if position < halfscreen:
+                return 0
+            elif position >= worldmap - halfscreen:
+                return worldmap - screen
+            else:
+                return position - halfscreen
+
         def geotop():
-            for j in range(len(self.data)):
-                for i in range(len(self.data[j])):
+            for j in range(cy, cy+GH-1):
+                for i in range(cx, cx+GW):
                     if len(self.data[j][i].char) > 1:
-                        term.puts(i, j, "[c={}]{}[/c]".format(self.data[j][i].color, chr(int(self.data[j][i].char, 16))))
+                        term.puts(i-cx, j-cy+1, "[c={}]{}[/c]".format(self.data[j][i].color, chr(int(self.data[j][i].char, 16))))
                     else:
-                        term.puts(i, j, "[c={}]{}[/c]".format(self.data[j][i].color, self.data[j][i].char))
+                        term.puts(i-cx, j-cy+1, "[c={}]{}[/c]".format(self.data[j][i].color, self.data[j][i].char))
             term.bkcolor('white')
-            term.puts(0, 0, "#"*100)
-            term.puts(center("Geography of Calabaston  ", 100), 0,
+            term.puts(0, 0, "#"*GW)
+            term.puts(center("Geography of Calabaston  ", GW), 0,
                 "[c=black]Geography of Calabaston[/c]")
             term.bkcolor('black')
-            term.refresh() 
 
         def geopol():
-            for j in range(len(self.data)):
-                for i in range(len(self.data[j])):
+            for j in range(cy, cy+GH):
+                for i in range(cx, cx+GW):
                     char, color, _, terr, tcol, _, _, _ = self.data[j][i]
                     if terr != "None":
                         term.puts(i, j, "[c={}]{}[/c]".format(tcol, chr(int("2261", 16))))
@@ -273,15 +291,14 @@ class World:
                         else:
                             term.puts(i, j, "[c={}]{}[/c]".format(color, char))     
             term.bkcolor('white')
-            term.puts(0, 0, "#"*100)
-            term.puts(center("Territories of Calabaston  ", 100), 0,
+            term.puts(0, 0, "#"*GW)
+            term.puts(center("Territories of Calabaston  ", GW), 0,
                 "[c=black]Territories of Calabaston[/c]")
             term.bkcolor('black')      
-            term.refresh()        
 
         def geoking():
-            for j in range(len(self.data)):
-                for i in range(len(self.data[j])):
+            for j in range(cy, cy+GH):
+                for i in range(cx, cx+GW):
                     char, color, _, _, _, k, kc, _ = self.data[j][i]
                     if k != "None":
                         term.puts(i, j, "[c={}]{}[/c]".format(kc, chr(int("2261", 16))))
@@ -291,20 +308,28 @@ class World:
                         else:
                             term.puts(i, j, "[c={}]{}[/c]".format(color, char, 16))    
             term.bkcolor('white')
-            term.puts(0, 0, "#"*100)
-            term.puts(center("Kingdoms of Calabaston  ", 100), 0,
+            term.puts(0, 0, "#"*GW)
+            term.puts(center("Kingdoms of Calabaston  ", GW), 0,
                 "[c=black]Kingdoms of Calabaston[/c]")
             term.bkcolor('black')      
-            term.refresh()        
 
         current = "g"
         while True:
+            x, y = self.pointer
+            cx = scroll(self.pointer[0], GW, self.w)
+            cy = scroll(self.pointer[1], GH-1, self.h)
+            print(x, y, cx, cy)
+
+            term.clear()
             if current == "g":
                 geotop()
             elif current == "p":
                 geopol()
             else:
                 geoking()
+
+            term.puts(x-cx, y-cy, '[c=white]@[/c]')
+            term.refresh()
 
             k = term.read()
 
@@ -316,12 +341,25 @@ class World:
                 current = "g"
             elif k == term.TK_K and current != "k":
                 current = "k"
+            elif k == term.TK_UP:
+                y -= 1
+            elif k == term.TK_DOWN:
+                y += 1
+            elif k == term.TK_LEFT:
+                x -= 1
+            elif k == term.TK_RIGHT:
+                x += 1
+            self.pointer[0] = max(min(x, self.w-1), 0)
+            self.pointer[1] = max(min(y, self.h), 1)
+
 
 if __name__ == "__main__":
     setup()
-    setup_font('Ibm_cga', 8, 8)
-    term.set("window: size=100x70, cellsize=auto")
-    # world = World("./assets/worldmap.png", "./assets/worldmap_territories.png")
+    # FH, FW, GH, GW = 8, 8, 25, 40
+    FH, FW, GH, GW = 16, 16, 24, 40
+    setup_font('Ibm_cga', FW, FH)
+    term.set("window: size={}x{}, cellsize=auto".format(GW, GH))
+
     world = World() # empty world
     world.add_world(
         "./assets/worldmap.png", 
