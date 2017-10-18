@@ -183,7 +183,6 @@ class World:
                         bit_value += increment
                     increment *= 2
             return bit_value
-        '''Adds colors to seatiles'''
 
         water = set()
         river = set()
@@ -201,17 +200,17 @@ class World:
                     river.add((i, j, self.river_legend[bitval(i, j)]))
 
         for i, j in water:
-            _, _, l, t, c, _, _, e = self.data[j][i]
-            self.data[j][i] = self.tile("2248","#3050B0", l, t, c, "", "", e)
+            _, _, l, t, c, k, kc, e = self.data[j][i]
+            self.data[j][i] = self.tile("2248","#3050B0", l, t, c, k, kc, e)
 
         for i, j in lakes:
-            _, _, l, t, c, _, _, e = self.data[j][i]
-            self.data[j][i] = self.tile("2248", "#30CCFF", l, t, c, "", "", e)
+            _, _, l, t, c, k, kc, e = self.data[j][i]
+            self.data[j][i] = self.tile("2248", "#30CCFF", l, t, c, k, kc, e)
 
         '''Evaluates river tiles'''
         for i, j, c in river:
-            _, _, l, t, tc, _, _, e = self.data[j][i]
-            self.data[j][i] = self.tile(c, "#30FFFF", l, t, tc, "", "", e)
+            _, _, l, t, tc, k, kc, e = self.data[j][i]
+            self.data[j][i] = self.tile(c, "#30FFFF", l, t, tc, k, kc, e)
 
     def draw(self):
         def geotop():
