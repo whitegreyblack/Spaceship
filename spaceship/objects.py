@@ -10,6 +10,7 @@ from math import sqrt
 from spaceship.constants import GAME_SCREEN_HEIGHT as sh
 from spaceship.constants import GAME_SCREEN_WIDTH as sw
 from spaceship.maps import hextup, hexone, output, blender, gradient, evaluate_blocks
+from spaceship.setup import toInt, palette
 from spaceship.charmap import Charmap as cm
 # TODO: Maybe move map to a new file called map and create a camera class?
 
@@ -323,12 +324,12 @@ class Map:
             try:
                 t = locchar[char]
             except KeyError:
-                raise
+                pass
             return t
         
         rows = []
-        # for row in d.split('\n')
-        for row in d:
+        for row in d.split('\n'):
+        # for row in d:
             cols = []
             for col in row:
                 chars, hexcodes, bkgd = evaluate(col)
@@ -585,6 +586,9 @@ class Map:
                             col = "darkest grey"
                     else:
                         ch, col, bkgd = " ", "black", None
+
+                ch = ch if len(str(ch)) > 1 else chr(toInt(palette[ch]))
+
                 try:        
                     yield (x-cx, y-cy, col, ch, None)
                 except NameError:

@@ -5,6 +5,8 @@ from bearlibterminal import terminal as term
 from collections import namedtuple
 from spaceship.screen_functions import center
 from spaceship.setup import setup, setup_font
+from spaceship.maps import stringify
+from objects import Map
 from random import choice
 from PIL import Image
 import time
@@ -119,7 +121,8 @@ class World:
 
     tile = namedtuple("Tile", "char color land territory tcol kingdom kcol enterable")
 
-    def __init__(self, x=16, y=46):
+    def __init__(self, character, x=16, y=46):
+        self.character = character
         self.pointer = [x, y]
         # empty map data only holds the top level maps -- each map will hold their own sublevel maps
         self.map_data = {} 
@@ -269,7 +272,12 @@ class World:
     def add_city(self, x, y):
         '''Must've been located in enterables legend'''
         string = "./assets/maps/"+self.enterable_legend[(x, y)].lower()+".png"
-        print(string)
+        self.map_data[(x, y)] = Map(stringify(string))
+        print("loaded {}".format(string))
+
+    def add_dungeon(self, x, y):
+        '''Must've been located in dungeontile?'''
+        pass
 
     def walkable(self, i, j):
         if 0 <= i < self.w-1 and 0 <= j < self.h-1:
@@ -402,7 +410,12 @@ class World:
             else:
                 if (x, y) not in self.map_data.keys():
                     term.puts(center("nodata  ", GW), GH//2, "NO DATA")    
-
+                else:
+                    term.puts(center("nodata  ", GW), GH//2, "LOAD MAP")    
+                    dungeon = self.map_data[(x, y)]
+                    dungeon.fov_calc([(x, y, 5)])
+                    for i, j, lit, ch, bkgd in list(dungeon.output(x, y, [])):
+                        term.puts(x-cx, y-cy, "[color={}]".format(lit)+ch+"[/color]")
             term.refresh()
 
             k = term.read()
@@ -478,7 +491,7 @@ if __name__ == "__main__":
     setup_font('Ibm_cga', FW, FH)
     term.set("window: size={}x{}, cellsize=auto".format(GW, GH))
 
-    world = World() # empty world
+    world = World(None) # adding character which will be passed down everywhere
     world.add_world(
         "./assets/worldmap.png", 
         "./assets/worldmap_territories.png",

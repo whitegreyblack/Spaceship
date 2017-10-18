@@ -420,10 +420,8 @@ def new_game(character=None):
         term.composition(False)
         dungeon.fov_calc(lights+[(player.x, player.y, player.sight)])
         for x, y, lit, ch, bkgd in list(dungeon.output(player.x, player.y, units)):
-            ch = ch if len(str(ch)) > 1 else chr(toInt(palette[ch]))
-            term.bkcolor("black")
+            # ch = ch if len(str(ch)) > 1 else chr(toInt(palette[ch]))
             term.puts(x+12, y+2, "[color={}]".format(lit)+ch+"[/color]")
-            term.bkcolor("black")
         term.refresh()
         
 
