@@ -7,34 +7,8 @@ from spaceship.screen_functions import center
 from spaceship.setup import setup, setup_font
 from random import choice
 from PIL import Image
+import time
 import shelve
-
-'''Colors
-"#ff00ff",
-
-dwarven
-"#ff0088",
-"#ff0000",
-
-orc
-"#ff4400",
-"#ff8800",
-
-human
-"#ffCC00",
-"#ffff00",
-
-elven
-"#88ff00",
-"#00ff00",
-
-beast
-"#00ff88",
-"#00ffff",
-
-"#0088ff",
-"#0000ff",
-'''
 
 class World:
     enterables = ("2302", "#", "&")
@@ -108,6 +82,7 @@ class World:
     tile = namedtuple("Tile", "char color land territory tcol kingdom kcol enterable")
 
     def add_world(self, geo, pol, king):
+        t1 = time.time()
         # do some error checking
         with Image.open(geo) as img:
             geopix = img.load()
@@ -177,7 +152,7 @@ class World:
                 row.append(self.tile(char, color, land, territory, tcolor, kingdom, kcolor, enterable))
             self.data.append(row)
         self.colorize()
-
+        print(time.time()-t1)
     def colorize(self):
         def neighbors(i, j, ilim, jlim, v):
             val = 0
@@ -241,14 +216,44 @@ class World:
             _, _, l, t, tc, k, kc, e = self.data[j][i]
             self.data[j][i] = self.tile(c, "#30FFFF", l, t, tc, k, kc, e)
 
-    def draw(self):
+    def accessTile(self, i, j):
+        return self.data[j][i]
+
+    def draw(self, key):
+        for j in range(len(self.data)):
+            for i in range(len(self.data[j])):
+                char, color, _, terr, tcol, king, kcol, _ = self.data[j][i]
+
+                if key == "g":
+                    if len(char) > 1:
+                        char = chr(int(char, 16))
+
+                elif key == "p":
+                    color = tcol
+                    if terr != "None":
+                        char = chr(int("2261", 16))
+                    else:
+                        if len(char) > 1:
+                            char = chr(int(char, 16))
+                
+                else:
+                    color = kcol
+                    if king != "None:":
+                        char = chr(int("2261", 16))
+                    elif len(char) > 1:
+                        char = chr(int(char, 16))
+                
+                yield (i, j, color, char)
+
+    def testdraw(self):
+        '''probably should only be called on main script'''
         def geotop():
             for j in range(len(self.data)):
                 for i in range(len(self.data[j])):
                     if len(self.data[j][i].char) > 1:
                         term.puts(i, j, "[c={}]{}[/c]".format(self.data[j][i].color, chr(int(self.data[j][i].char, 16))))
                     else:
-                        term.puts(i, j, "[c={}]{}[/c]".format(self.data[j][i].color, self.data[j][i].char, 16))
+                        term.puts(i, j, "[c={}]{}[/c]".format(self.data[j][i].color, self.data[j][i].char))
             term.bkcolor('white')
             term.puts(0, 0, "#"*100)
             term.puts(center("Geography of Calabaston  ", 100), 0,
@@ -266,7 +271,7 @@ class World:
                         if len(char) > 1:
                             term.puts(i, j, "[c={}]{}[/c]".format(color, chr(int(char, 16))))
                         else:
-                            term.puts(i, j, "[c={}]{}[/c]".format(color, char, 16))     
+                            term.puts(i, j, "[c={}]{}[/c]".format(color, char))     
             term.bkcolor('white')
             term.puts(0, 0, "#"*100)
             term.puts(center("Territories of Calabaston  ", 100), 0,
@@ -322,4 +327,4 @@ if __name__ == "__main__":
         "./assets/worldmap.png", 
         "./assets/worldmap_territories.png",
         "./assets/worldmap_kingdoms.png")
-    world.draw()
+    world.testdraw()
