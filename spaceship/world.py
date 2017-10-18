@@ -69,42 +69,42 @@ class World:
     }
     pol_color_key ={
         (0, 0, 0): "black",
-        (185, 122, 87): "#550000",
         (34, 177, 76): "#228022",
-        (237, 28, 36): "#ff8844",
         (181, 230, 29): "#77ff77",
+        (255, 127, 39): "#ffff00",
+        (237, 28, 36): "#ff8844",
         (255, 201, 14): "#ffAA00",
         (255, 242, 0): "#ff88ff",
-        (255, 127, 39): "#ffff00",
         (255, 174, 201): "#ff2255",
         (136, 0, 21): "#ff0000",
-        (239, 228, 176): "#0088ff",
+        (185, 122, 87): "#550000",
+        (239, 228, 176): "#dddddd",
     }
     enterables = ("2302", "#", "&")
 
     geo_legend = {
-        (255, 242, 0): ("field", "2261", ("#FFBF00",)),
-        (239, 228, 176): ("shore", "2261", ("#FFFFCC", "#FFFFE0")),
-        (34, 177, 76): ("dark forest", "00A5", ("#006400","#568203",)),
-        (0, 162, 232): ("deep sea", "2248", ("#3040A0",)),
-        (195, 195, 195): ("medium mountains", "2229", ("#C0C0C0","#D3D3D3")),
-        (127, 127, 127): ("low mountains", "n", ("#808080", "#A9A9A9",)),
-        (255, 255, 255): ("high mountains", "005E", ("#C0C0C0","#D3D3D3")),
         (185, 122, 87): ("hills", "2022", ("#C3B091", "#826644")),
+        (239, 228, 176): ("shore", "2261", ("#FFFFCC", "#FFFFE0")),
+        (255, 255, 255): ("high mountains", "005E", ("#D3D3D3",)),
+        (195, 195, 195): ("medium mountains", "2229", ("#C0C0C0",)),
+        (127, 127, 127): ("low mountains", "n", ("#808080", "#A9A9A9",)),
         (237, 28, 36): ("settlement", "2302", ("#00fF00",)),
         (181, 230, 29): ("forest", "0192", ("#228B22", "#74C365")),
+        (34, 177, 76): ("dark forest", "00A5", ("#006400","#568203",)),
         (255, 201, 14):("plains", ".", ("#FFBF00",)),
-        (255, 174, 201): ("dunes", "2022", ("#F0AC82",)), #"#C19A6B", "#6C541E"
+        (255, 242, 0): ("field", "2261", ("#FFBF00",)),
+        (255, 127, 39): ("hot plains", ".", ("#FFBD22",)),
+        (255, 174, 201): ("dunes", "2022", ("#F0AC82",)),
         (136, 0, 21): ("fortress", "#", ("#FF0000",)),
         (200, 191, 231): ("city", "&", ("#FFFF00",)),
         (112, 146, 190): ("river", "~", ("#30FFFF",)),
         (63, 72, 204): ("lake", "2248", ("#3088FF",)),
-        (255, 127, 39): ("hot plains", ".", ("#FFBD22",))
+        (0, 162, 232): ("deep sea", "2248", ("#3040A0",)),
     }
     # def __init__(self, land, territory):
     #     self.geotop(land)
     #     self.geopol(territory)
-    tile = namedtuple("Tile", "char color land territory tcol enterable")
+    tile = namedtuple("Tile", "char color land territory tcol kingdom kcol enterable")
 
     def add_world(self, geo, pol):
         # do some error checking
@@ -152,7 +152,7 @@ class World:
                     raise
 
                 enterable = char in self.enterables
-                row.append(self.tile(char, color, land, territory, tcolor, enterable))
+                row.append(self.tile(char, color, land, territory, tcolor, "", "", enterable))
             self.data.append(row)
         self.colorize()
 
@@ -201,17 +201,17 @@ class World:
                     river.add((i, j, self.river_legend[bitval(i, j)]))
 
         for i, j in water:
-            _, _, l, t, c, e = self.data[j][i]
-            self.data[j][i] = self.tile("2248","#3050B0", l, t, c, e)
+            _, _, l, t, c, _, _, e = self.data[j][i]
+            self.data[j][i] = self.tile("2248","#3050B0", l, t, c, "", "", e)
 
         for i, j in lakes:
-            _, _, l, t, c, e = self.data[j][i]
-            self.data[j][i] = self.tile("2248", "#30CCFF", l, t, c, e)
+            _, _, l, t, c, _, _, e = self.data[j][i]
+            self.data[j][i] = self.tile("2248", "#30CCFF", l, t, c, "", "", e)
 
         '''Evaluates river tiles'''
         for i, j, c in river:
-            _, _, l, t, tc, e = self.data[j][i]
-            self.data[j][i] = self.tile(c, "#30FFFF", l, t, tc, e)
+            _, _, l, t, tc, _, _, e = self.data[j][i]
+            self.data[j][i] = self.tile(c, "#30FFFF", l, t, tc, "", "", e)
 
     def draw(self):
         def geotop():
@@ -226,7 +226,7 @@ class World:
         def geopol():
             for j in range(len(self.data)):
                 for i in range(len(self.data[j])):
-                    char, color, _, terr, tcol, _ = self.data[j][i]
+                    char, color, _, terr, tcol, _, _, _ = self.data[j][i]
                     if terr != "None":
                         term.puts(i, j, "[c={}]{}[/c]".format(tcol, chr(int("2261", 16))))
                     else:
@@ -234,6 +234,19 @@ class World:
                             term.puts(i, j, "[c={}]{}[/c]".format(color, chr(int(char, 16))))
                         else:
                             term.puts(i, j, "[c={}]{}[/c]".format(color, char, 16))           
+            term.refresh()        
+
+        def geoking():
+            for j in range(len(self.data)):
+                for i in range(len(self.data[j])):
+                    char, color, _, _, _, k, kc, _ = self.data[j][i]
+                    if terr != "None":
+                        term.puts(i, j, "[c={}]{}[/c]".format(kc, chr(int("2261", 16))))
+                    else:
+                        if len(char) > 1:
+                            term.puts(i, j, "[c={}]{}[/c]".format(color, chr(int(char, 16))))
+                        else:
+                            term.puts(i, j, "[c={}]{}[/c]".format(color, char, 16))    
             term.refresh()        
 
         current = "g"
@@ -246,10 +259,12 @@ class World:
 
             if k == term.TK_CLOSE or k == term.TK_ESCAPE or k == term.TK_Q:
                 break
-            elif k == term.TK_P and current == "g":
+            elif k == term.TK_P and current != "p":
                 current = "p"
-            elif k == term.TK_G and current == "p":
+            elif k == term.TK_G and current != "g":
                 current = "g"
+            # elif k == term.TK_K and current != "k"
+            #     current = "kS"
 
 if __name__ == "__main__":
     setup()
