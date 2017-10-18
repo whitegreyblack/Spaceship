@@ -3,6 +3,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from bearlibterminal import terminal as term
 from collections import namedtuple
+from spaceship.screen_functions import center
 from spaceship.setup import setup, setup_font
 from random import choice
 from PIL import Image
@@ -36,6 +37,7 @@ beast
 '''
 
 class World:
+    enterables = ("2302", "#", "&")
     river_legend = {
         0: "2022",
         1: "2551",
@@ -55,33 +57,18 @@ class World:
         15: "256C",
     }
     pol_legend = {
-        (0, 0, 0): "None",
-        (185, 122, 87): "dwarven",
-        (34, 177, 76): "elven",
-        (237, 28, 36): "beast",
-        (181, 230, 29): "elven",
-        (255, 201, 14): "human",
-        (255, 242, 0): "human",
-        (255, 127, 39): "human",
-        (255, 174, 201): "orken",
-        (136, 0, 21): "dwarven",
-        (239, 228, 176): "orken",
+        (0, 0, 0): ("None", "black"),
+        (185, 122, 87): ("dwarven","#ff0000"),
+        (34, 177, 76): ("elven", "#228022"),
+        (237, 28, 36): ("beast", "#ff8844"),
+        (181, 230, 29): ("elven", "#77ff77"),
+        (255, 201, 14): ("human", "#ffAA00"),
+        (255, 242, 0): ("human", "#ff88ff"),
+        (255, 127, 39): ("human", "#ffff00"),
+        (255, 174, 201): ("orken", "#ff2255"),
+        (136, 0, 21): ("dwarven", "#550000"),
+        (239, 228, 176): ("orken", "#dddddd"),
     }
-    pol_color_key ={
-        (0, 0, 0): "black",
-        (34, 177, 76): "#228022",
-        (181, 230, 29): "#77ff77",
-        (255, 127, 39): "#ffff00",
-        (237, 28, 36): "#ff8844",
-        (255, 201, 14): "#ffAA00",
-        (255, 242, 0): "#ff88ff",
-        (255, 174, 201): "#ff2255",
-        (136, 0, 21): "#ff0000",
-        (185, 122, 87): "#550000",
-        (239, 228, 176): "#dddddd",
-    }
-    enterables = ("2302", "#", "&")
-
     geo_legend = {
         (185, 122, 87): ("hills", "2022", ("#C3B091", "#826644")),
         (239, 228, 176): ("shore", "2261", ("#FFFFCC", "#FFFFE0")),
@@ -101,12 +88,26 @@ class World:
         (63, 72, 204): ("lake", "2248", ("#3088FF",)),
         (0, 162, 232): ("deep sea", "2248", ("#3040A0",)),
     }
+
+    king_legend = {
+        (0, 0, 0): ("None", "black"),
+        (34, 177, 76): ("Arundel", "#006400"),
+        (255, 201, 14): ("Zagos", "#FFBF00"),
+        (237, 28, 36): ("Frostshield", "#880000"),
+        (136, 0, 21): ("Goldbeard", "#FF0000"),
+        (181, 230, 29): ("Arundel", "#568203"),
+        (255, 242, 0): ("Rane", "#FFFF00"),
+        (255, 127, 39): ("Tempest", "#FF8800"),
+        (239, 228, 176): ("Endless Dunes", "#FFFF88"),
+        (255, 174, 201): ("Fragos", "#ff88ff"),
+    }
+
     # def __init__(self, land, territory):
     #     self.geotop(land)
     #     self.geopol(territory)
     tile = namedtuple("Tile", "char color land territory tcol kingdom kcol enterable")
 
-    def add_world(self, geo, pol):
+    def add_world(self, geo, pol, king):
         # do some error checking
         with Image.open(geo) as img:
             geopix = img.load()
@@ -114,7 +115,11 @@ class World:
         with Image.open(pol) as img:
             polpix = img.load()
             pw, ph = img.size
+        with Image.open(king) as img:
+            kingpix = img.load()
+            kw, kh = img.size
         assert (gw, gh) == (pw, ph)
+        assert (gw, gh) == (kw, kh)
 
         # width height should be same for both so just use one
         self.w, self.h = pw, ph
@@ -123,6 +128,11 @@ class World:
         for j in range(self.h):
             row = []
             for i in range(self.w):
+
+                # seperate the array indexing access by map
+                # to decrease confusion on error
+                # encapsulate within try/except due to randomness
+                # of alpha channel popping up now and then
                 try:
                     gr, gg, gb, _ = geopix[i, j]
                 except ValueError:
@@ -133,26 +143,38 @@ class World:
                 except ValueError:
                     pr, pg, pb = polpix[i,j]
 
-                # done with geopix/polpix onto namedtuples                
+                try:
+                    kr, kg, kb, _ = kingpix[i, j]
+                except ValueError:
+                    kr, kg, kb = kingpix[i, j]
+
+                # done with geo/pol/king -- onto namedtuples                
+                # try/except KV used to increase speed of 
+                # implementing new properties in map
+
+                # deal with geography properties first
                 land, char, colors = self.geo_legend[(gr, gg, gb)]
 
                 if len(colors) > 1:
                     color = choice(colors)
                 else:
                     color = colors[0]
+
+                # then political properties
                 try:
-                    territory = self.pol_legend[(pr, pg, pb)]
+                    territory, tcolor = self.pol_legend[(pr, pg, pb)]
                 except KeyError:
                     print(((i, j), (pr, pg, pb)))
                     raise
 
+                # finally kingdom properties
                 try:
-                    tcolor = self.pol_color_key[(pr, pg, pb)]
+                    kingdom, kcolor = self.king_legend[(kr, kg, kb)]
                 except KeyError:
                     raise
 
                 enterable = char in self.enterables
-                row.append(self.tile(char, color, land, territory, tcolor, "", "", enterable))
+                row.append(self.tile(char, color, land, territory, tcolor, kingdom, kcolor, enterable))
             self.data.append(row)
         self.colorize()
 
@@ -190,24 +212,31 @@ class World:
         for i in range(self.w):
             for j in range(self.h):
                 char, col = self.data[j][i].char, self.data[j][i].color
+
+                # evaluate sea tiles
                 if (char, col) == ("2248", "#3040A0") and neighbors(i, j, (-1, 2), (-1, 2), "2248"):
                     water.add((i, j))
 
-                if (char, col) == ("2248","#3088FF") and neighbors(i, j, (-1, 2), (-1, 2), "2248"):
-                    lakes.add((i, j))
+                # evaluate lake tiles
+                # if (char, col) == ("2248","#3088FF") and neighbors(i, j, (-1, 2), (-1, 2), "2248"):
+                #     lakes.add((i, j))
 
+                # evaluate river tiles
                 if (char, col) == ("~", "#30FFFF"):
                     river.add((i, j, self.river_legend[bitval(i, j)]))
 
+        # iterate through sea tiles and replace
         for i, j in water:
             _, _, l, t, c, k, kc, e = self.data[j][i]
             self.data[j][i] = self.tile("2248","#3050B0", l, t, c, k, kc, e)
 
-        for i, j in lakes:
-            _, _, l, t, c, k, kc, e = self.data[j][i]
-            self.data[j][i] = self.tile("2248", "#30CCFF", l, t, c, k, kc, e)
 
-        '''Evaluates river tiles'''
+        # iterate through lake tiles and replace
+        # for i, j in lakes:
+        #     _, _, l, t, c, k, kc, e = self.data[j][i]
+        #     self.data[j][i] = self.tile("2248", "#30CCFF", l, t, c, k, kc, e)
+
+        # iterate through river tiles and replace
         for i, j, c in river:
             _, _, l, t, tc, k, kc, e = self.data[j][i]
             self.data[j][i] = self.tile(c, "#30FFFF", l, t, tc, k, kc, e)
@@ -220,6 +249,11 @@ class World:
                         term.puts(i, j, "[c={}]{}[/c]".format(self.data[j][i].color, chr(int(self.data[j][i].char, 16))))
                     else:
                         term.puts(i, j, "[c={}]{}[/c]".format(self.data[j][i].color, self.data[j][i].char, 16))
+            term.bkcolor('white')
+            term.puts(0, 0, "#"*100)
+            term.puts(center("Geography of Calabaston  ", 100), 0,
+                "[c=black]Geography of Calabaston[/c]")
+            term.bkcolor('black')
             term.refresh() 
 
         def geopol():
@@ -232,28 +266,41 @@ class World:
                         if len(char) > 1:
                             term.puts(i, j, "[c={}]{}[/c]".format(color, chr(int(char, 16))))
                         else:
-                            term.puts(i, j, "[c={}]{}[/c]".format(color, char, 16))           
+                            term.puts(i, j, "[c={}]{}[/c]".format(color, char, 16))     
+            term.bkcolor('white')
+            term.puts(0, 0, "#"*100)
+            term.puts(center("Territories of Calabaston  ", 100), 0,
+                "[c=black]Territories of Calabaston[/c]")
+            term.bkcolor('black')      
             term.refresh()        
 
         def geoking():
             for j in range(len(self.data)):
                 for i in range(len(self.data[j])):
                     char, color, _, _, _, k, kc, _ = self.data[j][i]
-                    if terr != "None":
+                    if k != "None":
                         term.puts(i, j, "[c={}]{}[/c]".format(kc, chr(int("2261", 16))))
                     else:
                         if len(char) > 1:
                             term.puts(i, j, "[c={}]{}[/c]".format(color, chr(int(char, 16))))
                         else:
                             term.puts(i, j, "[c={}]{}[/c]".format(color, char, 16))    
+            term.bkcolor('white')
+            term.puts(0, 0, "#"*100)
+            term.puts(center("Kingdoms of Calabaston  ", 100), 0,
+                "[c=black]Kingdoms of Calabaston[/c]")
+            term.bkcolor('black')      
             term.refresh()        
 
         current = "g"
         while True:
             if current == "g":
                 geotop()
-            else:
+            elif current == "p":
                 geopol()
+            else:
+                geoking()
+
             k = term.read()
 
             if k == term.TK_CLOSE or k == term.TK_ESCAPE or k == term.TK_Q:
@@ -262,8 +309,8 @@ class World:
                 current = "p"
             elif k == term.TK_G and current != "g":
                 current = "g"
-            # elif k == term.TK_K and current != "k"
-            #     current = "kS"
+            elif k == term.TK_K and current != "k":
+                current = "k"
 
 if __name__ == "__main__":
     setup()
@@ -271,5 +318,8 @@ if __name__ == "__main__":
     term.set("window: size=100x70, cellsize=auto")
     # world = World("./assets/worldmap.png", "./assets/worldmap_territories.png")
     world = World() # empty world
-    world.add_world("./assets/worldmap.png", "./assets/worldmap_territories.png")
+    world.add_world(
+        "./assets/worldmap.png", 
+        "./assets/worldmap_territories.png",
+        "./assets/worldmap_kingdoms.png")
     world.draw()
