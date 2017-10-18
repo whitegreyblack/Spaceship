@@ -10,18 +10,24 @@ import shelve
 
 '''Colors
 "#ff00ff",
+
+dwarven
 "#ff0088",
 "#ff0000",
 
+orc
 "#ff4400",
 "#ff8800",
 
+human
 "#ffCC00",
 "#ffff00",
 
+elven
 "#88ff00",
 "#00ff00",
 
+beast
 "#00ff88",
 "#00ffff",
 
@@ -58,17 +64,21 @@ class World:
         (255, 242, 0): "human",
         (255, 127, 39): "human",
         (255, 174, 201): "orken",
+        (136, 0, 21): "dwarven",
+        (239, 228, 176): "orken",
     }
     pol_color_key ={
         (0, 0, 0): "black",
         (185, 122, 87): "#550000",
         (34, 177, 76): "#228022",
-        (237, 28, 36): "#ff8A22",
+        (237, 28, 36): "#ff8844",
         (181, 230, 29): "#77ff77",
-        (255, 201, 14): "#ffcc00",
-        (255, 242, 0): "#ffcc00",
-        (255, 127, 39): "#ffcc00",
+        (255, 201, 14): "#ffAA00",
+        (255, 242, 0): "#ff88ff",
+        (255, 127, 39): "#ffff00",
         (255, 174, 201): "#ff2255",
+        (136, 0, 21): "#ff0000",
+        (239, 228, 176): "#0088ff",
     }
     enterables = ("2302", "#", "&")
 
@@ -78,9 +88,9 @@ class World:
         (34, 177, 76): ("dark forest", "00A5", ("#006400","#568203",)),
         (0, 162, 232): ("deep sea", "2248", ("#3040A0",)),
         (195, 195, 195): ("medium mountains", "2229", ("#C0C0C0","#D3D3D3")),
-        (127, 127, 127): ("low mountains", "2229", ("#808080", "#A9A9A9",)),
+        (127, 127, 127): ("low mountains", "n", ("#808080", "#A9A9A9",)),
         (255, 255, 255): ("high mountains", "005E", ("#C0C0C0","#D3D3D3")),
-        (185, 122, 87): ("hills", "n", ("#C3B091", "#826644")),
+        (185, 122, 87): ("hills", "2022", ("#C3B091", "#826644")),
         (237, 28, 36): ("settlement", "2302", ("#00fF00",)),
         (181, 230, 29): ("forest", "0192", ("#228B22", "#74C365")),
         (255, 201, 14):("plains", ".", ("#FFBF00",)),
@@ -218,7 +228,7 @@ class World:
                 for i in range(len(self.data[j])):
                     char, color, _, terr, tcol, _ = self.data[j][i]
                     if terr != "None":
-                        term.puts(i, j, "[c={}]{}[/c]".format(tcol, chr(int("2022", 16))))
+                        term.puts(i, j, "[c={}]{}[/c]".format(tcol, chr(int("2261", 16))))
                     else:
                         if len(char) > 1:
                             term.puts(i, j, "[c={}]{}[/c]".format(color, chr(int(char, 16))))
