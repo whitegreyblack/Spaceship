@@ -129,6 +129,10 @@ class World:
         # level zero is world level -- going "down" increments the level variable
         self.level = 0
 
+        # keep the pointers seperated from world and dungeon/map
+        self.world_position = []
+        self.map_position = []
+
     def add_world(self, geo, pol, king):
         # do some error checking
         with Image.open(geo) as img:
@@ -416,9 +420,9 @@ class World:
                     # dungeon.fov_calc([(x, y, 5)])
                     # for i, j, lit, ch, bkgd in list(dungeon.output(x, y, [])):
                     #     term.puts(x-cx, y-cy, "[color={}]".format(lit)+ch+"[/color]")
-                    for j in range(len(dungeon.data)):
-                        for i in range(len(dungeon.data[0])):
-                            term.puts(i-cx, j-cy, dungeon.data[j][i])
+                    for j in range(cy, cy+GH-1):
+                        for i in range(cx, cx+GW):
+                            term.puts(i-cx, j-cy+1, dungeon.data[j][i])
             term.refresh()
 
             k = term.read()
