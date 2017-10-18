@@ -119,8 +119,12 @@ class World:
 
     tile = namedtuple("Tile", "char color land territory tcol kingdom kcol enterable")
 
-    def __init__(self):
-        self.pointer = [15, 15]
+    def __init__(self, x=16, y=46):
+        self.pointer = [x, y]
+        # empty map data only holds the top level maps -- each map will hold their own sublevel maps
+        self.map_data = {} 
+        # level zero is world level -- going "down" increments the level variable
+        self.level = 0
 
     def add_world(self, geo, pol, king):
         # do some error checking
@@ -262,6 +266,11 @@ class World:
     def accessTile(self, i, j):
         return self.data[j][i]
 
+    def add_city(self, x, y):
+        '''Must've been located in enterables legend'''
+        string = "./assets/maps/"+self.enterable_legend[(x, y)].lower()+".png"
+        print(string)
+
     def walkable(self, i, j):
         if 0 <= i < self.w-1 and 0 <= j < self.h-1:
             for landtype in ("sea", "mountain", "lake"):
@@ -360,73 +369,102 @@ class World:
             term.puts(0, 0, "#"*GW)
             term.puts(center("Kingdoms of Calabaston  ", GW), 0,
                 "[c=black]Kingdoms of Calabaston[/c]")
-            term.bkcolor('black')      
+            term.bkcolor('black')     
+
         global GH, GW, FH, FW
         current = "g"
+
         while True:
             x, y = self.pointer
             cx = scroll(self.pointer[0], GW, self.w)
             cy = scroll(self.pointer[1], GH-1, self.h)
 
             term.clear()
-            if current == "g":
-                geotop()
-            elif current == "p":
-                geopol()
+            if self.level <= 0:
+                if current == "g":
+                    geotop()
+                elif current == "p":
+                    geopol()
+                else:
+                    geoking()
+                term.puts(x-cx, y-cy+1, '[c=white]@[/c]')
+                if self.enterable(x, y):
+                    term.bkcolor('white')
+                    term.puts(0, GH-1, "#"*GW)    
+                    try:                
+                        term.puts(center("  "+self.enterable_legend[(x, y)], GW), GH-1, 
+                            "[c=black]"+self.enterable_legend[(x, y)]+"[/c]")
+                    except KeyError:
+                        term.puts(center("  "+"Some town : to be named", GW), GH-1, 
+                            "[c=black]Some town : to be named[/c]")
+                    term.bkcolor("black")
+
             else:
-                geoking()
+                if (x, y) not in self.map_data.keys():
+                    term.puts(center("nodata  ", GW), GH//2, "NO DATA")    
 
-            term.puts(x-cx, y-cy+1, '[c=white]@[/c]')
-
-            if self.enterable(x, y):
-                term.bkcolor('white')
-                term.puts(0, GH-1, "#"*GW)    
-                try:                
-                    term.puts(center("  "+self.enterable_legend[(x, y)], GW), GH-1, 
-                        "[c=black]"+self.enterable_legend[(x, y)]+"[/c]")
-                except KeyError:
-                    term.puts(center("  "+"Some town : to be named", GW), GH-1, 
-                        "[c=black]Some town : to be named[/c]")
-                term.bkcolor("black")
-                print(x, y)
             term.refresh()
 
             k = term.read()
+            while k in (term.TK_SHIFT, term.TK_ALT, term.TK_CONTROL):
+                k = term.read()
 
+            # exit logic
             if k == term.TK_CLOSE or k == term.TK_ESCAPE or k == term.TK_Q:
                 break
+
+            # map functions
             elif k == term.TK_P and current != "p":
                 current = "p"
             elif k == term.TK_G and current != "g":
                 current = "g"
             elif k == term.TK_K and current != "k":
                 current = "k"
+
+            # level switching
             elif k == term.TK_PERIOD:
-                if term.state(term.TK_SHIFT):
+                if term.state(term.TK_SHIFT) and self.enterable(x, y):
                     print('entering')                
+                    self.level += 1
+                    if (x, y) not in self.map_data.keys():
+                        print('no data')
+                        # if it is a city
+                        if (x, y) in self.enterable_legend.keys():
+                            self.add_city(x, y)
+            elif k == term.TK_COMMA:
+                if term.state(term.TK_SHIFT) and self.enterable(x, y):
+                    print('exitting')                
+                    self.level -= 1
+
+
+            # terminal zooming
             elif k == term.TK_Z:
                 change = False
                 if term.TK_Z and term.state(term.TK_SHIFT):
                     if (GH, GW) != (24, 40):
                         FH, FW, GH, GW = 16, 16, 24, 40
                         change = True
+                        self.level += 1
                 else:   
                     if (GH, GW) != (48, 80):
                         FH, FW, GH, GW = 8, 8, 48, 80
                         change = True
+                        self.level -= 1
                 if change:
                     setup_font('Ibm_cga', FW, FH)
                     term.set("window: size={}x{}, cellsize=auto".format(GW, GH))
-            elif k == term.TK_UP:
+
+            # movement key handling
+            elif k == term.TK_UP and self.level == 0:
                 if self.walkable(x, y-1):
                     y -= 1
-            elif k == term.TK_DOWN:
+            elif k == term.TK_DOWN and self.level == 0:
                 if self.walkable(x, y+1):
                     y += 1
-            elif k == term.TK_LEFT:
+            elif k == term.TK_LEFT and self.level == 0:
                 if self.walkable(x-1, y):
                     x -= 1
-            elif k == term.TK_RIGHT:
+            elif k == term.TK_RIGHT and self.level == 0:
                 if self.walkable(x+1, y):
                     x += 1
             self.pointer[0] = max(min(x, self.w-1), 0)
