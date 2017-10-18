@@ -263,11 +263,13 @@ class Map:
     colors_block = ["#ffc0c0c0", "#ffa0a0a0", "#ff808080", "#ff606060", "#ff404040"]
     # colors_water = blender(color_water, 20)
 
-    def __init__(self, data):
+    def __init__(self, data, GW=80, GH=40):
         self.SUN = True
         # self.data, self.height, self.width = self.dimensions(data)
-        self.data = data
-        self.height, self.width = self.dimensions(data)
+        self.data, self.height, self.width = self.dimensions(data)
+        for i in self.data:
+            print(i)
+        print("MAP: {} {}".format(self.width, self.height))
         # self.block blocks both light (and movement?)
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.lamps = None
@@ -282,16 +284,17 @@ class Map:
         self.tilemap = self.fill(data, self.width, self.height)
         self.explore = [[0 for _ in range(self.width)] for _ in range(self.height)]
         print("MAP: {} {}".format(self.map_display_width, self.map_display_height))
-        print("MAP: {} {}".format(self.width, self.height))
+ 
 
     @staticmethod
     def dimensions(data):
         '''takes in a string map and returns a 2D list map and map dimensions'''
-        # data = [[col for col in row] for row in data.split('\n')]
+        if isinstance(data, str):
+            data = [[col for col in row] for row in data.split('\n')]
         height = len(data)
         width = max(len(col) for col in data)
         # return data, height, width
-        return height, width
+        return data, height, width
 
     def start_position(self):
         for i in range(len(self.data)):

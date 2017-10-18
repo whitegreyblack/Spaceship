@@ -269,10 +269,10 @@ class World:
     def accessTile(self, i, j):
         return self.data[j][i]
 
-    def add_city(self, x, y):
+    def add_city(self, x, y, gw, gh):
         '''Must've been located in enterables legend'''
         string = "./assets/maps/"+self.enterable_legend[(x, y)].lower()+".png"
-        self.map_data[(x, y)] = Map(stringify(string))
+        self.map_data[(x, y)] = Map(stringify(string), gw, gh)
         print("loaded {}".format(string))
 
     def add_dungeon(self, x, y):
@@ -413,9 +413,12 @@ class World:
                 else:
                     term.puts(center("nodata  ", GW), GH//2, "LOAD MAP")    
                     dungeon = self.map_data[(x, y)]
-                    dungeon.fov_calc([(x, y, 5)])
-                    for i, j, lit, ch, bkgd in list(dungeon.output(x, y, [])):
-                        term.puts(x-cx, y-cy, "[color={}]".format(lit)+ch+"[/color]")
+                    # dungeon.fov_calc([(x, y, 5)])
+                    # for i, j, lit, ch, bkgd in list(dungeon.output(x, y, [])):
+                    #     term.puts(x-cx, y-cy, "[color={}]".format(lit)+ch+"[/color]")
+                    for j in range(len(dungeon.data)):
+                        for i in range(len(dungeon.data[0])):
+                            term.puts(i-cx, j-cy, dungeon.data[j][i])
             term.refresh()
 
             k = term.read()
@@ -443,7 +446,7 @@ class World:
                         print('no data')
                         # if it is a city
                         if (x, y) in self.enterable_legend.keys():
-                            self.add_city(x, y)
+                            self.add_city(x, y, GW, GH)
             elif k == term.TK_COMMA:
                 if term.state(term.TK_SHIFT) and self.enterable(x, y):
                     print('exitting')                
