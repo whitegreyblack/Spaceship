@@ -20,16 +20,31 @@ from collections import namedtuple
 from namedlist import namedlist
 from spaceship.dungeon import build
 from spaceship.setup import setup, palette, output, setup_font
+from spaceship.world import World
 from time import clock
-    
+
+class Level: World, City, Dungeon = range(3)
+class WorldView: Geo, Pol, King = range(3)
 
 def new_game(character=None):
-    # if character is None then improperly accessed new_game
-    # else unpack the character
-    if character==None:
-        return output(proceed=False, value="No Character Data Input")
-    # dungeon = Map(stringify("./assets/testmap_empty.png"))
-    dungeon = Map(build())
+
+    def scroll(position, screen, worldmap):
+        '''
+        @position: current position of player 1D axis
+        
+        @screen  : size of the screen
+        
+        @worldmap: size of the map           
+        '''
+        halfscreen = screen//2
+        # less than half the screen - nothing
+        if position < halfscreen:
+            return 0
+        elif position >= worldmap - halfscreen:
+            return worldmap - screen
+        else:
+            return position - halfscreen
+
     def refresh(lines=[]):
         for line in lines:
             gamelog.add(line)
@@ -43,6 +58,54 @@ def new_game(character=None):
     # ---------------------------------------------------------------------------------------------------------------------#
     # Keyboard input
 
+    def key_in_world():
+        nonlocal proceed, wview
+        keydown = namedtuple("Key_Press", "x y a")
+        act, x, y = 0, 0, 0
+        code = term.read()
+        while code in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
+            code = term.read()
+        if any([term.state(tk) for tk in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT)]):
+            print("CTRL | ALT | SHIFT")
+        if code in (term.TK_CLOSE, term.TK_ESCAPE, term.TK_Q):
+            proceed = False
+
+        # map draw types
+        elif code in (term.TK_P, term.TK_G, term.TK_K):
+            if code == term.TK_P and wview != WorldView.Pol:
+                wview = WorldView.Pol
+            elif code == term.TK_G and wview != WorldView.Geo:
+                wview = WorldView.Geo
+            else:
+                wview = WorldView.King
+            act = "Do Nothing"
+        
+        elif code in (term.TK_COMMA, term.TK_PERIOD):
+            if code == term.TK_COMMA and term.state(term.TK_SHIFT):
+                act = "exit"
+            elif code == term.TK_PERIOD and term.state(term.TK_SHIFT):
+                act = "enter"
+        elif code == term.TK_Z:
+            act = "Zoom"
+        
+        # arrow keys
+        elif code in key_movement:
+            x, y = key_movement[code]
+        # numberpad keys
+        elif code in num_movement:
+            x, y = num_movement[code]
+        # keyboard keys
+        # elif code in key_actions:
+        #     act = key_actions[code].key
+        # any other key F-keys, Up/Down Pg, etc
+        else:
+            print("unrecognized command")
+        # make sure we clear any inputs before the next action is processed
+        # allows for the program to go slow enough for human playability
+        while term.has_input(): 
+            term.read()
+        print(x, y, act)
+        return keydown(x, y, act)
 
     def key_in():
         nonlocal proceed
@@ -84,6 +147,29 @@ def new_game(character=None):
     def eightsquare(x, y):
         space = namedtuple("Space", ("x","y"))
         return [space(x+i,y+j) for i, j in list(num_movement.values())]
+
+    def key_process_world(x, y):
+        tx = player.wx + x
+        ty = player.wy + y
+
+        inbounds = 0 <= tx < calabaston.w and 0 <= ty < calabaston.h
+        walkable = calabaston.walkable(tx, ty)
+
+        print('blocked: {}, bounds: {}'.format(blocked, inbounds))
+        if walkable and inbounds:
+            print('moving there')
+            player.moveOnWorld(x, y)
+            # description = calabaston.tilehasdescription(tposx, tposy)
+            # if description:
+            #     gamelog.add(description)
+        else:
+            print('not mving')
+            if blocked:
+                # =============  START WALK LOG  =================================
+                gamelog.add("Cannot go there")
+                # ===============  END WALK LOG  =================================
+            elif not inbounds:
+                gamelog.add(walkBlock.format("the edge of the map"))
 
     def key_process(x, y, blockables, units):
         walkChars = {
@@ -301,7 +387,7 @@ def new_game(character=None):
         
         elif onlyOne(reachables):
             i, j = reachables.pop()
-            openDoor(i, j) if opening else closeDoor(i, j)
+            openDoor(i, j) if key is "o" else closeDoor(i, j)
 
         else:
             gamelog.add("Which direction?")
@@ -327,8 +413,6 @@ def new_game(character=None):
             gamelog.add("Going up the stairs")
         else:
             gamelog.add("Going down the stairs")
-
-
 
     actions={
         'o': interactDoor,
@@ -424,9 +508,35 @@ def new_game(character=None):
             term.puts(x+12, y+2, "[color={}]".format(lit)+ch+"[/color]")
         term.refresh()
         
+    def worldmap_box():
+        cx = scroll(player.wx, SCREEN_WIDTH, calabaston.w,)
+        cy = scroll(player.wy, SCREEN_HEIGHT, calabaston.h)
+        cxe = cx+SCREEN_WIDTH
+        cye = cy+SCREEN_HEIGHT
+        for x, y, col, ch in list(calabaston.draw(wview, 
+                                    *(player.worldPosition()), 
+                                    (cx, cxe), (cy, cye))):
+            term.puts(x, y, "[c={}]{}ch[/c]".format(col, ch))
+        term.refresh()
 
-    def build_world():
-        pass
+    # if character is None then improperly accessed new_game
+    # else unpack the character
+    if character==None:
+        return output(proceed=False, value="No Character Data Input")
+    else:
+        print(*character)
+        player = Player(character)
+    # dungeon = Map(stringify("./assets/testmap_empty.png"))
+    dungeon = Map(build())
+    
+    # pointer to the current view
+    level = Level.World
+    wview = WorldView.Geo
+    calabaston = World().load(
+                "./assets/worldmap.png", 
+                "./assets/worldmap_territories.png",
+                "./assets/worldmap_kingdoms.png")    
+
     # Before anything happens we create our character
     # LIMIT_FPS = 30 -- later used in sprite implementation
     blocked = []
@@ -441,46 +551,63 @@ def new_game(character=None):
     COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
     COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
     #px, py = SCREEN_WIDTH//2, SCREEN_HEIGHT//2
-    px, py = dungeon.start_position()
-    #px, py = 0, 0
-    # units = Map.appendUnitList("./unitlist/test_map_colored.png")
-    # map = Map(parse("testmap.dat"))
-    #dungeon = Map(stringify("./assets/testmap.png"))
-    um = UnitManager()
-    player = Player(character, px, py)
-    # player.inventory[0] = "sword"
-    rat = Object("rat", px-5, py, 'r', c='#904040', r="monster")
-    # rat.message = "I am a rat"
-    # rat2 = Object("rat", 85, 29, 'R', r="monster")
-    # rat2.message = "I am a big rat"
-    npc = Object("v1", px+1, py, '@', 'orange')
-    # npc1 = Object("v2", 5, 15, '@', 'orange')
-    # npc2 = Object("v3", 0, 56, '@', 'orange')
-    # guard3 = Object("v4", 63, 31, '@', 'orange')
-    # guard1 = Object("v5", 64, 32, "@", 'orange')
-    # guard2 = Object("v6", 63, 37, "@", 'orange')
-    # guard4 = Object("v7", 64, 37, '@', 'orange')
-    # units = [npc, guard1, guard2, guard3, guard4, npc1, npc2, rat, rat2]
-    units = [npc, rat]
-    um.add(units)
-    # print(um._positions.keys())
-    # dungeon.add_item(87, 31, Item("sword", "(", "grey"))
+    wpx, wpy = player.worldPosition()
+    # dpx, dpy = dungeon.start_position()
+
+    # blanks
+        #px, py = 0, 0
+        # units = Map.appendUnitList("./unitlist/test_map_colored.png")
+        # map = Map(parse("testmap.dat"))
+        #dungeon = Map(stringify("./assets/testmap.png"))
+        # um = UnitManager()
+        # ======================================================================================
+        # player = Player(character, dpx, dpy)
+        # ======================================================================================
+        # player.inventory[0] = "sword"
+        # rat = Object("rat", dpx-5, dpy, 'r', c='#904040', r="monster")
+        # rat.message = "I am a rat"
+        # rat2 = Object("rat", 85, 29, 'R', r="monster")
+        # rat2.message = "I am a big rat"
+        # npc = Object("v1", dpx+1, dpy, '@', 'orange')
+        # npc1 = Object("v2", 5, 15, '@', 'orange')
+        # npc2 = Object("v3", 0, 56, '@', 'orange')
+        # guard3 = Object("v4", 63, 31, '@', 'orange')
+        # guard1 = Object("v5", 64, 32, "@", 'orange')
+        # guard2 = Object("v6", 63, 37, "@", 'orange')
+        # guard4 = Object("v7", 64, 37, '@', 'orange')
+        # units = [npc, guard1, guard2, guard3, guard4, npc1, npc2, rat, rat2]
+        # units = [npc, rat]
+        # um.add(units)
+        # print(um._positions.keys())
+        # dungeon.add_item(87, 31, Item("sword", "(", "grey"))
+
     proceed = True
-    lr = 5
+    # lr = 5
     lights = []
     while proceed:
         term.clear()
-        status_box()
-        # border()
-        log_box()
-        map_box()
-        x, y, a = key_in()
-        if a:
-            processAction(player.x, player.y, a)
+        if level == Level.World:
+            worldmap_box()
+            x, y, a = key_in_world()
+            if a != "Do Nothing" and a != 0:
+                pass
+            elif (x, y) != (0, 0):
+                print('moving')
+                key_process_world(x, y)
+            else:
+                print('do nothing')
         else:
-            key_process(x, y, dungeon.block, units)
-
-    player.dump()
+            # status_box()
+            # # border()
+            # log_box()
+            # map_box()
+            # x, y, a = key_in()
+            # if a:
+            #     processAction(player.x, player.y, a)
+            # else:
+            #     key_process(x, y, dungeon.block, units)
+            pass
+    # player.dump()
     return False
 # End New Game Menu
 

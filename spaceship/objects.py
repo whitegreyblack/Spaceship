@@ -12,6 +12,7 @@ from spaceship.constants import GAME_SCREEN_WIDTH as sw
 from spaceship.maps import hextup, hexone, output, blender, gradient, evaluate_blocks
 from spaceship.setup import toInt, palette
 from spaceship.charmap import Charmap as cm
+from spaceship.world import World
 # TODO: Maybe move map to a new file called map and create a camera class?
 
 errormessage=namedtuple("ErrMsg", "x y ch lvl vis lit")
@@ -37,15 +38,14 @@ chars_posts= ["x"]
 chars_lamps= ["o"]
 
 class Player:
-    def __init__(self, character, x, y):
+    def __init__(self, character):
         # unpack everything here
         self.name = character.name[0].upper() + character.name[1:]
-        self.home = self.location = character.home
+        self.setupHome(character.home)
         self.gold = character.gold
         self.level = 1
         self.exp = 0
         self.advexp = 80
-        self.x, self.y = x, y
         self.base_stats = character.stats
         self.gender = character.gender
         self.gender_bonus = character.gbonus
@@ -54,10 +54,23 @@ class Player:
         self.job = character.job
         self.job_bonus = character.jbonus
         self.skills = character.skills
-        self.equipment = character.eq
-        self.inventory = character.inv
+        self.equipment = character.equipment
+        self.inventory = character.inventory
         self.sight = 25
         self.calculate_initial_stats()
+
+    def setupHome(self, home):
+        self.home, self.hpointer = home, World.capitals(home)
+        self.wx, self.wy = self.hpointer
+
+    def worldPosition(self):
+        return self.wx, self.wy
+
+    def mapPosition(self):
+        return self.mx, self.my
+
+    def resetMapPos(self, x, y):
+        self.mx, self.my = x, y
 
     def calculate_initial_stats(self):
         stats = tuple(s+g+r+c for s , g, r, c 
@@ -71,12 +84,14 @@ class Player:
         self.mp = self.total_mp = self.int*self.wis*2
         self.sp = self.dex//5
 
-    def move(self, dx, dy):
-        self.x += dx
-        self.y += dy
+    def moveOnMap(self, dx, dy):
+        self.mx += dx
+        self.my += dy
+    
+    def moveOnWorld(self, dx, dy):
+        self.wx += dx
+        self.wy += dy
 
-    def pos(self):
-        return self.x, self.y
 
 class Item:
     def __init__(self, n, s, c):
@@ -327,7 +342,8 @@ class Map:
             return t
         
         rows = []
-        for row in d.split('\n'):
+        d = d if isinstance(d, list) else d.split('\n')
+        for row in d:
         # for row in d:
             cols = []
             for col in row:

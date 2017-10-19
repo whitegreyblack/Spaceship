@@ -376,7 +376,7 @@ def create_character():
                 if name.proceed == 0:
                     player=namedtuple("Player",
                         "name home gold stats gender gbonus race rbonus job \
-                         jbonus skills eq inv")
+                         jbonus skills equipment inventory")
                     gender = gender_row(1)
                     race = race_row(1)
                     job = class_row(1)

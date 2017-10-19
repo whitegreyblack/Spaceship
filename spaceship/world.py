@@ -3,14 +3,17 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from bearlibterminal import terminal as term
 from collections import namedtuple
+from namedlist import namedlist
 from spaceship.screen_functions import center
 from spaceship.setup import setup, setup_font
 from spaceship.maps import stringify
-from objects import Map
+from textwrap import wrap
+# from objects import Map
 from random import choice
 from PIL import Image
 import time
 import shelve
+
 
 class World:
     # world dictionaries used in map legends
@@ -37,39 +40,39 @@ class World:
     # list of city names:
     # islands are not yet entered
     enterable_legend = {
-        (6, 10): "Fragos",
-        (12, 14): "Another Town",
-        (42, 62): "Tiphmore",
-        (16, 46): "Renmar",
+        (51, 42): "Aerathalar",
+        (12, 14): "Armagos",
         (41, 20): "Aurundel",
+        (53, 51): "Dawnvalley",
         (83, 9): "Dun Badur",
-        (55, 14): "Dun Caden",
         (63, 7): "Dun Baras",
+        (55, 14): "Dun Caden",
         (82, 19): "Dun Kaldergen",
         (93, 25): "Dun Mogan",
-        (33, 7): "Dun Vargar",
-        (31, 18): "Falaeth",
-        (25, 32): "Galaloth",
-        (51, 42): "Aerathalar",
-        (58, 26): "Runagathor",
-        (69, 22): "Lantathor",
-        (78, 34): "Elenos",
-        (91, 40): "Elenloth",
-        (67, 42): "Whitewater",
-        (53, 51): "Dawnvalley",
-        (12, 14): "Houndsbeach",
-        (21, 18): "Yarrin",
-        (7, 43): "Westwatch",
-        (44, 35): "Lakepost",
-        (82, 45): "Lok Zargoth",
-        (72, 51): "Lok Gurrah",
         (48, 14): "Dun Molbur",
-        (26, 57): "Shadowbarrow",
+        (33, 7): "Dun Vargar",
         (65, 36): "Eastshore",
+        (91, 40): "Elenloth",
+        (78, 34): "Elenos",
+        (31, 18): "Falaeth",
+        (6, 10): "Fragos",
+        (25, 32): "Galaloth",
+        (91, 55): "Gom Bashur",
+        (96, 48): "Gorrathah",
+        (12, 14): "Houndsbeach",
+        (69, 22): "Lantathor",
+        (44, 35): "Lakepost",
+        (72, 51): "Lok Gurrah",
         (69, 62): "Lok Midgoth",
         (82, 60): "Lok Toragath",
-        (91, 55): "Gom Bashur",
-        (96, 48): "Gorrathah"
+        (82, 45): "Lok Zargoth",
+        (16, 46): "Renmar",
+        (58, 26): "Runagathor",
+        (26, 57): "Shadowbarrow",
+        (42, 62): "Tiphmore",
+        (7, 43): "Westwatch",
+        (67, 42): "Whitewater",
+        (21, 18): "Yarrin",
     }
 
     pol_legend = {
@@ -121,9 +124,8 @@ class World:
 
     tile = namedtuple("Tile", "char color land territory tcol kingdom kcol enterable")
 
-    def __init__(self, character, x=16, y=46):
-        self.character = character
-        self.pointer = [x, y]
+    def __init__(self):
+        self.pointer = (0, 0)
         # empty map data only holds the top level maps -- each map will hold their own sublevel maps
         self.map_data = {} 
         # level zero is world level -- going "down" increments the level variable
@@ -133,7 +135,19 @@ class World:
         self.world_position = []
         self.map_position = []
 
-    def add_world(self, geo, pol, king):
+    @staticmethod
+    def capitals(capital):
+        city = {
+            "Tiphmore": (42, 62),
+            "Dun Badur": (83, 9),
+            "Aurundel": (41, 20),
+            "Renmar": (16, 46),
+            "Lok Gurrah": (72, 51),            
+        }
+
+        return city[capital]
+
+    def load(self, geo, pol, king):
         # do some error checking
         with Image.open(geo) as img:
             geopix = img.load()
@@ -203,6 +217,7 @@ class World:
                 row.append(self.tile(char, color, land, territory, tcolor, kingdom, kcolor, enterable))
             self.data.append(row)
         self.colorize()
+        return self
 
     def colorize(self):
         def neighbors(i, j, ilim, jlim, v):
@@ -275,12 +290,14 @@ class World:
 
     def add_city(self, x, y, gw, gh):
         '''Must've been located in enterables legend'''
-        try:
-            string = "./assets/maps/"+self.enterable_legend[(x, y)].lower().replace(' ','_')+".png"
-            self.map_data[(x, y)] = Map(stringify(string), gw, gh)
-            print("loaded {}".format(string))
-        except FileNotFoundError:
-            pass
+        # try:
+        #     string = "./assets/maps/"+self.enterable_legend[(x, y)].lower().replace(' ','_')+".png"
+        #     self.map_data[(x, y)] = Map(stringify(string), gw, gh)
+        #     print("loaded {}".format(string))
+        # except FileNotFoundError:
+        #     pass
+        pass
+
     def add_dungeon(self, x, y):
         '''Must've been located in dungeontile?'''
         pass
@@ -293,16 +310,24 @@ class World:
             return True
         return False
 
-    def draw(self, key):
-        for j in range(len(self.data)):
-            for i in range(len(self.data[j])):
-                char, color, _, terr, tcol, king, kcol, _ = self.data[j][i]
+    def draw(self, key, x, y, vx, vy):
+        for j in range(*vy):
+            for i in range(*vx):
+                try:
+                    char, color, _, terr, tcol, king, kcol, _ = self.data[j][i]
+                except IndexError:
+                    print(i, j)
+                    raise
 
-                if key == "g":
+                if (x, y) == (i, j):
+                    color = "white"
+                    char = "@"
+
+                if key == 0:
                     if len(char) > 1:
                         char = chr(int(char, 16))
 
-                elif key == "p":
+                elif key == 1:
                     color = tcol
                     if terr != "None":
                         char = chr(int("2261", 16))
@@ -317,18 +342,18 @@ class World:
                     elif len(char) > 1:
                         char = chr(int(char, 16))
                 
-                yield (i, j, color, char)
-
+                yield (i-vx[0], j-vy[0], color, char)
+    """
     def testdraw(self):
         '''probably should only be called on main script'''
         def scroll(position, screen, worldmap):
-            """
+            '''
             @position: current position of player 1D axis
             
             @screen  : size of the screen
             
             @worldmap: size of the map           
-            """
+            '''
             halfscreen = screen//2
             # less than half the screen - nothing
             if position < halfscreen:
@@ -395,6 +420,7 @@ class World:
 
             term.clear()
             if self.level <= 0:
+                print(self.level)
                 if current == "g":
                     geotop()
                 elif current == "p":
@@ -417,21 +443,19 @@ class World:
                 if (x, y) not in self.map_data.keys():
                     term.puts(center("nodata  ", GW), GH//2, "NO DATA")    
                 else:
-                    self.level += 1
+                    # self.level += 1
+                    print(self.level)
                     term.puts(center("nodata  ", GW), GH//2, "LOAD MAP")    
                     dungeon = self.map_data[(x, y)]
                     xx, yy = dungeon.width//2, dungeon.height//2
                     dungeon.fov_calc([(xx, yy, 5),])
                     for i, j, lit, ch, bkgd in list(dungeon.output(xx, yy, [])):
                         term.puts(i, j, "[color={}]".format(lit)+ch+"[/color]")
-                        # print(lit)
-                    # print(i for i in list(dungeon.output(x, y, [])))
-                    # for j in range(cy, cy+GH-1):
-                    #     for i in range(cx, cx+GW):
-                    #         term.puts(i-cx, j-cy+1, dungeon.data[j][i])
+
             term.refresh()
 
             k = term.read()
+            print(k)
             while k in (term.TK_SHIFT, term.TK_ALT, term.TK_CONTROL):
                 k = term.read()
 
@@ -498,16 +522,16 @@ class World:
             self.pointer[0] = max(min(x, self.w-1), 0)
             self.pointer[1] = max(min(y, self.h), 1)
             self.level = max(min(self.level, 1), -1)
-
+    """
 if __name__ == "__main__":
-    setup()
     # FH, FW, GH, GW = 8, 8, 25, 40
+    setup()
     FH, FW, GH, GW = 16, 16, 24, 40
     setup_font('Ibm_cga', FW, FH)
     term.set("window: size={}x{}, cellsize=auto".format(GW, GH))
 
     world = World(None) # adding character which will be passed down everywhere
-    world.add_world(
+    world.load(
         "./assets/worldmap.png", 
         "./assets/worldmap_territories.png",
         "./assets/worldmap_kingdoms.png")
