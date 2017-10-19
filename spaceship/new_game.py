@@ -174,7 +174,7 @@ def new_game(character=None):
             elif not inbounds:
                 gamelog.add(walkBlock.format("the edge of the map"))
 
-    def key_process(x, y, blockables, units):
+    def key_process(x, y):
         walkChars = {
             "+": "a door",
             "/": "a door",
@@ -184,15 +184,17 @@ def new_game(character=None):
             "~": "a river",
         }
         walkBlock = "walked into {}"
-        tposx = player.x + x
-        tposy = player.y + y
-        positions = {}
-        for unit in units:
-            positions[unit.pos()] = unit
-        unit_pos = [(unit.x, unit.y) for unit in units]
+        tposx = player.mx + x
+        tposy = player.my + y
 
-        outofbounds = 0 <= tposx < len(blockables[0]) \
-            and 0 <= tposy < len(blockables)
+        # positions = {}
+        # for unit in units:
+        #     positions[unit.pos()] = unit
+        # unit_pos = [(unit.x, unit.y) for unit in units]
+        unit_pos = []
+
+        outofbounds = 0 <= tposx < dungeon.width-1 \
+            and 0 <= tposy < dungeon.height-1
 
         occupied = (tposx, tposy) in unit_pos
 
@@ -205,7 +207,7 @@ def new_game(character=None):
 
         # (not blocked) and (not occupied) and (inbounds)
         if not (blocked or occupied or not outofbounds):
-            player.move(x, y)
+            player.moveOnMap(x, y)
             if dungeon.square(tposx, tposy).items:
                 gamelog.add("There is something here")
         else:
@@ -216,38 +218,39 @@ def new_game(character=None):
 
             elif occupied:
                 # ============= START COMBAT LOG =================================
-                unit = positions[(tposx, tposy)]
-                if unit.r is not "human": # condition should be more complex
-                    unit.h -= 1
-                    gamelog.add("You attack the {}".format(unit.name))
-                    gamelog.add("The {} has {} left".format(unit.name, unit.h))
-                    if unit.h < 1:
-                        gamelog.add("You have killed the {}! You gain 15 exp".format(unit.name))
-                        units.remove(unit)
+                # unit = positions[(tposx, tposy)]
+                # if unit.r is not "human": # condition should be more complex
+                #     unit.h -= 1
+                #     gamelog.add("You attack the {}".format(unit.name))
+                #     gamelog.add("The {} has {} left".format(unit.name, unit.h))
+                #     if unit.h < 1:
+                #         gamelog.add("You have killed the {}! You gain 15 exp".format(unit.name))
+                #         units.remove(unit)
                 # =============== END COMBAD LOG =================================
-                else:
-                    gamelog.add(walkBlock.format(unit.r))
+                # else:
+                #     gamelog.add(walkBlock.format(unit.r))
+                pass
             elif outofbounds:
                 gamelog.add(walkBlock.format("the edge of the map"))
 
         # refresh units
-        units = list(filter(lambda u: u.h > 0, units))
+    #     units = list(filter(lambda u: u.h > 0, units))
 
-        for unit in units:
-    #     if unit.c != "grey":
-            x, y = 0, 0
-            if randint(0, 1):
-                x, y = num_movement[choice(list(num_movement.keys()))]
-            try:
-                blocked = blockables[unit.y+y][unit.x+x]
-            except:
-                blocked = False
-            occupied = (unit.x + x, unit.y + y) in unit_pos or (unit.x+x, unit.y+y) == (player.x, player.y)
-            outofbounds = 0 <= unit.x + x < len(blockables[0]) and 0 <= unit.y + y < len(blockables)
-            if not (blocked or occupied or not outofbounds):
-                unit.move(x, y)
+    #     for unit in units:
+    # #     if unit.c != "grey":
+    #         x, y = 0, 0
+    #         if randint(0, 1):
+    #             x, y = num_movement[choice(list(num_movement.keys()))]
+    #         try:
+    #             blocked = blockables[unit.y+y][unit.x+x]
+    #         except:
+    #             blocked = False
+    #         occupied = (unit.x + x, unit.y + y) in unit_pos or (unit.x+x, unit.y+y) == (player.x, player.y)
+    #         outofbounds = 0 <= unit.x + x < len(blockables[0]) and 0 <= unit.y + y < len(blockables)
+    #         if not (blocked or occupied or not outofbounds):
+    #             unit.move(x, y)
         
-        um.build()
+    #     um.build()
 
     inventory_list = [
         "Head       : ", 
@@ -428,10 +431,14 @@ def new_game(character=None):
         print('enter map')
         if level == Level.World:
             print(calabaston.mapAt(*player.worldPosition()))
+            # builds the map
             if not calabaston.mapAt(*player.worldPosition()):
+                print("in legend", player.worldPosition() in calabaston.enterable_legend.keys())
+                print(player.worldPosition())
                 if player.worldPosition() in calabaston.enterable_legend.keys():
                     filename = calabaston.enterable_legend[player.worldPosition()].lower().replace(' ','_')
                     filename = "./assets/maps/" + filename + ".png"
+                    print(filename)
                     try:
                         location = Map(stringify(filename), SCREEN_WIDTH, SCREEN_HEIGHT)
                     except FileNotFoundError:
@@ -439,16 +446,26 @@ def new_game(character=None):
                         raise
                     level = Level.City
                 else:
+                    print('Not important city')
                     tile = calabaston.accessTile(*player.worldPosition())
+                    print(tile.land)
                     # get options based on land tile
                     # build_options = Dungeon.build_options()
-                    location = dungeon.build() # dungeon.build(options)
+                    location = Map(build()) # dungeon.build(options)
                     level = Level.Dungeon
                 calabaston.add_location(location, *(player.worldPosition()))
-                player.resetMapPos(calabaston.w-1, calabaston.h//2)
+            # else:
+            #     location = calabaston.map_data[player.wy][player.wx]
+            player.resetMapPos(calabaston.w-1, calabaston.h//2)
+
+            if player.worldPosition() in calabaston.enterable_legend.keys():
+                level = Level.City
+            else:
+                level = Level.Dungeon
 
     def exitMap():
-        pass
+        nonlocal level
+        level = Level.World
 
     world_actions={
         '<': exitMap,
@@ -472,8 +489,13 @@ def new_game(character=None):
     }
 
     def processAction(x, y, key):
-        if key in ("o", "c", ","):
+        if key in ("o", "c"):
             actions[key](x, y, key)
+        if key in (","):
+            if term.state(term.TK_SHIFT):
+                exitMap()
+            else:
+                actions[key](x, y, key)
         elif key in ("t"):
             actions[key](x, y)
         elif key in ("i"):
@@ -588,7 +610,7 @@ def new_game(character=None):
         print(*character)
         player = Player(character)
     # dungeon = Map(stringify("./assets/testmap_empty.png"))
-    dungeon = Map(build())
+    # dungeon = Map(build())
     
     # pointer to the current view
     level = Level.World
@@ -647,6 +669,7 @@ def new_game(character=None):
     lights = []
     while proceed:
         term.clear()
+        print('LEVEL: ', level)
         if level == Level.World:
             worldmap_box()
             worldlegend_box()
@@ -661,15 +684,16 @@ def new_game(character=None):
                 print('do nothing')
 
         else:
-            # status_box()
+            dungeon = calabaston.map_data[player.wy][player.wx]
+            status_box()
             # border()
-            # log_box()
+            log_box()
             map_box()
             x, y, a = key_in()
             if a:
                 processAction(player.mx, player.my, a)
             else:
-                key_process(x, y, dungeon.block, units)
+                key_process(x, y)
             # pass
     # player.dump()
     return False
