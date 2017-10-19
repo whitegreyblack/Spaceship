@@ -10,7 +10,12 @@ from spaceship.setup import setup
 # Begin continue Menu
 def continue_game():
     term.clear()
-    term.puts(center('No Saved Games', SCREEN_WIDTH), SCREEN_HEIGHT//2, 'NO SAVED GAMES')
+    term.puts(
+        center(
+            'No Saved Games', 
+            term.state(term.TK_WIDTH)), 
+        term.state(term.TK_HEIGHT)//2, 
+        'NO SAVED GAMES')
     term.refresh()
     term.read()
     return True

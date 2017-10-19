@@ -2,7 +2,7 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
-from spaceship.action import key_movement, num_movement, key_actions, action, keypress
+from spaceship.action import key_movement, num_movement, key_actions, action, keypress, world_actions
 from spaceship.constants import FOV_RADIUS
 from spaceship.constants import GAME_SCREEN_WIDTH as SCREEN_WIDTH
 from spaceship.constants import GAME_SCREEN_HEIGHT as SCREEN_HEIGHT
@@ -80,11 +80,15 @@ def new_game(character=None):
                 wview = WorldView.King
             act = "Do Nothing"
         
+        # elif code in (term.TK_COMMA, term.TK_PERIOD):
+        #     if code == term.TK_COMMA and term.state(term.TK_SHIFT):
+        #         act = "exit"
+        #     elif code == term.TK_PERIOD and term.state(term.TK_SHIFT):
+        #         act = "enter"
         elif code in (term.TK_COMMA, term.TK_PERIOD):
-            if code == term.TK_COMMA and term.state(term.TK_SHIFT):
-                act = "exit"
-            elif code == term.TK_PERIOD and term.state(term.TK_SHIFT):
-                act = "enter"
+            if term.state(term.TK_SHIFT):
+                act = world_actions[code]
+
         elif code == term.TK_Z:
             act = "Zoom"
         
@@ -510,13 +514,13 @@ def new_game(character=None):
         
     def worldmap_box():
         cx = scroll(player.wx, SCREEN_WIDTH, calabaston.w,)
-        cy = scroll(player.wy, SCREEN_HEIGHT, calabaston.h)
+        cy = scroll(player.wy, SCREEN_HEIGHT-1, calabaston.h)
         cxe = cx+SCREEN_WIDTH
-        cye = cy+SCREEN_HEIGHT
+        cye = cy+SCREEN_HEIGHT-1
         for x, y, col, ch in list(calabaston.draw(wview, 
                                     *(player.worldPosition()), 
                                     (cx, cxe), (cy, cye))):
-            term.puts(x, y, "[c={}]{}ch[/c]".format(col, ch))
+            term.puts(x, y+1, "[c={}]{}ch[/c]".format(col, ch))
         term.refresh()
 
     # if character is None then improperly accessed new_game

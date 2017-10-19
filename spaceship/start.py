@@ -9,7 +9,12 @@ from spaceship.constants import GAME_TITLE as TITLE
 from spaceship.constants import GAME_TITLE_HEIGHT as TITLE_HEIGHT
 from spaceship.constants import GAME_TITLE_VERSION as VERSION
 from spaceship.constants import GAME_TITLE_WIDTH as TITLE_WIDTH
-from spaceship.constants import GAME_TITLE_ALT_SEC as GTAS
+
+if term.state(term.TK_HEIGHT) <= 24:
+    from spaceship.constants import GAME_TITLE_SHORT as GTAS
+else:
+    from spaceship.constants import GAME_TITLE as GTAS
+
 from spaceship.constants import GAME_SCREEN_HEIGHT as SCREEN_HEIGHT
 from spaceship.constants import GAME_SCREEN_WIDTH as SCREEN_WIDTH
 from spaceship.continue_game import continue_game
@@ -27,8 +32,18 @@ def start():
             term.puts(k, SCREEN_HEIGHT-6, toChr("2550"))
             term.puts(k, 5, toChr("2550"))
 
+    def calc_option_heights(hoffset, foffset):
+        ''' Calculate the remaining space in between the title header and footer
+        to come up with the new height and thus the new middle for options start
+        '''
+        height =  term.state(term.TK_HEIGHT) - hoffset - foffset
+        return [hoffset + height//2-height//4 + i * 2 for i in range(4)]
+
     def splitter(x, y):
-        return [z for z in range(x, y, 3)]
+        print(y, x)
+        step = (y-x) // (term.state(term.TK_HEIGHT) // 8)
+        print(step)
+        return [x+z for z in range(x, y, step)]
     
     def start_new_game():
         cc = create_character()
@@ -37,30 +52,36 @@ def start():
         return cc.proceed
 
     proceed = True
+    if term.state(term.TK_HEIGHT) <= 24:
+        title_height = 0
+    else:
+        title_height = term.state(term.TK_HEIGHT)//5
     title_index = -1
-    options_height = splitter(25, SCREEN_HEIGHT)
-    title_develop = 'Developed by WGB using Python and BearLibTerminal'
-    title_options = ["[[c]] continue", '[[n]] new game', '[[o]] options', '[[q]] quit']
-    width, height = SCREEN_WIDTH, SCREEN_HEIGHT
+    options_height = calc_option_heights(title_height+len(GTAS.split('\n')), 3)
+    print(options_height)
     title_height = 0
+    title_develop = 'Developed using BearLibTerminal'
+    title_version = 'version 0.0.7'
+    title_options = ["[[c]] continue", '[[n]] new game', '[[o]] options', '[[q]] quit']
+    width, height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
     option_height = 5
     while proceed:
-        # setup_font('Fira', 8, 16)
-        term.clear() # probably won't need later but using now to make sure title screen is empty
-        # border()
+        term.clear()
+
         # title header
-        # term.puts(center('a'*(TITLE_WIDTH-1), SCREEN_WIDTH), title_height+3, TITLE)
-        term.puts(center('a'*(len(GTAS.split('\n')[0])), SCREEN_WIDTH), 1, GTAS)
+        term.puts(center('a'*(len(GTAS.split('\n')[0])), width), 1, GTAS)
+
         # options
         length, option = longest(title_options)
         x = center(length-2, width)
         for option, i in zip(title_options, range(len(title_options))):
-            text = "[color=orange]{}[/color]".format(option) if i == title_index else option
+            text = "[color=#00FFFF]{}[/color]".format(option) if i == title_index else option
             term.puts(x, options_height[i], text)
         
         # FOOTER and VERSION
-        term.puts(center(VERSION, SCREEN_WIDTH), SCREEN_HEIGHT-4, VERSION)
+        term.puts(center(len(title_version), width), height-4, title_version)
         term.puts(center(title_develop, width), height-2, title_develop)
+
         term.refresh()
         code = term.read()
 

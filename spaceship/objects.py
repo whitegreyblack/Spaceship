@@ -25,6 +25,19 @@ class Letter: Ascii, Unicode = range(2)
 # fog levels are calculated in steps of 2, so radius of 10/11 will be the max bounds
 fog_levels= ["darkest ", "darker ", "dark ","light ","lighter ", "lightest"]
 
+# change variables to dictioanry -- more tight and accessible
+# allows for more 
+chars_key = {
+    "roads": [":"],
+    "floor": ["."],
+    "water": ["~"],
+    "grass": [",",";"],
+    "doors": ["+", "/"],
+    "walls": ["#"],
+    "posts": ["x"],
+    "lamps": ["o"],
+}
+
 chars_roads= [":"]
 chars_floor= ["."]
 chars_block= ("#", "+", "o", "x", "~", "%")
