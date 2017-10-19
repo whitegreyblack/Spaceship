@@ -513,22 +513,26 @@ def new_game(character=None):
         term.refresh()
         
     def worldlegend_box():
-        pass
+        x, y = SCREEN_WIDTH-12, 1
+        boxheader = "Map Legend"
+        selected(center(boxheader, 12), 1, surround(boxheader))
+        print('legend')
+        for char, color, desc, i in calabaston.maplegend():
+            term.puts(0, i*2+3, "[c={}] {}[/c]: {}".format(color, char, desc))
 
     def worldmap_box():
         # world map header
         selected(center(surround(calabaston.name), SCREEN_WIDTH), 0, surround(calabaston.name))
-
+        cx = scroll(player.wx, SCREEN_WIDTH, calabaston.w,)
+        cy = scroll(player.wy, SCREEN_HEIGHT, calabaston.h)
         if player.worldPosition() in calabaston.enterable_legend.keys():
-            cx = scroll(player.wx, SCREEN_WIDTH, calabaston.w,)
-            cy = scroll(player.wy, SCREEN_HEIGHT, calabaston.h)
-            cxe = cx+SCREEN_WIDTH
+            cxe = cx+SCREEN_WIDTH-14
             cye = cy+SCREEN_HEIGHT-2
             print(cx, cxe, cy, cye)
             for x, y, col, ch in list(calabaston.draw(wview, 
                                         *(player.worldPosition()), 
                                         (cx, cxe), (cy, cye))):
-                term.puts(x, y+1, "[c={}]{}ch[/c]".format(col, ch))
+                term.puts(x+14, y+1, "[c={}]{}[/c]".format(col, ch))
             enterable_name = surround(calabaston.enterable_legend[(player.wx, player.wy)])
             selected(center(surround(enterable_name), SCREEN_WIDTH),
                 SCREEN_HEIGHT-1,
@@ -541,15 +545,12 @@ def new_game(character=None):
             # term.bkcolor('black')
 
         else:
-            cx = scroll(player.wx, SCREEN_WIDTH, calabaston.w,)
-            cy = scroll(player.wy, SCREEN_HEIGHT, calabaston.h)
-            cxe = cx+SCREEN_WIDTH
+            cxe = cx+SCREEN_WIDTH-12
             cye = cy+SCREEN_HEIGHT-1
             for x, y, col, ch in list(calabaston.draw(wview, 
                                         *(player.worldPosition()), 
                                         (cx, cxe), (cy, cye))):
-                term.puts(x, y+1, "[c={}]{}ch[/c]".format(col, ch))           
-        term.refresh()
+                term.puts(x+12, y+1, "[c={}]{}[/c]".format(col, ch))           
 
     # if character is None then improperly accessed new_game
     # else unpack the character
@@ -620,6 +621,8 @@ def new_game(character=None):
         term.clear()
         if level == Level.World:
             worldmap_box()
+            worldlegend_box()
+            term.refresh()
             x, y, a = key_in_world()
             if a != "Do Nothing" and a != 0:
                 pass
@@ -628,6 +631,7 @@ def new_game(character=None):
                 key_process_world(x, y)
             else:
                 print('do nothing')
+
         else:
             # status_box()
             # # border()
