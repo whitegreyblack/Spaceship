@@ -11,7 +11,7 @@ from spaceship.tools import bresenhams, deltanorm, movement
 from spaceship.maps import stringify, hextup, hexone, toInt
 from spaceship.objects import Map, Object, Character, Item, Player
 from spaceship.create_character import create_character as create
-from spaceship.screen_functions import center
+from spaceship.screen_functions import center, surround, selected
 from bearlibterminal import terminal as term
 from spaceship.manager import UnitManager
 from spaceship.gamelog import GameLogger
@@ -512,15 +512,43 @@ def new_game(character=None):
             term.puts(x+12, y+2, "[color={}]".format(lit)+ch+"[/color]")
         term.refresh()
         
+    def worldlegend_box():
+        pass
+
     def worldmap_box():
-        cx = scroll(player.wx, SCREEN_WIDTH, calabaston.w,)
-        cy = scroll(player.wy, SCREEN_HEIGHT-1, calabaston.h)
-        cxe = cx+SCREEN_WIDTH
-        cye = cy+SCREEN_HEIGHT-1
-        for x, y, col, ch in list(calabaston.draw(wview, 
-                                    *(player.worldPosition()), 
-                                    (cx, cxe), (cy, cye))):
-            term.puts(x, y+1, "[c={}]{}ch[/c]".format(col, ch))
+        # world map header
+        selected(center(surround(calabaston.name), SCREEN_WIDTH), 0, surround(calabaston.name))
+
+        if player.worldPosition() in calabaston.enterable_legend.keys():
+            cx = scroll(player.wx, SCREEN_WIDTH, calabaston.w,)
+            cy = scroll(player.wy, SCREEN_HEIGHT, calabaston.h)
+            cxe = cx+SCREEN_WIDTH
+            cye = cy+SCREEN_HEIGHT-2
+            print(cx, cxe, cy, cye)
+            for x, y, col, ch in list(calabaston.draw(wview, 
+                                        *(player.worldPosition()), 
+                                        (cx, cxe), (cy, cye))):
+                term.puts(x, y+1, "[c={}]{}ch[/c]".format(col, ch))
+            enterable_name = surround(calabaston.enterable_legend[(player.wx, player.wy)])
+            selected(center(surround(enterable_name), SCREEN_WIDTH),
+                SCREEN_HEIGHT-1,
+                surround(enterable_name))
+            # term.bkcolor('white')
+            # term.puts(center(enterable_name, 
+            #     SCREEN_WIDTH), 
+            #     SCREEN_HEIGHT-1, 
+            #     "[c=black]"+enterable_name+"[/c]")
+            # term.bkcolor('black')
+
+        else:
+            cx = scroll(player.wx, SCREEN_WIDTH, calabaston.w,)
+            cy = scroll(player.wy, SCREEN_HEIGHT, calabaston.h)
+            cxe = cx+SCREEN_WIDTH
+            cye = cy+SCREEN_HEIGHT-1
+            for x, y, col, ch in list(calabaston.draw(wview, 
+                                        *(player.worldPosition()), 
+                                        (cx, cxe), (cy, cye))):
+                term.puts(x, y+1, "[c={}]{}ch[/c]".format(col, ch))           
         term.refresh()
 
     # if character is None then improperly accessed new_game

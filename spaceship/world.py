@@ -134,6 +134,7 @@ class World:
         # keep the pointers seperated from world and dungeon/map
         self.world_position = []
         self.map_position = []
+        self.name = "Calabaston"
 
     @staticmethod
     def capitals(capital):

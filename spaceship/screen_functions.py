@@ -45,6 +45,9 @@ def passed(x, y, text):
     term.puts(x, y, text)
     term.bkcolor("black")      
 
+def surround(text, char=' ', times=1):
+    return char*times+text+char*times
+
 def modify(increment, index, options):
     index += increment
     if not 0 <= index < options:
