@@ -58,5 +58,5 @@ key_actions={
 
 world_actions = {
     term.TK_PERIOD: action(">", "enter"),
-    term.TK_COMMA: action("<", "exit")
+    term.TK_COMMA: action("<", "exit"),
 }

@@ -87,8 +87,14 @@ def new_game(character=None):
         #         act = "enter"
         elif code in (term.TK_COMMA, term.TK_PERIOD):
             if term.state(term.TK_SHIFT):
-                act = world_actions[code]
-
+                try:
+                    act = world_actions[code]
+                except KeyError:
+                    print(list(world_actions.keys()))
+                    for i in world_actions.keys():
+                        print(i)
+                    print(term.TK_COMMA, term.TK_PERIOD)
+                    raise
         elif code == term.TK_Z:
             act = "Zoom"
         
@@ -417,6 +423,12 @@ def new_game(character=None):
         else:
             gamelog.add("Going down the stairs")
 
+    world_actions={
+
+    }
+    def processWorldAction(x, y, k):
+        if key in (">", "<"):
+            print('interact map')
     actions={
         'o': interactDoor,
         'c': interactDoor,
@@ -612,7 +624,7 @@ def new_game(character=None):
             term.refresh()
             x, y, a = key_in_world()
             if a != "Do Nothing" and a != 0:
-                pass
+                processWorldAction()
             elif (x, y) != (0, 0):
                 print('moving')
                 key_process_world(x, y)
