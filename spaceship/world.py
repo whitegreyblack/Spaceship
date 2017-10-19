@@ -90,23 +90,24 @@ class World:
     }
 
     geo_legend = {
-        (185, 122, 87): ("hills", "2022", ("#C3B091", "#826644")),
-        (239, 228, 176): ("shore", "2261", ("#FFFFCC", "#FFFFE0")),
+        (200, 191, 231): ("city(elven)", "&", ("#FFFF00",)),
+        (237, 28, 36): ("city(human)", "2302", ("#00fF00",)),
+        (136, 0, 21): ("fort(dw/or)", "#", ("#FF0000",)),
+        # (239, 228, 176): ("shore", "2261", ("#FFFFCC", "#FFFFE0")),
         (255, 255, 255): ("mnts(high)", "005E", ("#D3D3D3",)),
         (195, 195, 195): ("mnts(med)", "2229", ("#C0C0C0",)),
         (127, 127, 127): ("mnts(low)", "n", ("#808080", "#A9A9A9",)),
-        (237, 28, 36): ("town", "2302", ("#00fF00",)),
+        (185, 122, 87): ("hills", "2022", ("#C3B091", "#826644")),
         (181, 230, 29): ("forest", "0192", ("#228B22", "#74C365")),
         (34, 177, 76): ("dark woods", "00A5", ("#006400","#568203",)),
         (255, 201, 14):("plains", ".", ("#FFBF00",)),
-        (255, 242, 0): ("field", "2261", ("#FFBF00",)),
         (255, 127, 39): ("plains", ".", ("#FFBD22",)),
-        (255, 174, 201): ("desert", "2022", ("#F0AC82",)),
-        (136, 0, 21): ("fortress", "#", ("#FF0000",)),
-        (200, 191, 231): ("city", "&", ("#FFFF00",)),
-        (112, 146, 190): ("river", "~", ("#30FFFF",)),
-        (63, 72, 204): ("lake", "2248", ("#3088FF",)),
-        (0, 162, 232): ("deep sea", "2248", ("#3040A0",)),
+        (255, 242, 0): ("fields", "2261", ("#FFBF00",)),
+        (255, 174, 201): ("deserts", "~", ("#F0AC82",)),
+        (112, 146, 190): ("rivers", "~", ("#30FFFF",)),
+        (63, 72, 204): ("lakes", "2248", ("#3088FF",)),
+        (0, 162, 232): ("deep seas", "2248", ("#3040A0",)),
+        (0, 0, 0): ("dungeons", "*", ("#8800FF",)),
     }
 
     king_legend = {
@@ -293,7 +294,6 @@ class World:
         i = 0
         for d, ch, colors in self.geo_legend.values():
             ch = ch if len(ch) == 1 else chr(int(ch, 16))
-            print(colors)
             for col in colors:
                 yield ch, col, d, i
                 i += 1
@@ -314,7 +314,7 @@ class World:
 
     def walkable(self, i, j):
         if 0 <= i < self.w-1 and 0 <= j < self.h-1:
-            for landtype in ("sea", "mountain", "lake"):
+            for landtype in ("sea", "mnts", "lake"):
                 if landtype in self.data[j][i].land:
                     return False
             return True

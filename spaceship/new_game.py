@@ -159,7 +159,6 @@ def new_game(character=None):
         inbounds = 0 <= tx < calabaston.w and 0 <= ty < calabaston.h
         walkable = calabaston.walkable(tx, ty)
 
-        print('blocked: {}, bounds: {}'.format(blocked, inbounds))
         if walkable and inbounds:
             print('moving there')
             player.moveOnWorld(x, y)
@@ -264,6 +263,7 @@ def new_game(character=None):
         "Legs       : ",
         "Feet       : ",
     ]
+
     def openInventory():
         def inventory():
             term.clear()
@@ -299,7 +299,6 @@ def new_game(character=None):
         if debug:
             gamelog.add("Closing inventoryy")
         term.clear()
-
 
     def interactUnit(x, y):
         """Allows talking with other units"""
@@ -515,42 +514,30 @@ def new_game(character=None):
     def worldlegend_box():
         x, y = SCREEN_WIDTH-12, 1
         boxheader = "Map Legend"
-        selected(center(boxheader, 12), 1, surround(boxheader))
+        selected(center(surround(calabaston.name), 14), 1, surround(calabaston.name))   
+        selected(center(boxheader, 12), 3, surround(boxheader))
         print('legend')
         for char, color, desc, i in calabaston.maplegend():
-            term.puts(0, i*2+3, "[c={}] {}[/c]: {}".format(color, char, desc))
+            term.puts(0, i*2+5, "[c={}] {}[/c] {}".format(color, char, desc))
+        footer = i*2+5+3
+        if player.worldPosition() in calabaston.enterable_legend.keys():
+            enterable_name = surround(calabaston.enterable_legend[(player.wx, player.wy)])       
+            selected(center(surround(enterable_name) if len(enterable_name) >= 12 else enterable_name, 14),
+            footer,
+            surround(enterable_name) if len(enterable_name) >= 12 else enterable_name)
 
     def worldmap_box():
         # world map header
-        selected(center(surround(calabaston.name), SCREEN_WIDTH), 0, surround(calabaston.name))
-        cx = scroll(player.wx, SCREEN_WIDTH, calabaston.w,)
-        cy = scroll(player.wy, SCREEN_HEIGHT, calabaston.h)
-        if player.worldPosition() in calabaston.enterable_legend.keys():
-            cxe = cx+SCREEN_WIDTH-14
-            cye = cy+SCREEN_HEIGHT-2
-            print(cx, cxe, cy, cye)
-            for x, y, col, ch in list(calabaston.draw(wview, 
-                                        *(player.worldPosition()), 
-                                        (cx, cxe), (cy, cye))):
-                term.puts(x+14, y+1, "[c={}]{}[/c]".format(col, ch))
-            enterable_name = surround(calabaston.enterable_legend[(player.wx, player.wy)])
-            selected(center(surround(enterable_name), SCREEN_WIDTH),
-                SCREEN_HEIGHT-1,
-                surround(enterable_name))
-            # term.bkcolor('white')
-            # term.puts(center(enterable_name, 
-            #     SCREEN_WIDTH), 
-            #     SCREEN_HEIGHT-1, 
-            #     "[c=black]"+enterable_name+"[/c]")
-            # term.bkcolor('black')
+        # selected(center(surround(calabaston.name), SCREEN_WIDTH), 0, surround(calabaston.name))
+        cx = scroll(player.wx, SCREEN_WIDTH-14, calabaston.w,)
+        cy = scroll(player.wy, SCREEN_HEIGHT-2, calabaston.h)
+        cxe = cx+SCREEN_WIDTH-14
+        cye = cy+SCREEN_HEIGHT-2
 
-        else:
-            cxe = cx+SCREEN_WIDTH-12
-            cye = cy+SCREEN_HEIGHT-1
-            for x, y, col, ch in list(calabaston.draw(wview, 
-                                        *(player.worldPosition()), 
-                                        (cx, cxe), (cy, cye))):
-                term.puts(x+12, y+1, "[c={}]{}[/c]".format(col, ch))           
+        for x, y, col, ch in list(calabaston.draw(wview, 
+                                    *(player.worldPosition()), 
+                                    (cx, cxe), (cy, cye))):
+            term.puts(x+14, y+1, "[c={}]{}[/c]".format(col, ch))
 
     # if character is None then improperly accessed new_game
     # else unpack the character

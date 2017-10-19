@@ -53,13 +53,13 @@ def start():
 
     proceed = True
     if term.state(term.TK_HEIGHT) <= 24:
-        title_height = 0
+        title_height = 1
     else:
         title_height = term.state(term.TK_HEIGHT)//5
+    print(title_height)
     title_index = -1
     options_height = calc_option_heights(title_height+len(GTAS.split('\n')), 3)
     print(options_height)
-    title_height = 0
     title_develop = 'Developed using BearLibTerminal'
     title_version = 'version 0.0.7'
     title_options = ["[[c]] continue", '[[n]] new game', '[[o]] options', '[[q]] quit']
@@ -69,7 +69,7 @@ def start():
         term.clear()
 
         # title header
-        term.puts(center('a'*(len(GTAS.split('\n')[0])), width), 1, GTAS)
+        term.puts(center('a'*(len(GTAS.split('\n')[0])), width), title_height, GTAS)
 
         # options
         length, option = longest(title_options)
