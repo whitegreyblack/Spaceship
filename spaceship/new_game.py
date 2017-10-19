@@ -2,7 +2,7 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
-from spaceship.action import key_movement, num_movement, key_actions, action, keypress, world_actions
+from spaceship.action import key_movement, num_movement, key_actions, action, keypress, world_key_actions
 from spaceship.constants import FOV_RADIUS
 from spaceship.constants import GAME_SCREEN_WIDTH as SCREEN_WIDTH
 from spaceship.constants import GAME_SCREEN_HEIGHT as SCREEN_HEIGHT
@@ -65,8 +65,6 @@ def new_game(character=None):
         code = term.read()
         while code in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
             code = term.read()
-        if any([term.state(tk) for tk in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT)]):
-            print("CTRL | ALT | SHIFT")
         if code in (term.TK_CLOSE, term.TK_ESCAPE, term.TK_Q):
             proceed = False
 
@@ -88,12 +86,8 @@ def new_game(character=None):
         elif code in (term.TK_COMMA, term.TK_PERIOD):
             if term.state(term.TK_SHIFT):
                 try:
-                    act = world_actions[code]
+                    act = world_key_actions[code].key
                 except KeyError:
-                    print(list(world_actions.keys()))
-                    for i in world_actions.keys():
-                        print(i)
-                    print(term.TK_COMMA, term.TK_PERIOD)
                     raise
         elif code == term.TK_Z:
             act = "Zoom"
@@ -423,12 +417,48 @@ def new_game(character=None):
         else:
             gamelog.add("Going down the stairs")
 
-    world_actions={
+    def enterMap():
+        '''World Action:
+        Logic:
+            if at world level, check if there exists a map
+            if exists -> enter
+            else -> build the map and add it to the world
+        '''
+        nonlocal level
+        print('enter map')
+        if level == Level.World:
+            print(calabaston.mapAt(*player.worldPosition()))
+            if not calabaston.mapAt(*player.worldPosition()):
+                if player.worldPosition() in calabaston.enterable_legend.keys():
+                    filename = calabaston.enterable_legend[player.worldPosition()].lower().replace(' ','_')
+                    filename = "./assets/maps/" + filename + ".png"
+                    try:
+                        location = Map(stringify(filename), SCREEN_WIDTH, SCREEN_HEIGHT)
+                    except FileNotFoundError:
+                        print('no file of that name')
+                        raise
+                    level = Level.City
+                else:
+                    tile = calabaston.accessTile(*player.worldPosition())
+                    # get options based on land tile
+                    # build_options = Dungeon.build_options()
+                    location = dungeon.build() # dungeon.build(options)
+                    level = Level.Dungeon
+                calabaston.add_location(location, *(player.worldPosition()))
+                player.resetMapPos(calabaston.w-1, calabaston.h//2)
 
+    def exitMap():
+        pass
+
+    world_actions={
+        '<': exitMap,
+        '>': enterMap
     }
-    def processWorldAction(x, y, k):
-        if key in (">", "<"):
-            print('interact map')
+    def processWorldAction(key):
+        print('in processWorldAction', key)
+        if key == ">":
+            world_actions[key]()
+
     actions={
         'o': interactDoor,
         'c': interactDoor,
@@ -517,8 +547,8 @@ def new_game(character=None):
                 Then print units/interactables?
                 Finally light sources and player?"""
         term.composition(False)
-        dungeon.fov_calc(lights+[(player.x, player.y, player.sight)])
-        for x, y, lit, ch, bkgd in list(dungeon.output(player.x, player.y, units)):
+        dungeon.fov_calc(lights+[(player.mx, player.my, player.sight)])
+        for x, y, lit, ch, bkgd in list(dungeon.output(player.mx, player.my, [])):
             # ch = ch if len(str(ch)) > 1 else chr(toInt(palette[ch]))
             term.puts(x+12, y+2, "[color={}]".format(lit)+ch+"[/color]")
         term.refresh()
@@ -528,8 +558,7 @@ def new_game(character=None):
         boxheader = "Map Legend"
         selected(center(surround(calabaston.name), 14), 1, surround(calabaston.name))   
         selected(center(boxheader, 12), 3, surround(boxheader))
-        print('legend')
-        for char, color, desc, i in calabaston.maplegend():
+        for char, color, desc, i in calabaston.worldlegend():
             term.puts(0, i*2+5, "[c={}] {}[/c] {}".format(color, char, desc))
         footer = i*2+5+3
         if player.worldPosition() in calabaston.enterable_legend.keys():
@@ -624,7 +653,7 @@ def new_game(character=None):
             term.refresh()
             x, y, a = key_in_world()
             if a != "Do Nothing" and a != 0:
-                processWorldAction()
+                processWorldAction(a)
             elif (x, y) != (0, 0):
                 print('moving')
                 key_process_world(x, y)
@@ -633,15 +662,15 @@ def new_game(character=None):
 
         else:
             # status_box()
-            # # border()
+            # border()
             # log_box()
-            # map_box()
-            # x, y, a = key_in()
-            # if a:
-            #     processAction(player.x, player.y, a)
-            # else:
-            #     key_process(x, y, dungeon.block, units)
-            pass
+            map_box()
+            x, y, a = key_in()
+            if a:
+                processAction(player.mx, player.my, a)
+            else:
+                key_process(x, y, dungeon.block, units)
+            # pass
     # player.dump()
     return False
 # End New Game Menu

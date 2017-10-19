@@ -56,7 +56,11 @@ key_actions={
     term.TK_COMMA: action(",", "pickup"),
 }
 
-world_actions = {
+world_key_actions = {
     term.TK_PERIOD: action(">", "enter"),
     term.TK_COMMA: action("<", "exit"),
 }
+
+if __name__ == "__main__":
+    for i in world_key_actions.keys():
+        print(i)

@@ -127,8 +127,7 @@ class World:
 
     def __init__(self):
         self.pointer = (0, 0)
-        # empty map data only holds the top level maps -- each map will hold their own sublevel maps
-        self.map_data = {} 
+
         # level zero is world level -- going "down" increments the level variable
         self.level = 0
 
@@ -219,6 +218,10 @@ class World:
                 row.append(self.tile(char, color, land, territory, tcolor, kingdom, kcolor, enterable))
             self.data.append(row)
         self.colorize()
+
+        # empty map data only holds the top level maps -- each map will hold their own sublevel maps
+        self.map_data = [[None for _ in range(self.w)] for _ in range(self.h)]
+        
         return self
 
     def colorize(self):
@@ -290,7 +293,7 @@ class World:
     def accessTile(self, i, j):
         return self.data[j][i]
 
-    def maplegend(self):
+    def worldlegend(self):
         i = 0
         for d, ch, colors in self.geo_legend.values():
             ch = ch if len(ch) == 1 else chr(int(ch, 16))
@@ -298,7 +301,12 @@ class World:
                 yield ch, col, d, i
                 i += 1
 
-    def add_city(self, x, y, gw, gh):
+    def mapAt(self, x, y):
+        return self.map_data[y][x] != None
+
+    def add_location(self, location, x, y):
+        print(x)
+        print(y)
         '''Must've been located in enterables legend'''
         # try:
         #     string = "./assets/maps/"+self.enterable_legend[(x, y)].lower().replace(' ','_')+".png"
@@ -306,7 +314,7 @@ class World:
         #     print("loaded {}".format(string))
         # except FileNotFoundError:
         #     pass
-        pass
+        self.map_data[y][x] = location
 
     def add_dungeon(self, x, y):
         '''Must've been located in dungeontile?'''
