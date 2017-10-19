@@ -275,10 +275,12 @@ class World:
 
     def add_city(self, x, y, gw, gh):
         '''Must've been located in enterables legend'''
-        string = "./assets/maps/"+self.enterable_legend[(x, y)].lower()+".png"
-        self.map_data[(x, y)] = Map(stringify(string), gw, gh)
-        print("loaded {}".format(string))
-
+        try:
+            string = "./assets/maps/"+self.enterable_legend[(x, y)].lower().replace(' ','_')+".png"
+            self.map_data[(x, y)] = Map(stringify(string), gw, gh)
+            print("loaded {}".format(string))
+        except FileNotFoundError:
+            pass
     def add_dungeon(self, x, y):
         '''Must've been located in dungeontile?'''
         pass
@@ -385,7 +387,7 @@ class World:
 
         global GH, GW, FH, FW
         current = "g"
-
+        lastposition = None
         while True:
             x, y = self.pointer
             cx = scroll(self.pointer[0], GW, self.w)
@@ -415,14 +417,18 @@ class World:
                 if (x, y) not in self.map_data.keys():
                     term.puts(center("nodata  ", GW), GH//2, "NO DATA")    
                 else:
+                    self.level += 1
                     term.puts(center("nodata  ", GW), GH//2, "LOAD MAP")    
                     dungeon = self.map_data[(x, y)]
-                    # dungeon.fov_calc([(x, y, 5)])
-                    # for i, j, lit, ch, bkgd in list(dungeon.output(x, y, [])):
-                    #     term.puts(x-cx, y-cy, "[color={}]".format(lit)+ch+"[/color]")
-                    for j in range(cy, cy+GH-1):
-                        for i in range(cx, cx+GW):
-                            term.puts(i-cx, j-cy+1, dungeon.data[j][i])
+                    xx, yy = dungeon.width//2, dungeon.height//2
+                    dungeon.fov_calc([(xx, yy, 5),])
+                    for i, j, lit, ch, bkgd in list(dungeon.output(xx, yy, [])):
+                        term.puts(i, j, "[color={}]".format(lit)+ch+"[/color]")
+                        # print(lit)
+                    # print(i for i in list(dungeon.output(x, y, [])))
+                    # for j in range(cy, cy+GH-1):
+                    #     for i in range(cx, cx+GW):
+                    #         term.puts(i-cx, j-cy+1, dungeon.data[j][i])
             term.refresh()
 
             k = term.read()
@@ -451,8 +457,9 @@ class World:
                         # if it is a city
                         if (x, y) in self.enterable_legend.keys():
                             self.add_city(x, y, GW, GH)
+
             elif k == term.TK_COMMA:
-                if term.state(term.TK_SHIFT) and self.enterable(x, y):
+                if term.state(term.TK_SHIFT):
                     print('exitting')                
                     self.level -= 1
 
@@ -476,6 +483,7 @@ class World:
 
             # movement key handling
             elif k == term.TK_UP and self.level == 0:
+                print(self.level, 'walking')
                 if self.walkable(x, y-1):
                     y -= 1
             elif k == term.TK_DOWN and self.level == 0:
@@ -489,7 +497,7 @@ class World:
                     x += 1
             self.pointer[0] = max(min(x, self.w-1), 0)
             self.pointer[1] = max(min(y, self.h), 1)
-
+            self.level = max(min(self.level, 1), -1)
 
 if __name__ == "__main__":
     setup()

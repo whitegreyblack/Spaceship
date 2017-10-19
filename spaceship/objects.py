@@ -264,11 +264,7 @@ class Map:
     # colors_water = blender(color_water, 20)
 
     def __init__(self, data, GW=80, GH=40):
-        self.SUN = True
-        # self.data, self.height, self.width = self.dimensions(data)
         self.data, self.height, self.width = self.dimensions(data)
-        for i in self.data:
-            print(i)
         print("MAP: {} {}".format(self.width, self.height))
         # self.block blocks both light (and movement?)
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
@@ -279,10 +275,10 @@ class Map:
         # self.walls = gradient(self.width, self.height, chars_walls, color_walls)
         # self.grass = gradient(self.width, self.height, chars_grass, color_grass)
         # self.plant = gradient(self.width, self.height, chars_plant, color_plant)
-        self.map_display_width = min(self.width, sw-12)
-        self.map_display_height = min(self.height, sh-8)
         self.tilemap = self.fill(data, self.width, self.height)
         self.explore = [[0 for _ in range(self.width)] for _ in range(self.height)]
+        self.map_display_width = min(self.width, GW)
+        self.map_display_height = min(self.height, GH)
         print("MAP: {} {}".format(self.map_display_width, self.map_display_height))
  
 
@@ -348,13 +344,6 @@ class Map:
     def square(self, x, y):
         # return self.data[y][x]
         return self.tilemap[y][x]
-
-    def _sunup(self):
-        self.SUN=True
-
-
-    def _sundown(self):
-        self.SUN=False
 
     def darken(self, color):
         color = color[3:]
