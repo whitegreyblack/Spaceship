@@ -416,7 +416,9 @@ def new_game(character=None):
 
     def interactStairs(x, y, k):
         """Allows interactions with stairs"""
+        print("INTERACTSTAIRS")
         if k is ">":
+            print("Trying to go down")
             gamelog.add("Going up the stairs")
         else:
             gamelog.add("Going down the stairs")
@@ -428,8 +430,9 @@ def new_game(character=None):
             if exists -> enter
             else -> build the map and add it to the world
         '''
+        print('ENTER MAP FUNCTION')
         # print('enter map')
-        if player.zAxis == -1
+        if player.zAxis == -1:
             # print(calabaston.mapAt(*player.worldPosition()))
             # builds the map
             player.moveZAxis(1)
@@ -455,26 +458,41 @@ def new_game(character=None):
                     # get options based on land tile
                     # build_options = Dungeon.build_options()
                     location = Map(build(1000)) # dungeon.build(options)
+                    print("Location: ", location.getExit())
+                    print("Location: ", location.getEntrance())
                     player.resetMapPos(*location.getExit())
                     # print('PP:',player.mapPosition())
                     # print('Exit', location.getExit())
                 calabaston.add_location(location, *(player.worldPosition()))
         elif player.zAxis == 0:
-            pass
+            print("Map Level 0")
+            player.moveZAxis(1)
+            if player.mapPosition() == dungeon.getEntrance():
+                print('ill allow it -- move down')
+                pass
+            else:
+                print("cannot enter on current tile")
             # if in city then shouldnt really have a dungeon
             # could add a basement/attic level
             # also add check to make sure not inside a building -- if in building then '<' wouldnt work
             # i mean it could work but just wouldnt zoom out to world view you know
             # if in wilderness can only '>' on a dungeon enterance
             # if in a dungeon then goes down one sublevel
-        else:
-            pass
+        elif player.zAxis > 0:
+            print('at level 0 -- trying sublevel')
+        
             # processes all other dungeon subleves
+        
+        else:
+            print('no enterMap action')
+            pass
             
 
     def exitMap():
-        nonlocal level
-        level = Level.World
+        if player.mapPosition() == dungeon.getExit():
+            player.moveZAxis(-1)
+        else:
+            print('not standing on stairs')
 
     world_actions={
         '<': exitMap,
@@ -498,11 +516,19 @@ def new_game(character=None):
     }
 
     def processAction(x, y, key):
+        print("PROCESS KEY", key)
         if key in ("o", "c"):
             actions[key](x, y, key)
-        if key in (","):
+        elif key in ("<"):
+            print('exit')
             if term.state(term.TK_SHIFT):
                 exitMap()
+            else:
+                actions[key](x, y, key)
+        elif key in (">"):
+            print('enter')
+            if term.state(term.TK_SHIFT):
+                enterMap()
             else:
                 actions[key](x, y, key)
         elif key in ("t"):
@@ -677,8 +703,9 @@ def new_game(character=None):
     lights = []
     while proceed:
         term.clear()
-        print('LEVEL: ', player.zAxis)
         if player.zAxis == -1:
+            print('WORLD PLAYER LEVEL: ', player.zAxis)
+
             # World View
             worldmap_box()
             worldlegend_box()
@@ -695,6 +722,9 @@ def new_game(character=None):
                 print('do nothing')
 
         elif player.zAxis == 0:
+            print('DUNGEON PLAYER LEVEL: ', player.zAxis)
+
+            print('-- In MAP --')
             # City, Wilderness, Level 0 Dungeon
             dungeon = calabaston.map_data[player.wy][player.wx]
             status_box()
@@ -710,7 +740,7 @@ def new_game(character=None):
             # dungeon = calabaston.map_data[player.wx][player]
             # for i in range(player.zAxis):
                 # dungeon = dungeon.getSubLevel()
-            pass
+            print('you in a new dungeon now"')
 
     player.dump()
     return False

@@ -100,7 +100,7 @@ class Player:
             '''Make sure Z-Axis not less than -1 (WorldViewIndex)'''
             return max(self.zAxis+move, -1)
 
-        self.zAxis += self.checkZAxis(move)
+        self.zAxis = checkZAxis(move)
 
     def dump(self):
         GREEN='\x1b[1;32;40m'
@@ -133,7 +133,6 @@ class Player:
             Legs     : Common pants
             Feet     : Sandals
             ======== Player Items ========
-            {}
             ========  Alignments  ========
             ========  Relations   ========
             """[1:]
@@ -144,7 +143,7 @@ class Player:
             self.race,
             self.job,
             self.level,
-            self.exp
+            self.exp,
         ))
 
 class Item:
@@ -301,13 +300,38 @@ class Map:
         return data, height, width
 
     def getExit(self):
+        '''find exit and save on the first time
+        subsequent calls returns the saved point'''
+        if hasattr(self, "exitpoint"):
+            print('has exit')
+            print(self.exitpoint)
+            return self.exitpoint
+
         for j in range(len(self.data)):
             for i in range(len(self.data[0])):
                 if self.data[j][i] == "<":
                     print('GetExit')
                     print(self.data[j][i], i, j)
                     print(self.tilemap[j][i].char, i, j)
+                    self.exitpoint = i, j
                     return i, j
+
+    def getEntrance(self):
+        '''same logic as getExit'''
+        try:
+            if hasattr(self, self.enterance):
+                print('has enterance')
+                return self.enterance
+        except AttributeError:
+            for j in range(len(self.data)):
+                for i in range(len(self.data[0])):
+                    if self.data[j][i] == ">":
+                        print('GetEnterance')
+                        print(self.data[j][i], i, j)
+                        print(self.tilemap[j][i].char, i, j)
+                        self.entrance = i, j
+                        return i, j
+            return 'Doesnt have a sublevel?'
 
     def fill(self, d, w, h):
         # Light.Unexplored, Explored, Visible
