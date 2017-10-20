@@ -160,13 +160,13 @@ def new_game(character=None):
         walkable = calabaston.walkable(tx, ty)
 
         if walkable and inbounds:
-            print('moving there')
+            print('Moving On Map')
             player.moveOnWorld(x, y)
             # description = calabaston.tilehasdescription(tposx, tposy)
             # if description:
             #     gamelog.add(description)
         else:
-            print('not mving')
+            print('Not Moving On Map')
             if blocked:
                 # =============  START WALK LOG  =================================
                 gamelog.add("Cannot go there")
@@ -193,26 +193,27 @@ def new_game(character=None):
         # unit_pos = [(unit.x, unit.y) for unit in units]
         unit_pos = []
 
-        outofbounds = 0 <= tposx < dungeon.width-1 \
+        inbounds = 0 <= tposx < dungeon.width-1 \
             and 0 <= tposy < dungeon.height-1
 
         occupied = (tposx, tposy) in unit_pos
 
-        try:
-            blocked = blockables[tposy][tposx]
-            ch = dungeon.square(tposx, tposy).char
-        except BaseException:
-            blocked = False
-
+        walkable = dungeon.walkable(tposx, tposy)
+        print('Walk In', walkable, inbounds)
+        print('CURRENT LOCATION: ', player.mapPosition())
 
         # (not blocked) and (not occupied) and (inbounds)
-        if not (blocked or occupied or not outofbounds):
+        if walkable and inbounds:
+            print('Moving on Dungeon')
             player.moveOnMap(x, y)
+            print("pP:",player.mapPosition())
             if dungeon.square(tposx, tposy).items:
                 gamelog.add("There is something here")
         else:
+            print('Not Moving on Dungeon')
             if blocked:
                 # =============  START WALK LOG  =================================
+                ch = dungeon.square(tposx, tposy).char
                 gamelog.add(walkBlock.format(walkChars[ch]))
                 # ===============  END WALK LOG  =================================
 
@@ -230,7 +231,7 @@ def new_game(character=None):
                 # else:
                 #     gamelog.add(walkBlock.format(unit.r))
                 pass
-            elif outofbounds:
+            elif not inbounds:
                 gamelog.add(walkBlock.format("the edge of the map"))
 
         # refresh units
@@ -389,7 +390,7 @@ def new_game(character=None):
                     reachables.append((i, j))
 
         if not reachables:
-            gamelog.add("No {} near you".format("openables" if opening else "closeables"))
+            gamelog.add("No {} near you".format("openables" if key is "o" else "closeables"))
         
         elif onlyOne(reachables):
             i, j = reachables.pop()
@@ -445,19 +446,23 @@ def new_game(character=None):
                         print('no file of that name')
                         raise
                     level = Level.City
+                    # basically spawn in town center
+                    player.resetMapPos(location.width//2, location.height//2)
+
                 else:
                     print('Not important city')
                     tile = calabaston.accessTile(*player.worldPosition())
                     print(tile.land)
                     # get options based on land tile
                     # build_options = Dungeon.build_options()
-                    location = Map(build()) # dungeon.build(options)
+                    location = Map(build(1000)) # dungeon.build(options)
                     level = Level.Dungeon
+                    player.resetMapPos(*location.getExit())
+                    print('PP:',player.mapPosition())
+                    print('Exit', location.getExit())
                 calabaston.add_location(location, *(player.worldPosition()))
             # else:
             #     location = calabaston.map_data[player.wy][player.wx]
-            player.resetMapPos(calabaston.w-1, calabaston.h//2)
-
             if player.worldPosition() in calabaston.enterable_legend.keys():
                 level = Level.City
             else:
@@ -472,7 +477,7 @@ def new_game(character=None):
         '>': enterMap
     }
     def processWorldAction(key):
-        print('in processWorldAction', key)
+        print('IN ProcessWorldAction:', key)
         if key == ">":
             world_actions[key]()
 
@@ -572,7 +577,7 @@ def new_game(character=None):
         dungeon.fov_calc(lights+[(player.mx, player.my, player.sight)])
         for x, y, lit, ch, bkgd in list(dungeon.output(player.mx, player.my, [])):
             # ch = ch if len(str(ch)) > 1 else chr(toInt(palette[ch]))
-            term.puts(x+12, y+2, "[color={}]".format(lit)+ch+"[/color]")
+            term.puts(x+14, y+1, "[color={}]".format(lit)+ch+"[/color]")
         term.refresh()
         
     def worldlegend_box():

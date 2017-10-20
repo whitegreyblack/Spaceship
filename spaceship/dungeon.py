@@ -14,7 +14,8 @@ import time
 from copy import deepcopy
 
 # X_TEMP, Y_TEMP = 78, 40
-X_TEMP, Y_TEMP = 160, 80
+# X_TEMP, Y_TEMP = 160, 80
+X_TEMP, Y_TEMP = 80, 50
 WALL, FLOOR = -1, 1
 box = namedtuple("Box", "x1 y1 x2 y2")
 point = namedtuple("Point", "x y")
@@ -211,18 +212,12 @@ def lpath(b1, b2):
             return bresenhams((x1, y1), (x1, y2)) \
                 + bresenhams((x1, y2), (x2, y2))
 
-            # return bresenhams((x1, y1), ((x1+x2)//2, y1)) \
-            #     + bresenhams(((x1+x2)//2, y1), ((x1+x2)//2, y2)) \
-            #     + bresenhams(((x1+x2)//2, y2), (x2, y2))
         # high slope -- go vertical
         else:
             # if short:
             return bresenhams((x1, y1), (x2, y1)) \
                 + bresenhams((x2, y1), (x2, y2))
 
-            # return bresenhams((x1, y1), (x1, (y1+y2)//2)) \
-            #     + bresenhams((x1, (y1+y2)//2), (x2, (y1+y2)//2)) \
-            #     + bresenhams((x2, (y1+y2)//2), (x2, y2))
 def path(p1, p2, dungeon):
     node = namedtuple("Node", "df dg dh parent node")
     openlist = set()
@@ -454,18 +449,20 @@ def build(rot=0):
     tries = 0
 
     # Expansion Algorithm
-    while len(rooms) < 200 and tries < 2000:
+    while len(rooms) < 25 and tries < 2000:
         key = choice([i for i in range(-1, 5)])
-        if key == 0:
-            x, y = randint(12, 18), randint(6, 9)
+        if key == 4:
+            x, y = randint(16, 24), randint(12, 18)
             px, py = randint(9, X_TEMP-9), randint(9, Y_TEMP-9)
-        elif key > 0:
-            x, y = randint(8, 12), randint(3, 6)
+        elif key >= 2:
+            x, y = randint(12, 16), randint(8, 12)
             px, py = randint(6, X_TEMP-6), randint(6, Y_TEMP-6)
+        elif key >= 0:
+            x, y = randint(8, 12), randint(4, 6)
+            px, py = randint(4, X_TEMP-4), randint(4, Y_TEMP-4)
         else:
-            x, y = randint(4, 6), randint(3, 4)
-            px, py = randint(3, X_TEMP-3), randint(3, Y_TEMP-3)
-
+            x, y = randint(6, 8), randint(3, 4)
+            px, py = randint(3, X_TEMP-3), randint(3, Y_TEMP-3)    
         temp = box(px-int(round(x/2)), py-int(round(y/2)), px-int(round(x/2))+x, py-int(round(y/2))+y)
         intersects = any(intersect(room, temp) for room in rooms)
 
@@ -583,7 +580,7 @@ def build(rot=0):
     backstory = ""
 
     # the output is more for debugging
-
+    print("Rooms:", len(rooms))
 
     if rot:
         for i in range(1):

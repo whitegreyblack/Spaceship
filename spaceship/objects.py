@@ -298,11 +298,7 @@ class Map:
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.lamps = None
         self.fogofwar=[[0 for _ in range(self.width)] for _ in range(self.height)]
-        # self.block only blocks movements
         self.block = [[self.data[y][x] in chars_block for x in range(self.width)] for y in range(self.height)]
-        # self.walls = gradient(self.width, self.height, chars_walls, color_walls)
-        # self.grass = gradient(self.width, self.height, chars_grass, color_grass)
-        # self.plant = gradient(self.width, self.height, chars_plant, color_plant)
         self.tilemap = self.fill(data, self.width, self.height)
         self.explore = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.map_display_width = min(self.width, GW)
@@ -320,11 +316,14 @@ class Map:
         # return data, height, width
         return data, height, width
 
-    def start_position(self):
-        for i in range(len(self.data)):
-            for j in range(len(self.data[0])):
-                if self.data[i][j] == "<":
-                    return (j, i)
+    def getExit(self):
+        for j in range(len(self.data)):
+            for i in range(len(self.data[0])):
+                if self.data[j][i] == "<":
+                    print('GetExit')
+                    print(self.data[j][i], i, j)
+                    print(self.tilemap[j][i].char, i, j)
+                    return i, j
 
     def fill(self, d, w, h):
         # Light.Unexplored, Explored, Visible
@@ -343,14 +342,15 @@ class Map:
             " ": (' ', '#000000',"black"),
             "%": (cm.WALLS.chars, blender(cm.WALLS.hexcode), "black"),
             "^": (cm.WALLS.chars, blender(cm.WALLS.hexcode), "black"),
-            "<": (cm.WALLS.chars, blender(cm.WALLS.hexcode), "black"),
-            ">": (cm.WALLS.chars, blender(cm.WALLS.hexcode), "black"),
+            "<": (cm.LTHAN.chars, blender(cm.LTHAN.hexcode), "black"),
+            ">": (cm.GTHAN.chars, blender(cm.GTHAN.hexcode), "black"),
         }
 
         def evaluate(char):
             try:
                 t = locchar[char]
             except KeyError:
+                print('Eval Error:',char)
                 pass
             return t
         
@@ -373,6 +373,9 @@ class Map:
     def square(self, x, y):
         # return self.data[y][x]
         return self.tilemap[y][x]
+
+    def walkable(self, x, y):
+        return self.tilemap[y][x].char not in chars_block
 
     def darken(self, color):
         color = color[3:]
@@ -521,10 +524,10 @@ class Map:
 
         # print(self.map_display_height, self.map_display_width)
         # print(self.height, self.width)
-        cx = scroll(X, self.map_display_width, self.width)
-        cy = scroll(Y, self.map_display_height, self.height)
-        cxe = cx + self.map_display_width
-        cye = cy + self.map_display_height
+        cx = scroll(X, self.map_display_width-14, self.width)
+        cy = scroll(Y, self.map_display_height-2, self.height)
+        cxe = cx + self.map_display_width-14
+        cye = cy + self.map_display_height-2
 
         #fg_fog = "#ff202020"
         # daytime= True if self._sun() else False

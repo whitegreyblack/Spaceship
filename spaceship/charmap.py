@@ -14,7 +14,8 @@ class Charmap:
     ROADS=charmap([":"], ("#808080", "#994C00"))
     POSTS=charmap(["x"], ("#9a8478", "#9a8478"))
     BLOCK=charmap(["#", "+", "o", "x"],("#000000", "#ffffff"))
-
+    LTHAN=charmap(["<"], ("#c0c0c0", "#c0c0c0"))
+    GTHAN=charmap([">"], ("#c0c0c0", "#c0c0c0"))
 class Light:
     '''Light levels depends on two factors -- discovered and visible
                      Discovered | Visible
