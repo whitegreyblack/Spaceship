@@ -18,7 +18,7 @@ from spaceship.gamelog import GameLogger
 from random import randint, choice
 from collections import namedtuple
 from namedlist import namedlist
-from spaceship.dungeon import build
+from spaceship.dungeon import buildTerrain, buildDungeon
 from spaceship.setup import setup, output, setup_font
 from spaceship.world import World
 from time import clock
@@ -422,14 +422,14 @@ def new_game(character=None):
             print("Trying to go down")
             gamelog.add("Going down the stairs")
             if not dungeon.hasSublevel():
-                sublevel = Map(build())
+                sublevel = Map(buildDungeon())
                 sublevel.addParent(dungeon)
-                dungeon.addSublevel(Map(build()))
                 dungeon.addSublevel(sublevel)
             print()
             dungeon = dungeon.getSublevel()
             player.moveZAxis(1)
             player.resetMapPos(*dungeon.getExit())
+
         else:
             gamelog.add("Going up the stairs")
             player.moveZAxis(-1)
@@ -475,10 +475,12 @@ def new_game(character=None):
                 else:
                     # print('Not important city')
                     tile = calabaston.accessTile(*player.worldPosition())
-                    # print(tile.land)
+                    print("TILE TYPE: ", tile.land)
                     # get options based on land tile
                     # build_options = Dungeon.build_options()
-                    location = Map(build(1000)) # dungeon.build(options)
+                    if tile.land == "plains":
+                        location = Map(buildTerrain(tile.land))
+                    location = Map(buildDungeon(1000)) # dungeon.build(options)
                     print("Location: ", location.getExit())
                     print("Location: ", location.getEntrance())
                     player.resetMapPos(*location.getExit())
@@ -636,8 +638,8 @@ def new_game(character=None):
         selected(center(surround(calabaston.name), 14), 1, surround(calabaston.name))   
         selected(center(boxheader, 12), 3, surround(boxheader))
         for char, color, desc, i in calabaston.worldlegend():
-            term.puts(0, i*2+5, "[c={}] {}[/c] {}".format(color, char, desc))
-        footer = i*2+5+3
+            term.puts(0, i+4, "[c={}] {}[/c] {}".format(color, char, desc))
+        footer = i+5+3
         if player.worldPosition() in calabaston.enterable_legend.keys():
             enterable_name = surround(calabaston.enterable_legend[(player.wx, player.wy)])       
             selected(center(surround(enterable_name) if len(enterable_name) >= 12 else enterable_name, 14),
@@ -669,11 +671,12 @@ def new_game(character=None):
     
     # pointer to the current view
     wview = WorldView.Geo
-    calabaston = World().load(
+    calabaston = World()
+    calabaston.load(
                 "./assets/worldmap.png", 
                 "./assets/worldmap_territories.png",
                 "./assets/worldmap_kingdoms.png")    
-
+    print("World:", calabaston)
     # Before anything happens we create our character
     # LIMIT_FPS = 30 -- later used in sprite implementation
     blocked = []

@@ -477,19 +477,24 @@ def decay(dungeon, n=1000):
     '''
     return decayed
 
-def buildplains(entropy=0, buildopts=None):
+def buildTerrain(tiletype, entropy=0, buildopts=None):
     if buildopts:
         rocks = None
         water = None
         trees = None
     
     vegatation = .33
-    vege_chars = (",","`","Y","T","0192", "00A5",";")
-    plains = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
+    if tiletype == "plains":
+        vege_chars = (",","`","Y","T","0192", "00A5",";")
+        terrain = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
+        for i in range(X_TEMP):
+            for j in range(Y_TEMP):
+                terrain[j][i] = choice(vege_chars)
+        return terrain
+    else:
+        raise ValueError("Tiletype not implemented")
 
-
-
-def build(rot=0):
+def buildDungeon(rot=0):
     # constructor -- (-1 = impassable) start with a map of walls
     # dungeon = [[-1 for _ in range(x)] for _ in range(y)]
     dungeon = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
