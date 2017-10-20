@@ -19,7 +19,7 @@ from random import randint, choice
 from collections import namedtuple
 from namedlist import namedlist
 from spaceship.dungeon import build
-from spaceship.setup import setup, palette, output, setup_font
+from spaceship.setup import setup, output, setup_font
 from spaceship.world import World
 from time import clock
 
@@ -428,45 +428,49 @@ def new_game(character=None):
             if exists -> enter
             else -> build the map and add it to the world
         '''
-        nonlocal level
-        print('enter map')
-        if level == Level.World:
-            print(calabaston.mapAt(*player.worldPosition()))
+        # print('enter map')
+        if player.zAxis == -1
+            # print(calabaston.mapAt(*player.worldPosition()))
             # builds the map
+            player.moveZAxis(1)
             if not calabaston.mapAt(*player.worldPosition()):
-                print("in legend", player.worldPosition() in calabaston.enterable_legend.keys())
-                print(player.worldPosition())
+                # print("in legend", player.worldPosition() in calabaston.enterable_legend.keys())
+                # print(player.worldPosition())
                 if player.worldPosition() in calabaston.enterable_legend.keys():
                     filename = calabaston.enterable_legend[player.worldPosition()].lower().replace(' ','_')
                     filename = "./assets/maps/" + filename + ".png"
-                    print(filename)
+                    # print(filename)
                     try:
                         location = Map(stringify(filename), SCREEN_WIDTH, SCREEN_HEIGHT)
                     except FileNotFoundError:
-                        print('no file of that name')
+                        # print('no file of that name')
                         raise
-                    level = Level.City
                     # basically spawn in town center
                     player.resetMapPos(location.width//2, location.height//2)
 
                 else:
-                    print('Not important city')
+                    # print('Not important city')
                     tile = calabaston.accessTile(*player.worldPosition())
-                    print(tile.land)
+                    # print(tile.land)
                     # get options based on land tile
                     # build_options = Dungeon.build_options()
                     location = Map(build(1000)) # dungeon.build(options)
-                    level = Level.Dungeon
                     player.resetMapPos(*location.getExit())
-                    print('PP:',player.mapPosition())
-                    print('Exit', location.getExit())
+                    # print('PP:',player.mapPosition())
+                    # print('Exit', location.getExit())
                 calabaston.add_location(location, *(player.worldPosition()))
-            # else:
-            #     location = calabaston.map_data[player.wy][player.wx]
-            if player.worldPosition() in calabaston.enterable_legend.keys():
-                level = Level.City
-            else:
-                level = Level.Dungeon
+        elif player.zAxis == 0:
+            pass
+            # if in city then shouldnt really have a dungeon
+            # could add a basement/attic level
+            # also add check to make sure not inside a building -- if in building then '<' wouldnt work
+            # i mean it could work but just wouldnt zoom out to world view you know
+            # if in wilderness can only '>' on a dungeon enterance
+            # if in a dungeon then goes down one sublevel
+        else:
+            pass
+            # processes all other dungeon subleves
+            
 
     def exitMap():
         nonlocal level
@@ -618,7 +622,6 @@ def new_game(character=None):
     # dungeon = Map(build())
     
     # pointer to the current view
-    level = Level.World
     wview = WorldView.Geo
     calabaston = World().load(
                 "./assets/worldmap.png", 
@@ -674,12 +677,15 @@ def new_game(character=None):
     lights = []
     while proceed:
         term.clear()
-        print('LEVEL: ', level)
-        if level == Level.World:
+        print('LEVEL: ', player.zAxis)
+        if player.zAxis == -1:
+            # World View
             worldmap_box()
             worldlegend_box()
             term.refresh()
+
             x, y, a = key_in_world()
+
             if a != "Do Nothing" and a != 0:
                 processWorldAction(a)
             elif (x, y) != (0, 0):
@@ -688,7 +694,8 @@ def new_game(character=None):
             else:
                 print('do nothing')
 
-        else:
+        elif player.zAxis == 0:
+            # City, Wilderness, Level 0 Dungeon
             dungeon = calabaston.map_data[player.wy][player.wx]
             status_box()
             # border()
@@ -699,8 +706,13 @@ def new_game(character=None):
                 processAction(player.mx, player.my, a)
             else:
                 key_process(x, y)
-            # pass
-    # player.dump()
+        else:
+            # dungeon = calabaston.map_data[player.wx][player]
+            # for i in range(player.zAxis):
+                # dungeon = dungeon.getSubLevel()
+            pass
+
+    player.dump()
     return False
 # End New Game Menu
 

@@ -440,6 +440,18 @@ def decay(dungeon, n=1000):
     '''
     return decayed
 
+def buildplains(entropy=0, buildopts=None):
+    if buildopts:
+        rocks = None
+        water = None
+        trees = None
+    
+    vegatation = .33
+    vege_chars = (",","`","Y","T","0192", "00A5",";")
+    plains = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
+
+
+
 def build(rot=0):
     # constructor -- (-1 = impassable) start with a map of walls
     # dungeon = [[-1 for _ in range(x)] for _ in range(y)]

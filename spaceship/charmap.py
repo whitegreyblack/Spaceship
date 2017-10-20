@@ -16,6 +16,8 @@ class Charmap:
     BLOCK=charmap(["#", "+", "o", "x"],("#000000", "#ffffff"))
     LTHAN=charmap(["<"], ("#c0c0c0", "#c0c0c0"))
     GTHAN=charmap([">"], ("#c0c0c0", "#c0c0c0"))
+    TRAPS=charmap(["^"], ("#c0c0c0", "#c0c0c0"))
+
 class Light:
     '''Light levels depends on two factors -- discovered and visible
                      Discovered | Visible

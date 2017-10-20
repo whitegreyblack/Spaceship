@@ -4,13 +4,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from namedlist import namedlist
 from collections import namedtuple
 from spaceship.imports import *
-from spaceship.colors import color, COLOR, SHIP_COLOR
+from spaceship.colors import Color, COLOR
 from random import randint, choice
 from math import sqrt
 from spaceship.constants import GAME_SCREEN_HEIGHT as sh
 from spaceship.constants import GAME_SCREEN_WIDTH as sw
 from spaceship.maps import hextup, hexone, output, blender, gradient, evaluate_blocks
-from spaceship.setup import toInt, palette
+from spaceship.setup import toInt
 from spaceship.charmap import Charmap as cm
 from spaceship.world import World
 # TODO: Maybe move map to a new file called map and create a camera class?
@@ -21,9 +21,6 @@ visibility = namedtuple("Visiblity", "movement visibility lightlevel")
 
 class Light: Unexplored, Explored, Visible = range(3)    
 class Letter: Ascii, Unicode = range(2)
-
-# fog levels are calculated in steps of 2, so radius of 10/11 will be the max bounds
-fog_levels= ["darkest ", "darker ", "dark ","light ","lighter ", "lightest"]
 
 # change variables to dictioanry -- more tight and accessible
 # allows for more 
@@ -36,19 +33,11 @@ chars_key = {
     "walls": ["#"],
     "posts": ["x"],
     "lamps": ["o"],
+    "plant": ["2663"],
+    "house": ["="],
 }
 
-chars_roads= [":"]
-chars_floor= ["."]
 chars_block= ("#", "+", "o", "x", "~", "%")
-chars_grass= [",",";",]
-chars_water= ["~"]
-chars_house= ["="]
-chars_walls= ["#"]
-chars_doors= ["+", "/"]
-chars_plant= ["2663"]
-chars_posts= ["x"]
-chars_lamps= ["o"]
 
 class Player:
     def __init__(self, character):
@@ -75,6 +64,7 @@ class Player:
     def setupHome(self, home):
         self.home, self.hpointer = home, World.capitals(home)
         self.wx, self.wy = self.hpointer
+        self.zAxis = -1
 
     def worldPosition(self):
         return self.wx, self.wy
@@ -105,6 +95,57 @@ class Player:
         self.wx += dx
         self.wy += dy
 
+    def moveZAxis(self, move):
+        def checkZAxis(move):
+            '''Make sure Z-Axis not less than -1 (WorldViewIndex)'''
+            return max(self.zAxis+move, -1)
+
+        self.zAxis += self.checkZAxis(move)
+
+    def dump(self):
+        GREEN='\x1b[1;32;40m'
+        RED='\x1b[1;31;40m'
+        BLUE='\x1b[0;34;40m'
+        YELLOW='\x1b[0;33;40m'
+        END='\x1b[0m'
+        ISATTY = sys.stdout.isatty()
+        stat = GREEN+"{:<7}"+END if ISATTY else "{}"
+        expe = BLUE+"{:>7}"+END if ISATTY else "{}"
+        dump_template="""
+            [Character Sheet -- Spaceship]
+            ======== Player Stats ========
+            Name     : {}
+            Sex      : {}
+            Race     : {}
+            Class    : {}
+
+            Level    : {}
+            Exp      : {}
+            ========   Equipment  ========
+            Head     :
+            Neck     : 
+            Torso    : Peasant garb
+            Ring(L)  :
+            Hand(L)  : Sword
+            Ring(R)  :
+            Hand(R)  : 
+            Waist    : Thin rope
+            Legs     : Common pants
+            Feet     : Sandals
+            ======== Player Items ========
+            {}
+            ========  Alignments  ========
+            ========  Relations   ========
+            """[1:]
+        # print(self.backpack.dump())
+        print(dump_template.format(
+            self.name,
+            self.gender,
+            self.race,
+            self.job,
+            self.level,
+            self.exp
+        ))
 
 class Item:
     def __init__(self, n, s, c):
@@ -153,56 +194,6 @@ class Character(Object):
         self.l=l
         self.inventory = Inventory(b)
         self.backpack = Backpack()
-
-    def dump(self):
-        GREEN='\x1b[1;32;40m'
-        RED='\x1b[1;31;40m'
-        BLUE='\x1b[0;34;40m'
-        YELLOW='\x1b[0;33;40m'
-        END='\x1b[0m'
-        ISATTY = sys.stdout.isatty()
-        stat = GREEN+"{:<7}"+END if ISATTY else "{}"
-        expe = BLUE+"{:>7}"+END if ISATTY else "{}"
-        dump_template="""
-            [Character Sheet -- Spaceship]
-            ======== Player Stats ========
-            Name     : {}
-            Sex      : {}
-            Race     : {}
-            Subrace  : {}
-            Class    : {}
-            Subclass : {}
-
-            Level    : {}
-            Exp      : {}
-            ========   Equipment  ========
-            Head     :
-            Neck     : 
-            Torso    : Peasant garb
-            Ring(L)  :
-            Hand(L)  : Sword
-            Ring(R)  :
-            Hand(R)  : 
-            Waist    : Thin rope
-            Legs     : Common pants
-            Feet     : Sandals
-            ======== Player Items ========
-            {}
-            ========  Alignments  ========
-            ========  Relations   ========
-            """[1:]
-        print(self.backpack.dump())
-        print(dump_template.format(
-            stat.format("Hero"),
-            stat.format("Male"),
-            stat.format("Human"),
-            stat.format("Redskin"),
-            stat.format("Rogue"),
-            stat.format("Ninja"),
-            expe.format("3"),
-            expe.format("25"),
-            self.backpack.dump(),
-        ))
 
 class Slot:
     def __init__(self, current=None):
@@ -288,19 +279,12 @@ class Map:
                 [1,  0,  0,  1, -1,  0,  0, -1]
             ]
 
-    colors_block = ["#ffc0c0c0", "#ffa0a0a0", "#ff808080", "#ff606060", "#ff404040"]
-    # colors_water = blender(color_water, 20)
-
     def __init__(self, data, GW=80, GH=40):
         self.data, self.height, self.width = self.dimensions(data)
         print("MAP: {} {}".format(self.width, self.height))
-        # self.block blocks both light (and movement?)
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
-        self.lamps = None
-        self.fogofwar=[[0 for _ in range(self.width)] for _ in range(self.height)]
         self.block = [[self.data[y][x] in chars_block for x in range(self.width)] for y in range(self.height)]
         self.tilemap = self.fill(data, self.width, self.height)
-        self.explore = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.map_display_width = min(self.width, GW)
         self.map_display_height = min(self.height, GH)
         print("MAP: {} {}".format(self.map_display_width, self.map_display_height))
@@ -344,6 +328,7 @@ class Map:
             "^": (cm.WALLS.chars, blender(cm.WALLS.hexcode), "black"),
             "<": (cm.LTHAN.chars, blender(cm.LTHAN.hexcode), "black"),
             ">": (cm.GTHAN.chars, blender(cm.GTHAN.hexcode), "black"),
+            "^": (cm.TRAPS.chars, blender(cm.TRAPS.hexcode), "black"),
         }
 
         def evaluate(char):
@@ -412,9 +397,6 @@ class Map:
     def blocked(self, x, y):
         return (x < 0 or y < 0 or x >= self.width 
                 or y >= self.height or self.tilemap[y][x].char in ("#", "+", "%"))
-
-    def explored(self, x, y):
-        return self.explore[y][x] > 0
 
     def _sun(self):
         return self.SUN
@@ -493,18 +475,6 @@ class Map:
             
     def output(self, X, Y, units):
 
-        # character checks
-        def isWalls(c): return c in chars_walls
-        def isPosts(c): return c in chars_posts
-        def isDoors(c): return c in chars_doors
-        def isLamps(c): return c in chars_lamps
-        def isRoads(c): return c in chars_roads
-        def isWater(c): return c in chars_water
-        def isPlant(c): return c in chars_plant
-        def isGrass(c): return c in chars_grass
-        def isHouse(c): return c in chars_house
-        def isFloor(c): return c in chars_floor
-
         def scroll(position, screen, worldmap):
             """
             @position: current position of player 1D axis
@@ -529,8 +499,6 @@ class Map:
         cxe = cx + self.map_display_width-14
         cye = cy + self.map_display_height-2
 
-        #fg_fog = "#ff202020"
-        # daytime= True if self._sun() else False
         daytime = False
         fg_fog = "grey"
         bg_fog = "#ff000000"
@@ -544,19 +512,6 @@ class Map:
 
             # height should total 24 units
             for y in range(cy, cye):
-                # need to check if light is out
-                # if daytime:
-                #     # sun causes everything to be lit
-                #     lit = fog_levels[3]
-                #     level = ""
-                # else:
-                #     # check if the square is lighted and the light strength
-                #     lit = self.lit(x, y)
-                #     level = fog_levels[3]
-
-                #blocks are visible if the sun is up or in range of a lightable object
-                # visible = lit
-                #level = fog_levels[max(5-level, 0)] if level else fog_levels[min(0, level)]
 
                 if x == X and y == Y:
                     # Current position holds your position
@@ -568,17 +523,6 @@ class Map:
                     lit = self.lit(x, y)
                     ch = positions[(x, y)].i
                     col = positions[(x, y)].c if lit == 2 else "black"
-
-                #     if daytime:
-                #         level = ""
-                #         unit = positions[(x,y)]
-                #         ch = unit.i
-                #         col = unit.c
-
-                #     else:
-                #         level = "" if visible else "darkest "
-                #         ch = "@" if visible else self.square(x, y).char
-                #         col = "orange" if visible else fg_fog
 
                 # Current position holds an item
                 # elif self.square(x, y).items:
@@ -598,8 +542,8 @@ class Map:
                 #     ch = self.square(x, y).char
                 #     col = "white"
 
-                # all other environment features
                 else:
+                    # all other environment features
                     lit = self.lit(x, y)
                     if lit:
                         if lit == 2:
@@ -611,7 +555,7 @@ class Map:
                     else:
                         ch, col, bkgd = " ", "black", None
 
-                ch = ch if len(str(ch)) > 1 else chr(toInt(palette[ch]))
+                # ch = ch if len(str(ch)) > 1 else chr(toInt(palette[ch]))
 
                 try:        
                     yield (x-cx, y-cy, col, ch, None)
