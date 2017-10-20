@@ -90,9 +90,13 @@ class World:
     }
 
     geo_legend = {
-        (200, 191, 231): ("city(elven)", "&", ("#FFFF00",)),
+        # (200, 191, 231)
+        (200, 191, 231): ("city(elven)", "&", ("#FF8844",)),
+        # : ("asdf", "+", ("#000000",)),
+        (153, 217, 234): ("fort(dwarf)", "#", ("#FF00FF",)),
+        (163, 73, 164): ("city(elven)", "&", ("#FFFF00",)),
         (237, 28, 36): ("city(human)", "2302", ("#00fF00",)),
-        (136, 0, 21): ("fort(dw/or)", "#", ("#FF0000",)),
+        (136, 0, 21): ("fort(orcen)", "o", ("#FF0000",)),
         # (239, 228, 176): ("shore", "2261", ("#FFFFCC", "#FFFFE0")),
         (255, 255, 255): ("mnts(high)", "005E", ("#D3D3D3",)),
         (195, 195, 195): ("mnts(med)", "2229", ("#C0C0C0",)),
@@ -126,7 +130,7 @@ class World:
     tile = namedtuple("Tile", "char color land territory tcol kingdom kcol enterable")
 
     def __init__(self):
-        self.pointer = (0, 0)
+        self.pointer = list(World.capitals('Renmar'))
 
         # level zero is world level -- going "down" increments the level variable
         self.level = 0
@@ -364,7 +368,6 @@ class World:
                         char = chr(int(char, 16))
                 
                 yield (i-vx[0], j-vy[0], color, char)
-    """
     def testdraw(self):
         '''probably should only be called on main script'''
         def scroll(position, screen, worldmap):
@@ -461,13 +464,13 @@ class World:
                     term.bkcolor("black")
 
             else:
-                if (x, y) not in self.map_data.keys():
+                if self.map_data[y][x]:
                     term.puts(center("nodata  ", GW), GH//2, "NO DATA")    
                 else:
                     # self.level += 1
                     print(self.level)
                     term.puts(center("nodata  ", GW), GH//2, "LOAD MAP")    
-                    dungeon = self.map_data[(x, y)]
+                    dungeon = self.map_data[y][x]
                     xx, yy = dungeon.width//2, dungeon.height//2
                     dungeon.fov_calc([(xx, yy, 5),])
                     for i, j, lit, ch, bkgd in list(dungeon.output(xx, yy, [])):
@@ -497,16 +500,18 @@ class World:
                 if term.state(term.TK_SHIFT) and self.enterable(x, y):
                     print('entering')                
                     self.level += 1
-                    if (x, y) not in self.map_data.keys():
-                        print('no data')
-                        # if it is a city
-                        if (x, y) in self.enterable_legend.keys():
-                            self.add_city(x, y, GW, GH)
+                    print('LEVEL: ',self.level)
+                    # if self.map_data[y][x] == 
+                    #     print('no data')
+                    #     # if it is a city
+                    #     if self.map_data[y][x] == None:
+                    #         self.add_city(x, y, GW, GH)
 
             elif k == term.TK_COMMA:
-                if term.state(term.TK_SHIFT):
+                if term.state(term.TK_SHIFT) and self.enterable(x, y):
                     print('exitting')                
                     self.level -= 1
+                    print('LEVEL: ',self.level)
 
 
             # terminal zooming
@@ -543,7 +548,6 @@ class World:
             self.pointer[0] = max(min(x, self.w-1), 0)
             self.pointer[1] = max(min(y, self.h), 1)
             self.level = max(min(self.level, 1), -1)
-    """
 if __name__ == "__main__":
     # FH, FW, GH, GW = 8, 8, 25, 40
     setup()
@@ -551,7 +555,7 @@ if __name__ == "__main__":
     setup_font('Ibm_cga', FW, FH)
     term.set("window: size={}x{}, cellsize=auto".format(GW, GH))
 
-    world = World(None) # adding character which will be passed down everywhere
+    world = World() # adding character which will be passed down everywhere
     world.load(
         "./assets/worldmap.png", 
         "./assets/worldmap_territories.png",
