@@ -415,15 +415,36 @@ def new_game(character=None):
         map_box()
 
     def interactStairs(x, y, k):
+        nonlocal dungeon
         """Allows interactions with stairs"""
         print("INTERACTSTAIRS")
         if k is ">":
             print("Trying to go down")
-            gamelog.add("Going up the stairs")
-        else:
             gamelog.add("Going down the stairs")
-
+            if not dungeon.hasSublevel():
+                sublevel = Map(build())
+                sublevel.addParent(dungeon)
+                dungeon.addSublevel(Map(build()))
+                dungeon.addSublevel(sublevel)
+            print()
+            dungeon = dungeon.getSublevel()
+            player.moveZAxis(1)
+            player.resetMapPos(*dungeon.getExit())
+        else:
+            gamelog.add("Going up the stairs")
+            player.moveZAxis(-1)
+            print("ZAXIS AFTER GOING UP STAIRS: ", player.zAxis)
+            dungeon = dungeon.getParent()
+            if isinstance(dungeon, World):
+                dungeon = None
+                player.resetMapPos(0, 0)
+            else:
+            # if player.zAxis > 0:
+                player.resetMapPos(*dungeon.getEntrance())
+            # elif player.zAxis == 0:
+                
     def enterMap():
+
         '''World Action:
         Logic:
             if at world level, check if there exists a map
@@ -463,7 +484,11 @@ def new_game(character=None):
                     player.resetMapPos(*location.getExit())
                     # print('PP:',player.mapPosition())
                     # print('Exit', location.getExit())
+                location.addParent(calabaston)
                 calabaston.add_location(location, *(player.worldPosition()))
+            else:
+                player.resetMapPos(*calabaston.get_location(*player.worldPosition()).getExit())
+
         elif player.zAxis == 0:
             print("Map Level 0")
             player.moveZAxis(1)
@@ -488,14 +513,15 @@ def new_game(character=None):
             pass
             
 
-    def exitMap():
-        if player.mapPosition() == dungeon.getExit():
-            player.moveZAxis(-1)
-        else:
-            print('not standing on stairs')
+    # Uneeded since you cant exit WorldMap
+    # def exitMap():
+    #     if player.mapPosition() == dungeon.getExit():
+    #         player.moveZAxis(-1)
+    #     else:
+    #         print('not standing on stairs')
 
     world_actions={
-        '<': exitMap,
+        # '<': exitMap,
         '>': enterMap
     }
     def processWorldAction(key):
@@ -521,16 +547,10 @@ def new_game(character=None):
             actions[key](x, y, key)
         elif key in ("<"):
             print('exit')
-            if term.state(term.TK_SHIFT):
-                exitMap()
-            else:
-                actions[key](x, y, key)
+            actions[key](x, y, key)
         elif key in (">"):
             print('enter')
-            if term.state(term.TK_SHIFT):
-                enterMap()
-            else:
-                actions[key](x, y, key)
+            actions[key](x, y, key)
         elif key in ("t"):
             actions[key](x, y)
         elif key in ("i"):
@@ -701,6 +721,7 @@ def new_game(character=None):
     proceed = True
     # lr = 5
     lights = []
+    dungeon = None
     while proceed:
         term.clear()
         if player.zAxis == -1:
@@ -721,12 +742,16 @@ def new_game(character=None):
             else:
                 print('do nothing')
 
-        elif player.zAxis == 0:
+        else: # player.zAxis == 0:
             print('DUNGEON PLAYER LEVEL: ', player.zAxis)
 
             print('-- In MAP --')
             # City, Wilderness, Level 0 Dungeon
-            dungeon = calabaston.map_data[player.wy][player.wx]
+            if dungeon == None:
+                dungeon = calabaston.map_data[player.wy][player.wx]
+                if player.zAxis > 0:
+                    for i in range(player.zAxis):
+                        dungeon = dungeon.getSublevel()
             status_box()
             # border()
             log_box()
@@ -736,11 +761,11 @@ def new_game(character=None):
                 processAction(player.mx, player.my, a)
             else:
                 key_process(x, y)
-        else:
-            # dungeon = calabaston.map_data[player.wx][player]
-            # for i in range(player.zAxis):
-                # dungeon = dungeon.getSubLevel()
-            print('you in a new dungeon now"')
+        # else:
+        #     # dungeon = calabaston.map_data[player.wx][player]
+        #     # for i in range(player.zAxis):
+        #         # dungeon = dungeon.getSubLevel()
+        #     print('you in a new dungeon now"')
 
     player.dump()
     return False

@@ -333,6 +333,24 @@ class Map:
                         return i, j
             return 'Doesnt have a sublevel?'
 
+    def hasParent(self, parent):
+        return hasattr(self, 'parent')
+
+    def addParent(self, parent):
+        self.parent = parent
+
+    def getParent(self):
+        return self.parent
+
+    def hasSublevel(self):
+        return hasattr(self, 'sublevel')
+
+    def addSublevel(self, sublevel):
+        self.sublevel = sublevel
+
+    def getSublevel(self):
+        return self.sublevel
+
     def fill(self, d, w, h):
         # Light.Unexplored, Explored, Visible
         tile = namedlist("Tile", "char color bkgd visible walkable items")

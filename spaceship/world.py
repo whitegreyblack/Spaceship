@@ -304,6 +304,9 @@ class World:
     def mapAt(self, x, y):
         return self.map_data[y][x] != None
 
+    def get_location(self, x, y):
+        return self.map_data[y][x]
+
     def add_location(self, location, x, y):
         print(x)
         print(y)
