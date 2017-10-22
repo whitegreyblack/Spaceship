@@ -54,6 +54,8 @@ key_actions={
     term.TK_F1: action("f1", "func_key"),
     term.TK_F2: action("f2", "func_key"),
     term.TK_COMMA: action(",", "pickup"),
+    term.TK_PERIOD: action(">", "enter"),
+    term.TK_COMMA: action("<", "exit"),
 }
 
 world_key_actions = {

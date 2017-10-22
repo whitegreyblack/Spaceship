@@ -6,12 +6,12 @@ all: test lint clean
 .PHONY: clean
 clean: clean-logs
 	rm -rf *.orig~
-	rm -rf *.pyc~
+	rm -rf *.pyc
 	rm -rf */__pycache__
 	rm -rf *.stackdump~
 
 clean-logs:
-	rm -rf logs/*.txt~
+	rm -rf logs/*.txt
 
 lint-flake: lint-flake-source lint-flake-tests
 

@@ -9,6 +9,7 @@ from spaceship.setup import setup, setup_font
 from spaceship.maps import stringify
 from textwrap import wrap
 # from objects import Map
+from spaceship.tools import bresenhams
 from random import choice
 from PIL import Image
 import time
@@ -17,7 +18,7 @@ import shelve
 
 class World:
     # world dictionaries used in map legends
-    enterables = ("2302", "#", "&")
+    enterables = ("2302", "#", "&", "+", "o")
     river_legend = {
         0: "2022",
         1: "2551",
@@ -90,19 +91,26 @@ class World:
     }
 
     geo_legend = {
-        (200, 191, 231): ("city(elven)", "&", ("#FFFF00",)),
-        (237, 28, 36): ("city(human)", "2302", ("#00fF00",)),
-        (136, 0, 21): ("fort(dw/or)", "#", ("#FF0000",)),
+        (200, 191, 231): ("city(elven)", "&", ("#FF8844",)),
+        # : ("asdf", "+", ("#000000",)),
+        (153, 217, 234): ("fort(dwarf)", "#", ("#FF00FF",)),
+        (163, 73, 164): ("city(elven)", "&", ("#FFFF00",)),
+        # (237, 28, 36): ("city(human)", "2302", ("#00fF00",)),
+        (237, 28, 36): ("city(human)", "+", ("#00fF00",)),
+        (136, 0, 21): ("fort(orcen)", "o", ("#FF0000",)),
         # (239, 228, 176): ("shore", "2261", ("#FFFFCC", "#FFFFE0")),
-        (255, 255, 255): ("mnts(high)", "005E", ("#D3D3D3",)),
-        (195, 195, 195): ("mnts(med)", "2229", ("#C0C0C0",)),
+        (255, 255, 255): ("mnts(high)", "005E", ("#FFFFFF",)),
+        # (195, 195, 195): ("mnts(med)", "2229", ("#C0C0C0",)),
+        (195, 195, 195): ("mnts(med)", "n", ("#C0C0C0",)),
+
         (127, 127, 127): ("mnts(low)", "n", ("#808080", "#A9A9A9",)),
         (185, 122, 87): ("hills", "2022", ("#C3B091", "#826644")),
         (181, 230, 29): ("forest", "0192", ("#228B22", "#74C365")),
         (34, 177, 76): ("dark woods", "00A5", ("#006400","#568203",)),
         (255, 201, 14):("plains", ".", ("#FFBF00",)),
         (255, 127, 39): ("plains", ".", ("#FFBD22",)),
-        (255, 242, 0): ("fields", "2261", ("#FFBF00",)),
+        # (255, 242, 0): ("fields", "2261", ("#FFBF00",)),
+        (255, 242, 0): ("fields", "=", ("#FFBF00",)),
         (255, 174, 201): ("deserts", "~", ("#F0AC82",)),
         (112, 146, 190): ("rivers", "~", ("#30FFFF",)),
         (63, 72, 204): ("lakes", "2248", ("#3088FF",)),
@@ -123,10 +131,16 @@ class World:
         (255, 174, 201): ("Beast Nation", "#ff88ff"),
     }
 
+    dungeon_names = {
+        (12, 52): "Pig Beach",
+        (20, 57): "Beach Cave",
+        (22, 50): "Small Dungeon",
+    }
+
     tile = namedtuple("Tile", "char color land territory tcol kingdom kcol enterable")
 
     def __init__(self):
-        self.pointer = (0, 0)
+        self.pointer = list(World.capitals('Renmar'))
 
         # level zero is world level -- going "down" increments the level variable
         self.level = 0
@@ -135,6 +149,7 @@ class World:
         self.world_position = []
         self.map_position = []
         self.name = "Calabaston"
+        self._dungeons = set()
 
     @staticmethod
     def capitals(capital):
@@ -195,6 +210,10 @@ class World:
 
                 # deal with geography properties first
                 land, char, colors = self.geo_legend[(gr, gg, gb)]
+                
+                # add to dungeons list
+                if char == "*":
+                    self._dungeons.add((i,j))
 
                 if len(colors) > 1:
                     color = choice(colors)
@@ -218,13 +237,36 @@ class World:
                 row.append(self.tile(char, color, land, territory, tcolor, kingdom, kcolor, enterable))
             self.data.append(row)
         self.colorize()
-
+        # self.buildroads()
+        print('dungones loaded')
         # empty map data only holds the top level maps -- each map will hold their own sublevel maps
         self.map_data = [[None for _ in range(self.w)] for _ in range(self.h)]
         
-        return self
-
+    def buildroads(self):
+        # "Tiphmore": (42, 62),
+        # "Dun Badur": (83, 9),
+        # "Aurundel": (41, 20),
+        # "Renmar": (16, 46),
+        # "Lok Gurrah": (72, 51),    
+        connections = (
+            ((12, 52), (16, 46)),
+            ((22, 50), (16, 46)),
+            ((26, 57), (20, 57)),
+            ((26, 57), (22, 50)),
+        )
+        # (12, 52): "Pig Beach",
+        # (20, 57): "Beach Cave",
+        # (22, 50): "Small Dungeon",
+        for c in connections:
+            points = bresenhams(*c)
+            for i, j in points[1:len(points)-1]:
+                print(i, j)
+                _, _, l, t, c, k, kc, e = self.data[j][i]
+                print(l)
+                self.data[j][i] = self.tile("o","#483C32", "road", t, c, k, kc, e)    
+            
     def colorize(self):
+        '''Colorize modifies lakes and rivers with new characters and colors'''
         def neighbors(i, j, ilim, jlim, v):
             val = 0
             for ii in range(ilim[0], ilim[1]):
@@ -301,8 +343,14 @@ class World:
                 yield ch, col, d, i
                 i += 1
 
+    def dungeon(self, x, y):
+        return (x, y) in self._dungeons
+
     def mapAt(self, x, y):
         return self.map_data[y][x] != None
+
+    def get_location(self, x, y):
+        return self.map_data[y][x]
 
     def add_location(self, location, x, y):
         print(x)
@@ -361,7 +409,7 @@ class World:
                         char = chr(int(char, 16))
                 
                 yield (i-vx[0], j-vy[0], color, char)
-    """
+
     def testdraw(self):
         '''probably should only be called on main script'''
         def scroll(position, screen, worldmap):
@@ -438,7 +486,7 @@ class World:
 
             term.clear()
             if self.level <= 0:
-                print(self.level)
+                # print(self.level)
                 if current == "g":
                     geotop()
                 elif current == "p":
@@ -446,25 +494,35 @@ class World:
                 else:
                     geoking()
                 term.puts(x-cx, y-cy+1, '[c=white]@[/c]')
+                print("ENTERABLE?: ", x, y, self.enterable(x, y))
                 if self.enterable(x, y):
+                    print("ENTERABLE")
                     term.bkcolor('white')
                     term.puts(0, GH-1, "#"*GW)    
-                    try:                
-                        term.puts(center("  "+self.enterable_legend[(x, y)], GW), GH-1, 
+                    # try:                
+                    term.puts(center("  "+self.enterable_legend[(x, y)], GW), GH-1, 
                             "[c=black]"+self.enterable_legend[(x, y)]+"[/c]")
-                    except KeyError:
-                        term.puts(center("  "+"Some town : to be named", GW), GH-1, 
-                            "[c=black]Some town : to be named[/c]")
+                    term.bkcolor('black')
+                    # except KeyError:
+                    #     term.puts(center("  "+"Some town : to be named", GW), GH-1, 
+                    #         "[c=black]Some town : to be named[/c]")
                     term.bkcolor("black")
+                elif self.dungeon(x, y):
+                    term.bkcolor('white')
+                    term.puts(0, GH-1, "#"*GW)
+                    term.puts(center("  "+self.dungeon_names[(x, y)], GW), GH-1,
+                            "[c=black]"+self.dungeon_names[(x, y)]+"[/c]")
+                    term.bkcolor('black')
+
 
             else:
-                if (x, y) not in self.map_data.keys():
+                if self.map_data[y][x]:
                     term.puts(center("nodata  ", GW), GH//2, "NO DATA")    
                 else:
                     # self.level += 1
-                    print(self.level)
+                    # print(self.level)
                     term.puts(center("nodata  ", GW), GH//2, "LOAD MAP")    
-                    dungeon = self.map_data[(x, y)]
+                    dungeon = self.map_data[y][x]
                     xx, yy = dungeon.width//2, dungeon.height//2
                     dungeon.fov_calc([(xx, yy, 5),])
                     for i, j, lit, ch, bkgd in list(dungeon.output(xx, yy, [])):
@@ -473,7 +531,7 @@ class World:
             term.refresh()
 
             k = term.read()
-            print(k)
+            # print(k)
             while k in (term.TK_SHIFT, term.TK_ALT, term.TK_CONTROL):
                 k = term.read()
 
@@ -489,21 +547,23 @@ class World:
             elif k == term.TK_K and current != "k":
                 current = "k"
 
-            # level switching
-            elif k == term.TK_PERIOD:
-                if term.state(term.TK_SHIFT) and self.enterable(x, y):
-                    print('entering')                
-                    self.level += 1
-                    if (x, y) not in self.map_data.keys():
-                        print('no data')
-                        # if it is a city
-                        if (x, y) in self.enterable_legend.keys():
-                            self.add_city(x, y, GW, GH)
+            # # level switching
+            # elif k == term.TK_PERIOD:
+            #     if term.state(term.TK_SHIFT) and self.enterable(x, y):
+            #         print('entering')                
+            #         self.level += 1
+            #         print('LEVEL: ',self.level)
+            #         # if self.map_data[y][x] == 
+            #         #     print('no data')
+            #         #     # if it is a city
+            #         #     if self.map_data[y][x] == None:
+            #         #         self.add_city(x, y, GW, GH)
 
-            elif k == term.TK_COMMA:
-                if term.state(term.TK_SHIFT):
-                    print('exitting')                
-                    self.level -= 1
+            # elif k == term.TK_COMMA:
+            #     if term.state(term.TK_SHIFT) and self.enterable(x, y):
+            #         print('exitting')                
+            #         self.level -= 1
+            #         print('LEVEL: ',self.level)
 
 
             # terminal zooming
@@ -525,7 +585,6 @@ class World:
 
             # movement key handling
             elif k == term.TK_UP and self.level == 0:
-                print(self.level, 'walking')
                 if self.walkable(x, y-1):
                     y -= 1
             elif k == term.TK_DOWN and self.level == 0:
@@ -540,7 +599,6 @@ class World:
             self.pointer[0] = max(min(x, self.w-1), 0)
             self.pointer[1] = max(min(y, self.h), 1)
             self.level = max(min(self.level, 1), -1)
-    """
 if __name__ == "__main__":
     # FH, FW, GH, GW = 8, 8, 25, 40
     setup()
@@ -548,7 +606,7 @@ if __name__ == "__main__":
     setup_font('Ibm_cga', FW, FH)
     term.set("window: size={}x{}, cellsize=auto".format(GW, GH))
 
-    world = World(None) # adding character which will be passed down everywhere
+    world = World() # adding character which will be passed down everywhere
     world.load(
         "./assets/worldmap.png", 
         "./assets/worldmap_territories.png",

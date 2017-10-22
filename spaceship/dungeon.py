@@ -260,34 +260,55 @@ def decay(dungeon, n=1000):
     a well-formed dungeon and then start decay for n turns"""
     def cellauto(i, j):
         val = 0
+        # check the value of the cell
+        doors = set()
+        space = set()
         for ii in range(-1, 2):
             for jj in range(-1, 2):
                 if (i, j) != (i+ii, j+jj):
                     if dungeon[j+jj][i+ii] == '%':
                         val += 1
+                    if dungeon[j+jj][i+ii] == '+':
+                        doors.add((i+ii, j+jj))
+                    if dungeon[j+jj][i+ii] == ' ':
+                        space.add((i+ii, j+jj))
 
-        if (val >= 4) and point_oob_ext(i+ii, j+jj, (2, X_TEMP-2), (2, Y_TEMP-2)):
+        # turn the cell into a floor cell if surrounded by 4 walls or more
+        if (val >= 4 or val <= 1) and point_oob_ext(i+ii, j+jj, (2, X_TEMP-2), (2, Y_TEMP-2)):
             # if choice([i in range(0, 2)]):
             decayed[j][i] = '.'
             floors.append((i, j))
+            for di, dj in doors:
+                decayed[dj][di] = '.'
+                floors.append((di, dj))
             '''
             else:
                 decayed[j][i] = '~'
                 liquid.append((i, j))
             '''
-            for ii in range(-1, 2):
-                for jj in range(-1, 2):
-                    within = point_oob_ext(i+ii, j+jj, (0, X_TEMP-1), (0, Y_TEMP-1))
-                    if within and decayed[j+jj][i+ii] == ' ':
-                        decayed[j+jj][i+ii] = '%'
-                        walls.append((i+ii, j+jj))         
+            # make sure any free spaces bordering changed cell turn into wall tiles
+            # for ii in range(-1, 2):
+            #     for jj in range(-1, 2):
+            #         within = point_oob_ext(i+ii, j+jj, (0, X_TEMP-1), (0, Y_TEMP-1))
+            #         if within and decayed[j+jj][i+ii] == ' ':
+            #             decayed[j+jj][i+ii] = '%'
+            #             walls.append((i+ii, j+jj))         
+            for si, sj in space:
+                within = point_oob_ext(si, sj, (0, X_TEMP-1), (0, Y_TEMP-1))
+                if within:
+                    decayed[sj][si] = '%'
+                    walls.append((si, sj))
+            
+            return True
+        return False
 
     def cellpath(p1, p2):
+        # creates a bsf from two points
         frontier = set()
         frontier.add((0, p1))
         camefrom = { p1:None }
         costfrom = { p1:0 }
-        print(p1, p2)
+        # print(p1, p2)
         found = False
         for j in range(len(decayed)):
             for i in range(len(decayed[0])):
@@ -307,7 +328,7 @@ def decay(dungeon, n=1000):
             current = min(sorted(frontier))
             frontier.remove(current)
             curnode = current[1]
-            print(curnode)
+            # print(curnode)
             i, j = curnode
             if curnode == p2:
                 camefrom[neighbor] = curnode
@@ -350,9 +371,11 @@ def decay(dungeon, n=1000):
                 term.puts(*(camefrom[start]), '[c=#00c0c0]/[/c]')
                 start = camefrom[start]
                 term.refresh()
-    decayed = deepcopy(dungeon)
+
     walls, floors, doors, liquid, spaces, other = [], [], [], [], [], []
+    decayed = deepcopy(dungeon)
     print(len(dungeon[0]), len(dungeon))
+
     # get the dungeon features
     for j in range(len(dungeon)):
         for i in range(len(dungeon[0])):
@@ -370,11 +393,25 @@ def decay(dungeon, n=1000):
     # decay of walls
     shuffle(walls)
     shuffle(floors)
+
     print(len(walls))
+    # wallsToFloor = 0
+    # while wallsToFloor <= 50:
+    #     changed = cellauto(*walls[wallsToFloor%len(walls)])
+    #     if changed:
+    #         wallsToFloor += 1
+
+    changed = 0
     for i in range(len(walls)):
         # decay wall
         i, j = walls[i%len(walls)]
-        cellauto(i, j)
+        val = cellauto(i, j)
+        if val:
+            changed += 1
+    
+    print(changed)
+
+    # for i in range(len(floors)):
 
     # find 2nd and 3rd largest voids -> pools of water
     # space_copy = spaces
@@ -440,7 +477,24 @@ def decay(dungeon, n=1000):
     '''
     return decayed
 
-def build(rot=0):
+def buildTerrain(tiletype, entropy=0, buildopts=None):
+    if buildopts:
+        rocks = None
+        water = None
+        trees = None
+    
+    vegatation = .33
+    if tiletype == "plains":
+        vege_chars = (",","`","Y","T","0192", "00A5",";")
+        terrain = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
+        for i in range(X_TEMP):
+            for j in range(Y_TEMP):
+                terrain[j][i] = choice(vege_chars)
+        return terrain
+    else:
+        raise ValueError("Tiletype not implemented")
+
+def buildDungeon(rot=0):
     # constructor -- (-1 = impassable) start with a map of walls
     # dungeon = [[-1 for _ in range(x)] for _ in range(y)]
     dungeon = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
@@ -485,9 +539,16 @@ def build(rot=0):
             array[j] = distance(center(rooms[i]), center(rooms[j]))
         graph[i] = array
 
+    # build a mst graph between rooms
     graph = mst(graph)
 
-    # so the boxes and paths have been drawn
+    # =========================================================================
+    # basically these steps draw the rooms onto a tilemap
+    # anything before is pre rendering (drawing)
+    # anything after is post rendering 
+    # =========================================================================
+    
+    # so the boxes and paths have been rendered
     # now append dimensions to the map and create a dungeon
     # floors then rooms then walls
 
@@ -556,13 +617,27 @@ def build(rot=0):
         floor_clear.remove((i, j))
         dungeon[j][i] = '^'
 
-    i, j = choice(floor_clear)
-    floor_clear.remove((i, j))
-    dungeon[j][i] = '>'
+    upStairs, downStairs = choice(floor_clear), choice(floor_clear)
+    while distance(upStairs, downStairs) <= 15:
+        upStairs, downStairs = choice(floor_clear), choice(floor_clear)
 
-    i, j = choice(floor_clear)
-    floor_clear.remove((i, j))
-    dungeon[j][i] = '<'
+    # remove upstairs from floors and replace char
+    floor_clear.remove(upStairs)
+    ui, uj = upStairs
+    dungeon[uj][ui] = '<'
+
+    # remove downstairs from floors and replace char
+    floor_clear.remove(downStairs)
+    di, dj = downStairs
+    dungeon[dj][di] = '>'
+
+    # i, j = choice(floor_clear)
+    # floor_clear.remove((i, j))
+    # dungeon[j][i] = '>'
+
+    # i, j = choice(floor_clear)
+    # floor_clear.remove((i, j))
+    # dungeon[j][i] = '<'
 
     # for j in range(len(dungeon)):
     #     for i in range(len(dungeon[0])):
@@ -583,8 +658,8 @@ def build(rot=0):
     print("Rooms:", len(rooms))
 
     if rot:
-        for i in range(1):
-            dungeon = decay(dungeon, n=rot)
+        dungeon = decay(dungeon, n=rot)
+
     return dungeon
 
 def draw(box):
@@ -600,12 +675,7 @@ def draw(box):
     term.refresh()
 
 def test_dungeon():
-    rx1, rx2 = 0, 0
-    ry1, ry2 = 0, 0
-    while rx1 == rx2 and abs(rx1-rx2) < X_TEMP//4:
-        rx1, ry1 = randint(0, X_TEMP), 0
-        rx2, ry2 = randint(0, X_TEMP), Y_TEMP-1
-    dungeon = build(1000)
+    dungeon = build(2000)
     x, y = 0, 0
 
     for j in range(len(dungeon)):
@@ -631,12 +701,19 @@ def test_dungeon():
                 term.puts(i, j, dungeon[j][i])
             
     term.puts(x, y, '[c=#00C0C0]@[/c]')
-    term.puts(rx1, ry1, "[c=#0080C0]~[/c]")
-    if randint(-2, 2) > 0:
-        for i in range(-3, 4):
-            for i,j in bresenhams((rx1+i,ry1), (rx2+i, ry2)):
-                term.puts(i, j, "[c=#0080C0]~[/c]")
-        term.puts(rx2, ry2, "[c=#0080C0]~[/c]")
+
+    # River runs red
+    # rx1, rx2 = 0, 0
+    # ry1, ry2 = 0, 0
+    # while rx1 == rx2 and abs(rx1-rx2) < X_TEMP//4:
+    #     rx1, ry1 = randint(0, X_TEMP), 0
+    #     rx2, ry2 = randint(0, X_TEMP), Y_TEMP-1
+    # term.puts(rx1, ry1, "[c=#0080C0]~[/c]")
+    # if randint(-2, 2) > 0:
+    #     for i in range(-3, 4):
+    #         for i,j in bresenhams((rx1+i,ry1), (rx2+i, ry2)):
+    #             term.puts(i, j, "[c=#0080C0]~[/c]")
+    #     term.puts(rx2, ry2, "[c=#0080C0]~[/c]")
     term.refresh()
     term.read()
         
