@@ -8,8 +8,13 @@ from spaceship.constants import MENU_SCREEN_HEIGHT as SCREEN_HEIGHT
 from bearlibterminal import terminal as term
 from spaceship.setup import setup
 from collections import namedtuple
+from win32api import GetSystemMetrics
+
 
 def options():
+    def fullscreen():
+        print(GetSystemMetrics(0), GetSystemMetrics(1))
+
     width, height = SCREEN_WIDTH, SCREEN_HEIGHT
     options = namedtuple("Options", "fs to dc")
     full_screen = False
@@ -19,6 +24,17 @@ def options():
     option_title = "options"
     option_index = 0
     option_options = ['full screen', 'tile output', 'dynamic coloring']
+    option_suboptions = [
+        [
+            "80x25", "80x50", "160x25", "160x50"
+        ],
+        [
+            "8x16", "8x8", "16x16"
+        ],
+        [
+            "Colorblind Mode", "Full Colors", "Highlights Only"
+        ]
+    ]
     '''
     (o) fullscreen [unchecked] 
     (v) fullscreen [checked]
@@ -56,6 +72,8 @@ def options():
                         full_colors,)
             else:
                 print("You picked the options for {}".format(option_options[option_index]))
+                if option_index == 0:
+                    fullscreen()
         elif code in (term.TK_CLOSE, term.TK_ESCAPE):
             return options(
                 full_screen,
