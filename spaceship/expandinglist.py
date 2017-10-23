@@ -7,18 +7,23 @@ from screen_functions import center
 class Option:
     def __init__(self, title, opt=None, subopts=None):
         self.title = title
+        # opt list
         self.opts = [opt] if opt else []
-        self.subopts = [subopts] if subopts else []
-        self.expand = []
+        # opt index
         self.optindex = 0
-        self.suboptindex = 0
+        # subopt list
+        self.subopts = [subopts] if subopts else []
+        # subopt pointers
+        self.suboptindex = [-1] if subopts else []
+        # list of expansions
+        self.expand = set()
 
     def expansion(self, n: int):
         if n > len(self.opts):
             raise IndexError('invalid index for expansion')
 
         if n not in self.expand:
-            self.expand.append(n)
+            self.expand.add(n)
 
     def collapse(self, n: int):
         if n > len(self.opts):
@@ -30,21 +35,37 @@ class Option:
     def add_opt(self, opt: str, subopts: list):
         self.opts.append(opt)
         self.subopts.append(subopts)
+        self.suboptindex.append(-1)
 
     def move_pointer(self, move: int):
-        self.optindex = max(min(self.optindex+move, len(self.opts)-1), 0)
+        self.optindex = self.optindex+move
+
+
+    def correct_pointer(self):
+        self.optindex = max(min(self.optindex, len(self.opts)-1), 0)
     
     def move_subpointer(self, move: int):
-        self.suboptindex += move
+        self.suboptindex[self.optindex] += move
         
-        if self.suboptindex < 0:
-            self.suboptindex = -1
-            self.optindex -= 1
+        # # moving up
+        # if self.suboptindex < 0:
+        #     self.move_pointer(-1)
+        #     if self.optindex == 0:
+        #         self.suboptindex = len(self.subopts[self.optindex]) - 1
+        #     else:
+        #         self.suboptindex = 0
 
-        elif self.suboptindex > len(self.subopts[self.optindex]) - 1:
-            self.suboptindex = -1
-            self.optindex += 1
-        # self.suboptindex = max(min(self.suboptindex+move, len(self.subopts[self.optindex])-1), 0)
+        # # moving down
+        # elif self.suboptindex > len(self.subopts[self.optindex]) - 1:
+        #     self.move_pointer(1)
+        #     if self.optindex == len(self.opts):
+        #         self.suboptindex = len(self.subopts[self.optindex]) - 1
+        #     else:
+        #         self.suboptindex = -1
+        # # self.suboptindex = max(min(self.suboptindex+move, len(self.subopts[self.optindex])-1), 0)
+    
+    def correct_subpointer(self):
+        self.suboptindex = max(min(self.suboptindex[self.optindex], len(self.subopts[self.optindex])-1), 0)
 
 if __name__ == "__main__":
     term.open()
@@ -58,6 +79,7 @@ if __name__ == "__main__":
 
     while True:
         term.clear()
+        print(option.optindex, option.suboptindex)
         term.puts(center(option.title, term.state(term.TK_WIDTH)), 1, option.title)
         height = 3
         for index, opt in enumerate(option.opts):
@@ -65,21 +87,24 @@ if __name__ == "__main__":
             expanded = index in option.expand
             if selected:
                 # newopt = "[c=#00ffff]{}[/c]".format(opt) if selected else opt
-                if expanded:
-                    opt = "[[-]]" + opt
-                else:
-                    opt = "[[+]]" + "[c=#00ffff]{}[/c]".format(opt) if selected else opt
+                # if expanded:
+                #     opt = "[[-]]" + opt
+                # else:
+                opt = "[[+]] " + "[c=#00ffff]{}[/c]".format(opt) if selected else opt
             else:
                 if expanded:
-                    opt = "[[-]]" + opt
+                    opt = "[[-]] " + opt
                 else:
-                    opt = "[[+]]" + opt
+                    opt = "[[+]] " + opt
             term.puts(term.state(term.TK_WIDTH)//5, height, opt)
             height += 1
             if expanded:
                 for index, subopt in enumerate(option.subopts[index]):
                     if selected:
-                        subopt = "[c=#00ffff]{}[/c]".format(subopt) if index == option.suboptindex else subopt
+                        if index == option.suboptindex[option.optindex]:
+                            subopt = "[c=#00ffff]{}[/c]".format(subopt)
+                        else:
+                             subopt = subopt
                     term.puts(term.state(term.TK_WIDTH)//4, height, subopt)
                     height += 1
 
@@ -92,13 +117,17 @@ if __name__ == "__main__":
                 option.collapse(option.optindex)
             else:
                 option.expansion(option.optindex)
+                # option.move_subpointer(1)
         elif key == term.TK_DOWN:
             if len(option.expand):
                 option.move_subpointer(1)
+                option.correct_subpointer()
             else:
                 option.move_pointer(1)
+                option.correct_pointer()
         elif key == term.TK_UP:
             if len(option.expand):
                 option.move_subpointer(-1)
             else:
                 option.move_pointer(-1)
+                option.correct_pointer()
