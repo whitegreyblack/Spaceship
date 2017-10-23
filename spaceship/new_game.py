@@ -269,6 +269,12 @@ def new_game(character=None):
     ]
 
     def openInventory():
+        def backback():
+            term.clear()
+            for i in range(SCREEN_WIDTH):
+                term.puts(i, 1, '#')
+            term.puts(center('backback  ', SCREEN_WIDTH), 1, ' Backpack ')
+            
         def inventory():
             term.clear()
             for i in range(SCREEN_WIDTH):
@@ -296,6 +302,9 @@ def new_game(character=None):
             code = term.read()
             if code in (term.TK_ESCAPE, term.TK_I,):
                 break
+            elif code == term.TK_V:
+                # this is where our backback will be accessed
+                pass
             elif code == term.TK_UP:
                 if current_range > 0: current_range -= 1
             elif code == term.TK_DOWN:
@@ -461,14 +470,14 @@ def new_game(character=None):
                 # print("in legend", player.worldPosition() in calabaston.enterable_legend.keys())
                 # print(player.worldPosition())
                 if player.worldPosition() in calabaston.enterable_legend.keys():
-                    filename = calabaston.enterable_legend[player.worldPosition()].lower().replace(' ','_')
-                    filename = "./assets/maps/" + filename + ".png"
+                    fileloc = calabaston.enterable_legend[player.worldPosition()].lower().replace(' ','_')
+                    filename = "./assets/maps/" + fileloc + ".png"
                     # print(filename)
                     try:
                         location = Map(stringify(filename), SCREEN_WIDTH, SCREEN_HEIGHT)
                     except FileNotFoundError:
                         # print('no file of that name')
-                        raise
+                        raise FileNotFoundError("Map for {} not yet implemented".format(fileloc))
                     # basically spawn in town center
                     player.resetMapPos(location.width//2, location.height//2)
 
