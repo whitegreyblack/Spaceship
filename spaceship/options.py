@@ -11,6 +11,8 @@ from collections import namedtuple
 from win32api import GetSystemMetrics
 
 
+# TODO: expanding list
+
 def options():
     def fullscreen():
         print(GetSystemMetrics(0), GetSystemMetrics(1))
@@ -35,6 +37,8 @@ def options():
             "Colorblind Mode", "Full Colors", "Highlights Only"
         ]
     ]
+    option_closed = "[[+]]"
+    option_opened = "[[-]]"
     '''
     (o) fullscreen [unchecked] 
     (v) fullscreen [checked]
@@ -47,8 +51,14 @@ def options():
 
         # options
         for option, i in zip(option_options, range(len(option_options))):
-            option = "[color=orange]{}[/color]".format(option) if i == option_index else option
-            term.puts(width//8, height//4+i*2, option)
+            if i == option_index:
+                option = "[color=orange]{}[/color]".format(option)
+                status = "[color=orange]{}[/color]".format(option_closed)
+            else:
+                option = option
+                status = option_closed
+            term.puts(width//8-3, height//4+i*2, status)
+            term.puts(width//8+1, height//4+i*2, option)
 
         # back option
         term.puts(center('back', width), height-2, colored('back') if option_index == 3 else 'back')
