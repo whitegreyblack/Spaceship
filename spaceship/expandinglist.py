@@ -65,7 +65,7 @@ class Option:
         # # self.suboptindex = max(min(self.suboptindex+move, len(self.subopts[self.optindex])-1), 0)
     
     def correct_subpointer(self):
-        self.suboptindex = max(min(self.suboptindex[self.optindex], len(self.subopts[self.optindex])-1), 0)
+        self.suboptindex[self.optindex] = max(min(self.suboptindex[self.optindex], len(self.subopts[self.optindex])-1), 0)
 
 if __name__ == "__main__":
     term.open()
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     option = Option("Options Screen")
     option.add_opt("option a", ["suboption 1", "suboption 2", "suboption 3"])
     option.add_opt("option b", ["suboption 1", "suboption 2"])
-
+    option.add_opt("option c", ["suboption 1", "suboption 2", "suboption 3"])
     if not option.opts:
         raise AttributeError("No opts to display")
 
@@ -86,16 +86,16 @@ if __name__ == "__main__":
             selected = index == option.optindex
             expanded = index in option.expand
             if selected:
-                # newopt = "[c=#00ffff]{}[/c]".format(opt) if selected else opt
-                # if expanded:
-                #     opt = "[[-]]" + opt
-                # else:
-                opt = "[[+]] " + "[c=#00ffff]{}[/c]".format(opt) if selected else opt
+                if expanded:
+                    opt = "[[-]] " + "[c=#00ffff]{}[/c]".format(opt) if selected else opt
+                else:
+                    opt = "[[+]] " + "[c=#00ffff]{}[/c]".format(opt) if selected else opt
             else:
                 if expanded:
                     opt = "[[-]] " + opt
                 else:
                     opt = "[[+]] " + opt
+                    
             term.puts(term.state(term.TK_WIDTH)//5, height, opt)
             height += 1
             if expanded:
@@ -114,7 +114,12 @@ if __name__ == "__main__":
             break
         elif key == term.TK_ENTER:
             if option.optindex in option.expand:
-                option.collapse(option.optindex)
+                if option.suboptindex[option.optindex] != -1:
+                    print('SELECTED: {}|{}'.format(
+                        option.opts[option.optindex], 
+                        option.subopts[option.optindex][option.suboptindex[option.optindex]]))
+                else:
+                    option.collapse(option.optindex)
             else:
                 option.expansion(option.optindex)
                 # option.move_subpointer(1)
