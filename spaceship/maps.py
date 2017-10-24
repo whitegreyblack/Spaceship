@@ -15,6 +15,7 @@ from textwrap import wrap
 in creating procedural worlds"""
 
 # Key-value pairs are mapped from characters to color tuples
+# used when converting maps into color images
 picturfy_chars = {
     "#": (0,0,0),
     "%": (136, 0, 21),
@@ -31,6 +32,7 @@ picturfy_chars = {
 }
 
 # Key-Value pairs are tuples to tuple pertaining to color and character mapping
+# used in converting colored images into string maps
 stringify_chars = { 
     (0, 0, 0): "#",
     (136, 0, 21): "%",

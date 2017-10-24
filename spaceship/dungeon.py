@@ -485,7 +485,7 @@ def buildTerrain(tiletype, entropy=0, buildopts=None):
     
     vegatation = .33
     if tiletype == "plains":
-        vege_chars = (",","`","Y","T","0192", "00A5",";")
+        vege_chars = (",","`","Y","T","\"",";")
         terrain = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
         for i in range(X_TEMP):
             for j in range(Y_TEMP):

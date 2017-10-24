@@ -1,7 +1,12 @@
 from collections import namedtuple
 
-class Charmap:
-    charmap = namedtuple("Charmap", "chars hexcode")
+charmap = namedtuple("Charmap", "chars hexcode")
+
+class WildernessCharmap:
+    GRASS=charmap([",", ";", "`","\""], ("#56ab2f", "#a8e063"))
+    TREES=charmap(["Y", "T", "f"], ("#994C00", "#994C00"))
+
+class DungeonCharmap:
     GRASS=charmap([",", ";"], ("#56ab2f", "#a8e063"))
     HOUSE=charmap(["="], ("#ffffff", "#ffffff"))
     TILES=charmap(["."], ("#808080", "#C0C0C0"))

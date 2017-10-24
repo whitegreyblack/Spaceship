@@ -11,7 +11,8 @@ from spaceship.constants import GAME_SCREEN_HEIGHT as sh
 from spaceship.constants import GAME_SCREEN_WIDTH as sw
 from spaceship.maps import hextup, hexone, output, blender, gradient, evaluate_blocks
 from spaceship.setup import toInt
-from spaceship.charmap import Charmap as cm
+from spaceship.charmap import DungeonCharmap as dcm
+from spaceship.charmap import WildernessCharmap as wcm
 from spaceship.world import World
 # TODO: Maybe move map to a new file called map and create a camera class?
 
@@ -69,11 +70,42 @@ class Player:
     def worldPosition(self):
         return self.wx, self.wy
 
+    def saveWorldPos(self):
+        self.lastWorldPosition = self.wx, self.wy
+
     def mapPosition(self):
         return self.mx, self.my
 
+    def saveMapPos(self):
+        self.lastMapPosition = self.mx, self.my
+
     def resetMapPos(self, x, y):
         self.mx, self.my = x, y
+
+    def getWorldPosOnEnter(self):
+        if not hasattr(self, "lastWorldPosition"):
+            raise AttributeError("Cant call this func without a lastWorldPosition")
+
+        def direction(x, y):
+            return (-2*x)/2, (-2*y)/2
+
+        # directions = {
+        #     (-1, -1): (1, 1),
+        #     (-1, 0): (1, .5),
+        #     (-1, 1): (0, 0),
+        #     (0, -1): (.5, 0),
+        #     (0, 1): (.5, 1),
+        #     (1, -1): (0, 0),
+        #     (1, 0): (0, .5),
+        #     (1, 1): (0, 1),
+        # }
+        try:
+            print(self.wx - self.lastWorldPosition[0], self.wy - self.lastWorldPosition[1])
+            # print(directions[self.wx - self.lastWorldPosition[0], self.wy - self.lastWorldPosition[1]])
+            return direction(self.wx - self.lastWorldPosition[0], self.wy - self.lastWorldPosition[1])
+        except KeyError:
+            raise KeyError("direction not yet added or calculations were wrong")
+    
 
     def calculate_initial_stats(self):
         stats = tuple(s+g+r+c for s , g, r, c 
@@ -277,8 +309,11 @@ class Map:
                 [0,  1,  1,  0,  0, -1, -1,  0],
                 [1,  0,  0,  1, -1,  0,  0, -1]
             ]
+    
+    tile = namedlist("Tile", "char color bkgd visible walkable items")
 
-    def __init__(self, data, GW=80, GH=40):
+    def __init__(self, data, maptype, GW=80, GH=40):
+        self.maptype = maptype
         self.data, self.height, self.width = self.dimensions(data)
         print("MAP: {} {}".format(self.width, self.height))
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
@@ -353,32 +388,44 @@ class Map:
 
     def fill(self, d, w, h):
         # Light.Unexplored, Explored, Visible
-        tile = namedlist("Tile", "char color bkgd visible walkable items")
+        plainschar = {
+            ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
+            ",": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
+            ";": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
+            "`": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
+            "\"": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
+            "Y": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
+            "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
+            "f": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
+        }
+
         locchar={
-            ".": (cm.TILES.chars, blender(cm.TILES.hexcode), "black"),
-            ",": (cm.GRASS.chars, blender(cm.GRASS.hexcode), "black"),
-            "#": (cm.WALLS.chars, blender(cm.WALLS.hexcode), "black"),
-            "~": (cm.WATER.chars, blender(cm.WATER.hexcode), "black"),
-            "+": (cm.DOORS.chars, blender(cm.DOORS.hexcode), "black"),
-            "x": (cm.POSTS.chars, blender(cm.POSTS.hexcode), "black"), 
-            "|": (cm.PLANT.chars, blender(cm.PLANT.hexcode), "black"),
-            "o": (cm.LAMPS.chars, blender(cm.LAMPS.hexcode), "black"),
-            ":": (cm.ROADS.chars, blender(cm.ROADS.hexcode), "black"),
-            "=": (cm.HOUSE.chars, blender(cm.HOUSE.hexcode), "black"),
-            " ": (' ', '#000000',"black"),
-            "%": (cm.WALLS.chars, blender(cm.WALLS.hexcode), "black"),
-            "^": (cm.WALLS.chars, blender(cm.WALLS.hexcode), "black"),
-            "<": (cm.LTHAN.chars, blender(cm.LTHAN.hexcode), "black"),
-            ">": (cm.GTHAN.chars, blender(cm.GTHAN.hexcode), "black"),
-            "^": (cm.TRAPS.chars, blender(cm.TRAPS.hexcode), "black"),
+            ".": (dcm.TILES.chars, blender(dcm.TILES.hexcode)),
+            ",": (dcm.GRASS.chars, blender(dcm.GRASS.hexcode)),
+            "#": (dcm.WALLS.chars, blender(dcm.WALLS.hexcode)),
+            "~": (dcm.WATER.chars, blender(dcm.WATER.hexcode)),
+            "+": (dcm.DOORS.chars, blender(dcm.DOORS.hexcode)),
+            "x": (dcm.POSTS.chars, blender(dcm.POSTS.hexcode)), 
+            "|": (dcm.PLANT.chars, blender(dcm.PLANT.hexcode)),
+            "o": (dcm.LAMPS.chars, blender(dcm.LAMPS.hexcode)),
+            ":": (dcm.ROADS.chars, blender(dcm.ROADS.hexcode)),
+            "=": (dcm.HOUSE.chars, blender(dcm.HOUSE.hexcode)),
+            " ": (' ', '#000000'),
+            "%": (dcm.WALLS.chars, blender(dcm.WALLS.hexcode)),
+            "^": (dcm.WALLS.chars, blender(dcm.WALLS.hexcode)),
+            "<": (dcm.LTHAN.chars, blender(dcm.LTHAN.hexcode)),
+            ">": (dcm.GTHAN.chars, blender(dcm.GTHAN.hexcode)),
+            "^": (dcm.TRAPS.chars, blender(dcm.TRAPS.hexcode)),
         }
 
         def evaluate(char):
             try:
-                t = locchar[char]
+                if self.maptype == "plains":
+                    t = plainschar[char]
+                else:
+                    t = locchar[char]
             except KeyError:
-                print('Eval Error:',char)
-                pass
+                raise KeyError("Evaluate Plains Map: {} not in keys".format(char))
             return t
         
         rows = []
@@ -387,10 +434,10 @@ class Map:
         # for row in d:
             cols = []
             for col in row:
-                chars, hexcodes, bkgd = evaluate(col)
+                chars, hexcodes = evaluate(col)
                 light = Light.Unexplored
                 walkable = col in chars_block
-                cols.append(tile(choice(chars), choice(hexcodes), bkgd, light, walkable, []))
+                cols.append(self.tile(choice(chars), choice(hexcodes), "black", light, walkable, []))
             rows.append(cols)
         return rows
 
