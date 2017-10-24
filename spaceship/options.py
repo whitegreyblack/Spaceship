@@ -3,92 +3,204 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 import spaceship.constants as consts
 from spaceship.screen_functions import center, longest, colored
-from spaceship.constants import MENU_SCREEN_WIDTH as SCREEN_WIDTH
-from spaceship.constants import MENU_SCREEN_HEIGHT as SCREEN_HEIGHT
 from bearlibterminal import terminal as term
 from spaceship.setup import setup
 from collections import namedtuple
 from win32api import GetSystemMetrics
 
+class Option:
+    def __init__(self, title, opt=None, subopts=None):
+        self.title = title
+        # opt list
+        self.opts = [opt] if opt else []
+        # opt index
+        self.optindex = 0
+        # subopt list
+        self.subopts = [subopts] if subopts else []
+        # subopt pointers
+        self.suboptindex = [-1] if subopts else []
+        # list of expansions
+        self.expand = set()
+
+    def option(self):
+        return self.opts[self.optindex]
+
+    def suboption(self):
+        return self.subopts[self.optindex][self.suboptindex[self.optindex]]
+
+    def suboptsize(self):
+        return len(self.subopts[self.optindex])
+
+    def expansion(self, n: int):
+        if n > len(self.opts):
+            raise IndexError('invalid index for expansion')
+
+        if n not in self.expand:
+            self.expand.add(n)
+
+    def expand_all(self):
+        for i in range(len(self.opts)):
+            if i not in self.expand:
+                self.expand.add(i)
+
+    def collapse(self, n: int):
+        if n > len(self.opts):
+            raise IndexError('invalid index for collapse')
+
+        if n in self.expand:
+            self.expand.remove(n)
+
+    def collapse_all(self):
+        self.expand = set()
+
+    def add_opt(self, opt: str, subopts: list):
+        self.opts.append(opt)
+        self.subopts.append(subopts)
+        self.suboptindex.append(-1)
+
+    def move_pointer(self, move: int):
+        self.optindex = self.optindex+move
+
+    def correct_pointer(self):
+        self.optindex = max(min(self.optindex, len(self.opts)-1), 0)
+    
+    def move_subpointer(self, move: int):
+        self.suboptindex[self.optindex] += move
+    
+    def correct_subpointer(self):
+        self.suboptindex[self.optindex] = max(
+            min(self.suboptindex[self.optindex], len(self.subopts[self.optindex])-1), -1)
 
 # TODO: expanding list
+option = Option("Options Screen")
+option.add_opt("Screen Size", ["80x25", "80x50", "160x50"])
+option.add_opt("Cell Size", ["8x16", "8x8", "16x16"])
+option.add_opt("Font Choice", ["IBM_CGA", "Andale", "Courier", "Unscii-8", "Unscii-8-thin", "VeraMono"])
+option.add_opt("Coloring", ["Dynamic", "Dark", "Light", "Colorblind"])
 
 def options():
-    def fullscreen():
-        print(GetSystemMetrics(0), GetSystemMetrics(1))
+    def parse_screensize(p, screensize):
+        print(screensize, p)
+        sx, sy = list(map(lambda x: int(x), screensize.split('x')))
+        if (p['gx'], p['gy']) != (sx, sy):
+            p['gx'], p['gy'] = sx, sy
+            return p, True
+        return p, False
 
-    width, height = SCREEN_WIDTH, SCREEN_HEIGHT
-    options = namedtuple("Options", "fs to dc")
-    full_screen = False
-    tile_output = "8x16"
-    full_colors = False
+    def parse_cellsize(p, cellsize):
+        print(cellsize, p)
+        print(term.font('Courier'))
+        cx, cy = list(map(lambda x: int(x), cellsize.split('x')))
+        if (p['cx'], p['cy']) != (cx, cy):
+            p['cx'], p['cy'] = (cx, cy)
+            return p, True
+        return p, False
 
-    option_title = "options"
-    option_index = 0
-    option_options = ['full screen', 'tile output', 'dynamic coloring']
-    option_suboptions = [
-        [
-            "80x25", "80x50", "160x25", "160x50"
-        ],
-        [
-            "8x16", "8x8", "16x16"
-        ],
-        [
-            "Colorblind Mode", "Full Colors", "Highlights Only"
-        ]
-    ]
-    option_closed = "[[+]]"
-    option_opened = "[[-]]"
-    '''
-    (o) fullscreen [unchecked] 
-    (v) fullscreen [checked]
-    '''
+    def parse_fonts(p, font):
+        print(p)
+        if option == "default":
+            term.set('font: default, size={}'.format(p['cx']))
+        else:
+            term.set("font: ./fonts/{}.ttf, size={}{}".format(
+                font, 
+                p['cx'], 
+                'x'+str(p['cy']) if p['cy'] != p['cx'] else ''))
+
+
+    def reset_screen(properties):
+        print(properties)
+        term.set("window: size={}x{}, cellsize={}x{}".format(*(v for _, v in properties.items())))
+        term.refresh()
+
+    prop = {
+        'gx': term.state(term.TK_WIDTH),
+        'gy': term.state(term.TK_HEIGHT),
+        'cx': term.state(term.TK_CELL_WIDTH),
+        'cy': term.state(term.TK_CELL_HEIGHT),
+    }
+
     while True:
 
         term.clear()
+
         # options title
-        term.puts(center(option_title, width), 3, option_title.upper())
+        term.puts(center(option.title, term.state(term.TK_WIDTH)), 1, option.title)
 
         # options
-        for option, i in zip(option_options, range(len(option_options))):
-            if i == option_index:
-                option = "[color=orange]{}[/color]".format(option)
-                status = "[color=orange]{}[/color]".format(option_closed)
+        height = 3
+        print(option.optindex, option.suboptindex)
+        for index, opt in enumerate(option.opts):
+            selected = index == option.optindex
+            expanded = index in option.expand
+            if selected:
+                opt = ("[[-]] " if expanded else "[[+]] ") + "[c=#00ffff]{}[/c]".format(opt)
             else:
-                option = option
-                status = option_closed
-            term.puts(width//8-3, height//4+i*2, status)
-            term.puts(width//8+1, height//4+i*2, option)
+                opt = ("[[-]] " if expanded else "[[+]] ") + opt
 
-        # back option
-        term.puts(center('back', width), height-2, colored('back') if option_index == 3 else 'back')
+            term.puts(term.state(term.TK_WIDTH)//5, height, opt)
+            height += 1
+            if expanded:
+                for index, subopt in enumerate(option.subopts[index]):
+                    if selected:
+                        if index == option.suboptindex[option.optindex]:
+                            subopt = "[c=#00ffff]{}[/c]".format(subopt)
+                        else:
+                             subopt = subopt
+                    term.puts(term.state(term.TK_WIDTH)//4+3, height, subopt)
+                    height += 1
+
+        term.puts(term.state(term.TK_WIDTH)//5, height+1, "{}".format(term.state(term.TK_WIDTH)))
+        term.puts(term.state(term.TK_WIDTH)//5, height+2, "{}".format(term.state(term.TK_HEIGHT)))
+        term.puts(term.state(term.TK_WIDTH)//5, height+3, "{}".format(term.state(term.TK_CELL_WIDTH)))
+        term.puts(term.state(term.TK_WIDTH)//5, height+4, "{}".format(term.state(term.TK_CELL_HEIGHT)))
+
         term.refresh()
-        code = term.read()
+        key = term.read()
 
-        if code in (term.TK_UP, term.TK_DOWN):
-            if code == term.TK_UP:
-                option_index -= 1
+        if key in (term.TK_CLOSE, term.TK_Q, term.TK_ESCAPE):
+            break
+        elif key == term.TK_ENTER:
+            if option.optindex in option.expand:
+                # action stuff
+                if option.suboptindex[option.optindex] != -1:
+                    print('SELECTED: {}|{}'.format(
+                        option.opts[option.optindex], 
+                        option.subopts[option.optindex][option.suboptindex[option.optindex]]))
+                    if option.option() == "Screen Size":                       
+                        print(prop)
+                        prop, changed = parse_screensize(prop, option.suboption())
+                        if changed:
+                            print('changing screen properties')
+                            reset_screen(prop)
+                        print(prop)
+                    elif option.option() == "Cell Size":
+                        print(prop)
+                        prop, changed = parse_cellsize(prop, option.suboption())
+                        if changed:
+                            print('changing cell properties')
+                            reset_screen(prop)
+                        print(prop)
+                    elif option.option() == "Font Choice":
+                        parse_fonts(prop, option.suboption())
+                else:
+                    option.collapse(option.optindex)
             else:
-                option_index += 1
-            if not 0 <= option_index < len(option_options)+1:
-                option_index = max(0, min(option_index, len(option_options)))
-        elif code in (term.TK_ENTER,):
-            print(option_index)
-            if option_index == 3:
-                print("You picked the options for {}".format('Quit'))
-                return options(
-                        full_screen,
-                        tile_output,
-                        full_colors,)
+                option.expansion(option.optindex)
+                # option.move_subpointer(1)
+        elif key == term.TK_DOWN:
+            if len(option.expand):
+                option.move_subpointer(1)
+                option.correct_subpointer()
             else:
-                print("You picked the options for {}".format(option_options[option_index]))
-                if option_index == 0:
-                    fullscreen()
-        elif code in (term.TK_CLOSE, term.TK_ESCAPE):
-            return options(
-                full_screen,
-                tile_output,
-                full_colors,)
+                option.move_pointer(1)
+                option.correct_pointer()
+        elif key == term.TK_UP:
+            if len(option.expand):
+                option.move_subpointer(-1)
+                option.correct_subpointer()
+            else:
+                option.move_pointer(-1)
+                option.correct_pointer()
 
 if __name__ == "__main__":
     setup()

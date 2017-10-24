@@ -87,9 +87,9 @@ if __name__ == "__main__":
             expanded = index in option.expand
             if selected:
                 if expanded:
-                    opt = "[[-]] " + "[c=#00ffff]{}[/c]".format(opt) if selected else opt
+                    opt = "[[-]] " + "[c=#00ffff]{}[/c]".format(opt)
                 else:
-                    opt = "[[+]] " + "[c=#00ffff]{}[/c]".format(opt) if selected else opt
+                    opt = "[[+]] " + "[c=#00ffff]{}[/c]".format(opt)
             else:
                 if expanded:
                     opt = "[[-]] " + opt
@@ -125,7 +125,7 @@ if __name__ == "__main__":
                 # option.move_subpointer(1)
         elif key == term.TK_DOWN:
             if len(option.expand):
-                option.move_subpointer(1)
+                option.move_subpointer(1)e`
                 option.correct_subpointer()
             else:
                 option.move_pointer(1)
