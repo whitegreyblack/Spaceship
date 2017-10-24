@@ -31,6 +31,11 @@ class Option:
     def suboptsize(self):
         return len(self.subopts[self.optindex])
 
+    def reset_all(self):
+        self.optindex = 0
+        self.suboptindex = [-1 for i in range(len(self.opts))]
+        self.collapse_all()
+
     def expansion(self, n: int):
         if n > len(self.opts):
             raise IndexError('invalid index for expansion')
@@ -74,8 +79,8 @@ class Option:
 # TODO: expanding list
 option = Option("Options Screen")
 option.add_opt("Screen Size", ["80x25", "80x50", "160x50"])
-option.add_opt("Cell Size", ["8x16", "8x8", "16x16"])
-option.add_opt("Font Choice", ["IBM_CGA", "Andale", "Courier", "Unscii-8", "Unscii-8-thin", "VeraMono"])
+option.add_opt("Cell Size", ["Auto", "8x16", "8x8", "16x16"])
+option.add_opt("Font Choice", ["Default", "IBM_CGA", "Andale", "Courier", "Unscii-8", "Unscii-8-thin", "VeraMono"])
 option.add_opt("Coloring", ["Dynamic", "Dark", "Light", "Colorblind"])
 
 def options():
@@ -88,28 +93,51 @@ def options():
         return p, False
 
     def parse_cellsize(p, cellsize):
-        print(cellsize, p)
-        print(term.font('Courier'))
-        cx, cy = list(map(lambda x: int(x), cellsize.split('x')))
-        if (p['cx'], p['cy']) != (cx, cy):
-            p['cx'], p['cy'] = (cx, cy)
-            return p, True
+        if cellsize == "Auto":
+            if p['cx'] != 'Auto':
+                p['cx'], p['cy'] = "auto", None
+                return p, True
+        else:
+            print(cellsize, p)
+            print(term.font('Courier'))
+            cx, cy = list(map(lambda x: int(x), cellsize.split('x')))
+            if (p['cx'], p['cy']) != (cx, cy):
+                p['cx'], p['cy'] = (cx, cy)
+                return p, True
         return p, False
 
     def parse_fonts(p, font):
         print(p)
-        if option == "default":
-            term.set('font: default, size={}'.format(p['cx']))
-        else:
-            term.set("font: ./fonts/{}.ttf, size={}{}".format(
-                font, 
+        if option == "Default":
+            term.set('font: default, size={}{}'.format(
                 p['cx'], 
                 'x'+str(p['cy']) if p['cy'] != p['cx'] else ''))
 
+        else:
+            print(font, p['cx'], p['cy'])
+            if p['cx'] == "auto":
+                cy = 8 if font not in ("Andale, Courier, VeraMono") else 16
+                term.set("font: ./fonts/{}.ttf, size={}{}".format(
+                    font, 
+                    8, cy)) 
+            else:
+                term.set("font: ./fonts/{}.ttf, size={}{}".format(
+                    font, 
+                    p['cx'], 
+                    'x'+str(p['cy']) if p['cy'] != p['cx'] else ''))
+            # p['cx'], p['cy'] = "auto", None
+            reset_screen(p)
 
     def reset_screen(properties):
         print(properties)
-        term.set("window: size={}x{}, cellsize={}x{}".format(*(v for _, v in properties.items())))
+        if properties['cx'] == "auto":
+            term.set("window: size={}x{}, cellsize={}".format(
+                properties['gx'],
+                properties['gy'],
+                properties['cx'],
+            ))
+        else:
+            term.set("window: size={}x{}, cellsize={}x{}".format(*(v for _, v in properties.items())))
         term.refresh()
 
     prop = {
@@ -138,7 +166,7 @@ def options():
                 opt = ("[[-]] " if expanded else "[[+]] ") + opt
 
             term.puts(term.state(term.TK_WIDTH)//5, height, opt)
-            height += 1
+            height += term.state(term.TK_HEIGHT)//25
             if expanded:
                 for index, subopt in enumerate(option.subopts[index]):
                     if selected:
@@ -147,8 +175,8 @@ def options():
                         else:
                              subopt = subopt
                     term.puts(term.state(term.TK_WIDTH)//4+3, height, subopt)
-                    height += 1
-
+                    height += term.state(term.TK_HEIGHT)//25
+            height += term.state(term.TK_HEIGHT)//25
         term.puts(term.state(term.TK_WIDTH)//5, height+1, "{}".format(term.state(term.TK_WIDTH)))
         term.puts(term.state(term.TK_WIDTH)//5, height+2, "{}".format(term.state(term.TK_HEIGHT)))
         term.puts(term.state(term.TK_WIDTH)//5, height+3, "{}".format(term.state(term.TK_CELL_WIDTH)))
