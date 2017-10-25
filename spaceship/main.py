@@ -11,7 +11,7 @@ if __name__ == "__main__":
     setup()
     # setup_font('Andale', 8)
     setup_font('Ibm_cga', 8, 8)
-    term.set('window: size=80x50, cellsize=auto, title="Spaceship"')    
+    term.set('window: size=80x50, cellsize=auto, title="Spaceship", fullscreen=false')    
     # FH, FW, GH, GW = 16, 16, 24, 40
     # setup_font('Ibm_cga', FW, FH)
     # term.set("window: size={}x{}, cellsize=auto".format(GW, GH))

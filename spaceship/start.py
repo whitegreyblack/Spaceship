@@ -44,7 +44,15 @@ def start():
         step = (y-x) // (term.state(term.TK_HEIGHT) // 8)
         print(step)
         return [x+z for z in range(x, y, step)]
-    
+
+    def update_start_screen():
+        if term.state(term.TK_HEIGHT) <= 25:
+            title_height = 1
+        else:
+            title_height = term.state(term.TK_HEIGHT)//5
+        print("TITLE HEIGHT: ", title_height)
+        return title_height
+
     def start_new_game():
         cc = create_character()
         if "Exit" not in cc.value:
@@ -52,10 +60,8 @@ def start():
         return cc.proceed
 
     proceed = True
-    if term.state(term.TK_HEIGHT) <= 24:
-        title_height = 1
-    else:
-        title_height = term.state(term.TK_HEIGHT)//5
+    title_height = update_start_screen()
+
     print(title_height)
     title_index = -1
     options_height = calc_option_heights(title_height+len(GTAS.split('\n')), 3)
@@ -65,7 +71,9 @@ def start():
     title_options = ["[[c]] continue", '[[n]] new game', '[[o]] options', '[[q]] quit']
     width, height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
     option_height = 5
+
     while proceed:
+        print(title_height, options_height)
         term.clear()
 
         # title header
@@ -94,6 +102,8 @@ def start():
                 proceed = start_new_game()
             elif code == term.TK_O:
                 options()
+                title_height = update_start_screen()
+                options_height = calc_option_heights(title_height+len(GTAS.split('\n')), 3)
             else:
                 proceed = False
 
@@ -112,8 +122,11 @@ def start():
                 proceed = start_new_game()
             elif title_index == 2:
                 options()
+                title_height = update_start_screen()
+                options_height = calc_option_heights(title_height+len(GTAS.split('\n')), 3)
             else:
-                title_index = 0
+                proceed = False
+
         elif code in (term.TK_CLOSE, term.TK_ESCAPE):
             proceed = False        
     
