@@ -369,7 +369,7 @@ class World:
         pass
 
     def walkable(self, i, j):
-        if 0 <= i < self.w-1 and 0 <= j < self.h-1:
+        if 0 <= i < self.w and 0 <= j < self.h:
             for landtype in ("sea", "mnts", "lake"):
                 if landtype in self.data[j][i].land:
                     return False

@@ -65,13 +65,13 @@ def start():
     title_develop = 'Developed using BearLibTerminal'
     title_options = ["[[c]] continue", '[[n]] new game', '[[o]] options', '[[q]] quit']
     title_height = update_start_screen()
-    # width, height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
     options_height = calc_option_heights(title_height+len(GTAS.split('\n')), 3)
     option_height = 5
 
     while proceed:
         width, height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
         print(title_height, options_height)
+        
         term.clear()
 
         # title header

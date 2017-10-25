@@ -153,13 +153,14 @@ def new_game(character=None):
         return [space(x+i,y+j) for i, j in list(num_movement.values())]
 
     def key_process_world(x, y):
+        walkBlock = "walked into {}"
         tx = player.wx + x
         ty = player.wy + y
 
-        inbounds = 0 <= tx < calabaston.w and 0 <= ty < calabaston.h
+        # inbounds = 0 <= tx < calabaston.w and 0 <= ty < calabaston.h
         walkable = calabaston.walkable(tx, ty)
 
-        if walkable and inbounds:
+        if walkable:
             print('MOVING ON WORLD MAP')
             player.saveWorldPos()
             print("SAVED LAST WORLD POSITION")
@@ -172,9 +173,15 @@ def new_game(character=None):
             if blocked:
                 # =============  START WALK LOG  =================================
                 gamelog.add("Cannot go there")
+                print("cannot go there", tx, ty)
                 # ===============  END WALK LOG  =================================
             elif not inbounds:
                 gamelog.add(walkBlock.format("the edge of the map"))
+                print("cannot go there", tx, ty)
+            
+            elif not walkable:
+                print("not walkable")
+                print("cannot go there", calabaston.w, calabaston.h, tx, ty)
 
     def key_process(x, y):
         walkChars = {
@@ -193,19 +200,24 @@ def new_game(character=None):
         # for unit in units:
         #     positions[unit.pos()] = unit
         # unit_pos = [(unit.x, unit.y) for unit in units]
+
+        # 3 variables involved in walking
+        # OUT-OF-BOUNDS -- is player within the map?
+        # WALKABLE -- is the tile a walkable tile?
+        # BLOCKEd -- is the tile blocked?
         unit_pos = []
 
-        inbounds = 0 <= tposx < dungeon.width-1 \
-            and 0 <= tposy < dungeon.height-1
+        # inbounds = 0 <= tposx < dungeon.width \
+        #     and 0 <= tposy < dungeon.height
+        print("DUNGEON BOUNDS: ", dungeon.width, dungeon.height, tposx, tposy)
 
         occupied = (tposx, tposy) in unit_pos
-
         walkable = dungeon.walkable(tposx, tposy)
-        print('Walk In', walkable, inbounds)
+        print('Walk In', walkable)
         print('CURRENT LOCATION: ', player.mapPosition())
 
         # (not blocked) and (not occupied) and (inbounds)
-        if walkable and inbounds:
+        if walkable:
             print('Moving on Dungeon')
             player.saveMapPos()
             print("saved last map position")
@@ -235,8 +247,8 @@ def new_game(character=None):
                 # else:
                 #     gamelog.add(walkBlock.format(unit.r))
                 pass
-            elif not inbounds:
-                gamelog.add(walkBlock.format("the edge of the map"))
+            # elif not inbounds:
+            #     gamelog.add(walkBlock.format("the edge of the map"))
 
         # refresh units
     #     units = list(filter(lambda u: u.h > 0, units))
@@ -498,8 +510,8 @@ def new_game(character=None):
                         location = Map(buildTerrain(tile.land), tile.land)
                         x, y = player.getWorldPosOnEnter()
                         print(x, y)
-                        x = int((location.width-1) * x)
-                        y = int((location.height-1) * y)
+                        x = int(location.width * x - 1)
+                        y = int(location.height * y - 1)
                         print("location w,h", location.width, location.height)
                         print(x, y)
                         player.resetMapPos(x, y)
@@ -801,7 +813,7 @@ def new_game(character=None):
         #         # dungeon = dungeon.getSubLevel()
         #     print('you in a new dungeon now"')
 
-    player.dump()
+    # player.dump()
     return False
 # End New Game Menu
 

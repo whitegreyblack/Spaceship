@@ -43,23 +43,25 @@ chars_block= ("#", "+", "o", "x", "~", "%")
 class Player:
     def __init__(self, character):
         # unpack everything here
-        self.name = character.name[0].upper() + character.name[1:]
-        self.setupHome(character.home)
-        self.gold = character.gold
-        self.level = 1
         self.exp = 0
+        self.level = 1
+        self.sight = 12
         self.advexp = 80
-        self.base_stats = character.stats
-        self.gender = character.gender
-        self.gender_bonus = character.gbonus
-        self.race = character.race
-        self.race_bonus = character.rbonus
         self.job = character.job
-        self.job_bonus = character.jbonus
+        self.race = character.race
+        self.gold = character.gold
+        self.gender = character.gender
         self.skills = character.skills
+        self.base_stats = character.stats
+        self.job_bonus = character.jbonus
+        self.race_bonus = character.rbonus
         self.equipment = character.equipment
         self.inventory = character.inventory
-        self.sight = 25
+        self.gender_bonus = character.gbonus
+        self.name = character.name[0].upper() + character.name[1:]
+
+        # functions after unpacking
+        self.setupHome(character.home)
         self.calculate_initial_stats()
 
     def setupHome(self, home):
@@ -87,22 +89,13 @@ class Player:
             raise AttributeError("Cant call this func without a lastWorldPosition")
 
         def direction(x, y):
-            return (-2*x)/2, (-2*y)/2
+            return (x+1)/2, (y+1)/2
 
-        # directions = {
-        #     (-1, -1): (1, 1),
-        #     (-1, 0): (1, .5),
-        #     (-1, 1): (0, 0),
-        #     (0, -1): (.5, 0),
-        #     (0, 1): (.5, 1),
-        #     (1, -1): (0, 0),
-        #     (1, 0): (0, .5),
-        #     (1, 1): (0, 1),
-        # }
         try:
             print(self.wx - self.lastWorldPosition[0], self.wy - self.lastWorldPosition[1])
-            # print(directions[self.wx - self.lastWorldPosition[0], self.wy - self.lastWorldPosition[1]])
-            return direction(self.wx - self.lastWorldPosition[0], self.wy - self.lastWorldPosition[1])
+            print(self.lastWorldPosition[0]-self.wx, self.lastWorldPosition[1]-self.wy)
+            print(direction(self.wx - self.lastWorldPosition[0], self.wy - self.lastWorldPosition[1]))
+            return direction(self.lastWorldPosition[0]-self.wx, self.lastWorldPosition[1]-self.wy)
         except KeyError:
             raise KeyError("direction not yet added or calculations were wrong")
     
@@ -449,7 +442,9 @@ class Map:
         return self.tilemap[y][x]
 
     def walkable(self, x, y):
-        return self.tilemap[y][x].char not in chars_block
+        if 0 <= x < self.width and 0 <= y < self.height:
+            return self.tilemap[y][x].char not in chars_block
+        return False
 
     def darken(self, color):
         color = color[3:]
