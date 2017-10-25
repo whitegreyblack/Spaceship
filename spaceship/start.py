@@ -60,19 +60,17 @@ def start():
         return cc.proceed
 
     proceed = True
-    title_height = update_start_screen()
-
-    print(title_height)
     title_index = -1
-    options_height = calc_option_heights(title_height+len(GTAS.split('\n')), 3)
-    print(options_height)
-    title_develop = 'Developed using BearLibTerminal'
     title_version = 'version 0.0.7'
+    title_develop = 'Developed using BearLibTerminal'
     title_options = ["[[c]] continue", '[[n]] new game', '[[o]] options', '[[q]] quit']
-    width, height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
+    title_height = update_start_screen()
+    # width, height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
+    options_height = calc_option_heights(title_height+len(GTAS.split('\n')), 3)
     option_height = 5
 
     while proceed:
+        width, height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
         print(title_height, options_height)
         term.clear()
 
@@ -93,20 +91,19 @@ def start():
         term.refresh()
         code = term.read()
 
-        # key in
-        if code in (term.TK_C, term.TK_N, term.TK_O, term.TK_Q):
-            # branching
-            if code == term.TK_C:
-                proceed = continue_game()
-            elif code == term.TK_N:
-                proceed = start_new_game()
-            elif code == term.TK_O:
-                options()
-                title_height = update_start_screen()
-                options_height = calc_option_heights(title_height+len(GTAS.split('\n')), 3)
-            else:
-                proceed = False
+        # key in (CNOQ, ENTER)
+        if code == term.TK_C or (code == term.TK_ENTER and title_index == 0):
+            proceed = continue_game()
+        elif code == term.TK_N or (code == term.TK_ENTER and title_index == 1):
+            proceed = start_new_game()
+        elif code == term.TK_O or (code == term.TK_ENTER and title_index == 2):
+            options()
+            title_height = update_start_screen()
+            options_height = calc_option_heights(title_height+len(GTAS.split('\n')), 3)
+        elif code == term.TK_Q or (code == term.TK_ENTER and title_index == 3):
+            proceed = False
 
+        # KEYS (UP, DOWN)
         elif code in (term.TK_UP, term.TK_DOWN):
             if code == term.TK_UP:
                 title_index -= 1
@@ -114,22 +111,12 @@ def start():
                 title_index += 1
             if not 0 <= title_index < len(title_options):
                 title_index = max(0, min(title_index, len(title_options)-1)) 
-                
-        elif code in (term.TK_ENTER,):
-            if title_index == 0:
-                proceed = continue_game()
-            elif title_index == 1:
-                proceed = start_new_game()
-            elif title_index == 2:
-                options()
-                title_height = update_start_screen()
-                options_height = calc_option_heights(title_height+len(GTAS.split('\n')), 3)
-            else:
-                proceed = False
 
         elif code in (term.TK_CLOSE, term.TK_ESCAPE):
             proceed = False        
     
+        else:
+            print("Unknown command")
 if __name__ == "__main__":
     term.open()
     setup_font('Ibm_cga', 8, 8)

@@ -191,7 +191,9 @@ def options():
         key = term.read()
 
         if key in (term.TK_CLOSE, term.TK_Q, term.TK_ESCAPE):
+            option.reset_all()
             break
+        
         elif key == term.TK_ENTER:
             if option.optindex in option.expand:
                 # action stuff
@@ -220,6 +222,8 @@ def options():
             else:
                 option.expansion(option.optindex)
                 # option.move_subpointer(1)
+
+        # Arrow keys (UP | DOWN)
         elif key == term.TK_DOWN:
             if len(option.expand):
                 option.move_subpointer(1)
