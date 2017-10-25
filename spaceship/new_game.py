@@ -175,9 +175,9 @@ def new_game(character=None):
                 gamelog.add("Cannot go there")
                 print("cannot go there", tx, ty)
                 # ===============  END WALK LOG  =================================
-            elif not inbounds:
-                gamelog.add(walkBlock.format("the edge of the map"))
-                print("cannot go there", tx, ty)
+            # elif not inbounds:
+            #     gamelog.add(walkBlock.format("the edge of the map"))
+            #     print("cannot go there", tx, ty)
             
             elif not walkable:
                 print("not walkable")
@@ -247,6 +247,7 @@ def new_game(character=None):
                 # else:
                 #     gamelog.add(walkBlock.format(unit.r))
                 pass
+
             # elif not inbounds:
             #     gamelog.add(walkBlock.format("the edge of the map"))
 

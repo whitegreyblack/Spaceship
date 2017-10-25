@@ -75,7 +75,7 @@ def new_name(character) -> (int, str):
 
         elif term.check(term.TK_WCHAR) and len(string) < 30:
             if chr(term.state(term.TK_WCHAR)) not in (
-                '1234567890!@#$%^&&*()-=_+,./<>?\'"[]{}\|~`'):
+                '1234567890!@#$%^&&*()-=_+,./<>?";[]{}\|~`'):
                 string += chr(term.state(term.TK_WCHAR))
             else:
                 invalid = True

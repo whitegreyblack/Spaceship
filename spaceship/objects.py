@@ -38,7 +38,7 @@ chars_key = {
     "house": ["="],
 }
 
-chars_block= ("#", "+", "o", "x", "~", "%")
+chars_block= ("#", "+", "o", "x", "~", "%", "Y", "T")
 
 class Player:
     def __init__(self, character):
@@ -387,9 +387,9 @@ class Map:
             ";": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
             "`": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
             "\"": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
-            "Y": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
-            "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
-            "f": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
+            # "Y": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
+            "T": (choice(wcm.TREES.chars), blender(wcm.TREES.hexcode)),
+            # "f": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
         }
 
         locchar={
@@ -480,7 +480,7 @@ class Map:
 
     def blocked(self, x, y):
         return (x < 0 or y < 0 or x >= self.width 
-                or y >= self.height or self.tilemap[y][x].char in ("#", "+", "%"))
+                or y >= self.height or self.tilemap[y][x].char in chars_block)
 
     def _sun(self):
         return self.SUN
