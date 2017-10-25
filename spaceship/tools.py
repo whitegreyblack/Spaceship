@@ -5,8 +5,15 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 
 import math
 
+# TODO: Move these into more generalized files
 
-def lambdafunc(f, x1, y1, x2, y2):
+def lambdatrue(f, *args, **kwargs):
+    return f(*args, **kwargs)
+
+def lambdafunc(f, x, y):
+    return f(x, y)
+
+def lambdafunctwice(f, x1, y1, x2, y2):
     '''Returns a tuple containing results using parameter function'''
     return (f(x1, x2), f(y1, y2))
 

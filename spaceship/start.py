@@ -117,8 +117,9 @@ def start():
     
         else:
             print("Unknown command")
+
 if __name__ == "__main__":
     term.open()
     setup_font('Ibm_cga', 8, 8)
-    term.set('window: size=80x50, cellsize=auto, title="Spaceship"')    
+    term.set('window: size=80x50, cellsize=auto, title="Spaceship", fullscreen=false')    
     start()
