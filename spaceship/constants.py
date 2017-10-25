@@ -51,8 +51,9 @@ GAME_TITLE_SHORT ='''
 ██║     ██╔══██║██╔══██╗██╔══██║██║    
 ╚██████╗██║  ██║██████╔╝██║  ██║██████╗
  ╚═════╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚═════╝
-        War of the Five Kings
+     Act I: Bones of the Ancestors
 '''[1:]
+# War of the Five Kings
 
 GAME_TITLE_ALT='''\
                                                                                                            

@@ -10,10 +10,10 @@ from textwrap import wrap
 from bearlibterminal import terminal as term
 
 import spaceship.cc_strings as strings
-from spaceship.constants import CM_BORDER_HEIGHT as BORDER_HEIGHT
-from spaceship.constants import CM_BORDER_WIDTH as BORDER_WIDTH
-from spaceship.constants import MENU_SCREEN_HEIGHT as SCREEN_HEIGHT
-from spaceship.constants import MENU_SCREEN_WIDTH as SCREEN_WIDTH
+# from spaceship.constants import CM_BORDER_HEIGHT as BORDER_HEIGHT
+# from spaceship.constants import CM_BORDER_WIDTH as BORDER_WIDTH
+# from spaceship.constants import MENU_SCREEN_HEIGHT as SCREEN_HEIGHT
+# from spaceship.constants import MENU_SCREEN_WIDTH as SCREEN_WIDTH
 from spaceship.continue_game import continue_game
 from spaceship.new_name import new_name
 from spaceship.screen_functions import *
@@ -54,7 +54,7 @@ def create_character():
 
     indices = [0, 0, 0]
     grid = [[3, 26, 48], 5]
-    length = SCREEN_WIDTH//2
+    length = term.state(term.TK_WIDTH)//2
 
     str_title = "Character Creation"
     str_help = "Press (?) for info on a selected race, subrace or class"
@@ -83,15 +83,15 @@ def create_character():
         # border(BORDER_WIDTH, [0], "#")
         # border(BORDER_WIDTH, [10, 39], toChr("2550"))
         term.bkcolor('darkest grey')
-        for i in range(BORDER_WIDTH-2):
+        for i in range((term.state(term.TK_WIDTH)-1)-2):
             term.puts(i+1, 1, ' ')
             term.puts(i+1, 35, ' ')
         for i in range(35):
             term.puts(1, i+1, ' ')
-            term.puts(BORDER_WIDTH-2, i+1, ' ')
+            term.puts((term.state(term.TK_WIDTH)-1)-2, i+1, ' ')
         term.bkcolor('dark brown')
         for i in range(20):
-            term.puts(BORDER_WIDTH//2-10+i, 1, ' ')
+            term.puts((term.state(term.TK_WIDTH)-1)//2-10+i, 1, ' ')
         term.bkcolor('black')
         
     def title():

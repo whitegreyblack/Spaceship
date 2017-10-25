@@ -508,7 +508,8 @@ def new_game(character=None):
                     # build_options = Dungeon.build_options()
                     wilderness = tile.land in ("plains", "dark woods", "hills", "forest", "desert")
                     if wilderness:
-                        location = Map(buildTerrain(tile.land), tile.land)
+                        neighbors = calabaston.accessTileNeighbors(*player.worldPosition())
+                        location = Map(buildTerrain(tile.land, buildopts=neighbors), tile.land)
                         x, y = player.getWorldPosOnEnter()
                         print(x, y)
                         x = int(location.width * x - 1)

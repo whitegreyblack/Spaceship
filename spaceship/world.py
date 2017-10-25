@@ -335,6 +335,20 @@ class World:
     def accessTile(self, i, j):
         return self.data[j][i]
 
+    def accessTileNeighbors(self, i, j):
+        # tile = namedtuple("Tile", "char color land territory tcol kingdom kcol enterable")
+        neighbors = []
+        for jj in range(-1, 2):
+            for ii in range(-1, 2):
+                if (ii, jj) != (0, 0):
+                    try:
+                        neighbors.append(self.data[j+jj][i+ii])
+                    except IndexError:
+                        neighbors.append(self.data[j][i])
+        # make sure we get all neighbors
+        assert len(neighbors) == 8
+        return neighbors
+
     def worldlegend(self):
         i = 0
         for d, ch, colors in self.geo_legend.values():
