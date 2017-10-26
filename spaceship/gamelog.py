@@ -77,7 +77,7 @@ class GameLogger:
             pass
 
     def getHeader(self):
-        return "["+"-".join(filter(lambda x: ":" in x, ctime().split(" ")))+"]:- "
+        return "["+"-".join(filter(lambda x: ":" in x, ctime().split(" ")))+"] :- "
 
     def add(self, message):
         """Adds a message to the stack

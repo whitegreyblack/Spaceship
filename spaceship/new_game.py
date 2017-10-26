@@ -169,16 +169,17 @@ def new_game(character=None):
             # if description:
             #     gamelog.add(description)
         else:
+            # Individually log the specific reason
             gamelog.add('NOT MOVING ON WORLD MAP')
-            if blocked:
+            # if blocked:
                 # =============  START WALK LOG  =================================
-                gamelog.add("Cannot go there {}, {}".format(tx, ty))
+                # gamelog.add("Cannot go there {}, {}".format(tx, ty))
                 # ===============  END WALK LOG  =================================
             # elif not inbounds:
             #     gamelog.add(walkBlock.format("the edge of the map"))
             #     print("cannot go there", tx, ty)
             
-            elif not walkable:
+            if not walkable:
                 gamelog.add("NOT WALKABLE: GW,GH: {},{}, PX,PY: {},{}".format(
                     calabaston.w,
                     calabaston.h,
@@ -213,10 +214,12 @@ def new_game(character=None):
         #     and 0 <= tposy < dungeon.height
         gamelog.add("DUNGEON BOUNDS: DW, DH: {}, {} PX, PY: {} {}".format(
             dungeon.width, 
-            dungeon.height, tposx, tposy))
+            dungeon.height, 
+            tposx, 
+            tposy))
 
         occupied = (tposx, tposy) in unit_pos
-        walkable = dungeon.walkable(tposx, tposy)
+        walkable = not dungeon.blocked(tposx, tposy)
         gamelog.add('Walk In'.format(walkable))
         gamelog.add('CURRENT LOCATION: {}'.format(player.mapPosition()))
 
@@ -231,13 +234,13 @@ def new_game(character=None):
                 gamelog.add("There is something here")
         else:
             gamelog.add('Not Moving on Dungeon')
-            if blocked:
+            # if blocked:
                 # =============  START WALK LOG  =================================
-                ch = dungeon.square(tposx, tposy).char
-                gamelog.add(walkBlock.format(walkChars[ch]))
+                # ch = dungeon.square(tposx, tposy).char
+                # gamelog.add(walkBlock.format(walkChars[ch]))
                 # ===============  END WALK LOG  =================================
 
-            elif occupied:
+            # elif occupied:
                 # ============= START COMBAT LOG =================================
                 # unit = positions[(tposx, tposy)]
                 # if unit.r is not "human": # condition should be more complex
@@ -250,8 +253,9 @@ def new_game(character=None):
                 # =============== END COMBAD LOG =================================
                 # else:
                 #     gamelog.add(walkBlock.format(unit.r))
-                pass
-
+                # pass
+            if not walkable:
+                gamelog.add("NOT WALKABLE")
             # elif not inbounds:
             #     gamelog.add(walkBlock.format("the edge of the map"))
 

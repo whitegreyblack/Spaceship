@@ -38,7 +38,8 @@ chars_key = {
     "house": ["="],
 }
 
-chars_block= ("#", "+", "o", "x", "~", "%", "Y", "T")
+chars_block_move= {"#", "+", "o", "x", "~", "%", "Y", "T"}
+chars_block_light = {"#", "+", "o", "%", "Y", "T"}
 
 class Player:
     def __init__(self, character):
@@ -290,10 +291,7 @@ For example
         these tiles will also not be considered land tiles
     For each land tile that is not a mountain:
         it has a chance to hold a dungeon i guess
-
-    
 '''
-
 class Map:
     ''' Ray Tracing Implementation based off of Rogue Basin Python Tutorial '''
     mult = [
@@ -303,20 +301,22 @@ class Map:
                 [1,  0,  0,  1, -1,  0,  0, -1]
             ]
     
-    tile = namedlist("Tile", "char color bkgd visible walkable items")
+    tile = namedlist("Tile", "char color bkgd visible block_mov block_lit items")
 
     def __init__(self, data, maptype, GW=80, GH=40):
         self.maptype = maptype
         self.data, self.height, self.width = self.dimensions(data)
         print("MAP: {} {}".format(self.width, self.height))
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
-        self.block = [[self.data[y][x] in chars_block for x in range(self.width)] for y in range(self.height)]
+        self.block = [[self.data[y][x] in chars_block_move for x in range(self.width)] for y in range(self.height)]
         self.tilemap = self.fill(data, self.width, self.height)
         self.map_display_width = min(self.width, GW)
         self.map_display_height = min(self.height, GH)
         print("MAP: {} {}".format(self.map_display_width, self.map_display_height))
  
-
+    ###########################################################################
+    # Level Initialization, Setup and Evaluation                              #
+    ###########################################################################
     @staticmethod
     def dimensions(data):
         '''takes in a string map and returns a 2D list map and map dimensions'''
@@ -327,6 +327,73 @@ class Map:
         # return data, height, width
         return data, height, width
 
+    def fill(self, d, w, h):
+        # Light.Unexplored, Explored, Visible
+        plainschar = {
+            ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
+            ",": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
+            ";": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
+            "`": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
+            "\"": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
+            # "Y": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
+            "T": (choice(wcm.TREES.chars), blender(wcm.TREES.hexcode)),
+            # "f": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
+        }
+
+        locchar={
+            ".": (dcm.TILES.chars, blender(dcm.TILES.hexcode)),
+            ",": (dcm.GRASS.chars, blender(dcm.GRASS.hexcode)),
+            "#": (dcm.WALLS.chars, blender(dcm.WALLS.hexcode)),
+            "~": (dcm.WATER.chars, blender(dcm.WATER.hexcode)),
+            "+": (dcm.DOORS.chars, blender(dcm.DOORS.hexcode)),
+            "x": (dcm.POSTS.chars, blender(dcm.POSTS.hexcode)), 
+            "|": (dcm.PLANT.chars, blender(dcm.PLANT.hexcode)),
+            "o": (dcm.LAMPS.chars, blender(dcm.LAMPS.hexcode)),
+            ":": (dcm.ROADS.chars, blender(dcm.ROADS.hexcode)),
+            "=": (dcm.HOUSE.chars, blender(dcm.HOUSE.hexcode)),
+            " ": (' ', '#000000'),
+            "%": (dcm.WALLS.chars, blender(dcm.WALLS.hexcode)),
+            "^": (dcm.WALLS.chars, blender(dcm.WALLS.hexcode)),
+            "<": (dcm.LTHAN.chars, blender(dcm.LTHAN.hexcode)),
+            ">": (dcm.GTHAN.chars, blender(dcm.GTHAN.hexcode)),
+            "^": (dcm.TRAPS.chars, blender(dcm.TRAPS.hexcode)),
+        }
+
+        def evaluate(char):
+            try:
+                if self.maptype == "plains":
+                    t = plainschar[char]
+                else:
+                    t = locchar[char]
+            except KeyError:
+                raise KeyError("Evaluate Plains Map: {} not in keys".format(char))
+            return t
+        
+        rows = []
+        d = d if isinstance(d, list) else d.split('\n')
+        for row in d:
+        # for row in d:
+            cols = []
+            for col in row:
+                chars, hexcodes = evaluate(col)
+                light = Light.Unexplored
+                block_mov = col in chars_block_move
+                block_lit = col in chars_block_light
+                print(col, block_lit)
+                cols.append(self.tile(
+                    choice(chars), 
+                    choice(hexcodes), 
+                    "black", 
+                    light, 
+                    block_mov,
+                    block_lit, 
+                    []))
+            rows.append(cols)
+        return rows
+
+    ###########################################################################
+    # Connected Map/Dungeon Functions and Properties                          #
+    ###########################################################################
     def getExit(self):
         '''find exit and save on the first time
         subsequent calls returns the saved point'''
@@ -379,75 +446,61 @@ class Map:
     def getSublevel(self):
         return self.sublevel
 
-    def fill(self, d, w, h):
-        # Light.Unexplored, Explored, Visible
-        plainschar = {
-            ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
-            ",": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
-            ";": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
-            "`": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
-            "\"": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
-            # "Y": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
-            "T": (choice(wcm.TREES.chars), blender(wcm.TREES.hexcode)),
-            # "f": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
-        }
-
-        locchar={
-            ".": (dcm.TILES.chars, blender(dcm.TILES.hexcode)),
-            ",": (dcm.GRASS.chars, blender(dcm.GRASS.hexcode)),
-            "#": (dcm.WALLS.chars, blender(dcm.WALLS.hexcode)),
-            "~": (dcm.WATER.chars, blender(dcm.WATER.hexcode)),
-            "+": (dcm.DOORS.chars, blender(dcm.DOORS.hexcode)),
-            "x": (dcm.POSTS.chars, blender(dcm.POSTS.hexcode)), 
-            "|": (dcm.PLANT.chars, blender(dcm.PLANT.hexcode)),
-            "o": (dcm.LAMPS.chars, blender(dcm.LAMPS.hexcode)),
-            ":": (dcm.ROADS.chars, blender(dcm.ROADS.hexcode)),
-            "=": (dcm.HOUSE.chars, blender(dcm.HOUSE.hexcode)),
-            " ": (' ', '#000000'),
-            "%": (dcm.WALLS.chars, blender(dcm.WALLS.hexcode)),
-            "^": (dcm.WALLS.chars, blender(dcm.WALLS.hexcode)),
-            "<": (dcm.LTHAN.chars, blender(dcm.LTHAN.hexcode)),
-            ">": (dcm.GTHAN.chars, blender(dcm.GTHAN.hexcode)),
-            "^": (dcm.TRAPS.chars, blender(dcm.TRAPS.hexcode)),
-        }
-
-        def evaluate(char):
-            try:
-                if self.maptype == "plains":
-                    t = plainschar[char]
-                else:
-                    t = locchar[char]
-            except KeyError:
-                raise KeyError("Evaluate Plains Map: {} not in keys".format(char))
-            return t
-        
-        rows = []
-        d = d if isinstance(d, list) else d.split('\n')
-        for row in d:
-        # for row in d:
-            cols = []
-            for col in row:
-                chars, hexcodes = evaluate(col)
-                light = Light.Unexplored
-                walkable = col in chars_block
-                cols.append(self.tile(choice(chars), choice(hexcodes), "black", light, walkable, []))
-            rows.append(cols)
-        return rows
-
-    def add_item(self, x, y, i):
-        self.tilemap[y][x].items.append(i)
-
+    ###########################################################################
+    #  Singular Map Functions                                                 #
+    ###########################################################################
     def square(self, x, y):
         # return self.data[y][x]
         return self.tilemap[y][x]
 
     def walkable(self, x, y):
-        if 0 <= x < self.width and 0 <= y < self.height:
-            return self.tilemap[y][x].char not in chars_block
-        return False
+        return 0 <= x < self.width and 0 <= y < self.height
 
+    def viewable(self, x, y):
+        '''Only acts on objects within the bounds of the map'''
+        bounds = self.walkable(x, y)
+        if bounds:
+            return self.square(x, y).block_lit
+        else:
+            return bounds
+
+    def blocked(self, x, y):
+        '''Only acts on objects within the bounds of the map'''
+        bounds = self.walkable(x, y)
+        if bounds:
+            return self.square(x, y).block_mov
+        else:
+            return bounds
+
+    def open_door(self, x, y):
+        def is_closed_door(x, y):
+            return self.square(x,y).char == "+"
+        # if self.square(x, y) == "+":
+        #     self.data[y][x] = "/"
+        if is_closed_door(x, y):
+            self.tilemap[y][x].char = "/"
+
+    
+    def close_door(self, x, y):
+        def is_opened_door(x, y):
+            return self.square(x, y).char == "/"
+        # if self.square(x, y) == "/":
+        #     self.data[y][x] = "+"
+        if is_opened_door(x, y):
+            self.tilemap[y][x].char = "+"
+
+    def reblock(self, x, y):
+        # self.block[y][x] = True
+        self.square(x, y).block = True
+    def unblock(self, x, y):
+        # self.block[y][x] = False
+        self.square(x, y).block = False
+
+    ###########################################################################
+    # Sight, Light and Color Functions                                        #
+    ###########################################################################
     def darken(self, color):
-        color = color[3:]
+        color = color[3:] # removes "#ff" -> hexcode identifier and alpha channel
         if color == "656565":
             return "#323232"
         elif color == "888888":
@@ -456,34 +509,6 @@ class Map:
             return "#494949"
         elif color == "b0b0b0":
             return "#555555"
-
-    def open_door(self, x, y):
-        # if self.square(x, y) == "+":
-        #     self.data[y][x] = "/"
-        openable = self.tilemap[y][x].char == "+"
-        if openable:
-            self.tilemap[y][x].char = "/"
-
-    
-    def close_door(self, x, y):
-        # if self.square(x, y) == "/":
-        #     self.data[y][x] = "+"
-        closeable = self.tilemap[y][x].char == "/"
-        if closeable:
-            self.tilemap[y][x].char = "+"
-
-    def reblock(self, x, y):
-        self.block[y][x] = True
-
-    def unblock(self, x, y):
-        self.block[y][x] = False
-
-    def blocked(self, x, y):
-        return (x < 0 or y < 0 or x >= self.width 
-                or y >= self.height or self.tilemap[y][x].char in chars_block)
-
-    def _sun(self):
-        return self.SUN
 
     def lit(self, x, y):
         #return self.light[y][x] == self.flag
@@ -495,11 +520,11 @@ class Map:
     def set_lit(self, x, y, v):
         if 0 <= x < self.width and 0 <= y < self.height:
             self.light[y][x] = v
-    # def set_lit(self, x, y, row, radius):
-    #     if 0 <= x < self.width and 0 <= y < self.height:
-    #         if self.light[y][x] < radius-row:
-    #             self.light[y][x] = radius-row
-    #             self.fogofwar[y][x] = True
+        # def set_lit(self, x, y, row, radius):
+        #     if 0 <= x < self.width and 0 <= y < self.height:
+        #         if self.light[y][x] < radius-row:
+        #             self.light[y][x] = radius-row
+        #             self.fogofwar[y][x] = True
 
     def lit_reset(self):
         self.light = [[1 if self.light[y][x] > 0 else 0 for x in range(self.width)] for y in range(self.height)]
@@ -538,16 +563,16 @@ class Map:
                     if dx*dx + dy*dy < radius_squared:
                         self.set_lit(X, Y, 2)
 
-                    if blocked:
+                    if blocked: # -> sight ends
                         # we're scanning a row of blocked squares:
-                        if self.blocked(X, Y):
+                        if not self.viewable(X, Y) and self.blocked(X, Y):
                             new_start = r_slope
                             continue
                         else:
                             blocked = False
                             start = new_start
                     else:
-                        if self.blocked(X, Y) and j < radius:
+                        if not self.viewable(X, Y) and self.blocked(X, Y) and j < radius:
                             # This is a blocking square, start a child scan:
                             blocked = True
                             self.sight(cx, cy, j+1, start, l_slope,
@@ -557,6 +582,15 @@ class Map:
             if blocked:
                 break
             
+    ###########################################################################
+    # Item and Object Functions                                               #
+    ###########################################################################
+    def add_item(self, x, y, i):
+        self.tilemap[y][x].items.append(i)
+
+    ###########################################################################
+    # Output and Display Functions                                            #
+    ###########################################################################
     def output(self, X, Y, units):
 
         def scroll(position, screen, worldmap):
@@ -631,10 +665,11 @@ class Map:
                     lit = self.lit(x, y)
                     if lit:
                         if lit == 2:
-                            ch, col, _, _, _, _ = self.square(x, y)
+                            ch = self.square(x, y).char
+                            col = self.square(x, y).color
                             # col = "white"
                         else:
-                            ch, _, _, _, _, _ = self.square(x, y)
+                            ch = self.square(x, y).char
                             col = "darkest grey"
                     else:
                         ch, col, bkgd = " ", "black", None
