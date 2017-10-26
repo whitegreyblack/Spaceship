@@ -36,23 +36,43 @@ class GameLogger:
         Methods: {add, update, write, dump, dumps}
     """
 
-    def __init__(self, screenlinelimit, maxcachesize=10):
-        """@args: maxsize(positional) -- can specify the nubmer of items in queue before erasure"""
+    def __init__(self, screenlinelimit, ptt=False, maxcachesize=10):
+        """
+        @args: 
+            screenlinelimit(required) -- specify number of lines to be shown on screen
+            ptt(position) -- specify if messages are printed to terminal
+            maxsize(positional) -- can specify the nubmer of items in queue before erasure
+        """
         self.index = 0
         self.counter = 0
         self.messages = []
+        self.print_to_term = ptt
         self.maxsize = maxcachesize
         self.maxlines = screenlinelimit
-        
         self.setupFileWriting()
 
+    def print_on(self):
+        if self.print_to_term:
+            print("Gamelogger-Printing is already enabled")
+        else:
+            self.print_to_term = True
+
+    def print_off(self):
+        if not self.print_to_term:
+            print("Gamelogger-Printing is already disabled")
+        else:
+            self.print_to_term = False
+
     def setupFileWriting(self):
+        '''Adds the filename attribute to class for use in message log recording'''
         if not os.path.isdir('logs'):
             print('Log folder does not exist -- Creating "./logs')
             os.makedirs('logs')
 
         self.filename = "logs/log_"+"_".join(filter(lambda x: ":" not in x, ctime().split(" ")))+".txt"
         print("Setup log file in {}".format(self.filename))
+        
+        # open it once to see if error is raised
         with open(self.filename, 'w') as f:
             pass
 
@@ -67,6 +87,9 @@ class GameLogger:
             if not, then checkks the stack for maxsize and removes the topmost element from queue
             Finally appends the new message to stack and updates pointer
         """
+        if self.print_to_term:
+            print(message)
+
         if self.messages and message in self.messages[-1]:
             self.messages.pop(-1)
             self.counter += 1
@@ -106,7 +129,8 @@ class GameLogger:
     def dumps(self):
         """Write entire message queue to disk"""
         print("writing dump to {}".format(self.filename))
-        with open(self.filename, 'a') as f:
-            for message in self.messages:
-                f.write(self.getHeader() + message + "\n")
+        # with open(self.filename, 'a') as f:
+        for message in self.messages:
+                # f.write(self.getHeader() + message + "\n")
+            self.dump(message)
 

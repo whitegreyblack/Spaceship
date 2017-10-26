@@ -103,12 +103,12 @@ def new_game(character=None):
         #     act = key_actions[code].key
         # any other key F-keys, Up/Down Pg, etc
         else:
-            print("unrecognized command")
+            gamelog.add("unrecognized command")
         # make sure we clear any inputs before the next action is processed
         # allows for the program to go slow enough for human playability
         while term.has_input(): 
             term.read()
-        print(x, y, act)
+        gamelog.add("KEY-IN-WORLD: {}, {}, {}".format(x, y, act))
         return keydown(x, y, act)
 
     def key_in():
@@ -120,7 +120,7 @@ def new_game(character=None):
         while code in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
             code = term.read()
         if any([term.state(tk) for tk in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT)]):
-            print("CTRL | ALT | SHIFT")
+            gamelog.add("CTRL | ALT | SHIFT")
         if code in (term.TK_ESCAPE, term.TK_CLOSE):
             gamelog.dumps()
             proceed = False
@@ -136,7 +136,7 @@ def new_game(character=None):
             act = key_actions[code].key
         # any other key F-keys, Up/Down Pg, etc
         else:
-            print("unrecognized command")
+            gamelog.add("unrecognized command")
         # make sure we clear any inputs before the next action is processed
         # allows for the program to go slow enough for human playability
         while term.has_input(): 
@@ -161,27 +161,29 @@ def new_game(character=None):
         walkable = calabaston.walkable(tx, ty)
 
         if walkable:
-            print('MOVING ON WORLD MAP')
+            gamelog.add('MOVING ON WORLD MAP')
             player.saveWorldPos()
-            print("SAVED LAST WORLD POSITION")
+            gamelog.add("SAVED LAST WORLD POSITION")
             player.moveOnWorld(x, y)
             # description = calabaston.tilehasdescription(tposx, tposy)
             # if description:
             #     gamelog.add(description)
         else:
-            print('NOT MOVING ON WORLD MAP')
+            gamelog.add('NOT MOVING ON WORLD MAP')
             if blocked:
                 # =============  START WALK LOG  =================================
-                gamelog.add("Cannot go there")
-                print("cannot go there", tx, ty)
+                gamelog.add("Cannot go there {}, {}".format(tx, ty))
                 # ===============  END WALK LOG  =================================
             # elif not inbounds:
             #     gamelog.add(walkBlock.format("the edge of the map"))
             #     print("cannot go there", tx, ty)
             
             elif not walkable:
-                print("not walkable")
-                print("cannot go there", calabaston.w, calabaston.h, tx, ty)
+                gamelog.add("NOT WALKABLE: GW,GH: {},{}, PX,PY: {},{}".format(
+                    calabaston.w,
+                    calabaston.h,
+                    tx, ty
+                ))
 
     def key_process(x, y):
         walkChars = {
@@ -209,24 +211,26 @@ def new_game(character=None):
 
         # inbounds = 0 <= tposx < dungeon.width \
         #     and 0 <= tposy < dungeon.height
-        print("DUNGEON BOUNDS: ", dungeon.width, dungeon.height, tposx, tposy)
+        gamelog.add("DUNGEON BOUNDS: DW, DH: {}, {} PX, PY: {} {}".format(
+            dungeon.width, 
+            dungeon.height, tposx, tposy))
 
         occupied = (tposx, tposy) in unit_pos
         walkable = dungeon.walkable(tposx, tposy)
-        print('Walk In', walkable)
-        print('CURRENT LOCATION: ', player.mapPosition())
+        gamelog.add('Walk In'.format(walkable))
+        gamelog.add('CURRENT LOCATION: {}'.format(player.mapPosition()))
 
         # (not blocked) and (not occupied) and (inbounds)
         if walkable:
-            print('Moving on Dungeon')
+            gamelog.add('Moving on Dungeon')
             player.saveMapPos()
-            print("saved last map position")
+            gamelog.add("saved last map position")
             player.moveOnMap(x, y)
-            print("pP:",player.mapPosition())
+            gamelog.add("pP: {}".format(player.mapPosition()))
             if dungeon.square(tposx, tposy).items:
                 gamelog.add("There is something here")
         else:
-            print('Not Moving on Dungeon')
+            gamelog.add('Not Moving on Dungeon')
             if blocked:
                 # =============  START WALK LOG  =================================
                 ch = dungeon.square(tposx, tposy).char
@@ -298,7 +302,7 @@ def new_game(character=None):
                 term.puts(i, 1, '#')
             term.puts(center(' inventory ', SCREEN_WIDTH), 1, ' Inventory ')
             col, row = 1, 3
-            print(player.equipment)
+            gamelog.add("EQ: {}".format(*player.equipment))
             for i, l, e in zip(range(len(inventory_list)), inventory_list, player.equipment):
                 term.puts(col, row+i*2, chr(ord('a')+i)+'. '+ l+(e if isinstance(e, str) else ''))
         debug=False
@@ -443,23 +447,23 @@ def new_game(character=None):
     def interactStairs(x, y, k):
         nonlocal dungeon
         """Allows interactions with stairs"""
-        print("INTERACTSTAIRS")
+        gamelog.add("INTERACTSTAIRS")
         if k is ">":
-            print("Trying to go down")
+            gamelog.add("TRYING TO GO DOWN STAIRS")
             gamelog.add("Going down the stairs")
             if not dungeon.hasSublevel():
                 sublevel = Map(buildDungeon(), "dungeon")
                 sublevel.addParent(dungeon)
                 dungeon.addSublevel(sublevel)
-            print()
             dungeon = dungeon.getSublevel()
             player.moveZAxis(1)
             player.resetMapPos(*dungeon.getExit())
 
         else:
-            gamelog.add("Going up the stairs")
+            gamelog.add("TRYING TO GO UP STAIRS")
+            gamelog.add("GOING UP STAIRS")
             player.moveZAxis(-1)
-            print("ZAXIS AFTER GOING UP STAIRS: ", player.zAxis)
+            gamelog.add("ZAXIS AFTER GOING UP STAIRS: ", player.zAxis)
             dungeon = dungeon.getParent()
             if isinstance(dungeon, World):
                 dungeon = None
@@ -477,10 +481,9 @@ def new_game(character=None):
             if exists -> enter
             else -> build the map and add it to the world
         '''
-        print('ENTER MAP FUNCTION')
-        # print('enter map')
+        gamelog.add('ENTER MAP FUNCTION')
         if player.zAxis == -1:
-            # print(calabaston.mapAt(*player.worldPosition()))
+            gamelog.add("Calabaston has map: {}".format(calabaston.mapAt(*player.worldPosition())))
             # builds the map
             player.moveZAxis(1)
 
@@ -503,7 +506,7 @@ def new_game(character=None):
                 else:
                     # print('Not important city')
                     tile = calabaston.accessTile(*player.worldPosition())
-                    print("TILE TYPE: ", tile.land)
+                    gamelog.add("TILE TYPE: {}".format(tile.land))
                     # get options based on land tile
                     # build_options = Dungeon.build_options()
                     wilderness = tile.land in ("plains", "dark woods", "hills", "forest", "desert")
@@ -511,17 +514,15 @@ def new_game(character=None):
                         neighbors = calabaston.accessTileNeighbors(*player.worldPosition())
                         location = Map(buildTerrain(tile.land, buildopts=neighbors), tile.land)
                         x, y = player.getWorldPosOnEnter()
-                        print(x, y)
-                        x = int(location.width * x - 1)
-                        y = int(location.height * y - 1)
-                        print("location w,h", location.width, location.height)
-                        print(x, y)
+                        x = max(int(location.width * x - 1), 0)
+                        y = max(int(location.height * y - 1), 0)
+                        gamelog.add("location w,h {}, {}".format(location.width, location.height))
                         player.resetMapPos(x, y)
                     else:
                         location = Map(buildDungeon(1000), tile.land) # dungeon.build(options)
                         player.resetMapPos(*location.getExit())
-                    print("Location: ", location.getExit())
-                    print("Location: ", location.getEntrance())
+                    gamelog.add("Location Exit : {}".format(location.getExit()))
+                    gamelog.add("Location Enter: {}".format(location.getEntrance()))
                     # print('PP:',player.mapPosition())
                     # print('Exit', location.getExit())
                 location.addParent(calabaston)
@@ -537,13 +538,13 @@ def new_game(character=None):
                     player.resetMapPos(*calabaston.get_location(*player.worldPosition()).getExit())
             
         elif player.zAxis == 0:
-            print("Map Level 0")
+            gamelog.add("Map Level 0")
             player.moveZAxis(1)
             if player.mapPosition() == dungeon.getEntrance():
-                print('ill allow it -- move down')
+                gamelog.add('ill allow it -- move down')
                 pass
             else:
-                print("cannot enter on current tile")
+                gamelog.add("cannot enter on current tile")
             # if in city then shouldnt really have a dungeon
             # could add a basement/attic level
             # also add check to make sure not inside a building -- if in building then '<' wouldnt work
@@ -551,12 +552,12 @@ def new_game(character=None):
             # if in wilderness can only '>' on a dungeon enterance
             # if in a dungeon then goes down one sublevel
         elif player.zAxis > 0:
-            print('at level 0 -- trying sublevel')
+            gamelog.add('at level 0 -- trying sublevel')
         
             # processes all other dungeon subleves
         
         else:
-            print('no enter_map action')
+            gamelog.add('no enter_map action')
             pass
             
 
@@ -572,7 +573,7 @@ def new_game(character=None):
         '>': enter_map
     }
     def processWorldAction(key):
-        print('IN ProcessWorldAction:', key)
+        print('IN ProcessWorldAction: key-{}'.format(key))
         if key == ">":
             world_actions[key]()
 
@@ -589,14 +590,14 @@ def new_game(character=None):
     }
 
     def processAction(x, y, key):
-        print("PROCESS KEY", key)
+        gamelog.add("PROCESS KEY: {}".format(key))
         if key in ("o", "c"):
             actions[key](x, y, key)
         elif key in ("<"):
-            print('exit')
+            gamelog.add('exit')
             actions[key](x, y, key)
         elif key in (">"):
-            print('enter')
+            gamelog.add('enter')
             actions[key](x, y, key)
         elif key in ("t"):
             actions[key](x, y)
@@ -605,7 +606,7 @@ def new_game(character=None):
         elif key in ("f1, f2"):
             actions[key]()
         else:
-            print("unknown command: {} @ ({}, {})".format(key, x, y))            
+            gamelog.add("unknown command: {} @ ({}, {})".format(key, x, y))            
 
     # End Keyboard Functions
     # ---------------------------------------------------------------------------------------------------------------------#
@@ -704,12 +705,15 @@ def new_game(character=None):
                                     (cx, cxe), (cy, cye))):
             term.puts(x+14, y+1, "[c={}]{}[/c]".format(col, ch))
 
+    # very first thing is game logger initialized to output messages on terminal
+    gamelog = GameLogger(4, ptt=True)
+
     # if character is None then improperly accessed new_game
     # else unpack the character
     if character==None:
         return output(proceed=False, value="No Character Data Input")
     else:
-        print(*character)
+        gamelog.add("{}".format(*character))
         player = Player(character)
     # dungeon = Map(stringify("./assets/testmap_empty.png"))
     # dungeon = Map(build())
@@ -721,14 +725,13 @@ def new_game(character=None):
                 "./assets/worldmap.png", 
                 "./assets/worldmap_territories.png",
                 "./assets/worldmap_kingdoms.png")    
-    print("World:", calabaston)
+    gamelog.add("World: {}".format(calabaston))
     # Before anything happens we create our character
     # LIMIT_FPS = 30 -- later used in sprite implementation
     blocked = []
     # dungeon = Map(stringify("./assets/testmap_colored.png"))
 
     # End graphics functions
-    gamelog = GameLogger(4)
     # global game variables
     #MAP_WIDTH, MAP_HEIGHT = 24, 48
 
@@ -773,7 +776,7 @@ def new_game(character=None):
     while proceed:
         term.clear()
         if player.zAxis == -1:
-            print('WORLD PLAYER LEVEL: ', player.zAxis)
+            gamelog.add('WORLD PLAYER LEVEL: {}'.format(player.zAxis))
 
             # World View
             worldmap_box()
@@ -788,12 +791,12 @@ def new_game(character=None):
                 print('moving')
                 key_process_world(x, y)
             else:
-                print('do nothing')
+                gamelog.add('do nothing')
 
         else: # player.zAxis == 0:
-            print('DUNGEON PLAYER LEVEL: ', player.zAxis)
+            gamelog.add('DUNGEON PLAYER LEVEL: {}'.format(player.zAxis))
 
-            print('-- In MAP --')
+            gamelog.add('-- In MAP --')
             # City, Wilderness, Level 0 Dungeon
             if dungeon == None:
                 dungeon = calabaston.map_data[player.wy][player.wx]

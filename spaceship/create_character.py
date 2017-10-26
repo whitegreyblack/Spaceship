@@ -98,14 +98,14 @@ def create_character():
         '''Adds the title to top of screen'''
         title = " " + str_title + " "
         term.bkcolor('brown')
-        term.puts(center(title, SCREEN_WIDTH), 1, "[c=black]"+title+"[/c]")
+        term.puts(center(title, (term.state(term.TK_WIDTH))), 1, "[c=black]"+title+"[/c]")
         term.bkcolor('black')
 
     def subtitle():
         '''Adds text underneath the title'''
         # subtitle -- clears subtitle area to make space for new subtitle text
         subtitle = subtitle_text(character_index)
-        x = center(subtitle, SCREEN_WIDTH)
+        x = center(subtitle, (term.state(term.TK_WIDTH)))
         term.puts(x, 3, subtitle)
         term.bkcolor('black')
 
@@ -248,7 +248,7 @@ def create_character():
 
         term.puts(1, 37, join(
             descriptions[primary][secondary],
-            SCREEN_WIDTH-2))
+            (term.state(term.TK_WIDTH))-2))
 
     def form_equipment(req, ceq):
         def get_eq(x):
