@@ -18,7 +18,7 @@ from spaceship.continue_game import continue_game
 from spaceship.new_name import new_name
 from spaceship.screen_functions import *
 from spaceship.setup import output, setup, setup_font, setup_menu, toChr, setup_ext
-
+from random import randint 
 # str_title = "Character Creation"
 # str_help = "Press (?) for info on a selected race, subrace or class"
 # def create_character_small_term():
@@ -59,9 +59,14 @@ def create_character():
     str_title = "Character Creation"
     str_help = "Press (?) for info on a selected race, subrace or class"
 
+    # some helper objects used in character creation
     character = namedtuple("Character", "name gender_opt race_opt class_opt")
     equipment = namedtuple("Equipment", "hd nk bd ar hn lh rh lr rr wa lg ft")
 
+    # return type
+    player=namedtuple("Player",
+        "name home gold stats gender gbonus race rbonus job \
+        jbonus skills equipment inventory")
     def subtitle_text(i):
         text = "Choose your {}"
         if i == 0:
@@ -292,11 +297,11 @@ def create_character():
 
         # BONUS
         if character_index == 0:
-            total = strings.STATS(*(s+g for s, g in zip(strings.HUMAN, gbonus)))
+            total = strings.STATS(*(s + g for s, g in zip(strings.HUMAN, gbonus)))
         elif character_index == 1:
-            total = strings.STATS(*(s+g+r for s, g, r in zip(stats, gbonus, rbonus)))
+            total = strings.STATS(*(s + g + r for s, g, r in zip(stats, gbonus, rbonus)))
         else:
-            total = strings.STATS(*(s+g+r+c for s, g, r, c in zip(
+            total = strings.STATS(*(s + g + r + c for s, g, r, c in zip(
                                                         stats,
                                                         gbonus,
                                                         rbonus,
@@ -308,7 +313,7 @@ def create_character():
         sp = total.dex // 5
 
         # BACKGROUND
-        term.puts(col1, row+1, strings._col1.format(
+        term.puts(col1, row + 1, strings._col1.format(
             gender,
             race if character_index > 0 else "",
             location if character_index > 0 else "",
@@ -317,19 +322,19 @@ def create_character():
             1, 80, hp, mp, sp))
 
         # STATS
-        term.puts(col2, row+1, strings._col2.format(
+        term.puts(col2, row + 1, strings._col2.format(
             *("" for _ in range(2)) if character_index < 1 else skills,
             *(total)))
 
         term.puts(col2+10, row+11, strings._bon.format(*transform_values(gbonus)))
 
         if character_index > 0:
-            term.puts(col2+14, row+11, strings._bon.format(*transform_values(rbonus)))
+            term.puts(col2 + 14, row + 11, strings._bon.format(*transform_values(rbonus)))
 
         # EQUIPMENT and INVENTORY
         eq, inv = None, None
         if character_index > 1:
-            term.puts(col2+18, row+11, strings._bon.format(*transform_values(cbonus)))
+            term.puts(col2 + 18, row + 11, strings._bon.format(*transform_values(cbonus)))
             eq, inv = form_equipment(req, ceq)
             # if var is -1 then shows eq else shows inv
             if inv_screen < 0:
@@ -388,15 +393,41 @@ def create_character():
         elif code == term.TK_V and character_index > 1:
             inv_screen *= -1
 
+        # Randomize selection
+        elif code == term.TK_8:
+            if term.state(term.TK_SHIFT):
+                name = "Random name"
+                gender_index = randint(0, 1)
+                gender = gender_row(1)
+                race_index = randint(0, 4)
+                race = race_row(1)
+                class_index = randint(0, 4)
+                job = class_row(1)
+                eq, inv = form_equipment(race.eq, job.equipment)
+                return output(
+                        proceed=True,
+                        value=player(
+                            name,
+                            race.location,
+                            race.gold,
+                            race.stats,
+                            gender.gender,
+                            gender.bonus,
+                            race.race,
+                            race.bonus,
+                            job.classes,
+                            job.bonuses,
+                            race.skills,
+                            eq,
+                            inv))
+            
+
         # ENTER
         elif code == term.TK_ENTER:
             if character_index == 3:
                 name = new_name((race, occu))
                 print(name)
                 if name.proceed == 0:
-                    player=namedtuple("Player",
-                        "name home gold stats gender gbonus race rbonus job \
-                         jbonus skills equipment inventory")
                     gender = gender_row(1)
                     race = race_row(1)
                     job = class_row(1)
@@ -426,7 +457,7 @@ def create_character():
                         proceed=False,
                         value="Exit to Desktop")
 
-            if character_index == 0:
+            elif character_index == 0:
                 return output(
                         proceed=True,
                         value="Exit to Menu")

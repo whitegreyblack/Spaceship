@@ -467,7 +467,7 @@ def new_game(character=None):
             gamelog.add("TRYING TO GO UP STAIRS")
             gamelog.add("GOING UP STAIRS")
             player.moveZAxis(-1)
-            gamelog.add("ZAXIS AFTER GOING UP STAIRS: ", player.zAxis)
+            gamelog.add("ZAXIS AFTER GOING UP STAIRS: {}".format(player.zAxis))
             dungeon = dungeon.getParent()
             if isinstance(dungeon, World):
                 dungeon = None
