@@ -52,12 +52,14 @@ class GameLogger:
         self.setupFileWriting()
 
     def print_on(self):
+        '''Toggles print to terminal on; shows message if already on'''
         if self.print_to_term:
             print("Gamelogger-Printing is already enabled")
         else:
             self.print_to_term = True
 
     def print_off(self):
+        '''Toggles print to terminal off; shows message if already off'''
         if not self.print_to_term:
             print("Gamelogger-Printing is already disabled")
         else:
@@ -77,6 +79,7 @@ class GameLogger:
             pass
 
     def getHeader(self):
+        '''Returns a time string for use in log pre-messages'''
         return "["+"-".join(filter(lambda x: ":" in x, ctime().split(" ")))+"] :- "
 
     def add(self, message):

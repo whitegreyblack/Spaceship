@@ -574,15 +574,15 @@ class Map:
                         # if not self.blocked and not self.viewable - empty space
                         if self.blocked(X, Y) and not self.viewable(X, Y):
                             new_start = r_slope
-                        elif self.blocked(X, Y) and self.viewable(X, Y):
-                            blocked = False
-                            start = new_start
+                        # elif self.blocked(X, Y) and self.viewable(X, Y):
+                        #     blocked = False
+                        #     start = new_start
                         # if not self.blocked(x, y)
                         else:
                             blocked = False
                             start = new_start
                     else:
-                        if self.blocked(X, Y) or not self.viewable(X, Y) and j < radius:
+                        if self.blocked(X, Y) and not self.viewable(X, Y) and j < radius:
                             # This is a blocking square, start a child scan:
                             blocked = True
                             self.sight(cx, cy, j+1, start, l_slope,
