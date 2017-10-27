@@ -371,6 +371,7 @@ class Map:
         
         rows = []
         d = d if isinstance(d, list) else d.split('\n')
+        tiles = set()
         for row in d:
         # for row in d:
             cols = []
@@ -378,17 +379,20 @@ class Map:
                 chars, hexcodes = evaluate(col)
                 light = Light.Unexplored
                 block_mov = col in chars_block_move
-                block_lit = col in chars_block_light
-                print(col, block_lit)
-                cols.append(self.tile(
+                block_lit = col not in chars_block_light
+                tile = self.tile(
                     choice(chars), 
                     choice(hexcodes), 
                     "black", 
                     light, 
                     block_mov,
                     block_lit, 
-                    []))
+                    [])
+                tiles.add((tile.char, tile.block_mov, tile.block_lit))
+                cols.append(tile)
             rows.append(cols)
+        for i in tiles:
+            print(i)
         return rows
 
     ###########################################################################
@@ -453,24 +457,22 @@ class Map:
         # return self.data[y][x]
         return self.tilemap[y][x]
 
-    def walkable(self, x, y):
+    def within_bounds(self, x, y):
         return 0 <= x < self.width and 0 <= y < self.height
+
+    def out_of_bounds(self, x, y):
+        return not self.within_bounds(x, y)
+
+    def walkable(self, x, y):
+        return self.within_bounds(x, y) and not self.square(x, y).block_mov
 
     def viewable(self, x, y):
         '''Only acts on objects within the bounds of the map'''
-        bounds = self.walkable(x, y)
-        if bounds:
-            return self.square(x, y).block_lit
-        else:
-            return bounds
+        return self.within_bounds(x, y) and self.square(x, y).block_lit
 
     def blocked(self, x, y):
         '''Only acts on objects within the bounds of the map'''
-        bounds = self.walkable(x, y)
-        if bounds:
-            return self.square(x, y).block_mov
-        else:
-            return bounds
+        return self.out_of_bounds(x, y) or self.square(x, y).block_mov
 
     def open_door(self, x, y):
         def is_closed_door(x, y):
@@ -480,7 +482,6 @@ class Map:
         if is_closed_door(x, y):
             self.tilemap[y][x].char = "/"
 
-    
     def close_door(self, x, y):
         def is_opened_door(x, y):
             return self.square(x, y).char == "/"
@@ -492,6 +493,7 @@ class Map:
     def reblock(self, x, y):
         # self.block[y][x] = True
         self.square(x, y).block = True
+
     def unblock(self, x, y):
         # self.block[y][x] = False
         self.square(x, y).block = False
@@ -518,7 +520,7 @@ class Map:
         return self.light[y][x]
 
     def set_lit(self, x, y, v):
-        if 0 <= x < self.width and 0 <= y < self.height:
+        if self.within_bounds(x, y):
             self.light[y][x] = v
         # def set_lit(self, x, y, row, radius):
         #     if 0 <= x < self.width and 0 <= y < self.height:
@@ -553,6 +555,8 @@ class Map:
             while dx <= 0:
                 dx += 1
                 X, Y = cx + dx * xx + dy * xy, cy + dx * yx + dy * yy
+                # l_slope and r_slope store the slopes of the left and right
+                # extremities of the square we're considering:
                 l_slope, r_slope = (dx-0.5)/(dy+0.5), (dx+0.5)/(dy-0.5)
                 if start < r_slope:
                     continue
@@ -562,17 +566,23 @@ class Map:
                     # Our light beam is touching this square; light it:
                     if dx*dx + dy*dy < radius_squared:
                         self.set_lit(X, Y, 2)
-
-                    if blocked: # -> sight ends
+                    if blocked:
                         # we're scanning a row of blocked squares:
-                        if not self.viewable(X, Y) and self.blocked(X, Y):
+                        # if self.blocked and self.viewable         - window
+                        # if self.blocked and not self.viewable     - wall
+                        # if not self.blocked and self.viewable     - floor
+                        # if not self.blocked and not self.viewable - empty space
+                        if self.blocked(X, Y) and not self.viewable(X, Y):
                             new_start = r_slope
-                            continue
+                        elif self.blocked(X, Y) and self.viewable(X, Y):
+                            blocked = False
+                            start = new_start
+                        # if not self.blocked(x, y)
                         else:
                             blocked = False
                             start = new_start
                     else:
-                        if not self.viewable(X, Y) and self.blocked(X, Y) and j < radius:
+                        if self.blocked(X, Y) or not self.viewable(X, Y) and j < radius:
                             # This is a blocking square, start a child scan:
                             blocked = True
                             self.sight(cx, cy, j+1, start, l_slope,
@@ -616,7 +626,8 @@ class Map:
         cy = scroll(Y, self.map_display_height-2, self.height)
         cxe = cx + self.map_display_width-14
         cye = cy + self.map_display_height-2
-
+        print(cx, cxe)
+        print(cy, cye)
         daytime = False
         fg_fog = "grey"
         bg_fog = "#ff000000"
