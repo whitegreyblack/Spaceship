@@ -508,6 +508,8 @@ def buildTerrain(tiletype, entropy=0, buildopts=None):
         pass
     elif tiletpye == 'woods':
         pass
+    elif tiletype == 'shore':
+        pass:
     else:
         raise ValueError("Tiletype not implemented")
 
