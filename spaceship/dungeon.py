@@ -502,6 +502,12 @@ def buildTerrain(tiletype, entropy=0, buildopts=None):
                 break
         print('NUM TREES: ', t)
         return terrain
+    elif tiletype == "hills":
+        pass
+    elif tiletpye == "mountains":
+        pass
+    elif tiletpye == 'woods':
+        pass
     else:
         raise ValueError("Tiletype not implemented")
 
