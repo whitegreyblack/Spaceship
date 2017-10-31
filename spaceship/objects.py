@@ -329,6 +329,7 @@ class Map:
 
     def fill(self, d, w, h):
         # Light.Unexplored, Explored, Visible
+        # city, wilderness, dungeon
         plainschar = {
             ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
             ",": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
@@ -338,6 +339,7 @@ class Map:
             # "Y": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
             "T": (choice(wcm.TREES.chars), blender(wcm.TREES.hexcode)),
             # "f": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
+            "~": (wcm.HILLS.chars, blender(wcm.HILLS.hexcode)),
         }
 
         locchar={
@@ -362,6 +364,8 @@ class Map:
         def evaluate(char):
             try:
                 if self.maptype == "plains":
+                    t = plainschar[char]
+                elif self.maptype == "hills":
                     t = plainschar[char]
                 else:
                     t = locchar[char]

@@ -5,6 +5,7 @@ charmap = namedtuple("Charmap", "chars hexcode")
 class WildernessCharmap:
     GRASS=charmap([",", ";", "`","\""], ("#56ab2f", "#a8e063"))
     TREES=charmap(["Y", "T", "f"], ("#994C00", "#994C00"))
+    HILLS=charmap(["~"], ("#994C00", "#9A8478"))
 
 class DungeonCharmap:
     GRASS=charmap([",", ";"], ("#56ab2f", "#a8e063"))

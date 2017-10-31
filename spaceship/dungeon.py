@@ -503,13 +503,25 @@ def buildTerrain(tiletype, entropy=0, buildopts=None):
         print('NUM TREES: ', t)
         return terrain
     elif tiletype == "hills":
-        pass
+        vege_chars = (",","`","\"","~")
+        terrain = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
+        for i in range(X_TEMP):
+            for j in range(Y_TEMP):
+                terrain[j][i] = choice(vege_chars)
+        num_trees = 10
+        for t in range(num_trees):
+            terrain[randint(0, Y_TEMP-1)][randint(0, X_TEMP-1)] = "T"
+            stop_chance = randint(0, num_trees-t)
+            if stop_chance == 0:
+                break
+        print('NUM TREES: ', t)
+        return terrain
     elif tiletpye == "mountains":
         pass
     elif tiletpye == 'woods':
         pass
     elif tiletype == 'shore':
-        pass:
+        pass
     else:
         raise ValueError("Tiletype not implemented")
 

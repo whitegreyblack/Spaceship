@@ -4,3 +4,4 @@ namedlist
 ptpython
 pytest
 pytest-cov
+pypiwin32
