@@ -117,11 +117,11 @@ class World:
         (255, 127, 39): ("plains", ".", ("#FFBD22",)),
         # (255, 242, 0): ("fields", "2261", ("#FFBF00",)),
         (255, 242, 0): ("fields", "=", ("#FFBF00",)),
-        (255, 174, 201): ("deserts", "~", ("#F0AC82",)),
-        (112, 146, 190): ("rivers", "~", ("#30FFFF",)),
-        (63, 72, 204): ("lakes", "2248", ("#3088FF",)),
+        (255, 174, 201): ("desert", "~", ("#F0AC82",)),
+        (112, 146, 190): ("river", "~", ("#30FFFF",)),
+        (63, 72, 204): ("lake", "2248", ("#3088FF",)),
         (0, 162, 232): ("deep seas", "2248", ("#3040A0",)),
-        (0, 0, 0): ("dungeons", "*", ("#FF00FF",)),
+        (0, 0, 0): ("dungeon", "*", ("#FF00FF",)),
     }
 
     king_legend = {
@@ -137,7 +137,7 @@ class World:
         (255, 174, 201): ("Beast Nation", "#ff88ff"),
     }
 
-    dungeon_names = {
+    dungeon_legend = {
         (12, 52): "Pig Beach",
         (20, 57): "Beach Cave",
         (22, 50): "Small Dungeon",
@@ -230,8 +230,9 @@ class World:
                 try:
                     territory, tcolor = self.pol_legend[(pr, pg, pb)]
                 except KeyError:
-                    print(((i, j), (pr, pg, pb)))
-                    raise
+                    raise KeyError("{}, {}, ({}, {}, {})".format(
+                        i, j, pr, pg, pb
+                    ))
 
                 # finally kingdom properties
                 try:
@@ -243,8 +244,7 @@ class World:
                 row.append(self.tile(char, color, land, territory, tcolor, kingdom, kcolor, enterable))
             self.data.append(row)
         self.colorize()
-        # self.buildroads()
-        print('dungones loaded')
+        # self.buildroads()        
         # empty map data only holds the top level maps -- each map will hold their own sublevel maps
         self.map_data = [[None for _ in range(self.w)] for _ in range(self.h)]
         
@@ -266,9 +266,7 @@ class World:
         for c in connections:
             points = bresenhams(*c)
             for i, j in points[1:len(points)-1]:
-                print(i, j)
                 _, _, l, t, c, k, kc, e = self.data[j][i]
-                print(l)
                 self.data[j][i] = self.tile("o","#483C32", "road", t, c, k, kc, e)    
             
     def colorize(self):
@@ -366,12 +364,14 @@ class World:
             # self.data[j][i] = self.tile(c, "#228B22", l, t, tc, k, kc, e)
             self.data[j][i].char = "\""
             self.data[j][i].color = "#568203"
+            self.data[j][i].land = "grassland"
         
         for i, j in plain:
             if self.data[j][i].char == ".":
                 if grass_neighbors(i, j, "\""):
                     self.data[j][i].char = "\""
                     self.data[j][i].color = "#568203" 
+                    self.data[j][i].land = "grassland"
 
     def enterable(self, i, j):
         return self.data[j][i].enterable
@@ -411,9 +411,10 @@ class World:
     def get_location(self, x, y):
         return self.map_data[y][x]
 
+    def get_landtype(self, x, y):
+        return self.data[y][x].land
+
     def add_location(self, location, x, y):
-        print(x)
-        print(y)
         '''Must've been located in enterables legend'''
         # try:
         #     string = "./assets/maps/"+self.enterable_legend[(x, y)].lower().replace(' ','_')+".png"
@@ -441,8 +442,7 @@ class World:
                 try:
                     char, color, _, terr, tcol, king, kcol, _ = self.data[j][i]
                 except IndexError:
-                    print(i, j)
-                    raise
+                    raise IndexError("{}, {}".format(i, j))
 
                 if (x, y) == (i, j):
                     color = "white"
@@ -556,7 +556,7 @@ class World:
                 else:
                     geoking()
                 term.puts(x-cx, y-cy+1, '[c=white]@[/c]')
-                print("ENTERABLE?: ", x, y, self.enterable(x, y))
+                # print("ENTERABLE?: ", x, y, self.enterable(x, y))
                 if self.enterable(x, y):
                     print("ENTERABLE")
                     term.bkcolor('white')
@@ -572,8 +572,8 @@ class World:
                 elif self.dungeon(x, y):
                     term.bkcolor('white')
                     term.puts(0, GH-1, "#"*GW)
-                    term.puts(center("  "+self.dungeon_names[(x, y)], GW), GH-1,
-                            "[c=black]"+self.dungeon_names[(x, y)]+"[/c]")
+                    term.puts(center("  "+self.dungeon_legend[(x, y)], GW), GH-1,
+                            "[c=black]"+self.dungeon_legend[(x, y)]+"[/c]")
                     term.bkcolor('black')
 
 
@@ -661,6 +661,7 @@ class World:
             self.pointer[0] = max(min(x, self.w-1), 0)
             self.pointer[1] = max(min(y, self.h), 1)
             self.level = max(min(self.level, 1), -1)
+
 if __name__ == "__main__":
     # FH, FW, GH, GW = 8, 8, 25, 40
     setup()

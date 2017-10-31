@@ -677,7 +677,7 @@ def new_game(character=None):
                 Finally light sources and player?"""
         term.composition(False)
         dungeon.fov_calc(lights+[(player.mx, player.my, player.sight)])
-        for x, y, lit, ch, bkgd in list(dungeon.output(player.mx, player.my, [])):
+        for x, y, lit, ch, bkgd in dungeon.output(player.mx, player.my, []):
             # ch = ch if len(str(ch)) > 1 else chr(toInt(palette[ch]))
             term.puts(x+14, y+1, "[color={}]".format(lit)+ch+"[/color]")
         term.refresh()
@@ -692,9 +692,24 @@ def new_game(character=None):
         footer = i+5+3
         if player.worldPosition() in calabaston.enterable_legend.keys():
             enterable_name = surround(calabaston.enterable_legend[(player.wx, player.wy)])       
-            selected(center(surround(enterable_name) if len(enterable_name) >= 12 else enterable_name, 14),
-            footer,
-            surround(enterable_name) if len(enterable_name) >= 12 else enterable_name)
+            selected(
+                center(surround(enterable_name) if len(enterable_name) <= 12 else enterable_name, 12),
+                footer,
+                surround(enterable_name) if len(enterable_name) <= 12 else enterable_name)
+        elif player.worldPosition() in calabaston.dungeon_legend.keys():
+            dungeon_name = surround(calabaston.dungeon_legend[player.worldPosition()])
+            selected(
+                center(surround(dungeon_name) if len(dungeon_name) <= 12 else dungeon_name, 12),
+                footer,
+                surround(dungeon_name) if len(dungeon_name) <= 12 else dungeon_name)
+        footer += 1
+        landtype = calabaston.get_landtype(*player.worldPosition())
+        if landtype:
+            selected(
+                center(surround(landtype), 12),
+                footer,
+                surround(landtype))
+        
 
     def worldmap_box():
         # world map header
@@ -704,9 +719,9 @@ def new_game(character=None):
         cxe = cx+SCREEN_WIDTH-14
         cye = cy+SCREEN_HEIGHT-2
 
-        for x, y, col, ch in list(calabaston.draw(wview, 
+        for x, y, col, ch in calabaston.draw(wview, 
                                     *(player.worldPosition()), 
-                                    (cx, cxe), (cy, cye))):
+                                    (cx, cxe), (cy, cye)):
             term.puts(x+14, y+1, "[c={}]{}[/c]".format(col, ch))
 
     # very first thing is game logger initialized to output messages on terminal
