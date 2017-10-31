@@ -103,10 +103,16 @@ class World:
         # (195, 195, 195): ("mnts(med)", "2229", ("#C0C0C0",)),
         (195, 195, 195): ("mnts(med)", "n", ("#C0C0C0",)),
 
-        (127, 127, 127): ("mnts(low)", "n", ("#808080", "#A9A9A9",)),
-        (185, 122, 87): ("hills", "2022", ("#C3B091", "#826644")),
-        (181, 230, 29): ("forest", "0192", ("#228B22", "#74C365")),
-        (34, 177, 76): ("dark woods", "00A5", ("#006400","#568203",)),
+        # (127, 127, 127): ("mnts(low)", "n", ("#808080", "#A9A9A9",)),
+        (127, 127, 127): ("mnts(low)", "n", ("#808080",)),
+
+        # (185, 122, 87): ("hills", "2022", ("#C3B091", "#826644")),
+        (185, 122, 87): ("hills", "2022", ("#826644",)),
+        # (181, 230, 29): ("forest", "0192", ("#228B22", "#74C365")),
+        (181, 230, 29): ("forest", "0192", ("#568203",)),
+
+        # (34, 177, 76): ("dark woods", "00A5", ("#006400","#568203",)),
+        (34, 177, 76): ("dark woods", "00A5", ("#006400",)),
         (255, 201, 14):("plains", ".", ("#FFBF00",)),
         (255, 127, 39): ("plains", ".", ("#FFBD22",)),
         # (255, 242, 0): ("fields", "2261", ("#FFBF00",)),
@@ -137,7 +143,7 @@ class World:
         (22, 50): "Small Dungeon",
     }
 
-    tile = namedtuple("Tile", "char color land territory tcol kingdom kcol enterable")
+    tile = namedlist("Tile", "char color land territory tcol kingdom kcol enterable")
 
     def __init__(self):
         self.pointer = list(World.capitals('Renmar'))
@@ -279,6 +285,18 @@ class World:
                             pass
             return val > 1
 
+        def grass_neighbors(i, j, v):
+            val = 0
+            for ii in range(-1, 2):
+                for jj in range(-1, 2):
+                    if (ii, jj) != (0, 0):
+                        try:
+                            if self.data[j+jj][i+ii].char == v:
+                                val += 1
+                        except IndexError:
+                            pass
+            return val > 0
+
         def bitval(i, j):
             bit_value=0 
             increment=1
@@ -297,6 +315,8 @@ class World:
         water = set()
         river = set()
         lakes = set()
+        grass = set()
+        plain = set()
         for i in range(self.w):
             for j in range(self.h):
                 char, col = self.data[j][i].char, self.data[j][i].color
@@ -310,14 +330,24 @@ class World:
                 #     lakes.add((i, j))
 
                 # evaluate river tiles
+                # we include return val from river legend since every river tile will be evaluated
                 if (char, col) == ("~", "#30FFFF"):
                     river.add((i, j, self.river_legend[bitval(i, j)]))
+
+                # evaluate plain tiles:
+                if (char, col) == (".", "#FFBF00"):
+                    plain.add((i, j))
+                    if grass_neighbors(i, j, "0192"):
+                        grass.add((i, j))
+                    elif grass_neighbors(i, j, "="):
+                        grass.add((i, j))
 
         # iterate through sea tiles and replace
         for i, j in water:
             _, _, l, t, c, k, kc, e = self.data[j][i]
-            self.data[j][i] = self.tile("=","#3050B0", "sea", t, c, k, kc, e)
-
+            self.data[j][i].char = "="
+            # self.data[j][i][0] = "="
+            self.data[j][i].color = "#3050B0"
 
         # iterate through lake tiles and replace
         # for i, j in lakes:
@@ -326,8 +356,22 @@ class World:
 
         # iterate through river tiles and replace
         for i, j, c in river:
-            _, _, l, t, tc, k, kc, e = self.data[j][i]
-            self.data[j][i] = self.tile(c, "#30FFFF", l, t, tc, k, kc, e)
+            # _, _, l, t, tc, k, kc, e = self.data[j][i]
+            self.data[j][i].char = c
+            self.data[j][i].color = "#30FFFF"
+
+        # first pass for grass -- all tiles next to forest or fields
+        for i, j in grass:
+            # c, _, l, t, tc, k, kc, e = self.data[j][i]
+            # self.data[j][i] = self.tile(c, "#228B22", l, t, tc, k, kc, e)
+            self.data[j][i].char = "\""
+            self.data[j][i].color = "#568203"
+        
+        for i, j in plain:
+            if self.data[j][i].char == ".":
+                if grass_neighbors(i, j, "\""):
+                    self.data[j][i].char = "\""
+                    self.data[j][i].color = "#568203" 
 
     def enterable(self, i, j):
         return self.data[j][i].enterable
@@ -345,6 +389,7 @@ class World:
                         neighbors.append(self.data[j+jj][i+ii])
                     except IndexError:
                         neighbors.append(self.data[j][i])
+
         # make sure we get all neighbors
         assert len(neighbors) == 8
         return neighbors
@@ -405,7 +450,10 @@ class World:
 
                 if key == 0:
                     if len(char) > 1:
-                        char = chr(int(char, 16))
+                        try:
+                            char = chr(int(char, 16))
+                        except ValueError:
+                            raise ValueError(char)
 
                 elif key == 1:
                     color = tcol
