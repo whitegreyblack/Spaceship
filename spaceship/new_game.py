@@ -28,23 +28,6 @@ class WorldView: Geo, Pol, King = range(3)
 
 def new_game(character=None):
 
-    def scroll(position, screen, worldmap):
-        '''
-        @position: current position of player 1D axis
-        
-        @screen  : size of the screen
-        
-        @worldmap: size of the map           
-        '''
-        halfscreen = screen//2
-        # less than half the screen - nothing
-        if position < halfscreen:
-            return 0
-        elif position >= worldmap - halfscreen:
-            return worldmap - screen
-        else:
-            return position - halfscreen
-
     def refresh(lines=[]):
         for line in lines:
             gamelog.add(line)
@@ -690,12 +673,18 @@ def new_game(character=None):
         for char, color, desc, i in calabaston.worldlegend():
             term.puts(0, i+4, "[c={}] {}[/c] {}".format(color, char, desc))
         footer = i+5+3
+
+        # check if player position is over a city/enterable area
+        # this is purely a ui enhancement. Actually entering a city is not that much different
+        # than entering a dungeon/wilderness area
         if player.worldPosition() in calabaston.enterable_legend.keys():
             enterable_name = surround(calabaston.enterable_legend[(player.wx, player.wy)])       
             selected(
                 center(surround(enterable_name) if len(enterable_name) <= 12 else enterable_name, 12),
                 footer,
                 surround(enterable_name) if len(enterable_name) <= 12 else enterable_name)
+
+        # check if player position is over a dungeon position
         elif player.worldPosition() in calabaston.dungeon_legend.keys():
             dungeon_name = surround(calabaston.dungeon_legend[player.worldPosition()])
             selected(
@@ -703,6 +692,8 @@ def new_game(character=None):
                 footer,
                 surround(dungeon_name) if len(dungeon_name) <= 12 else dungeon_name)
         footer += 1
+
+        # Add land types to the overworld ui
         landtype = calabaston.get_landtype(*player.worldPosition())
         if landtype:
             selected(
@@ -712,12 +703,34 @@ def new_game(character=None):
         
 
     def worldmap_box():
-        # world map header
+        '''Displays the world map tiles in the terminal'''
+        def scroll(position, screen, worldmap):
+            '''
+            @position: current position of player 1D axis
+            
+            @screen  : size of the screen
+            
+            @worldmap: size of the map           
+            '''
+            halfscreen = screen//2
+            # less than half the screen - nothing
+            if position < halfscreen:
+                return 0
+            elif position >= worldmap - halfscreen:
+                return worldmap - screen
+            else:
+                return position - halfscreen
+
+        # world map header and variables used in calculating screen box
         # selected(center(surround(calabaston.name), SCREEN_WIDTH), 0, surround(calabaston.name))
-        cx = scroll(player.wx, SCREEN_WIDTH-14, calabaston.w,)
-        cy = scroll(player.wy, SCREEN_HEIGHT-2, calabaston.h)
-        cxe = cx+SCREEN_WIDTH-14
-        cye = cy+SCREEN_HEIGHT-2
+        SCREEN_WIDTH_OFFSET = 14 # save 14 tiles on left side of screen to display map information
+        SCREEN_HEIGHT_OFFSET = 2 # save two tiles to create horizonatal bars on top and bottom
+        TOTAL_MAP_WIDTH = SCREEN_WIDTH - SCREEN_WIDTH_OFFSET    # keeping these variables explicit
+        TOTAL_MAP_HEIGHT = SCREEN_HEIGHT - SCREEN_HEIGHT_OFFSET # so we dont have to calculate again
+        cx = scroll(player.wx, TOTAL_MAP_WIDTH, calabaston.w,)
+        cy = scroll(player.wy, TOTAL_MAP_HEIGHT, calabaston.h)
+        cxe = cx+TOTAL_MAP_WIDTH
+        cye = cy+TOTAL_MAP_HEIGHT
 
         for x, y, col, ch in calabaston.draw(wview, 
                                     *(player.worldPosition()), 

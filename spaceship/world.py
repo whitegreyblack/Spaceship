@@ -558,7 +558,7 @@ class World:
                 term.puts(x-cx, y-cy+1, '[c=white]@[/c]')
                 # print("ENTERABLE?: ", x, y, self.enterable(x, y))
                 if self.enterable(x, y):
-                    print("ENTERABLE")
+                    # print("ENTERABLE")
                     term.bkcolor('white')
                     term.puts(0, GH-1, "#"*GW)    
                     # try:                

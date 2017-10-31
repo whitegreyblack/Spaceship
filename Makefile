@@ -34,7 +34,7 @@ test:
 test-clean: test clean
 
 profile:
-	python -m cProfile -s time spaceship/main.py > profiler.txt
+	python -m cProfile -s time spaceship/start.py > profiler.txt
 
 profile-dungeon:
 	python -m cProfile -s time spaceship/dungeon.py > profiler.txt
