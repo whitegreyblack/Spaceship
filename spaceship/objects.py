@@ -496,11 +496,11 @@ class Map:
 
     def reblock(self, x, y):
         # self.block[y][x] = True
-        self.square(x, y).block = True
+        self.square(x, y).block_mov = True
 
     def unblock(self, x, y):
         # self.block[y][x] = False
-        self.square(x, y).block = False
+        self.square(x, y).block_mov = False
 
     ###########################################################################
     # Sight, Light and Color Functions                                        #

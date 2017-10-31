@@ -444,7 +444,7 @@ def new_game(character=None):
                 return
 
             if (x+cx, y+cy) in reachables:
-                openDoor(x+cx, y+cy) if opening else closeDoor(x+cx, y+cy)
+                openDoor(x+cx, y+cy) if key is 'o' else closeDoor(x+cx, y+cy)
 
         map_box()
 
