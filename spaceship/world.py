@@ -336,7 +336,8 @@ class World:
                 if (char, col) == (".", "#FFBF00"):
                     plain.add((i, j))
                     if grass_neighbors(i, j, "0192"):
-                        grass.add((i, j))
+                        # grass.add((i, j))
+                        pass
                     elif grass_neighbors(i, j, "="):
                         grass.add((i, j))
 
@@ -365,13 +366,14 @@ class World:
             self.data[j][i].char = "\""
             self.data[j][i].color = "#568203"
             self.data[j][i].land = "grassland"
-        
-        for i, j in plain:
-            if self.data[j][i].char == ".":
-                if grass_neighbors(i, j, "\""):
-                    self.data[j][i].char = "\""
-                    self.data[j][i].color = "#568203" 
-                    self.data[j][i].land = "grassland"
+
+        # second pass for grass 
+        # for i, j in plain:
+        #     if self.data[j][i].char == ".":
+        #         if grass_neighbors(i, j, "\""):
+        #             self.data[j][i].char = "\""
+        #             self.data[j][i].color = "#568203" 
+        #             self.data[j][i].land = "grassland"
 
     def enterable(self, i, j):
         return self.data[j][i].enterable
