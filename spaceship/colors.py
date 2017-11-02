@@ -50,7 +50,7 @@ class Color:
     green_darker = "#0B4228"
     green_darkest = "#032D19"
 
-    TEAL
+    # TEAL
     teal_lightest = "#E8FFFE"
     teal_lighter = "#A0F0ED"
     teal_light = "#64D5CA"
@@ -97,7 +97,14 @@ class Color:
 
     @classmethod
     def color(cls, col: str) -> str:
-        '''Returns the hex value of a given color'''
+        '''Returns the hex value of a given color
+        
+        Example:
+            >>> Color.color('red')
+            #E3342F
+            >>> Color.color('red.lighter)
+            #F0ACAA
+        '''
         if "." in col:
             col = col.replace('.', "_")
         if hasattr(cls, col):
@@ -106,10 +113,20 @@ class Color:
 
     @classmethod
     def color_rgb(cls, col:str) -> str:
-        '''Returns the rgb value of a given color'''
+        '''Returns the rgb value of a given color
+                      
+        Example:
+            >>> Color.color('red')
+            (14, 3, 2)
+            >>> Color.color('red.lighter)
+            (15, 10, 10)        
+            '''
         hexval = cls.color(col)
         return int(hexval[1:2], 16), int(hexval[3:4], 16), int(hexval[5:6], 16)
 
 if __name__ == "__main__":
     print(Color.color('red'))
     print(Color.color('red.lighter'))
+    print(Color.color('blue'))
+    print(Color.color_rgb('red'))
+    print(Color.color_rgb('red.lighter'))
