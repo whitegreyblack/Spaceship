@@ -9,7 +9,8 @@ from spaceship.constants import GAME_SCREEN_HEIGHT as SCREEN_HEIGHT
 from spaceship.setup import setup_game
 from spaceship.tools import bresenhams, deltanorm, movement
 from spaceship.maps import stringify, hextup, hexone, toInt
-from spaceship.objects import Map, Object, Character, Item, Player
+from spaceship.objects import Map, Object, Character, Item
+from spaceship.player import Player
 from spaceship.create_character import create_character as create
 from spaceship.screen_functions import center, surround, selected
 from bearlibterminal import terminal as term
@@ -540,6 +541,7 @@ def new_game(character=None):
                 pass
             else:
                 gamelog.add("cannot enter on current tile")
+
             # if in city then shouldnt really have a dungeon
             # could add a basement/attic level
             # also add check to make sure not inside a building -- if in building then '<' wouldnt work

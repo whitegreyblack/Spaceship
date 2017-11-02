@@ -13,9 +13,9 @@ import math
 import time
 from copy import deepcopy
 
-# X_TEMP, Y_TEMP = 78, 40
+X_TEMP, Y_TEMP = 78, 40
 # X_TEMP, Y_TEMP = 160, 80
-X_TEMP, Y_TEMP = 80, 50
+# X_TEMP, Y_TEMP = 80, 50
 WALL, FLOOR = -1, 1
 box = namedtuple("Box", "x1 y1 x2 y2")
 point = namedtuple("Point", "x y")
