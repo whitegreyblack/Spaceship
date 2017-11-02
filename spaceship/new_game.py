@@ -436,29 +436,39 @@ def new_game(character=None):
         nonlocal dungeon
         """Allows interactions with stairs"""
         gamelog.add("INTERACTSTAIRS")
-        if k is ">":
+
+        # first seperate logic by action take to differentiate going up versus down
+        if k is ">": # and player.mapPosition() == dungeon.get
             gamelog.add("TRYING TO GO DOWN STAIRS")
-            gamelog.add("Going down the stairs")
-            if not dungeon.hasSublevel():
-                sublevel = Map(buildDungeon(), "dungeon")
-                sublevel.addParent(dungeon)
-                dungeon.addSublevel(sublevel)
-            dungeon = dungeon.getSublevel()
-            player.moveZAxis(1)
-            player.resetMapPos(*dungeon.getExit())
+            if player.mapPosition() == dungeon.getDownStairs():
+                gamelog.add('PLAYER STANDING ON STAIRS LEADING DOWN')
+                if not dungeon.hasSublevel():
+                    sublevel = Map(buildDungeon(), "dungeon")
+                    sublevel.addParent(dungeon)
+                    dungeon.addSublevel(sublevel)
+                dungeon = dungeon.getSublevel()
+                player.moveZAxis(1)
+                player.resetMapPos(*dungeon.getUpStairs())
+            else:
+                gamelog.add('PLAYER NOT STANDING ON STAIRS LEADING DOWN')
 
         else:
             gamelog.add("TRYING TO GO UP STAIRS")
-            gamelog.add("GOING UP STAIRS")
-            player.moveZAxis(-1)
-            gamelog.add("ZAXIS AFTER GOING UP STAIRS: {}".format(player.zAxis))
-            dungeon = dungeon.getParent()
-            if isinstance(dungeon, World):
-                dungeon = None
-                player.resetMapPos(0, 0)
+            if player.mapPosition() == dungeon.getUpStairs():
+                gamelog.add('PLAYER STANDING ON STAIRS LEADING UP')
+                # dungeon will have parent -- need to differentiate between
+                # world and first level dungeon
+                gamelog.add("GOING UP STAIRS")
+                player.moveZAxis(-1)
+                gamelog.add("ZAXIS AFTER GOING UP STAIRS: {}".format(player.zAxis))
+                dungeon = dungeon.getParent()
+                if isinstance(dungeon, World):
+                    dungeon = None
+                    player.resetMapPos(0, 0)
             else:
+                gamelog.add('PLAYER NOT STANDING ON STAIRS LEADING UP')
             # if player.zAxis > 0:
-                player.resetMapPos(*dungeon.getEntrance())
+                # player.resetMapPos(*dungeon.getUpStairs())
             # elif player.zAxis == 0:
                 
     def enter_map():
@@ -508,9 +518,9 @@ def new_game(character=None):
                         player.resetMapPos(x, y)
                     else:
                         location = Map(buildDungeon(1000), tile.land) # dungeon.build(options)
-                        player.resetMapPos(*location.getExit())
-                    gamelog.add("Location Exit : {}".format(location.getExit()))
-                    gamelog.add("Location Enter: {}".format(location.getEntrance()))
+                        player.resetMapPos(*location.getUpStairs())
+                    gamelog.add("Location Exit : {}".format(location.getUpStairs()))
+                    gamelog.add("Location Enter: {}".format(location.getDownStairs()))
                     # print('PP:',player.mapPosition())
                     # print('Exit', location.getExit())
                 location.addParent(calabaston)
@@ -531,7 +541,7 @@ def new_game(character=None):
                         player.resetMapPos(x, y)
                     # reenter a dungeon:
                     else:
-                        player.resetMapPos(*calabaston.get_location(*player.worldPosition()).getExit())
+                        player.resetMapPos(*calabaston.get_location(*player.worldPosition()).getUpStairs())
             
         elif player.zAxis == 0:
             gamelog.add("Map Level 0")
@@ -570,7 +580,7 @@ def new_game(character=None):
         '>': enter_map
     }
     def processWorldAction(key):
-        print('IN ProcessWorldAction: key-{}'.format(key))
+        print('IN ProcessWorldAction: key - {}'.format(key))
         if key == ">":
             world_actions[key]()
 
@@ -826,11 +836,11 @@ def new_game(character=None):
             term.refresh()
 
             x, y, a = key_in_world()
-
+            gamelog.add('ACTION: {} {} {}'.format(x, y, a))
             if a != "Do Nothing" and a != 0:
                 processWorldAction(a)
             elif (x, y) != (0, 0):
-                print('moving')
+                gamelog.add('NOT MOVING')
                 key_process_world(x, y)
             else:
                 gamelog.add('do nothing')

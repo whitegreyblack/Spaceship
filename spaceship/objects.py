@@ -271,24 +271,19 @@ class Map:
     ###########################################################################
     # Connected Map/Dungeon Functions and Properties                          #
     ###########################################################################
-    def getExit(self):
+    def getUpStairs(self):
         '''find exit and save on the first time
         subsequent calls returns the saved point'''
         if hasattr(self, "exitpoint"):
-            print('has exit')
-            print(self.exitpoint)
             return self.exitpoint
 
         for j in range(len(self.data)):
             for i in range(len(self.data[0])):
                 if self.data[j][i] == "<":
-                    print('GetExit')
-                    print(self.data[j][i], i, j)
-                    print(self.tilemap[j][i].char, i, j)
                     self.exitpoint = i, j
                     return i, j
 
-    def getEntrance(self):
+    def getDownStairs(self):
         '''same logic as getExit'''
         try:
             if hasattr(self, self.enterance):
