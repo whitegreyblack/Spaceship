@@ -515,14 +515,22 @@ def new_game(character=None):
                 location.addParent(calabaston)
                 calabaston.add_location(location, *(player.worldPosition()))
             else:
-                location = calabaston.get_location(*player.worldPosition())
-                if location.maptype in ("plains", "dark woods", "hills", "forest", "desert"):
-                    x, y = player.getWorldPosOnEnter()
-                    x = int((location.width-1) * x)
-                    y = int((location.height-1) * y)
-                    player.resetMapPos(x, y)
+                # re-enter city
+                if player.worldPosition() in calabaston.enterable_legend.keys():
+                    location = calabaston.get_location(*player.worldPosition())
+                    player.resetMapPos(location.width//2, location.height//2)
+
                 else:
-                    player.resetMapPos(*calabaston.get_location(*player.worldPosition()).getExit())
+                    location = calabaston.get_location(*player.worldPosition())
+                    # reenter a wilderness
+                    if location.maptype in ("plains", "dark woods", "hills", "forest", "desert"):
+                        x, y = player.getWorldPosOnEnter()
+                        x = int((location.width-1) * x)
+                        y = int((location.height-1) * y)
+                        player.resetMapPos(x, y)
+                    # reenter a dungeon:
+                    else:
+                        player.resetMapPos(*calabaston.get_location(*player.worldPosition()).getExit())
             
         elif player.zAxis == 0:
             gamelog.add("Map Level 0")
