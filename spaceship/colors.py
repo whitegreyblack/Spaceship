@@ -1,57 +1,115 @@
 import random
 
-# class Color:
-#     def __init__(self, r=None, g=None, b=None):
-#         def color():
-#             return random.randint(0,255)
-#         self.r = color() if r is None else r
-#         self.g = color() if g is None else g
-#         self.b = color() if b is None else b
-#     def set(self, r=None,g=None,b=None):
-#         if r is not None:
-#             self.r = r
-#         if g is not None:
-#             self.g = g
-#         if b is not None:
-#             self.b = b
-#     def get(self):
-#         return (self.r, self.g, self.b)
-
 class Color:
+    """Color class used as a static method to import hexvalue color codes"""
 
-    def toRGB(self):
-        hexval = str(self.h)
-        return int(hexval[0:1], 16), int(hexval[2:3], 16), int(hexval[4:5], 16)
-
-    def toHEX(self):
-        return str(hex(self.r))+str(hex(self.g))+str(hex(self.b))
-
-    def setRGB(self, r, g, b):
-        '''If called set RGB then HEX'''
-        self.r = r
-        self.g = g
-        self.b = b
-        self.setHex(*self.toHEX())
-
-    def setHEX(self, hexval):
-        self.h = hexval
-        self.setRGB(*self.toRGB())
+    # GREYS
+    white = "#FFFFFF"
+    grey_lightest = "#FAFCFC"
+    grey_lighter = "#F3F7F9"
+    grey_light = "#DAE4E9"
+    grey = "#9BABB4"
+    grey_dark = "#70818A"
+    grey_darker = "#596A73"
+    grey_darkest = "#364349"
+    black = "#222B2F"
     
+    # RED
+    red_lightest = "#FCEBEA"
+    red_lighter = "#F9ACAA"
+    red_light = "#EF5753"
+    red = "#E3342F"
+    red_dark = "#CC1F1A"
+    red_darker = "#CA1B19"
+    red_darkest = "#420806"
 
+    # ORANGE
+    orange_lightest = "#FFF5EB"
+    orange_lighter = "#FCD9B6"
+    orange_light = "#FAAD63"
+    orange = "#F6993F"
+    orange_dark = "#DE751F"
+    orange_darker = "#7F4012"
+    orange_darkest = "#542605"
 
-class COLOR:
-    WHITE = (250, 250, 250)
-    BLACK = (0, 0, 0)
-    LGREY = (200, 200, 200)
-    GREY = (125, 125, 125)
-    DGREY = (50, 50, 50)
-    BROWN = (225, 175, 100)
-    YELLOW = (250, 250, 100)
+    # YELLOW
+    yellow_lightest = "#FCFBEB"
+    yellow_lighter = "#FFF9C2"
+    yellow_light = "#FFF382"
+    yellow = "#FFED4A"
+    yellow_dark = "#F2D024"
+    yellow_darker = "#684F1D"
+    yellow_darkest = "#453411"
 
-# class SHIP_COLOR:
-#     wall = color(0, 128, 255).get()
-#     floor = color(128, 255, 255).get()
-#     hatch = color(255, 128, 0).get()
-#     other = color(128, 128, 192).get()
+    # GREEN
+    green_lightest = "#E3FCEC"
+    green_lighter = "#A2F5BF"
+    green_light = "#51D88A"
+    green = "#38C172"
+    green_dark = "#1F9D55"
+    green_darker = "#0B4228"
+    green_darkest = "#032D19"
 
+    TEAL
+    teal_lightest = "#E8FFFE"
+    teal_lighter = "#A0F0ED"
+    teal_light = "#64D5CA"
+    teal = "#4DC0B5"
+    teal_dark = "#38A89D"
+    teal_darker = "#174E4B"
+    teal_darkest = "#0D3331"
 
+    # BLUE
+    blue_lightest = "#EFF8FF"
+    blue_lighter = "#BCDEFA"
+    blue_light = "#6CB2EB"
+    blue = "#3490DC"
+    blue_dark = "#2779BD"
+    blue_darker = "#103D60"
+    blue_darkest = "#05233B"
+
+    # INDIGO
+    indigo_lightest = "#E6E8FF"
+    indigo_lighter = "#B2B7FF"
+    indigo_light = "#7886D7"
+    indigo = "#6574CD"
+    indigo_dark = "#5661B3"
+    indigo_darker = "#2F365F"
+    indigo_darkest = "#191E38"
+
+    # PURPLE
+    purple_lightest = "#F3EBFF"
+    purple_lighter = "#D6BBFC"
+    purple_light = "#A779E9"
+    purple = "#9561E2"
+    purple_dark = "#794ACF"
+    purple_darker = "#352465"
+    purple_darkest = "#1F133F"
+
+    # PINK
+    pink_lightest = "#FFEBEF"
+    pink_lighter = "#FFBBCA"
+    pink_light = "#FA7EA8"
+    pink = "#F66D9B"
+    pink_dark = "#EB5286"
+    pink_darker = "#72173A"
+    pink_darkest = "#45051E"
+
+    @classmethod
+    def color(cls, col: str) -> str:
+        '''Returns the hex value of a given color'''
+        if "." in col:
+            col = col.replace('.', "_")
+        if hasattr(cls, col):
+            return getattr(cls, col)
+        raise AttributeError("No hexcode for the given color")
+
+    @classmethod
+    def color_rgb(cls, col:str) -> str:
+        '''Returns the rgb value of a given color'''
+        hexval = cls.color(col)
+        return int(hexval[1:2], 16), int(hexval[3:4], 16), int(hexval[5:6], 16)
+
+if __name__ == "__main__":
+    print(Color.color('red'))
+    print(Color.color('red.lighter'))

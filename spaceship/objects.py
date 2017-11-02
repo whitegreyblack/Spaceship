@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from namedlist import namedlist
 from collections import namedtuple
 from spaceship.imports import *
-from spaceship.colors import Color, COLOR
+from spaceship.colors import Color
 from random import randint, choice
 from math import sqrt
 from spaceship.constants import GAME_SCREEN_HEIGHT as sh
