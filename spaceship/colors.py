@@ -114,7 +114,7 @@ class Color:
     @classmethod
     def color_rgb(cls, col:str) -> str:
         '''Returns the rgb value of a given color
-                      
+    
         Example:
             >>> Color.color('red')
             (14, 3, 2)
@@ -122,7 +122,7 @@ class Color:
             (15, 10, 10)        
             '''
         hexval = cls.color(col)
-        return int(hexval[1:2], 16), int(hexval[3:4], 16), int(hexval[5:6], 16)
+        return int(hexval[1:3], 16), int(hexval[3:5], 16), int(hexval[5:7], 16)
 
 if __name__ == "__main__":
     print(Color.color('red'))
