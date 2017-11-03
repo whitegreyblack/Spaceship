@@ -358,27 +358,14 @@ class Map:
             self.square(x, y).char = "+"
 
     def reblock(self, x, y):
-        # self.block[y][x] = True
         self.square(x, y).block_mov = True
 
     def unblock(self, x, y):
-        # self.block[y][x] = False
         self.square(x, y).block_mov = False
 
     ###########################################################################
     # Sight, Light and Color Functions                                        #
     ###########################################################################
-    def darken(self, color):
-        color = color[3:] # removes "#ff" -> hexcode identifier and alpha channel
-        if color == "656565":
-            return "#323232"
-        elif color == "888888":
-            return "#444444"
-        elif color == "989898":
-            return "#494949"
-        elif color == "b0b0b0":
-            return "#555555"
-
     def lit(self, x, y):
         return self.square(x, y).light
 
@@ -389,7 +376,10 @@ class Map:
     def lit_reset(self):
         for y in range(self.height):
             for x in range(self.width):
-                self.square(x, y).light = 1 if self.square(x, y).light > 0 else 0
+                if self.square(x, y).light:
+                    self.square(x, y).light = 1 # if self.square(x, y).light > 0 else 0
+
+
 
     def fov_calc(self, lights):
         self.lamps = lights
