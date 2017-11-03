@@ -105,8 +105,9 @@ class Color:
             >>> Color.color('red.lighter)
             #F0ACAA
         '''
-        if "." in col:
-            col = col.replace('.', "_")
+        for char in ('.', '-', ' '):
+            if char in col:
+                col = col.replace(char, "_")
         if hasattr(cls, col):
             return getattr(cls, col)
         raise AttributeError("No hexcode for the given color")
@@ -127,6 +128,7 @@ class Color:
 if __name__ == "__main__":
     print(Color.color('red'))
     print(Color.color('red.lighter'))
+    print(Color.color('red-lighter'))
     print(Color.color('blue'))
     print(Color.color_rgb('red'))
     print(Color.color_rgb('red.lighter'))

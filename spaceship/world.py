@@ -92,7 +92,6 @@ class World:
 
     geo_legend = {
         (200, 191, 231): ("city(elven)", "&", ("#FF8844",)),
-        # : ("asdf", "+", ("#000000",)),
         (153, 217, 234): ("fort(dwarf)", "#", ("#FF00FF",)),
         (163, 73, 164): ("city(elven)", "&", ("#FFFF00",)),
         # (237, 28, 36): ("city(human)", "2302", ("#00fF00",)),
@@ -264,12 +263,20 @@ class World:
         self.colorize()
         
         # undecided on whether to add roads or not -- will see in the future if it makes sense to add
-        self.buildroads()        
+        self.build_roads()        
         # empty map data only holds the top level maps -- each map will hold their own sublevel maps
         self.map_data = [[None for _ in range(self.w)] for _ in range(self.h)]
         
-    def buildroads(self):
+    def build_roads(self):
         '''Creates connections from pointA to pointB on map and writes ROAD characters on the map'''
+        def slope(p1, p2):
+            x = p2[0] - p1[0]
+            y = p2[1] - p1[1]
+            if not x:
+                return ":"
+            if not y:
+                return "."
+            return ":"
         # "Tiphmore": (42, 62),
         # "Dun Badur": (83, 9),
         # "Aurundel": (41, 20),
@@ -286,9 +293,10 @@ class World:
         # (22, 50): "Small Dungeon",
         for c in connections:
             points = bresenhams(*c)
+            char = slope(*c)
             for i, j in points[1:len(points)-1]:
                 _, _, l, t, c, k, kc, e = self.data[j][i]
-                self.data[j][i] = self.tile("o","#483C32", "road", t, c, k, kc, e)    
+                self.data[j][i] = self.tile(char, "#542605", "road", t, c, k, kc, e)    
             
     def colorize(self):
         '''Colorize modifies lakes and rivers with new characters and colors'''

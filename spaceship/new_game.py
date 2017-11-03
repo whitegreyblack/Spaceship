@@ -454,7 +454,15 @@ def new_game(character=None):
 
         else:
             gamelog.add("TRYING TO GO UP STAIRS")
-            if player.mapPosition() == dungeon.getUpStairs():
+
+            # check if you're in a city
+            if player.worldPosition() in calabaston.enterable_legend.keys():
+                gamelog.add('PLAYER IN CITY DUNGEON')
+                gamelog.add('PLAYER MOVES FREELY IN CITY')
+                player.moveZAxis(-1)
+            
+            # check if you're in a dungeon
+            elif player.mapPosition() == dungeon.getUpStairs():
                 gamelog.add('PLAYER STANDING ON STAIRS LEADING UP')
                 # dungeon will have parent -- need to differentiate between
                 # world and first level dungeon
@@ -462,11 +470,15 @@ def new_game(character=None):
                 player.moveZAxis(-1)
                 gamelog.add("ZAXIS AFTER GOING UP STAIRS: {}".format(player.zAxis))
                 dungeon = dungeon.getParent()
-                if isinstance(dungeon, World):
-                    dungeon = None
-                    player.resetMapPos(0, 0)
+                # if isinstance(dungeon, World):
+                #     dungeon = None
+                #     player.resetMapPos(0, 0)
             else:
                 gamelog.add('PLAYER NOT STANDING ON STAIRS LEADING UP')
+
+            if isinstance(dungeon, World):
+                dungeon = None
+                player.resetMapPos(0, 0)
             # if player.zAxis > 0:
                 # player.resetMapPos(*dungeon.getUpStairs())
             # elif player.zAxis == 0:
@@ -776,8 +788,7 @@ def new_game(character=None):
     calabaston.load(
                 "./assets/worldmap.png", 
                 "./assets/worldmap_territories.png",
-                "./assets/worldmap_kingdoms.png")    
-    gamelog.add("World: {}".format(calabaston))
+                "./assets/worldmap_kingdoms.png")   
     # Before anything happens we create our character
     # LIMIT_FPS = 30 -- later used in sprite implementation
     blocked = []
@@ -851,7 +862,7 @@ def new_game(character=None):
             gamelog.add('-- In MAP --')
             # City, Wilderness, Level 0 Dungeon
             if dungeon == None:
-                dungeon = calabaston.map_data[player.wy][player.wx]
+                dungeon = calabaston.get_location(*player.worldPosition())
                 if player.zAxis > 0:
                     for i in range(player.zAxis):
                         dungeon = dungeon.getSublevel()
@@ -871,6 +882,7 @@ def new_game(character=None):
         #     print('you in a new dungeon now"')
 
     # player.dump()
+    gamelog.dumps()
     return False
 # End New Game Menu
 

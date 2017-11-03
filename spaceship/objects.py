@@ -4,11 +4,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from namedlist import namedlist
 from collections import namedtuple
 from spaceship.imports import *
-from spaceship.colors import Color
 from random import randint, choice
 from math import sqrt
 from spaceship.constants import GAME_SCREEN_HEIGHT as sh
 from spaceship.constants import GAME_SCREEN_WIDTH as sw
+from spaceship.color import Color
 from spaceship.maps import hextup, hexone, output, blender, gradient, evaluate_blocks
 from spaceship.setup import toInt
 from spaceship.charmap import DungeonCharmap as dcm
@@ -175,6 +175,7 @@ class Map:
     def __init__(self, data, maptype, GW=80, GH=40):
         self.maptype = maptype
         self.data, self.height, self.width = self.dimensions(data)
+        # self.map_id = mid
         print("MAP: {} {}".format(self.width, self.height))
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.block = [[self.data[y][x] in chars_block_move for x in range(self.width)] for y in range(self.height)]
@@ -264,8 +265,7 @@ class Map:
                 tiles.add((tile.char, tile.block_mov, tile.block_lit))
                 cols.append(tile)
             rows.append(cols)
-        for i in tiles:
-            print(i)
+        print('Tiles: {}'.format(tiles))
         return rows
 
     ###########################################################################
@@ -287,15 +287,17 @@ class Map:
         '''same logic as getExit'''
         try:
             if hasattr(self, self.enterance):
-                print('has enterance')
+                print('GET DOWNSTAIRS: MAP HAS ENTERANCE')
                 return self.enterance
         except AttributeError:
+            # manually look through the map to check for '>'
             for j in range(len(self.data)):
                 for i in range(len(self.data[0])):
                     if self.data[j][i] == ">":
-                        print('GetEnterance')
+                        print('GET DOWNSTAIRS: HAS ENTERANCE AFTER LOOPING')
                         print(self.data[j][i], i, j)
-                        print(self.tilemap[j][i].char, i, j)
+                        print("LOCATION: {}, {}; CHAR: {}".format(
+                            self.tilemap[j][i].char, i, j))
                         self.entrance = i, j
                         return i, j
             return 'Doesnt have a sublevel?'
@@ -539,7 +541,18 @@ class Map:
                 #     ch = self.square(x, y).char
                 #     col = "white"
 
-                elif self.square(x, y).char = '^':
+                # deal with displaying traps
+                elif self.square(x, y).char == '^':
+                    lit = self.lit(x, y)
+                    if lit:
+                        if lit == 2:
+                            cha = self.square(x, y).char
+                            col = self.square(x, y).color
+                        else:
+                            ch = self.square(x, y).char
+                            col = Color.color('grey darkest')
+                    else:
+                        ch, col, bkgd = ".", "black", None
 
                 else:
                     # all other environment features
@@ -556,11 +569,12 @@ class Map:
                         ch, col, bkgd = " ", "black", None
 
                 # ch = ch if len(str(ch)) > 1 else chr(toInt(palette[ch]))
+                yield (x-cx, y-cy, col, ch, None)
 
-                try:        
-                    yield (x-cx, y-cy, col, ch, None)
-                except NameError:
-                    yield (x-cx, y-cy, col, ch, None)
+                # try:        
+                #     yield (x-cx, y-cy, col, ch, None)
+                # except NameError:
+                #     yield (x-cx, y-cy, col, ch, None)
         self.lit_reset()
 
 

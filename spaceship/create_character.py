@@ -426,7 +426,7 @@ def create_character():
         elif code == term.TK_ENTER:
             if character_index == 3:
                 name = new_name((race, occu))
-                print(name)
+                print("CHARACTER NAME: {}".format(name.value))
                 if name.proceed == 0:
                     gender = gender_row(1)
                     race = race_row(1)
