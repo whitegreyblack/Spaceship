@@ -6,7 +6,8 @@ from spaceship.screen_functions import center, longest, colored
 from bearlibterminal import terminal as term
 from spaceship.setup import setup
 from collections import namedtuple
-from win32api import GetSystemMetrics as sysize
+
+# from win32api import GetSystemMetrics as sysize
 
 class Option:
     def __init__(self, title, opt=None, subopts=None):
@@ -79,8 +80,8 @@ class Option:
 # TODO: expanding list
 option = Option("Options Screen")
 # 80x25 -> 8x16 | 80x50 -> 8x8 | 160x50 -> 16x16 | FullScreen -> 16x16
-option.add_opt("Screen Size", ["80x25", "80x50", "160x50", 
-                                "Full Screen: {}x{}".format(sysize(0), sysize(1))])
+option.add_opt("Screen Size", ["80x25", "80x50", "160x50",]) 
+                                # "Full Screen: {}x{}".format(sysize(0), sysize(1))])
 option.add_opt("Cell Size", ["Auto", "8x16", "8x8", "16x16"])
 option.add_opt("Font Choice", ["Default", "IBM_CGA", "Andale", "Courier", "Unscii-8", "Unscii-8-thin", "VeraMono"])
 option.add_opt("Coloring", ["Dynamic", "Dark", "Light", "Colorblind"])
