@@ -171,15 +171,23 @@ class World:
 
     def load(self, geo, pol, king):
         # do some error checking
+        # geological map
         with Image.open(geo) as img:
             geopix = img.load()
             gw, gh = img.size
+
+        # territory map
         with Image.open(pol) as img:
             polpix = img.load()
             pw, ph = img.size
+
+        # kingdom map
         with Image.open(king) as img:
             kingpix = img.load()
             kw, kh = img.size
+
+        # make sure these maps are all the same size since they
+        # are the same map with different properties
         assert (gw, gh) == (pw, ph)
         assert (gw, gh) == (kw, kh)
 
@@ -195,24 +203,29 @@ class World:
                 # to decrease confusion on error
                 # encapsulate within try/except due to randomness
                 # of alpha channel popping up now and then
+
+                # geological map
                 try:
                     gr, gg, gb, _ = geopix[i, j]
                 except ValueError:
                     gr, gg, gb = geopix[i, j]
 
+                # territory map
                 try:
                     pr, pg, pb, _ = polpix[i, j]
                 except ValueError:
                     pr, pg, pb = polpix[i,j]
 
+                # kingdom map
                 try:
                     kr, kg, kb, _ = kingpix[i, j]
                 except ValueError:
                     kr, kg, kb = kingpix[i, j]
 
                 # done with geo/pol/king -- onto namedtuples                
-                # try/except KV used to increase speed of 
-                # implementing new properties in map
+                # try/except Key-Value used to increase speed of 
+                # implementing new properties in map since
+                # KeyErrors raises which characters unimplemented
 
                 # deal with geography properties first
                 land, char, colors = self.geo_legend[(gr, gg, gb)]
@@ -221,12 +234,14 @@ class World:
                 if char == "*":
                     self._dungeons.add((i,j))
 
+                # differentiate between lists with single or multiple
+                # color values to choose from
                 if len(colors) > 1:
                     color = choice(colors)
                 else:
                     color = colors[0]
 
-                # then political properties
+                # then political properties are evaluated
                 try:
                     territory, tcolor = self.pol_legend[(pr, pg, pb)]
                 except KeyError:
@@ -242,13 +257,19 @@ class World:
 
                 enterable = char in self.enterables
                 row.append(self.tile(char, color, land, territory, tcolor, kingdom, kcolor, enterable))
+
             self.data.append(row)
+
+        # water and grass tiles are added here 
         self.colorize()
-        # self.buildroads()        
+        
+        # undecided on whether to add roads or not -- will see in the future if it makes sense to add
+        self.buildroads()        
         # empty map data only holds the top level maps -- each map will hold their own sublevel maps
         self.map_data = [[None for _ in range(self.w)] for _ in range(self.h)]
         
     def buildroads(self):
+        '''Creates connections from pointA to pointB on map and writes ROAD characters on the map'''
         # "Tiphmore": (42, 62),
         # "Dun Badur": (83, 9),
         # "Aurundel": (41, 20),
