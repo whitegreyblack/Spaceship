@@ -176,13 +176,13 @@ class Map:
         self.maptype = maptype
         self.data, self.height, self.width = self.dimensions(data)
         # self.map_id = mid
-        print("MAP: {} {}".format(self.width, self.height))
+        print("[MAP CLASS]: {} {}".format(self.width, self.height))
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.block = [[self.data[y][x] in chars_block_move for x in range(self.width)] for y in range(self.height)]
         self.tilemap = self.fill(data, self.width, self.height)
         self.map_display_width = min(self.width, GW)
         self.map_display_height = min(self.height, GH)
-        print("MAP: {} {}".format(self.map_display_width, self.map_display_height))
+        print("[MAP CLASS]: {} {}".format(self.map_display_width, self.map_display_height))
  
     ###########################################################################
     # Level Initialization, Setup and Evaluation                              #
@@ -265,7 +265,7 @@ class Map:
                 tiles.add((tile.char, tile.block_mov, tile.block_lit))
                 cols.append(tile)
             rows.append(cols)
-        print('Tiles: {}'.format(tiles))
+        print('[MAP CLASS]: Tiles - {}'.format(tiles))
         return rows
 
     ###########################################################################
@@ -294,9 +294,9 @@ class Map:
             for j in range(len(self.data)):
                 for i in range(len(self.data[0])):
                     if self.data[j][i] == ">":
-                        print('GET DOWNSTAIRS: HAS ENTERANCE AFTER LOOPING')
+                        print('[GET DOWNSTAIRS]: HAS ENTERANCE AFTER LOOPING')
                         print(self.data[j][i], i, j)
-                        print("LOCATION: {}, {}; CHAR: {}".format(
+                        print("[GET DOWNSTAIRS]: LOCATION - {}, {}; CHAR - {}".format(
                             self.tilemap[j][i].char, i, j))
                         self.entrance = i, j
                         return i, j
@@ -496,7 +496,7 @@ class Map:
         cy = scroll(Y, self.map_display_height-2, self.height)
         cxe = cx + self.map_display_width-14
         cye = cy + self.map_display_height-2
-        print(cx, cxe)
+        print("[MAP CLASS - OUTPUT]: CX:{}, CXE:{}"cx, cxe)
         print(cy, cye)
         daytime = False
         fg_fog = "grey"
