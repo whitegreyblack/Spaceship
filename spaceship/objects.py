@@ -170,14 +170,13 @@ class Map:
                 [1,  0,  0,  1, -1,  0,  0, -1]
             ]
     
-    tile = namedlist("Tile", "char color bkgd visible block_mov block_lit items")
+    tile = namedlist("Tile", "char color bkgd light block_mov block_lit items")
 
     def __init__(self, data, maptype, mapid, GW=80, GH=40):
         self.maptype = maptype
         self.data, self.height, self.width = self.dimensions(data)
         self.map_id = mapid
         print('[MAP CLASS]:\n\t{}'.format(self.map_id))
-        self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.block = [[self.data[y][x] in chars_block_move for x in range(self.width)] for y in range(self.height)]
         self.tilemap = self.fill(data, self.width, self.height)
         self.map_display_width = min(self.width, GW)
@@ -349,18 +348,14 @@ class Map:
     def open_door(self, x, y):
         def is_closed_door(x, y):
             return self.square(x,y).char == "+"
-        # if self.square(x, y) == "+":
-        #     self.data[y][x] = "/"
         if is_closed_door(x, y):
-            self.tilemap[y][x].char = "/"
+            self.square(x, y).char = "/"
 
     def close_door(self, x, y):
         def is_opened_door(x, y):
             return self.square(x, y).char == "/"
-        # if self.square(x, y) == "/":
-        #     self.data[y][x] = "+"
         if is_opened_door(x, y):
-            self.tilemap[y][x].char = "+"
+            self.square(x, y).char = "+"
 
     def reblock(self, x, y):
         # self.block[y][x] = True
@@ -385,24 +380,17 @@ class Map:
             return "#555555"
 
     def lit(self, x, y):
-        #return self.light[y][x] == self.flag
-            return self.light[y][x]
-
-    def lit_level(self, x, y):
-        return self.light[y][x]
+        return self.square(x, y).light
 
     def set_lit(self, x, y, v):
         if self.within_bounds(x, y):
-            self.light[y][x] = v
-        # def set_lit(self, x, y, row, radius):
-        #     if 0 <= x < self.width and 0 <= y < self.height:
-        #         if self.light[y][x] < radius-row:
-        #             self.light[y][x] = radius-row
-        #             self.fogofwar[y][x] = True
+            self.square(x, y).light = v
 
     def lit_reset(self):
-        self.light = [[1 if self.light[y][x] > 0 else 0 for x in range(self.width)] for y in range(self.height)]
-    
+        for y in range(self.height):
+            for x in range(self.width):
+                self.square(x, y).light = 1 if self.square(x, y).light > 0 else 0
+
     def fov_calc(self, lights):
         self.lamps = lights
         for x, y, radius in lights:
@@ -514,7 +502,7 @@ class Map:
 
             # height should total 24 units
             for y in range(cy, cye):
-
+                # reset variables every iteration
                 if x == X and y == Y:
                     # Current position holds your position
                     ch = "@"
@@ -549,7 +537,7 @@ class Map:
                     lit = self.lit(x, y)
                     if lit:
                         if lit == 2:
-                            cha = self.square(x, y).char
+                            ch = self.square(x, y).char
                             col = self.square(x, y).color
                         else:
                             ch = self.square(x, y).char

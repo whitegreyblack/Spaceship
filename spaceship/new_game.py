@@ -205,7 +205,7 @@ def new_game(character=None):
 
         # inbounds = 0 <= tposx < dungeon.width \
         #     and 0 <= tposy < dungeon.height
-        gamelog.add("[KEY PROCESS]: DUNGEON BOUNDS: DW, DH: {}, {} PX, PY: {} {}".format(
+        gamelog.add("[KEY PROCESS]:\n\tDUNGEON BOUNDS: DW, DH: {}, {} PX, PY: {} {}".format(
             dungeon.width, 
             dungeon.height, 
             tposx, 
@@ -213,20 +213,20 @@ def new_game(character=None):
 
         occupied = (tposx, tposy) in unit_pos
         walkable = not dungeon.blocked(tposx, tposy)
-        gamelog.add('[KEY PROCESS]: WALKABLE: {}'.format(walkable))
-        gamelog.add('[KEY PROCESS]: CURRENT LOCATION: {}'.format(player.mapPosition()))
+        gamelog.add('\tWALKABLE: {}'.format(walkable))
+        gamelog.add('\tCURRENT LOCATION: {}'.format(player.mapPosition()))
 
         # (not blocked) and (not occupied) and (inbounds)
         if walkable:
-            gamelog.add('[KEY PROCESS]: MOVING IN DUNGEON')
+            gamelog.add('\tMOVING IN DUNGEON')
             player.saveMapPos()
-            gamelog.add("[KEY PROCESS]: SAVED LAST MAP POSITION")
+            gamelog.add("\tSAVED LAST MAP POSITION")
             player.moveOnMap(x, y)
-            gamelog.add("[KEY PROCESS]: PLAYER POSITION - {}".format(player.mapPosition()))
+            gamelog.add("\tPLAYER POSITION - {}".format(player.mapPosition()))
             if dungeon.square(tposx, tposy).items:
                 gamelog.add("There is something here")
         else:
-            gamelog.add('[KEY PROCESS]: NOT MOVING IN DUNGEON BECAUSE: ')
+            gamelog.add('\tNOT MOVING IN DUNGEON BECAUSE: ')
             # if blocked:
                 # =============  START WALK LOG  =================================
                 # ch = dungeon.square(tposx, tposy).char
@@ -248,7 +248,7 @@ def new_game(character=None):
                 #     gamelog.add(walkBlock.format(unit.r))
                 # pass
             if not walkable:
-                gamelog.add("[KEY PROCESS]:     NOT WALKABLE")
+                gamelog.add("\t\tNOT WALKABLE")
             # elif not inbounds:
             #     gamelog.add(walkBlock.format("the edge of the map"))
 
@@ -479,7 +479,7 @@ def new_game(character=None):
                 gamelog.add("\tCHECKING PARENT")
                 dungeon = dungeon.getParent()
                 gamelog.add("\tPARENT ID: {}".format(dungeon.map_id))
-                            
+
             # check if you're in a dungeon
             elif player.mapPosition() == dungeon.getUpStairs():
                 gamelog.add('\tPLAYER STANDING ON STAIRS LEADING UP')
