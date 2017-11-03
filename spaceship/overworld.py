@@ -64,6 +64,12 @@ OVERWORLD_PATH = "./assets/worldmap.png"
 
 #     return "\n".join(lines)
 class Map:
+    '''Used in trying to implement a dynamically constructed map
+
+    given a map_path to image it will try to add mountain ranges
+    and other features then draw the image to the screen
+    '''
+    
     def __init__(self, path):
         self.world, self.h, self.w = Map.stringify_world(path)
 
@@ -94,6 +100,7 @@ class Map:
                     line += map_keys[(r, g, b)]
                 except KeyError:
                     print((r, g, b))
+                    line += '#'
             lines.append(list(line))
         return lines, h, w
 

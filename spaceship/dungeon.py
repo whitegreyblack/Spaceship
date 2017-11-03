@@ -223,7 +223,7 @@ def path(p1, p2, dungeon):
     openlist = set()
     closelist = []
     openlist.add(node(0, 0, 0, None, p1))
-    print(int(distance(p1, p2)*10))
+    print("PATH: DISTANCE - {}".format(int(distance(p1, p2)*10)))
     while openlist:
         nodeq = min(sorted(openlist))
         openlist.remove(nodeq)
@@ -374,7 +374,7 @@ def decay(dungeon, n=1000):
 
     walls, floors, doors, liquid, spaces, other = [], [], [], [], [], []
     decayed = deepcopy(dungeon)
-    print(len(dungeon[0]), len(dungeon))
+    print("DUNGEON DIMENSIONS: {}x{}".format(len(dungeon[0]), len(dungeon)))
 
     # get the dungeon features
     for j in range(len(dungeon)):
@@ -394,7 +394,7 @@ def decay(dungeon, n=1000):
     shuffle(walls)
     shuffle(floors)
 
-    print(len(walls))
+    print("NUMBER OF WALLS: {}".format(len(walls)))
     # wallsToFloor = 0
     # while wallsToFloor <= 50:
     #     changed = cellauto(*walls[wallsToFloor%len(walls)])
@@ -409,7 +409,7 @@ def decay(dungeon, n=1000):
         if val:
             changed += 1
     
-    print(changed)
+    print("CHANGED: {}".format(changed))
 
     # for i in range(len(floors)):
 
@@ -521,6 +521,13 @@ def buildTerrain(tiletype, entropy=0, buildopts=None):
     elif tiletpye == 'woods':
         pass
     elif tiletype == 'shore':
+        pass
+    elif tiletype == 'fields':
+        # ALGO: BSP seperates areas into 'fields' which then contain a couple of rectangles and
+        #       the largest one or two rectangles become fields while the next two become houses
+        #       all other rectangles become plain tiles
+        # Maybe a bezier curve could be used to add a river that flows between the fields
+        # Even add a chance for river to split within the map
         pass
     else:
         raise ValueError("Tiletype not implemented")
