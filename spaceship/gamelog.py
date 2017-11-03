@@ -121,9 +121,11 @@ class GameLogger:
     def dump(self, message):
         """Write log to disk -- TODO: Unneeded? Just use dumps?"""
         try:
+            print('[GAME LOG]: APPENDING')
             with open(self.filename, 'a') as f:
                 f.write(self.getHeader() + message + "\n")
         except OSError:
+            print('[GAME LOG]: WRITING')
             with open(self.filename, 'w') as f:
                 f.write(self.getHeader() + message + "\n")
         except:

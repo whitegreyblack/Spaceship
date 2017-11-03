@@ -496,7 +496,7 @@ class Map:
         cy = scroll(Y, self.map_display_height-2, self.height)
         cxe = cx + self.map_display_width-14
         cye = cy + self.map_display_height-2
-        print("[MAP CLASS - OUTPUT]: CX:{}, CXE:{}"cx, cxe)
+        print("[MAP CLASS - OUTPUT]: CX:{}, CXE:{}".format(cx, cxe))
         print(cy, cye)
         daytime = False
         fg_fog = "grey"
