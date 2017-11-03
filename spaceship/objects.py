@@ -23,6 +23,7 @@ visibility = namedtuple("Visiblity", "movement visibility lightlevel")
 class Light: Unexplored, Explored, Visible = range(3)    
 class Letter: Ascii, Unicode = range(2)
 
+debug = False
 # change variables to dictioanry -- more tight and accessible
 # allows for more 
 chars_key = {
@@ -100,7 +101,8 @@ class Slot:
     @slot.setter
     def slot(self, item):
         self._slot = item
-        print("set slot to {}".format(item))
+        if debug:
+            print("set slot to {}".format(item))
 
 class Inventory:
     """This is what you'll be holding -- may change this to equipped class name"""
@@ -176,13 +178,15 @@ class Map:
         self.maptype = maptype
         self.data, self.height, self.width = self.dimensions(data)
         self.map_id = mapid
-        print('[MAP CLASS]:\n\t{}'.format(self.map_id))
         self.block = [[self.data[y][x] in chars_block_move for x in range(self.width)] for y in range(self.height)]
         self.tilemap = self.fill(data, self.width, self.height)
         self.map_display_width = min(self.width, GW)
         self.map_display_height = min(self.height, GH)
-        print("\tMAP DIM: {} {}".format(self.width, self.height))
-        print("\tMAP DIS:{} {}".format(self.map_display_width, self.map_display_height))
+
+        if debug:
+            print('[MAP CLASS]:\n\t{}'.format(self.map_id))
+            print("\tMAP DIM: {} {}".format(self.width, self.height))
+            print("\tMAP DIS:{} {}".format(self.map_display_width, self.map_display_height))
  
     ###########################################################################
     # Level Initialization, Setup and Evaluation                              #
@@ -247,7 +251,6 @@ class Map:
         d = d if isinstance(d, list) else d.split('\n')
         tiles = set()
         for row in d:
-        # for row in d:
             cols = []
             for col in row:
                 chars, hexcodes = evaluate(col)
@@ -265,7 +268,10 @@ class Map:
                 tiles.add((tile.char, tile.block_mov, tile.block_lit))
                 cols.append(tile)
             rows.append(cols)
-        print('\tTiles - {}'.format(tiles))
+
+        if debug:
+            print('\tTiles - {}'.format(tiles))
+
         return rows
 
     ###########################################################################
@@ -285,20 +291,27 @@ class Map:
 
     def getDownStairs(self):
         '''same logic as getExit'''
-        print('[GET DOWNSTAIRS]:')
+        if debug:
+            print('[GET DOWNSTAIRS]:')
+
         try:
             if hasattr(self, self.enterance):
-                print('\tMAP HAS ENTERANCE')
+                if debug:
+                    print('\tMAP HAS ENTERANCE')
+
                 return self.enterance
         except AttributeError:
             # manually look through the map to check for '>'
             for j in range(len(self.data)):
                 for i in range(len(self.data[0])):
                     if self.data[j][i] == ">":
-                        print('\tHAS ENTERANCE AFTER LOOPING')
-                        print(self.data[j][i], i, j)
-                        print("\tLOCATION - {}, {}; CHAR - {}".format(
-                            self.tilemap[j][i].char, i, j))
+
+                        if debug:
+                            print('\tHAS ENTERANCE AFTER LOOPING')
+                            print(self.data[j][i], i, j)
+                            print("\tLOCATION - {}, {}; CHAR - {}".format(
+                                self.tilemap[j][i].char, i, j))
+
                         self.entrance = i, j
                         return i, j
             return 'Doesnt have a sublevel?'
@@ -462,7 +475,6 @@ class Map:
             @worldmap: size of the map           
             """
             halfscreen = screen//2
-            # less than half the screen - nothing
             if position < halfscreen:
                 return 0
             elif position >= worldmap - halfscreen:
@@ -470,18 +482,16 @@ class Map:
             else:
                 return position - halfscreen
 
-        # print(self.map_display_height, self.map_display_width)
-        # print(self.height, self.width)
         cx = scroll(X, self.map_display_width-14, self.width)
-        cy = scroll(Y, self.map_display_height-2, self.height)
+        cy = scroll(Y, self.map_display_height-6, self.height)
         cxe = cx + self.map_display_width-14
-        cye = cy + self.map_display_height-2
-        print("[MAP CLASS - OUTPUT]:")
-        print("\tCX:{}, CXE:{}".format(cx, cxe))
-        print("\tCY:{}, CYE:{}".format(cy, cye))
-        daytime = False
-        fg_fog = "grey"
-        bg_fog = "#ff000000"
+        cye = cy + self.map_display_height-6
+        
+        if debug:
+            print("[MAP CLASS - OUTPUT]:")
+            print("\tCX:{}, CXE:{}".format(cx, cxe))
+            print("\tCY:{}, CYE:{}".format(cy, cye))
+
         positions = {}
         for unit in units:
             positions[unit.pos()] = unit
@@ -549,13 +559,7 @@ class Map:
                     else:
                         ch, col, bkgd = " ", "black", None
 
-                # ch = ch if len(str(ch)) > 1 else chr(toInt(palette[ch]))
                 yield (x-cx, y-cy, col, ch, None)
-
-                # try:        
-                #     yield (x-cx, y-cy, col, ch, None)
-                # except NameError:
-                #     yield (x-cx, y-cy, col, ch, None)
         self.lit_reset()
 
 

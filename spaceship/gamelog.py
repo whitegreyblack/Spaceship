@@ -83,16 +83,12 @@ class GameLogger:
         return "["+"-".join(filter(lambda x: ":" in x, ctime().split(" ")))+"] :- "
 
     def add(self, message):
-        """Adds a message to the stack
-        Walkthrough: 
-            Checks if message is the same as before
-            If it is then appends a number (xN) to the message until message is different
-            if not, then checkks the stack for maxsize and removes the topmost element from queue
-            Finally appends the new message to stack and updates pointer
-        """
+        """Adds a message to queue and handles repeated messages from game"""
+        # checks terminal print flag
         if self.print_to_term:
             print(message)
 
+        # Checks if message is the same as before
         if self.messages and message in self.messages[-1]:
             self.messages.pop(-1)
             self.counter += 1
@@ -100,6 +96,7 @@ class GameLogger:
         else:
             self.counter = 0
         
+        # Dump the messages as long as they are not repeats of the same message
         if len(self.messages) + 1 > self.maxsize:
             if self.counter: # don't need to repeatedly dump the same message every time
                 self.dump(self.messages[0])
