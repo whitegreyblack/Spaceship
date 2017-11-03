@@ -8,6 +8,13 @@ from spaceship.setup import setup
 from collections import namedtuple
 from win32api import GetSystemMetrics as sysize
 
+if os.name == 'nt': # win32
+    print('platform win 32')
+elif os.name == 'posix':
+    print('platform posix')
+else:
+    print('platform undetected')
+
 class Option:
     def __init__(self, title, opt=None, subopts=None):
         self.title = title

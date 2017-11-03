@@ -1,49 +1,22 @@
 # Spaceship
 
-## [TODO]:
-    Script to extract log data
-    Unit Display
-    Setup.cfg
-    Color Gradient Map
-    Mouse Input
-    Test coverage for files
-    Reformatting and Documentation
+Spaceship is a placeholder name for my roguelike game built using python with bearlibterminal.
 
-## [DONE]:
-<del>Camera and Scrolling</del>
+# Version
+Current version is 0.1.3
 
-~~Stringify Reversal: Map STRING to PNG~~
+# Current Features
+2 Genders, 5 Races and 5 classes
+Overworld map similar to ADOM overworld map
+Dungeon/Wilderness Generation, Permanent City Layouts
+Full Colors using Hex Color Codes
+Message Log
+Object Interaction (Doors, Stairs, Walls)
+Field-of-View sight using recursive ray algorithm
+Log Data and Character Dumps after death
 
-~~Created more test maps~~
-
-~~Colorize maps~~
-
-~~Stringify: Map PNG to STRING~~
-
-~~Player and Unit movement~~
-
-~~Blocking~~
-
-~~Join animation functions into a main file~~
-
-~~Recursive FOV animation~~
-
-~~Naive FOV animation~~
-
-~~Distance functions for calculations placed in tools~~
-
-~~Pytest integration and tests folderr~~
-
-~~Setup.py~~
-
-~~Font setup and terminal layering~~
-
-<del>Initial setup</del>
-
-## [Changelog]:
-
-## [Git Log/Commits]:
-    Should be formatted as:
-        TODO: ---
-        DONE: ---
-    This allows for an easier way to extract log data using scripts
+# To Be Implemented
+Character-Character interaction
+Better city layouts and standardized map sizes
+Stat distribution and leveling
+Dynamic enemy and enemy location spawning within dungeons and wilderness

@@ -539,6 +539,8 @@ class Map:
                 #     ch = self.square(x, y).char
                 #     col = "white"
 
+                elif self.square(x, y).char = '^':
+
                 else:
                     # all other environment features
                     lit = self.lit(x, y)
