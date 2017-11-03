@@ -172,17 +172,18 @@ class Map:
     
     tile = namedlist("Tile", "char color bkgd visible block_mov block_lit items")
 
-    def __init__(self, data, maptype, GW=80, GH=40):
+    def __init__(self, data, maptype, mapid, GW=80, GH=40):
         self.maptype = maptype
         self.data, self.height, self.width = self.dimensions(data)
-        # self.map_id = mid
-        print("[MAP CLASS]: {} {}".format(self.width, self.height))
+        self.map_id = mapid
+        print('[MAP CLASS]:\n\t{}'.format(self.map_id))
         self.light = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.block = [[self.data[y][x] in chars_block_move for x in range(self.width)] for y in range(self.height)]
         self.tilemap = self.fill(data, self.width, self.height)
         self.map_display_width = min(self.width, GW)
         self.map_display_height = min(self.height, GH)
-        print("[MAP CLASS]: {} {}".format(self.map_display_width, self.map_display_height))
+        print("\tMAP DIM: {} {}".format(self.width, self.height))
+        print("\tMAP DIS:{} {}".format(self.map_display_width, self.map_display_height))
  
     ###########################################################################
     # Level Initialization, Setup and Evaluation                              #
@@ -265,7 +266,7 @@ class Map:
                 tiles.add((tile.char, tile.block_mov, tile.block_lit))
                 cols.append(tile)
             rows.append(cols)
-        print('[MAP CLASS]: Tiles - {}'.format(tiles))
+        print('\tTiles - {}'.format(tiles))
         return rows
 
     ###########################################################################
@@ -285,18 +286,19 @@ class Map:
 
     def getDownStairs(self):
         '''same logic as getExit'''
+        print('[GET DOWNSTAIRS]:')
         try:
             if hasattr(self, self.enterance):
-                print('GET DOWNSTAIRS: MAP HAS ENTERANCE')
+                print('\tMAP HAS ENTERANCE')
                 return self.enterance
         except AttributeError:
             # manually look through the map to check for '>'
             for j in range(len(self.data)):
                 for i in range(len(self.data[0])):
                     if self.data[j][i] == ">":
-                        print('[GET DOWNSTAIRS]: HAS ENTERANCE AFTER LOOPING')
+                        print('\tHAS ENTERANCE AFTER LOOPING')
                         print(self.data[j][i], i, j)
-                        print("[GET DOWNSTAIRS]: LOCATION - {}, {}; CHAR - {}".format(
+                        print("\tLOCATION - {}, {}; CHAR - {}".format(
                             self.tilemap[j][i].char, i, j))
                         self.entrance = i, j
                         return i, j
@@ -496,8 +498,9 @@ class Map:
         cy = scroll(Y, self.map_display_height-2, self.height)
         cxe = cx + self.map_display_width-14
         cye = cy + self.map_display_height-2
-        print("[MAP CLASS - OUTPUT]: CX:{}, CXE:{}".format(cx, cxe))
-        print(cy, cye)
+        print("[MAP CLASS - OUTPUT]:")
+        print("\tCX:{}, CXE:{}".format(cx, cxe))
+        print("\tCY:{}, CYE:{}".format(cy, cye))
         daytime = False
         fg_fog = "grey"
         bg_fog = "#ff000000"

@@ -36,7 +36,7 @@ class Player:
     def setupHome(self, home):
         self.home, self.hpointer = home, World.capitals(home)
         self.wx, self.wy = self.hpointer
-        self.zAxis = -1
+        self.wz = -1
 
     def worldPosition(self):
         return self.wx, self.wy
@@ -92,9 +92,9 @@ class Player:
     def moveZAxis(self, move):
         def checkZAxis(move):
             '''Make sure Z-Axis not less than -1 (WorldViewIndex)'''
-            return max(self.zAxis+move, -1)
+            return max(self.wz + move, -1)
 
-        self.zAxis = checkZAxis(move)
+        self.wz = checkZAxis(move)
 
     def dump(self):
         GREEN='\x1b[1;32;40m'

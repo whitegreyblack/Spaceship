@@ -149,6 +149,7 @@ class World:
 
         # level zero is world level -- going "down" increments the level variable
         self.level = 0
+        self.map_id = 'world'
 
         # keep the pointers seperated from world and dungeon/map
         self.world_position = []
