@@ -21,6 +21,7 @@ def new_name(character) -> (int, str):
         for i in range(xhalf-fifth, xhalf+fifth):
             term.puts(i, yhalf-2, "{}".format(chr(toInt('2550'))))
             term.puts(i, yhalf, "{}".format(chr(toInt('2550'))))
+            
         for j in range(yhalf-2, yhalf+1):
             term.puts(xhalf-fifth, j, "{}".format(chr(toInt('2551'))))
             term.puts(xhalf+fifth, j, "{}".format(chr(toInt('2551'))))
