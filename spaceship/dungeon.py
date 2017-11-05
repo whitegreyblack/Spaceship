@@ -524,12 +524,16 @@ def buildTerrain(tiletype, entropy=0, buildopts=None):
                 break
         print('NUM TREES: ', t)
         return terrain
-    elif tiletpye == "mountains":
+
+    elif tiletype == "mountains":
         pass
-    elif tiletpye == 'woods':
+
+    elif tiletype == 'woods':
         pass
+
     elif tiletype == 'shore':
         pass
+        
     elif tiletype == 'fields':
         # ALGO: BSP seperates areas into 'fields' which then contain a couple of rectangles and
         #       the largest one or two rectangles become fields while the next two become houses
@@ -538,6 +542,7 @@ def buildTerrain(tiletype, entropy=0, buildopts=None):
         # Even add a chance for river to split within the map
         pass
     else:
+        print(tiletype)
         raise ValueError("Tiletype not implemented")
 
 def buildDungeon(rot=0):
