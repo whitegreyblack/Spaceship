@@ -42,9 +42,11 @@ def start():
 
     def splitter(x, y):
         step = (y-x) // (term.state(term.TK_HEIGHT) // 8)
+
         if debug:
             print(y, x)
             print(step)
+
         return [x+z for z in range(x, y, step)]
 
     def update_start_screen():
@@ -52,7 +54,10 @@ def start():
             title_height = 1
         else:
             title_height = term.state(term.TK_HEIGHT)//5
-        print("TITLE HEIGHT: ", title_height)
+
+        if debug:
+            print("TITLE HEIGHT: ", title_height)
+
         return title_height
 
     def start_new_game():
@@ -84,6 +89,7 @@ def start():
         # options
         length, option = longest(title_options)
         x = center(length-2, width)
+        
         for option, i in zip(title_options, range(len(title_options))):
             text = "[color=#00FFFF]{}[/color]".format(option) if i == title_index else option
             term.puts(x, options_height[i], text)

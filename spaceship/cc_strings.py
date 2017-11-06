@@ -8,30 +8,30 @@ from collections import namedtuple
 _world = "Calabaston"
 
 _col1 = """
-Gender  : {:>10}\n
-Race    : {:>10}\n
-Capital : {:>10}\n
-Class   : {:>10}\n\n
-Gold    : {:>10}\n
-Level   : {:>10}\n
-Adv Exp : {:>10}\n\n
-HP      : [c=#00ffff]{:>10}[/c]\n
-MP      : [c=#00ffff]{:>10}[/c]\n
-SP      : [c=#00ffff]{:>10}[/c]\n
+Gender  : {:>10}{delim}
+Race    : {:>10}{delim}
+Capital : {:>10}{delim}
+Class   : {:>10}{delim}\n
+Gold    : {:>10}{delim}
+Level   : {:>10}{delim}
+Adv Exp : {:>10}{delim}\n
+HP      : [c=#00ffff]{:>10}[/c]{delim}
+MP      : [c=#00ffff]{:>10}[/c]{delim}
+SP      : [c=#00ffff]{:>10}[/c]{delim}
 """[1:]
 
 _col2 = """
-SKILLS  : \n\n  {}\n\n  {}\n\n\n
-   TOTAL  GB  RB  CB\n
-STR : [c=#00ffff]{:>2}[/c]\n
-CON : [c=#00ffff]{:>2}[/c]\n
-DEX : [c=#00ffff]{:>2}[/c]\n
-INT : [c=#00ffff]{:>2}[/c]\n
-WIS : [c=#00ffff]{:>2}[/c]\n
-CHA : [c=#00ffff]{:>2}[/c]
+SKILLS  : {delim}\n  {}{delim}\n  {}{delim}{delim}\n
+   TOTAL  GB  RB  CB{delim}
+STR : [c=#00ffff]{:>2}[/c]{delim}
+CON : [c=#00ffff]{:>2}[/c]{delim}
+DEX : [c=#00ffff]{:>2}[/c]{delim}
+INT : [c=#00ffff]{:>2}[/c]{delim}
+WIS : [c=#00ffff]{:>2}[/c]{delim}
+CHA : [c=#00ffff]{:>2}[/c]{delim}
 """[1:]
 
-_bon = """{:>2}\n\n{:>2}\n\n{:>2}\n\n{:>2}\n\n{:>2}\n\n{:>2}"""
+_bon = """{:>2}{delim}\n{:>2}{delim}\n{:>2}{delim}\n{:>2}{delim}\n{:>2}{delim}\n{:>2}"""
 
 _col3 = """
 Head  : {:<5}\n\nNeck  : {:<5}\n\nBody  : {:<5}\n
@@ -98,7 +98,7 @@ suited for either magic or melee classes.
 """[1:]
 
 race_elven="""
-The long-lived, mysterious race of elves reside deep within the forests of Aurendel. Though they may look frail, their
+The long-lived, mysterious race of elves reside deep within the forests of Aurendelim. Though they may look frail, their
 appearances betray them as they are more dextereous than other races. They live in accordance to the law of the forest
 and dissaprove of any attempt by other races that try to exploit the forest for its resources. Elven warriors are most
 often seen using magic or ranged weaponry but can be skilled in melee as well.
@@ -210,7 +210,7 @@ subrace_descriptions=[
     ],
     [
         "Family name for the elite elven family residing in the Emerald Forest",
-        "Local elven family name for the elves residing in the woods of Arundel",
+        "Local elven family name for the elves residing in the woods of Arundelim",
         "Drow are banished elves residing in the forest hills of the Dark Forest",
     ],
     [

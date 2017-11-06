@@ -837,7 +837,8 @@ def new_game(character=None):
         messages = gamelog.write().messages
         if messages:
             for idx in range(len(messages)):
-                term.puts(1, SCREEN_HEIGHT- gamelog.maxlines + idx, messages[idx])
+                # offput by 1 for border and then # of lines logger is currently set at
+                term.puts(1, SCREEN_HEIGHT - len(messages) + idx - 1, messages[idx])
 
     def map_box():
         """ Logic:

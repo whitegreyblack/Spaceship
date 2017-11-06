@@ -41,7 +41,7 @@ from random import randint
 #     term.border()
 
 def create_character():
-    row = 11
+    row = 11 if term.state(term.TK_HEIGHT) > 25 else 6
     col1 = 3
     col2 = 26
     col3 = 49
@@ -55,6 +55,7 @@ def create_character():
     indices = [0, 0, 0]
     grid = [[3, 26, 48], 5]
     length = term.state(term.TK_WIDTH)//2
+    shorten = term.state(term.TK_HEIGHT) > 25
 
     str_title = "Character Creation"
     str_help = "Press (?) for info on a selected race, subrace or class"
@@ -67,6 +68,9 @@ def create_character():
     player=namedtuple("Player",
         "name home gold stats gender gbonus race rbonus job \
         jbonus skills equipment inventory")
+    
+    print("Adding newline" if term.state(term.TK_HEIGHT) > 25 else "Not adding delim")
+    
     def subtitle_text(i):
         text = "Choose your {}"
         if i == 0:
@@ -111,7 +115,8 @@ def create_character():
         # subtitle -- clears subtitle area to make space for new subtitle text
         subtitle = subtitle_text(character_index)
         x = center(subtitle, (term.state(term.TK_WIDTH)))
-        term.puts(x, 3, subtitle)
+        y = 3 if term.state(term.TK_HEIGHT) > 25 else 2
+        term.puts(x, y, subtitle)
         term.bkcolor('black')
 
     def gender_row(g=False):
@@ -123,7 +128,7 @@ def create_character():
         ]
         if not g:
             for option, i in zip(gender_options, range(len(gender_options))):
-                x, y = 24+22*i, 5
+                x, y = 24+22*i, 5 if term.state(term.TK_HEIGHT) > 25 else 3
                 gender = pad(option.gender, length=8)
                 if i == gender_index:
                     if character_index == 0:
@@ -170,7 +175,7 @@ def create_character():
         # RACE OPTIONS
         if not r:
             for option, i in zip(race_options, range(len(race_options))):
-                x, y = 13+11*i, 7
+                x, y = 13+11*i, 7 if term.state(term.TK_HEIGHT) > 25 else 4
                 race = pad(option.race, length=8)
                 if i == race_index:
                     if character_index == 1:
@@ -222,7 +227,7 @@ def create_character():
         # CLASS OPTIONS
         if not c:
             for option, i in zip(class_options, range(len(class_options))):
-                x, y = 13+11*i, 9
+                x, y = 13+11*i, 9 if term.state(term.TK_HEIGHT) > 25 else 5
                 option = pad(option.classes, length=8)
                 if i == class_index:
                     if character_index == 2:
@@ -319,22 +324,39 @@ def create_character():
             location if character_index > 0 else "",
             occu if character_index > 1 else "",
             gold if character_index > 0 else 0,
-            1, 80, hp, mp, sp))
+            1, 80, hp, mp, sp,
+            delim="\n" if term.state(term.TK_HEIGHT) > 25 else ""))
 
         # STATS
         term.puts(col2, row + 1, strings._col2.format(
             *("" for _ in range(2)) if character_index < 1 else skills,
-            *(total)))
+            *(total),
+            delim="\n" if term.state(term.TK_HEIGHT) > 25 else ""))
 
-        term.puts(col2+10, row+11, strings._bon.format(*transform_values(gbonus)))
+        term.puts(
+            col2 + 10, 
+            row + 11, 
+            strings._bon.format(
+                *transform_values(gbonus), 
+                delim="\n" if term.state(term.TK_HEIGHT) > 25 else ""))
 
         if character_index > 0:
-            term.puts(col2 + 14, row + 11, strings._bon.format(*transform_values(rbonus)))
+            term.puts(
+                col2 + 14, 
+                row + 11, 
+                strings._bon.format(
+                    *transform_values(rbonus),
+                     delim="\n" if term.state(term.TK_HEIGHT) > 25 else ""))
 
         # EQUIPMENT and INVENTORY
         eq, inv = None, None
         if character_index > 1:
-            term.puts(col2 + 18, row + 11, strings._bon.format(*transform_values(cbonus)))
+            term.puts(
+                col2 + 18, 
+                row + 11 , 
+                strings._bon.format(
+                    *transform_values(cbonus),
+                     delim="\n" if term.state(term.TK_HEIGHT) > 25 else ""))
             eq, inv = form_equipment(req, ceq)
             # if var is -1 then shows eq else shows inv
             if inv_screen < 0:

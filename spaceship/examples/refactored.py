@@ -1,5 +1,71 @@
 # refactored code -- saved for future reference
 '''
+
+def circle():
+    term.open()
+    term.set('window: size=160x100, cellsize=2x2')
+    setup_font('Ibm_cga', 4, 4)
+    dungeon = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
+    cx, cy = X_TEMP//2-1, Y_TEMP//2-1
+    cr = min(cx, cy)
+    print(cr)
+    f = 1 - cr
+    fx = 1
+    fy = -2 * cr
+    x = 0
+    y = cr
+    dungeon[cy-cr][cx] = '.'
+    dungeon[cy+cr][cx] = '.'
+    dungeon[cy][cx-cr] = '.'
+    dungeon[cy][cx+cr] = '.'
+    while x < y:
+        if f >= 0: 
+            y -= 1
+            fy += 2
+            f += fy
+        x += 1
+        fx += 2
+        f += fx    
+        dungeon[cy+y][cx+x] = '.'
+        dungeon[cy+y][cx-x] = '.'
+        dungeon[cy-y][cx+x] = '.'
+        dungeon[cy-y][cx-x] = '.'
+        dungeon[cy+x][cx+y] = '.'
+        dungeon[cy+x][cx-y] = '.'
+        dungeon[cy-x][cx+y] = '.'
+        dungeon[cy-x][cx-y] = '.'
+    for i in range(Y_TEMP):
+        for j in range(X_TEMP):
+            term.puts(j, i, dungeon[i][j])
+    term.refresh()
+    term.read()
+
+def ellipse():
+    term.open()
+    term.set('window: size=160x100, cellsize=8x8')
+    setup_font('Ibm_cga', 4, 4)
+    dungeon = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
+    xr, yr = cx, cy = X_TEMP//2-1, Y_TEMP//2-1
+    t = 0
+    step = 1
+    group = set()
+    dungeon[cy-yr][cx] = '.'
+    dungeon[cy-yr][cx] = '.'
+    dungeon[cy][cx-xr] = '.'
+    dungeon[cy][cx+xr] = '.'
+    while t <= 360:
+        x = int(round(cx + xr*math.cos(t)))
+        y = int(round(cy + yr*math.sin(t)))
+        if (x,y) not in group:
+            dungeon[y][x] = '.'
+            group.add((x,y))
+        t += step    
+    for i in range(Y_TEMP):
+        for j in range(X_TEMP):
+            term.puts(j, i, dungeon[i][j])
+    term.refresh()
+    term.read()
+
 def actionClose(x, y):
     def closeDoor(i, j):
         glog.add("Closed door")
