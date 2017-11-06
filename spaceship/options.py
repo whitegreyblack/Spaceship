@@ -7,8 +7,8 @@ from bearlibterminal import terminal as term
 from spaceship.setup import setup
 from collections import namedtuple
 
+debug = False
 # from win32api import GetSystemMetrics as sysize
-
 if os.name == 'nt': # win32
     print('platform win 32')
 elif os.name == 'posix':
@@ -97,7 +97,6 @@ def options():
     def parse_screensize(p, screensize):
         if "Full Screen" in screensize:
             sx, sy = sysize(0)//term.state(term.TK_CELL_WIDTH), sysize(1)//term.state(term.TK_CELL_HEIGHT)
-            print(sx, sy)
         else:
             sx, sy = list(map(lambda x: int(x), screensize.split('x')))
         if (p['gx'], p['gy']) != (sx, sy):
@@ -111,8 +110,6 @@ def options():
                 p['cx'], p['cy'] = "auto", None
                 return p, True
         else:
-            print(cellsize, p)
-            print(term.font('Courier'))
             cx, cy = list(map(lambda x: int(x), cellsize.split('x')))
             if (p['cx'], p['cy']) != (cx, cy):
                 p['cx'], p['cy'] = (cx, cy)
@@ -120,14 +117,12 @@ def options():
         return p, False
 
     def parse_fonts(p, font):
-        print(p)
         if option == "Default":
             term.set('font: default, size={}{}'.format(
                 p['cx'], 
                 'x'+str(p['cy']) if p['cy'] != p['cx'] else ''))
 
         else:
-            print(font, p['cx'], p['cy'])
             if p['cx'] == "auto":
                 cy = 8 if font not in ("Andale, Courier, VeraMono") else 16
                 term.set("font: ./fonts/{}.ttf, size={}{}".format(
@@ -142,7 +137,6 @@ def options():
             reset_screen(p)
 
     def reset_screen(properties):
-        print(properties)
         if properties['cx'] == "auto":
             term.set("window: size={}x{}, cellsize={}".format(
                 properties['gx'],
@@ -169,7 +163,10 @@ def options():
 
         # options
         height = 3
-        print(option.optindex, option.suboptindex)
+        
+        if debug:
+            print(option.optindex, option.suboptindex)
+
         for index, opt in enumerate(option.opts):
             selected = index == option.optindex
             expanded = index in option.expand
@@ -206,23 +203,19 @@ def options():
             if option.optindex in option.expand:
                 # action stuff
                 if option.suboptindex[option.optindex] != -1:
-                    print('SELECTED: {}|{}'.format(
-                        option.opts[option.optindex], 
-                        option.subopts[option.optindex][option.suboptindex[option.optindex]]))
+                    if debug:
+                        print('SELECTED: {}|{}'.format(
+                            option.opts[option.optindex], 
+                            option.subopts[option.optindex][option.suboptindex[option.optindex]]))
+
                     if option.option() == "Screen Size":                       
-                        print(prop)
                         prop, changed = parse_screensize(prop, option.suboption())
                         if changed:
-                            print('changing screen properties')
                             reset_screen(prop)
-                        print(prop)
                     elif option.option() == "Cell Size":
-                        print(prop)
                         prop, changed = parse_cellsize(prop, option.suboption())
                         if changed:
-                            print('changing cell properties')
                             reset_screen(prop)
-                        print(prop)
                     elif option.option() == "Font Choice":
                         parse_fonts(prop, option.suboption())
                 else:

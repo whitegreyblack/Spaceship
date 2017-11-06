@@ -41,7 +41,9 @@ from random import randint
 #     term.border()
 
 def create_character():
-    row = 11 if term.state(term.TK_HEIGHT) > 25 else 6
+    shorten = term.state(term.TK_HEIGHT) <= 25
+    delim = "\n" if not shorten else ""
+    row = 11 if not shorten else 6
     col1 = 3
     col2 = 26
     col3 = 49
@@ -55,7 +57,6 @@ def create_character():
     indices = [0, 0, 0]
     grid = [[3, 26, 48], 5]
     length = term.state(term.TK_WIDTH)//2
-    shorten = term.state(term.TK_HEIGHT) > 25
 
     str_title = "Character Creation"
     str_help = "Press (?) for info on a selected race, subrace or class"
@@ -69,7 +70,7 @@ def create_character():
         "name home gold stats gender gbonus race rbonus job \
         jbonus skills equipment inventory")
     
-    print("Adding newline" if term.state(term.TK_HEIGHT) > 25 else "Not adding delim")
+    print("Adding newline" if not shorten else "Not adding delim")
     
     def subtitle_text(i):
         text = "Choose your {}"
@@ -84,23 +85,26 @@ def create_character():
 
     def transform_values(values):
         return tuple("+[c=#00ff00]"+str(v)+"[/c]" if v > 0
-                     else "-[c=#ff0000]"+str(abs(v))+"[/c]" if v < 0
+                     else "-[c=#ff0000]" + str(abs(v)) + "[/c]" if v < 0
                      else v for v in values)
 
     def cc_border():
         '''Border for Create Character Screen'''
         # border(BORDER_WIDTH, [0], "#")
         # border(BORDER_WIDTH, [10, 39], toChr("2550"))
+
         term.bkcolor('darkest grey')
-        for i in range((term.state(term.TK_WIDTH)-1)-2):
-            term.puts(i+1, 1, ' ')
-            term.puts(i+1, 35, ' ')
-        for i in range(35):
-            term.puts(1, i+1, ' ')
-            term.puts((term.state(term.TK_WIDTH)-1)-2, i+1, ' ')
+        for i in range((term.state(term.TK_WIDTH) - 1) - 2):
+            term.puts(i + 1, 1, ' ')
+            term.puts(i + 1, 35 if not shorten else 19, ' ')
+        
+        for i in range(35 if not shorten else 19):
+            term.puts(1, i + 1, ' ')
+            term.puts((term.state(term.TK_WIDTH) - 1) - 2, i + 1, ' ')
+
         term.bkcolor('dark brown')
         for i in range(20):
-            term.puts((term.state(term.TK_WIDTH)-1)//2-10+i, 1, ' ')
+            term.puts((term.state(term.TK_WIDTH)-1) // 2 - 10 + i, 1, ' ')
         term.bkcolor('black')
         
     def title():
@@ -115,7 +119,7 @@ def create_character():
         # subtitle -- clears subtitle area to make space for new subtitle text
         subtitle = subtitle_text(character_index)
         x = center(subtitle, (term.state(term.TK_WIDTH)))
-        y = 3 if term.state(term.TK_HEIGHT) > 25 else 2
+        y = 3 if not shorten else 2
         term.puts(x, y, subtitle)
         term.bkcolor('black')
 
@@ -128,7 +132,7 @@ def create_character():
         ]
         if not g:
             for option, i in zip(gender_options, range(len(gender_options))):
-                x, y = 24+22*i, 5 if term.state(term.TK_HEIGHT) > 25 else 3
+                x, y = 24+22*i, 5 if not shorten else 3
                 gender = pad(option.gender, length=8)
                 if i == gender_index:
                     if character_index == 0:
@@ -175,7 +179,7 @@ def create_character():
         # RACE OPTIONS
         if not r:
             for option, i in zip(race_options, range(len(race_options))):
-                x, y = 13+11*i, 7 if term.state(term.TK_HEIGHT) > 25 else 4
+                x, y = 13+11*i, 7 if not shorten else 4
                 race = pad(option.race, length=8)
                 if i == race_index:
                     if character_index == 1:
@@ -227,7 +231,7 @@ def create_character():
         # CLASS OPTIONS
         if not c:
             for option, i in zip(class_options, range(len(class_options))):
-                x, y = 13+11*i, 9 if term.state(term.TK_HEIGHT) > 25 else 5
+                x, y = 13+11*i, 9 if not shorten else 5
                 option = pad(option.classes, length=8)
                 if i == class_index:
                     if character_index == 2:
@@ -246,9 +250,9 @@ def create_character():
         descriptions = [
             [strings.start],
             [strings.race_beast, strings.race_dwarf, strings.race_elven,
-                strings.race_human, strings.race_orcen, ],
+                strings.race_human, strings.race_orcen,],
             [strings.class_druid, strings.class_cleric, strings.class_wizard,
-                strings.class_archer, strings.class_squire, ]]
+                strings.class_archer, strings.class_squire,]]
 
         primary = min(character_index, 2)
 
@@ -256,9 +260,13 @@ def create_character():
             else race_index if character_index == 1 \
             else character_index
 
-        term.puts(1, 37, join(
-            descriptions[primary][secondary],
-            (term.state(term.TK_WIDTH))-2))
+        term.puts(
+            1, 
+            37 if not shorten else (row + 14), 
+            join(
+                descriptions[primary][secondary].replace('\n',''),
+                (term.state(term.TK_WIDTH))-2,
+                delim))
 
     def form_equipment(req, ceq):
         def get_eq(x):
@@ -282,9 +290,12 @@ def create_character():
             return items
 
         inv = []
+        
         for r, c in zip(req, ceq):
             inv.append(get_eq(r)+get_eq(c))
+        
         eqp = [i.pop(0) if len(i) > 0 else [] for i in inv]
+
         return eqp, flatten(inv)
 
     while True:
@@ -325,51 +336,60 @@ def create_character():
             occu if character_index > 1 else "",
             gold if character_index > 0 else 0,
             1, 80, hp, mp, sp,
-            delim="\n" if term.state(term.TK_HEIGHT) > 25 else ""))
+            delim=delim))
 
         # STATS
         term.puts(col2, row + 1, strings._col2.format(
             *("" for _ in range(2)) if character_index < 1 else skills,
             *(total),
-            delim="\n" if term.state(term.TK_HEIGHT) > 25 else ""))
+            delim=delim))
 
         term.puts(
             col2 + 10, 
-            row + 11, 
+            row + (11 if not shorten else 6), 
             strings._bon.format(
                 *transform_values(gbonus), 
-                delim="\n" if term.state(term.TK_HEIGHT) > 25 else ""))
+                delim=delim))
 
         if character_index > 0:
             term.puts(
                 col2 + 14, 
-                row + 11, 
+                row +  (11 if not shorten else 6), 
                 strings._bon.format(
                     *transform_values(rbonus),
-                     delim="\n" if term.state(term.TK_HEIGHT) > 25 else ""))
+                     delim=delim))
 
         # EQUIPMENT and INVENTORY
         eq, inv = None, None
         if character_index > 1:
             term.puts(
                 col2 + 18, 
-                row + 11 , 
+                row +  (11 if not shorten else 6), 
                 strings._bon.format(
                     *transform_values(cbonus),
-                     delim="\n" if term.state(term.TK_HEIGHT) > 25 else ""))
+                     delim=delim))
+
             eq, inv = form_equipment(req, ceq)
             # if var is -1 then shows eq else shows inv
             if inv_screen < 0:
-                term.puts(col3, row+1, strings._col3.format(
-                    *(e if len(e) > 0 else "" for e in eq)))
+                term.puts(
+                    col3, 
+                    row + 1, 
+                    strings._col3.format(
+                        *(e if len(e) > 0 else "" for e in eq),
+                        delim=delim))
             else:
                 for item, i in zip(inv, range(len(inv))):
                     term.puts(col3, row+1+i, "{}.{}".format(
                                                         chr(ord('a')+i),
                                                         item))
         else:
-            term.puts(col3, row+1, strings._col3.format(
-                *("" for _ in range(12))))
+            term.puts(
+                col3, 
+                row + 1, 
+                strings._col3.format(
+                    *("" for _ in range(12)),
+                    delim=delim))
 
         # FOOTER
         description_row()

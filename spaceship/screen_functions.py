@@ -19,9 +19,9 @@ def optionize(text):
 def longest(options):
     return max(map(lambda opt: (len(opt), opt), options))
 
-def join(string, length):
+def join(string, length, delim="\n"):
     # use regex to replace [*]
-    return "\n\n".join(wrap(string, length))
+    return ("{}\n".format(delim)).join(wrap(string, length))
 
 def split(string, length):
     return wrap(string, length)

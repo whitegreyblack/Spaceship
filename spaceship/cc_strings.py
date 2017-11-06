@@ -34,10 +34,10 @@ CHA : [c=#00ffff]{:>2}[/c]{delim}
 _bon = """{:>2}{delim}\n{:>2}{delim}\n{:>2}{delim}\n{:>2}{delim}\n{:>2}{delim}\n{:>2}"""
 
 _col3 = """
-Head  : {:<5}\n\nNeck  : {:<5}\n\nBody  : {:<5}\n
-Arms  : {:<5}\n\nHands : {:<5}\n\nLhand : {:<5}
-Rhand : {:<5}\n\nRing1 : {:<5}\nRing2 : {:<5}\n
-Waist : {:<5}\n\nLegs  : {:<5}\n\nFeet  : {:<5}\n
+Head  : {:<5}{delim}\nNeck  : {:<5}{delim}\nBody  : {:<5}{delim}
+Arms  : {:<5}{delim}\nHands : {:<5}{delim}\nLhand : {:<5}
+Rhand : {:<5}{delim}\nRing1 : {:<5}\nRing2 : {:<5}{delim}
+Waist : {:<5}{delim}\nLegs  : {:<5}{delim}\nFeet  : {:<5}\n
 """[1:]
 
 # Some formulas to use when developing a character
