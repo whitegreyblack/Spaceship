@@ -487,8 +487,8 @@ def buildTerrain(tiletype, entropy=0, buildopts=None):
         water = None
         trees = None
     
-    vegatation = .33
     if tiletype == "plains":
+        vegatation = .33
         vege_chars = (",","`","\"",";")
         terrain = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
         for i in range(X_TEMP):
@@ -502,6 +502,7 @@ def buildTerrain(tiletype, entropy=0, buildopts=None):
                 break
         print('NUM TREES: ', t)
         return terrain
+
     elif tiletype == "hills":
         vege_chars = (",","`","\"","~")
         terrain = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
@@ -516,8 +517,10 @@ def buildTerrain(tiletype, entropy=0, buildopts=None):
                 break
         print('NUM TREES: ', t)
         return terrain
+
     elif tiletpye == "mountains":
         pass
+        
     elif tiletpye == 'woods':
         pass
     elif tiletype == 'shore':
