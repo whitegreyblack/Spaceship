@@ -620,7 +620,8 @@ def new_game(character=None):
                 # entering a city location
                 if player.worldPosition() in calabaston.enterable_legend.keys():
                     fileloc = calabaston.enterable_legend[player.worldPosition()].lower().replace(' ','_')
-                    filename = "./assets/maps/" + fileloc + ".png"
+                    img_name = "./assets/maps/" + fileloc + ".png"
+                    cfg_name = "./assets/maps"/ + fileloc + ".cfg"
                     # print(filename)
                     try:
                         x = player.wx
@@ -633,7 +634,7 @@ def new_game(character=None):
                             gamelog.add('CITY HASH ID: {}'.format(hash(v)))
 
                         location = Map(
-                            data=stringify(filename), 
+                            data=stringify(img_name, cfg_name), 
                             map_type="city", 
                             map_id=hash(v), 
                             width=term.state(term.TK_WIDTH), 
