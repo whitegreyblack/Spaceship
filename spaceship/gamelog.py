@@ -36,7 +36,7 @@ class GameLogger:
         Methods: {add, update, write, dump, dumps}
     """
 
-    def __init__(self, screenlinelimit, ptt=False, maxcachesize=10):
+    def __init__(self, screenlinelimit, ptt=False):
         """
         @args: 
             screenlinelimit(required) -- specify number of lines to be shown on screen
@@ -47,7 +47,6 @@ class GameLogger:
         self.counter = 0
         self.messages = []
         self.print_to_term = ptt
-        self.maxsize = maxcachesize
         self.maxlines = screenlinelimit
         self.setupFileWriting()
 
@@ -102,7 +101,7 @@ class GameLogger:
             self.counter = 0
         
         # Dump the messages as long as they are not repeats of the same message
-        if len(self.messages) + 1 > self.maxsize:
+        if len(self.messages) + 1 > self.maxlines:
             if self.counter: # don't need to repeatedly dump the same message every time
                 self.dump(self.messages.pop(0))
 
@@ -111,14 +110,14 @@ class GameLogger:
 
     def update(self, n=0):
         """Updates the points to the message position to start printing from"""
-        self.index = len(self.messages)-4 if not n else n
+        self.index = len(self.messages)-self.maxlines if not n else n
 
     def write(self):
         """Return a set of messages for game loop to print"""
-        if len(self.messages) < 4:
+        if len(self.messages) < self.maxlines:
             return log(self.messages)
 
-        return log([self.messages[self.index+i] for i in range(4)])
+        return log([self.messages[self.index+i] for i in range(self.maxlines)])
 
     def dump(self, message):
         """Write log to disk"""

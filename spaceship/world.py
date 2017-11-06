@@ -9,7 +9,7 @@ from spaceship.setup import setup, setup_font
 from spaceship.maps import stringify
 from textwrap import wrap
 # from objects import Map
-from spaceship.tools import bresenhams
+from spaceship.tools import bresenhams, scroll
 from random import choice
 from PIL import Image
 import time
@@ -144,7 +144,7 @@ class World:
 
     tile = namedlist("Tile", "char color land territory tcol kingdom kcol enterable")
 
-    def __init__(self):
+    def __init__(self, width, height):
         self.pointer = list(World.capitals('Renmar'))
 
         # level zero is world level -- going "down" increments the level variable
@@ -156,6 +156,9 @@ class World:
         self.map_position = []
         self.name = "Calabaston"
         self._dungeons = set()
+        self.map_display_width = width
+        self.map_display_height = height
+        self.display_key = 0
 
     @staticmethod
     def capitals(capital):
@@ -192,12 +195,15 @@ class World:
         assert (gw, gh) == (kw, kh)
 
         # width height should be same for both so just use one
-        self.w, self.h = pw, ph
+        self.width, self.height = pw, ph
+        self.map_display_width = min(self.width, self.map_display_width)
+        self.map_display_height = min(self.height, self.map_display_height)
+
         # iterate through maps and pull info from each
         self.data = []
-        for j in range(self.h):
+        for j in range(self.height):
             row = []
-            for i in range(self.w):
+            for i in range(self.width):
 
                 # seperate the array indexing access by map
                 # to decrease confusion on error
@@ -266,7 +272,7 @@ class World:
         # undecided on whether to add roads or not -- will see in the future if it makes sense to add
         self.build_roads()        
         # empty map data only holds the top level maps -- each map will hold their own sublevel maps
-        self.map_data = [[None for _ in range(self.w)] for _ in range(self.h)]
+        self.map_data = [[None for _ in range(self.width)] for _ in range(self.height)]
         
     def build_roads(self):
         '''Creates connections from pointA to pointB on map and writes ROAD characters on the map'''
@@ -345,8 +351,8 @@ class World:
         lakes = set()
         grass = set()
         plain = set()
-        for i in range(self.w):
-            for j in range(self.h):
+        for i in range(self.width):
+            for j in range(self.height):
                 char, col = self.data[j][i].char, self.data[j][i].color
 
                 # evaluate sea tiles
@@ -426,7 +432,7 @@ class World:
         assert len(neighbors) == 8
         return neighbors
 
-    def worldlegend(self):
+    def legend(self):
         i = 0
         for d, ch, colors in self.geo_legend.values():
             ch = ch if len(ch) == 1 else chr(int(ch, 16))
@@ -467,33 +473,52 @@ class World:
         pass
 
     def walkable(self, i, j):
-        if 0 <= i < self.w and 0 <= j < self.h:
+        if 0 <= i < self.width and 0 <= j < self.height:
             for landtype in ("sea", "mnts", "lake"):
                 if landtype in self.data[j][i].land:
                     return False
             return True
         return False
 
-    def draw(self, key, x, y, vx, vy):
-        for j in range(*vy):
-            for i in range(*vx):
+    def draw(self, player_x, player_y):
+        
+        # map size checks for when the map dimensions are not 80 x 50
+        shorten_x = self.map_display_width >= 66
+        shorten_y = self.map_display_height >= 44
+
+        # get camera location for x coordinate
+        cam_x = scroll(
+            player_x, 
+            self.map_display_width + (-15 if shorten_x else 0), 
+            self.width)
+        ext_x = cam_x + self.map_display_width + (-15 if shorten_x else 0)
+
+        # get camera location for y coordinate
+        cam_y = scroll(
+            player_y, 
+            self.map_display_height + (-2 if shorten_y else -2), 
+            self.height)
+        ext_y = cam_y + self.map_display_height + (-2 if shorten_y else -2)
+
+        for j in range(cam_y, ext_y):
+            for i in range(cam_x, ext_x):
                 try:
                     char, color, _, terr, tcol, king, kcol, _ = self.data[j][i]
                 except IndexError:
                     raise IndexError("{}, {}".format(i, j))
 
-                if (x, y) == (i, j):
+                if (player_x, player_y) == (i, j):
                     color = "white"
                     char = "@"
 
-                if key == 0:
+                if self.display_key == 0:
                     if len(char) > 1:
                         try:
                             char = chr(int(char, 16))
                         except ValueError:
                             raise ValueError(char)
 
-                elif key == 1:
+                elif self.display_key == 1:
                     color = tcol
                     if terr != "None":
                         char = chr(int("2261", 16))
@@ -508,7 +533,7 @@ class World:
                     elif len(char) > 1:
                         char = chr(int(char, 16))
                 
-                yield (i-vx[0], j-vy[0], color, char)
+                yield (i-cam_x, j-cam_y, color, char)
 
     def testdraw(self):
         '''probably should only be called on main script'''

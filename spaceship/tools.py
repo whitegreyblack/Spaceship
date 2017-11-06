@@ -131,3 +131,20 @@ def bresenhams(start, end):
     if swapped:
         points.reverse()
     return points
+
+def scroll(position, screen, worldmap):
+    '''
+    @position: current position of player 1D axis
+    
+    @screen  : size of the screen
+    
+    @worldmap: size of the map           
+    '''
+    halfscreen = screen//2
+    # less than half the screen - nothing
+    if position < halfscreen:
+        return 0
+    elif position >= worldmap - halfscreen:
+        return worldmap - screen
+    else:
+        return position - halfscreen

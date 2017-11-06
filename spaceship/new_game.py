@@ -3,9 +3,6 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.action import key_movement, num_movement, key_actions, action, keypress, world_key_actions
-from spaceship.constants import FOV_RADIUS
-from spaceship.constants import GAME_SCREEN_WIDTH as SCREEN_WIDTH
-from spaceship.constants import GAME_SCREEN_HEIGHT as SCREEN_HEIGHT
 from spaceship.setup import setup_game
 from spaceship.tools import bresenhams, deltanorm, movement
 from spaceship.maps import stringify, hextup, hexone, toInt
@@ -511,7 +508,12 @@ def new_game(character=None):
                     if debug:
                         gamelog.add("\tHASH: {}".format(hash(v)))
                     
-                    sublevel = Map(buildDungeon(), "dungeon", hash(v))
+                    sublevel = Map(
+                        data=buildDungeon(), 
+                        map_type="dungeon", 
+                        map_id=hash(v), 
+                        width=term.state(term.TK_WIDTH), 
+                        height=term.state(term.TK_HEIGHT))
                     
                     if debug:
                         print('\tSUBLEVEL ID: {}'.format(sublevel.map_id))
@@ -527,7 +529,8 @@ def new_game(character=None):
                 gamelog.add('\tPLAYER NOT STANDING ON STAIRS LEADING DOWN')
 
         else:
-            gamelog.add("\tTRYING TO GO UP STAIRS")
+            if debug:
+                gamelog.add("\tTRYING TO GO UP STAIRS")
 
             # check if you're in a city
             if player.worldPosition() in calabaston.enterable_legend.keys():
@@ -629,7 +632,12 @@ def new_game(character=None):
                         if debug:
                             gamelog.add('CITY HASH ID: {}'.format(hash(v)))
 
-                        location = Map(stringify(filename), "city", hash(v), SCREEN_WIDTH, SCREEN_HEIGHT)
+                        location = Map(
+                            data=stringify(filename), 
+                            map_type="city", 
+                            map_id=hash(v), 
+                            width=term.state(term.TK_WIDTH), 
+                            height=term.state(term.TK_HEIGHT))
                     except FileNotFoundError:
                         # print('no file of that name')
                         raise FileNotFoundError("Map for {} not yet implemented".format(fileloc))
@@ -657,9 +665,11 @@ def new_game(character=None):
                         neighbors = calabaston.accessTileNeighbors(*player.worldPosition())
                     
                         location = Map(
-                            buildTerrain(tile.land, buildopts=neighbors), 
-                            tile.land,
-                            mapid=hash(v))
+                            data=buildTerrain(tile.land, buildopts=neighbors), 
+                            map_type=tile.land,
+                            map_id=hash(v),
+                            width=term.state(term.TK_WIDTH),
+                            height=term.state(term.TK_HEIGHT))
                     
                         x, y = player.getWorldPosOnEnter()
                         x = max(int(location.width * x - 1), 0)
@@ -673,9 +683,11 @@ def new_game(character=None):
                     # Build a dungeon tile
                     else:
                         location = Map(
-                            buildDungeon(1000), 
-                            tile.land,
-                            mapid=hash(v)) # dungeon.build(options)
+                            data=buildDungeon(1000), 
+                            map_type=tile.land,
+                            map_id=hash(v), # dungeon.build(options)
+                            width=term.state(term.TK_WIDTH),
+                            height=term.state(term.TK_HEIGHT))
                     
                         player.resetMapPos(*location.getUpStairs())
                     
@@ -812,7 +824,7 @@ def new_game(character=None):
 
     turn = 0
     def status_box():
-        col, row = 0, 2
+        col, row = 1, 2
         term.puts(col, row+0, player.name)
         term.puts(col, row+1, player.gender + " " + player.race)
         term.puts(col, row+2, player.job)
@@ -838,7 +850,7 @@ def new_game(character=None):
         if messages:
             for idx in range(len(messages)):
                 # offput by 1 for border and then # of lines logger is currently set at
-                term.puts(1, SCREEN_HEIGHT - len(messages) + idx - 1, messages[idx])
+                term.puts(1, screen_height - len(messages) + idx - 1, messages[idx])
 
     def map_box():
         """ Logic:
@@ -852,12 +864,13 @@ def new_game(character=None):
             term.puts(x + 14, y + 1, "[color={}]".format(lit) + ch + "[/color]")
         term.refresh()
         
-    def worldlegend_box():
-        x, y = SCREEN_WIDTH-12, 1
+    def world_legend_box():
+        x, y = screen_width-12, 1
         boxheader = "Map Legend"
         selected(center(surround(calabaston.name), 14), 1, surround(calabaston.name))   
         selected(center(boxheader, 12), 3, surround(boxheader))
-        for char, color, desc, i in calabaston.worldlegend():
+        
+        for char, color, desc, i in calabaston.legend():
             term.puts(0, i + 4, "[c={}] {}[/c] {}".format(color, char, desc))
         footer = i + 5 + 3
 
@@ -891,43 +904,18 @@ def new_game(character=None):
 
     def worldmap_box():
         '''Displays the world map tiles in the terminal'''
-        def scroll(position, screen, worldmap):
-            '''
-            @position: current position of player 1D axis
-            
-            @screen  : size of the screen
-            
-            @worldmap: size of the map           
-            '''
-            halfscreen = screen//2
-            # less than half the screen - nothing
-            if position < halfscreen:
-                return 0
-            elif position >= worldmap - halfscreen:
-                return worldmap - screen
-            else:
-                return position - halfscreen
 
-        # world map header and variables used in calculating screen box
-        # selected(center(surround(calabaston.name), SCREEN_WIDTH), 0, surround(calabaston.name))
-        SCREEN_WIDTH_OFFSET = 14 # save 14 tiles on left side of screen to display map information
-        SCREEN_HEIGHT_OFFSET = 2 # save two tiles to create horizonatal bars on top and bottom
-        TOTAL_MAP_WIDTH = SCREEN_WIDTH - SCREEN_WIDTH_OFFSET    # keeping these variables explicit
-        TOTAL_MAP_HEIGHT = SCREEN_HEIGHT - SCREEN_HEIGHT_OFFSET # so we dont have to calculate again
-        cx = scroll(player.wx, TOTAL_MAP_WIDTH, calabaston.w,)
-        cy = scroll(player.wy, TOTAL_MAP_HEIGHT, calabaston.h)
-        cxe = cx+TOTAL_MAP_WIDTH
-        cye = cy+TOTAL_MAP_HEIGHT
-
-        for x, y, col, ch in calabaston.draw(wview, 
-                                    *(player.worldPosition()), 
-                                    (cx, cxe), (cy, cye)):
-            term.puts(x + 14, y + 1, "[c={}]{}[/c]".format(col, ch))
+        screen_off_x, screen_off_y = 14, 1
+        for x, y, col, ch in calabaston.draw(*(player.worldPosition())):
+            term.puts(
+                x + screen_off_x, 
+                y + screen_off_y, 
+                "[c={}]{}[/c]".format(col, ch))
 
     # very first thing is game logger initialized to output messages on terminal
     # gamelog = GameLogger(4, ptt=True)
-    gamelog = GameLogger(4)
-
+    gamelog = GameLogger(4 if term.state(term.TK_HEIGHT) > 25 else 2)
+    print("MAX LINES: {}".format(gamelog.maxlines))
     # if character is None then improperly accessed new_game
     # else unpack the character
     if character==None:
@@ -938,7 +926,8 @@ def new_game(character=None):
     
     # pointer to the current view
     wview = WorldView.Geo
-    calabaston = World()
+    screen_width, screen_height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
+    calabaston = World(screen_width, screen_height)
     calabaston.load(
                 "./assets/worldmap.png", 
                 "./assets/worldmap_territories.png",
@@ -954,7 +943,6 @@ def new_game(character=None):
     MAP_FACTOR = 2
     COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
     COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
-    #px, py = SCREEN_WIDTH//2, SCREEN_HEIGHT//2
     wpx, wpy = player.worldPosition()
     # dpx, dpy = dungeon.start_position()
 
@@ -997,7 +985,7 @@ def new_game(character=None):
 
             # World View
             worldmap_box()
-            worldlegend_box()
+            world_legend_box()
             term.refresh()
 
             x, y, a = key_in_world()

@@ -14,6 +14,7 @@ from spaceship.setup import toInt
 from spaceship.charmap import DungeonCharmap as dcm
 from spaceship.charmap import WildernessCharmap as wcm
 from spaceship.world import World
+from spaceship.tools import scroll
 # TODO: Maybe move map to a new file called map and create a camera class?
 
 errormessage=namedtuple("ErrMsg", "x y ch lvl vis lit")
@@ -176,14 +177,14 @@ class Map:
     
     tile = namedlist("Tile", "char color bkgd light block_mov block_lit items")
 
-    def __init__(self, data, maptype, mapid, GW=80, GH=40):
-        self.maptype = maptype
+    def __init__(self, data, map_type, map_id, width=80, height=50):
+        self.maptype = map_type
         self.data, self.height, self.width = self.dimensions(data)
-        self.map_id = mapid
+        self.map_id = map_id
         self.block = [[self.data[y][x] in chars_block_move for x in range(self.width)] for y in range(self.height)]
         self.tilemap = self.fill(data, self.width, self.height)
-        self.map_display_width = min(self.width, GW)
-        self.map_display_height = min(self.height, GH)
+        self.map_display_width = min(self.width, width)
+        self.map_display_height = min(self.height, height)
 
         if map_init_debug:
             print('[MAP CLASS]:\n\t{}'.format(self.map_id))
@@ -470,42 +471,28 @@ class Map:
     ###########################################################################
     # Output and Display Functions                                            #
     ###########################################################################
-    def output(self, X, Y, units):
+    def output(self, player_x, player_y, units):
+        shorten_x = self.map_display_width >= 66
+        shorten_y = self.map_display_height >= 44
 
-        def scroll(position, screen, worldmap):
-            """
-            @position: current position of player 1D axis
-            
-            @screen  : size of the screen
-            
-            @worldmap: size of the map           
-            """
-            halfscreen = screen//2
-            if position < halfscreen:
-                return 0
-            elif position >= worldmap - halfscreen:
-                return worldmap - screen
-            else:
-                return position - halfscreen
+        # get camera location for x coordinate
+        cam_x = scroll(
+            player_x, 
+            self.map_display_width + (-14 if shorten_x else 0), 
+            self.width)
+        ext_x = cam_x + self.map_display_width + (-14 if shorten_x else 0)
 
-        if self.map_display_width >= 66:
-            cx = scroll(X, self.map_display_width-14, self.width)
-            cxe = cx + self.map_display_width-14
-        else:
-            cx = scroll(X, self.map_display_width, self.width)
-            cxe = cx + self.map_display_width
-
-        if self.map_display_height >= 44: 
-            cy = scroll(Y, self.map_display_height-6, self.height)
-            cye = cy + self.map_display_height-6
-        else:
-            cy = scroll(Y, self.map_display_height, self.height)
-            cye = cy + self.map_display_height
+        # get camera location for y coordinate
+        cam_y = scroll(
+            player_y, 
+            self.map_display_height + (-6 if shorten_y else -4), 
+            self.height)
+        ext_y = cam_y + self.map_display_height + (-6 if shorten_y else -4)
         
         if debug:
             print("[MAP CLASS - OUTPUT]:")
-            print("\tCX:{}, CXE:{}".format(cx, cxe))
-            print("\tCY:{}, CYE:{}".format(cy, cye))
+            print("\tCX:{}, CXE:{}".format(cam_x, ext_x))
+            print("\tCY:{}, CYE:{}".format(cam_y, ext_y))
 
         positions = {}
         for unit in units:
@@ -513,12 +500,12 @@ class Map:
 
         col = "#ffffff"
         # width should total 80 units
-        for x in range(cx, cxe):
+        for x in range(cam_x, ext_x):
 
             # height should total 24 units
-            for y in range(cy, cye):
+            for y in range(cam_y, ext_y):
                 # reset variables every iteration
-                if x == X and y == Y:
+                if x == player_x and y == player_y:
                     # Current position holds your position
                     ch = "@"
                     col = "white"
@@ -574,7 +561,7 @@ class Map:
                     else:
                         ch, col, bkgd = " ", "black", None
 
-                yield (x-cx, y-cy, col, ch, None)
+                yield (x-cam_x, y-cam_y, col, ch, None)
         self.lit_reset()
 
 

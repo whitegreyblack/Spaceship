@@ -43,7 +43,7 @@ from random import randint
 def create_character():
     shorten = term.state(term.TK_HEIGHT) <= 25
     delim = "\n" if not shorten else ""
-    row = 11 if not shorten else 6
+    row = 11 if not shorten else 5
     col1 = 3
     col2 = 26
     col3 = 49
@@ -94,32 +94,35 @@ def create_character():
         # border(BORDER_WIDTH, [10, 39], toChr("2550"))
 
         term.bkcolor('darkest grey')
-        for i in range((term.state(term.TK_WIDTH) - 1) - 2):
-            term.puts(i + 1, 1, ' ')
-            term.puts(i + 1, 35 if not shorten else 19, ' ')
+        for i in range(term.state(term.TK_WIDTH) - 2):
+            term.puts(i + 1, 1 if not shorten else 0, ' ')
+            term.puts(i + 1, 35 if not shorten else 18, ' ')
         
-        for i in range(35 if not shorten else 19):
+        for i in range(35 if not shorten else 18):
             term.puts(1, i + 1, ' ')
-            term.puts((term.state(term.TK_WIDTH) - 1) - 2, i + 1, ' ')
+            term.puts(term.state(term.TK_WIDTH) - 2, i + 1, ' ')
 
-        term.bkcolor('dark brown')
-        for i in range(20):
-            term.puts((term.state(term.TK_WIDTH)-1) // 2 - 10 + i, 1, ' ')
-        term.bkcolor('black')
+        # term.bkcolor('dark brown')
+        # for i in range(20):
+        #     term.puts((term.state(term.TK_WIDTH)-1) // 2 - 10 + i, 1, ' ')
+        # term.bkcolor('black')
         
     def title():
         '''Adds the title to top of screen'''
         title = " " + str_title + " "
         term.bkcolor('brown')
-        term.puts(center(title, (term.state(term.TK_WIDTH))), 1, "[c=black]"+title+"[/c]")
+        term.puts(
+            center(title, term.state(term.TK_WIDTH)), 
+            1 if not shorten else 0, 
+            "[c=black]" + title + "[/c]")
         term.bkcolor('black')
 
     def subtitle():
         '''Adds text underneath the title'''
         # subtitle -- clears subtitle area to make space for new subtitle text
         subtitle = subtitle_text(character_index)
-        x = center(subtitle, (term.state(term.TK_WIDTH)))
-        y = 3 if not shorten else 2
+        x = center(subtitle, term.state(term.TK_WIDTH))
+        y = 3 if not shorten else 1
         term.puts(x, y, subtitle)
         term.bkcolor('black')
 
@@ -132,7 +135,7 @@ def create_character():
         ]
         if not g:
             for option, i in zip(gender_options, range(len(gender_options))):
-                x, y = 24+22*i, 5 if not shorten else 3
+                x, y = 24+22*i, 5 if not shorten else 2
                 gender = pad(option.gender, length=8)
                 if i == gender_index:
                     if character_index == 0:
@@ -179,7 +182,7 @@ def create_character():
         # RACE OPTIONS
         if not r:
             for option, i in zip(race_options, range(len(race_options))):
-                x, y = 13+11*i, 7 if not shorten else 4
+                x, y = 13+11*i, 7 if not shorten else 3
                 race = pad(option.race, length=8)
                 if i == race_index:
                     if character_index == 1:
@@ -231,7 +234,7 @@ def create_character():
         # CLASS OPTIONS
         if not c:
             for option, i in zip(class_options, range(len(class_options))):
-                x, y = 13+11*i, 9 if not shorten else 5
+                x, y = 13+11*i, 9 if not shorten else 4
                 option = pad(option.classes, length=8)
                 if i == class_index:
                     if character_index == 2:
