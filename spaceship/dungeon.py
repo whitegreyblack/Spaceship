@@ -13,6 +13,7 @@ import math
 import time
 from copy import deepcopy
 
+debug = False
 X_TEMP, Y_TEMP = 78, 40
 # X_TEMP, Y_TEMP = 160, 80
 # X_TEMP, Y_TEMP = 80, 50
@@ -223,7 +224,10 @@ def path(p1, p2, dungeon):
     openlist = set()
     closelist = []
     openlist.add(node(0, 0, 0, None, p1))
-    print("PATH: DISTANCE - {}".format(int(distance(p1, p2)*10)))
+
+    if debug:
+        print("PATH: DISTANCE - {}".format(int(distance(p1, p2)*10)))
+
     while openlist:
         nodeq = min(sorted(openlist))
         openlist.remove(nodeq)
@@ -374,7 +378,8 @@ def decay(dungeon, n=1000):
 
     walls, floors, doors, liquid, spaces, other = [], [], [], [], [], []
     decayed = deepcopy(dungeon)
-    print("DUNGEON DIMENSIONS: {}x{}".format(len(dungeon[0]), len(dungeon)))
+    if debug:
+        print("DUNGEON DIMENSIONS: {}x{}".format(len(dungeon[0]), len(dungeon)))
 
     # get the dungeon features
     for j in range(len(dungeon)):
@@ -393,8 +398,10 @@ def decay(dungeon, n=1000):
     # decay of walls
     shuffle(walls)
     shuffle(floors)
-
-    print("NUMBER OF WALLS: {}".format(len(walls)))
+    
+    if debug:
+        print("NUMBER OF WALLS: {}".format(len(walls)))
+    
     # wallsToFloor = 0
     # while wallsToFloor <= 50:
     #     changed = cellauto(*walls[wallsToFloor%len(walls)])
@@ -409,7 +416,8 @@ def decay(dungeon, n=1000):
         if val:
             changed += 1
     
-    print("CHANGED: {}".format(changed))
+    if debug:
+        print("CHANGED: {}".format(changed))
 
     # for i in range(len(floors)):
 
@@ -518,13 +526,15 @@ def buildTerrain(tiletype, entropy=0, buildopts=None):
         print('NUM TREES: ', t)
         return terrain
 
-    elif tiletpye == "mountains":
+    elif tiletype == "mountains":
         pass
-        
-    elif tiletpye == 'woods':
+
+    elif tiletype == 'woods':
         pass
+
     elif tiletype == 'shore':
         pass
+        
     elif tiletype == 'fields':
         # ALGO: BSP seperates areas into 'fields' which then contain a couple of rectangles and
         #       the largest one or two rectangles become fields while the next two become houses
@@ -533,6 +543,7 @@ def buildTerrain(tiletype, entropy=0, buildopts=None):
         # Even add a chance for river to split within the map
         pass
     else:
+        print(tiletype)
         raise ValueError("Tiletype not implemented")
 
 def buildDungeon(rot=0):

@@ -201,6 +201,10 @@ def new_game(character=None):
             "#": "a wall",
             "x": "a post",
             "~": "a river",
+            "T": "a tree",
+            "f": "a tree",
+            "Y": "a tree",
+            
         }
         walkBlock = "walked into {}"
         tposx = player.mx + x
@@ -455,7 +459,7 @@ def new_game(character=None):
             openDoor(i, j) if key is "o" else closeDoor(i, j)
 
         else:
-            gamelog.add("Which direction?")
+            gamelog.add("There is more than one door near you. Which direction?")
             log_box()
             term.refresh()
             code = term.read()
@@ -480,10 +484,13 @@ def new_game(character=None):
 
         # first seperate logic by action take to differentiate going up versus down
         if k is ">": # and player.mapPosition() == dungeon.get
-            gamelog.add("TRYING TO GO DOWN STAIRS")
+            if debug:
+                gamelog.add("TRYING TO GO DOWN STAIRS")
+            
             if player.mapPosition() == dungeon.getDownStairs():
                 if debug:
                     gamelog.add('\tPLAYER STANDING ON STAIRS LEADING DOWN')
+                
                 if not dungeon.hasSublevel():
                     x = player.wx
                     y = player.wy
@@ -525,6 +532,12 @@ def new_game(character=None):
 
                 if debug:
                     gamelog.add("\tPARENT ID: {}".format(dungeon.map_id))
+
+            elif calabaston.is_wilderness(*player.worldPosition()):
+                
+                gamelog.add('\tPLAYER IS IN WILDERNESS\nPLAYER CAN EXIT MAP ANYWHERE')
+                player.moveZAxis(-1)
+                dungeon = dungeon.getParent()
 
             # check if you're in a dungeon
             elif player.mapPosition() == dungeon.getUpStairs():
@@ -726,7 +739,8 @@ def new_game(character=None):
         if key in ("o", "c"):
             actions[key](x, y, key)
         elif key in ("<"):
-            gamelog.add('[PROCESS ACTION]: EXIT')
+            if debug:
+                gamelog.add('[PROCESS ACTION]: EXIT')
             actions[key](x, y, key)
         elif key in (">"):
             gamelog.add('enter')

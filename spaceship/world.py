@@ -446,6 +446,12 @@ class World:
     def get_landtype(self, x, y):
         return self.data[y][x].land
 
+    def is_wilderness(self, x, y):
+        for landtype in ("dungeon", "city(human)", "city(elven)", "fortress"):
+            if landtype == self.get_landtype(x, y):
+                return False
+        return True
+
     def add_location(self, location, x, y):
         '''Must've been located in enterables legend'''
         # try:

@@ -25,6 +25,7 @@ from spaceship.options import options
 from spaceship.screen_functions import center, colored, longest
 from spaceship.setup import setup, setup_font, setup_game, setup_menu, toChr
 
+debug = False
 
 def start():
     def border():
@@ -40,9 +41,10 @@ def start():
         return [hoffset + height//2-height//4 + i * 2 for i in range(4)]
 
     def splitter(x, y):
-        print(y, x)
         step = (y-x) // (term.state(term.TK_HEIGHT) // 8)
-        print(step)
+        if debug:
+            print(y, x)
+            print(step)
         return [x+z for z in range(x, y, step)]
 
     def update_start_screen():
@@ -70,7 +72,9 @@ def start():
 
     while proceed:
         width, height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
-        print(title_height, options_height)
+        
+        if debug:
+            print(title_height, options_height)
         
         term.clear()
 
