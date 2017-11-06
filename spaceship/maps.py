@@ -105,8 +105,10 @@ def picturfy(string, filename="picturfy-img.png", folder="./", debug=False):
     img_to_save.save(folder+filename)
     return folder+filename
 
+def build_location(image_file, cfg_file):
+    return
 
-def stringify(string, debug=False):
+def stringify(img_file, cfg_file, debug=False):
     """Takes in a file location string and a bool for debug
     to determine output. Sister function to asciify. Uses 
     only keyboard accessible characters in the map."""
@@ -114,7 +116,7 @@ def stringify(string, debug=False):
     lines = []
     colors = set()
 
-    with Image.open(string) as img:
+    with Image.open(img_file) as img:
         pixels = img.load()
         w, h = img.size
 

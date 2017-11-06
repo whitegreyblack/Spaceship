@@ -90,7 +90,7 @@ option = Option("Options Screen")
 option.add_opt("Screen Size", ["80x25", "80x50", "160x50", "160x100"]) 
                                 # "Full Screen: {}x{}".format(sysize(0), sysize(1))])
 option.add_opt("Cell Size", ["Auto", "8x16", "8x8", "16x16"])
-option.add_opt("Font Choice", ["Default", "IBM_CGA", "Andale", "Courier", "Unscii-8", "Unscii-8-thin", "VeraMono"])
+option.add_opt("Font Choice", ["Default", "Source", "Fira", "Fira-Bold", "IBM_CGA", "Andale", "Courier", "Unscii-8", "Unscii-8-thin", "VeraMono"])
 option.add_opt("Coloring", ["Dynamic", "Dark", "Light", "Colorblind"])
 
 def options():

@@ -621,7 +621,7 @@ def new_game(character=None):
                 if player.worldPosition() in calabaston.enterable_legend.keys():
                     fileloc = calabaston.enterable_legend[player.worldPosition()].lower().replace(' ','_')
                     img_name = "./assets/maps/" + fileloc + ".png"
-                    cfg_name = "./assets/maps"/ + fileloc + ".cfg"
+                    cfg_name = "./assets/maps/" + fileloc + ".cfg"
                     # print(filename)
                     try:
                         x = player.wx
