@@ -201,6 +201,7 @@ class Map:
         height = len(data)
         width = max(len(col) for col in data)
         # return data, height, width
+        print(height, width)
         return data, height, width
 
     def fill(self, d, w, h):
@@ -246,7 +247,7 @@ class Map:
                 else:
                     t = locchar[char]
             except KeyError:
-                raise KeyError("Evaluate Plains Map: {} not in keys".format(char))
+                raise KeyError("Evaluate Map: {} not in keys".format(char))
             return t
         
         rows = []
@@ -487,10 +488,19 @@ class Map:
             else:
                 return position - halfscreen
 
-        cx = scroll(X, self.map_display_width-14, self.width)
-        cy = scroll(Y, self.map_display_height-6, self.height)
-        cxe = cx + self.map_display_width-14
-        cye = cy + self.map_display_height-6
+        if self.map_display_width >= 66:
+            cx = scroll(X, self.map_display_width-14, self.width)
+            cxe = cx + self.map_display_width-14
+        else:
+            cx = scroll(X, self.map_display_width, self.width)
+            cxe = cx + self.map_display_width
+
+        if self.map_display_height >= 44: 
+            cy = scroll(Y, self.map_display_height-6, self.height)
+            cye = cy + self.map_display_height-6
+        else:
+            cy = scroll(Y, self.map_display_height, self.height)
+            cye = cy + self.map_display_height
         
         if debug:
             print("[MAP CLASS - OUTPUT]:")
