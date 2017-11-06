@@ -65,6 +65,11 @@ class GameLogger:
         else:
             self.print_to_term = False
 
+    def print_once(self, message):
+        self.print_on()
+        self.add(message)
+        self.print_off()
+
     def setupFileWriting(self):
         '''Adds the filename attribute to class for use in message log recording'''
         if not os.path.isdir('logs'):
@@ -99,8 +104,7 @@ class GameLogger:
         # Dump the messages as long as they are not repeats of the same message
         if len(self.messages) + 1 > self.maxsize:
             if self.counter: # don't need to repeatedly dump the same message every time
-                self.dump(self.messages[0])
-            self.messages.pop(0)
+                self.dump(self.messages.pop(0))
 
         self.messages.append(message)
         self.update()
@@ -113,18 +117,19 @@ class GameLogger:
         """Return a set of messages for game loop to print"""
         if len(self.messages) < 4:
             return log(self.messages)
+
         return log([self.messages[self.index+i] for i in range(4)])
 
     def dump(self, message):
-        """Write log to disk -- TODO: Unneeded? Just use dumps?"""
+        """Write log to disk"""
         try:
-            print('[GAME LOG]: APPENDING')
             with open(self.filename, 'a') as f:
                 f.write(self.getHeader() + message + "\n")
+
         except OSError:
-            print('[GAME LOG]: WRITING')
             with open(self.filename, 'w') as f:
                 f.write(self.getHeader() + message + "\n")
+
         except:
             raise
 

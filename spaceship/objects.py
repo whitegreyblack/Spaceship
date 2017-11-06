@@ -23,6 +23,8 @@ visibility = namedtuple("Visiblity", "movement visibility lightlevel")
 class Light: Unexplored, Explored, Visible = range(3)    
 class Letter: Ascii, Unicode = range(2)
 
+map_init_debug = True
+map_func_debug = False
 debug = False
 # change variables to dictioanry -- more tight and accessible
 # allows for more 
@@ -183,7 +185,7 @@ class Map:
         self.map_display_width = min(self.width, GW)
         self.map_display_height = min(self.height, GH)
 
-        if debug:
+        if map_init_debug:
             print('[MAP CLASS]:\n\t{}'.format(self.map_id))
             print("\tMAP DIM: {} {}".format(self.width, self.height))
             print("\tMAP DIS:{} {}".format(self.map_display_width, self.map_display_height))
@@ -348,6 +350,11 @@ class Map:
         return not self.within_bounds(x, y)
 
     def walkable(self, x, y):
+        if debug:
+            print("WITHIN BOUNDS: {} {}".format(x, y))
+            print("\tRESULTS: {}".format(self.within_bounds(x, y)))
+            print("DUNGEON BOUNDS: {} {}".format(self.width, self.height))
+
         return self.within_bounds(x, y) and not self.square(x, y).block_mov
 
     def viewable(self, x, y):
@@ -391,8 +398,6 @@ class Map:
             for x in range(self.width):
                 if self.square(x, y).light:
                     self.square(x, y).light = 1 # if self.square(x, y).light > 0 else 0
-
-
 
     def fov_calc(self, lights):
         self.lamps = lights

@@ -204,7 +204,6 @@ def new_game(character=None):
             "T": "a tree",
             "f": "a tree",
             "Y": "a tree",
-            
         }
         walkBlock = "walked into {}"
         tposx = player.mx + x
@@ -231,10 +230,15 @@ def new_game(character=None):
                 tposy))
 
         occupied = (tposx, tposy) in unit_pos
-        walkable = not dungeon.blocked(tposx, tposy)
+        # walkable = not dungeon.blocked(tposx, tposy)
+        walkable = dungeon.walkable(tposx, tposy)
 
         if debug:
+            gamelog.print_on()
             gamelog.add('\tWALKABLE: {}'.format(walkable))
+            gamelog.print_off()
+
+        if debug:
             gamelog.add('\tCURRENT LOCATION: {}'.format(player.mapPosition()))
 
         # (not blocked) and (not occupied) and (inbounds)
@@ -254,6 +258,7 @@ def new_game(character=None):
 
             if dungeon.square(tposx, tposy).items:
                 gamelog.add("There is something here")
+
         else:
             if debug:
                 gamelog.add('\tNOT MOVING IN DUNGEON BECAUSE: ')
@@ -272,15 +277,20 @@ def new_game(character=None):
                 # else:
                 #     gamelog.add(walkBlock.format(unit.r))
                 # pass
+
             if not walkable:
+                # =============  START WALK LOG  =================================
+                # find out if it was due to out of bounds error or block error
                 if debug:
                     gamelog.add("\t\tNOT WALKABLE")
-                # =============  START WALK LOG  =================================
-                ch = dungeon.square(tposx, tposy).char
-                if ch == "~":
-                    gamelog.add('you cannot swim')
+                if dungeon.out_of_bounds(tposx, tposy):
+                    gamelog.add("Reached the edge of the map")
                 else:
-                    gamelog.add(walkBlock.format(walkChars[ch]))
+                    ch = dungeon.square(tposx, tposy).char
+                    if ch == "~":
+                        gamelog.add('you cannot swim')
+                    else:
+                        gamelog.add(walkBlock.format(walkChars[ch]))
                 # ===============  END WALK LOG  =================================
 
 
@@ -508,9 +518,11 @@ def new_game(character=None):
                     
                     sublevel.addParent(dungeon)
                     dungeon.addSublevel(sublevel)
+
                 dungeon = dungeon.getSublevel()
                 player.moveZAxis(1)
                 player.resetMapPos(*dungeon.getUpStairs())
+
             else:
                 gamelog.add('\tPLAYER NOT STANDING ON STAIRS LEADING DOWN')
 
@@ -568,11 +580,14 @@ def new_game(character=None):
 
             if debug:
                 gamelog.add('\tCHECKING IF PARENT IS OVERWORLD')
+
             if isinstance(dungeon, World):
                 if debug:
                     gamelog.add('\tPARENT IS OVERWORLD -- DESTROYING DUNGEON REFERENCE')
+
                 dungeon = None
                 player.resetMapPos(0, 0)
+
             else:
                 if debug:
                     gamelog.add('\tPARENT IS NOT OVERWORLD -- DUNGEON REFERENCE STILL EXISTS')
@@ -586,6 +601,7 @@ def new_game(character=None):
         '''
         if debug:
             gamelog.add('[ENTER MAP]:')
+
         if player.wz == -1:
             if debug:
                 gamelog.add("\tCalabaston has map: {}".format(calabaston.mapAt(*player.worldPosition())))
@@ -630,17 +646,21 @@ def new_game(character=None):
                     # get options based on land tile
                     # build_options = Dungeon.build_options()
                     wilderness = tile.land in ("plains", "dark woods", "hills", "forest", "desert")
+                    
                     x = player.wx
                     y = player.wy
                     z = player.wz
                     t = 'wilderness'
                     v = str(x) + str(y) + str(z) + t
+
                     if wilderness:
                         neighbors = calabaston.accessTileNeighbors(*player.worldPosition())
+                    
                         location = Map(
                             buildTerrain(tile.land, buildopts=neighbors), 
                             tile.land,
                             mapid=hash(v))
+                    
                         x, y = player.getWorldPosOnEnter()
                         x = max(int(location.width * x - 1), 0)
                         y = max(int(location.height * y - 1), 0)
@@ -649,11 +669,14 @@ def new_game(character=None):
                             gamelog.add("location w,h {}, {}".format(location.width, location.height))
                         
                         player.resetMapPos(x, y)
+                    
+                    # Build a dungeon tile
                     else:
                         location = Map(
                             buildDungeon(1000), 
                             tile.land,
                             mapid=hash(v)) # dungeon.build(options)
+                    
                         player.resetMapPos(*location.getUpStairs())
                     
                     if debug:
@@ -661,14 +684,16 @@ def new_game(character=None):
                         gamelog.add("\tLocation Enter: {}".format(location.getDownStairs()))
                     # print('PP:',player.mapPosition())
                     # print('Exit', location.getExit())
+
                 location.addParent(calabaston)
                 calabaston.add_location(location, *(player.worldPosition()))
+
             else:
                 # re-enter city
                 if debug:
                     gamelog.add("PLAYER POSITION ON WORLD {}, {}".format(
-                        *player.worldPosition()
-                    ))
+                        *player.worldPosition()))
+                
                 if player.worldPosition() in calabaston.enterable_legend.keys():
                     location = calabaston.get_location(*player.worldPosition())
                     player.resetMapPos(location.width//2, location.height//2)
@@ -812,7 +837,7 @@ def new_game(character=None):
         messages = gamelog.write().messages
         if messages:
             for idx in range(len(messages)):
-                term.puts(1, SCREEN_HEIGHT-5+idx, messages[idx])
+                term.puts(1, SCREEN_HEIGHT- gamelog.maxlines + idx, messages[idx])
 
     def map_box():
         """ Logic:
@@ -823,7 +848,7 @@ def new_game(character=None):
         dungeon.fov_calc(lights+[(player.mx, player.my, player.sight)])
         for x, y, lit, ch, bkgd in dungeon.output(player.mx, player.my, []):
             # ch = ch if len(str(ch)) > 1 else chr(toInt(palette[ch]))
-            term.puts(x+14, y+1, "[color={}]".format(lit)+ch+"[/color]")
+            term.puts(x + 14, y + 1, "[color={}]".format(lit) + ch + "[/color]")
         term.refresh()
         
     def worldlegend_box():
@@ -832,8 +857,8 @@ def new_game(character=None):
         selected(center(surround(calabaston.name), 14), 1, surround(calabaston.name))   
         selected(center(boxheader, 12), 3, surround(boxheader))
         for char, color, desc, i in calabaston.worldlegend():
-            term.puts(0, i+4, "[c={}] {}[/c] {}".format(color, char, desc))
-        footer = i+5+3
+            term.puts(0, i + 4, "[c={}] {}[/c] {}".format(color, char, desc))
+        footer = i + 5 + 3
 
         # check if player position is over a city/enterable area
         # this is purely a ui enhancement. Actually entering a city is not that much different
@@ -896,7 +921,7 @@ def new_game(character=None):
         for x, y, col, ch in calabaston.draw(wview, 
                                     *(player.worldPosition()), 
                                     (cx, cxe), (cy, cye)):
-            term.puts(x+14, y+1, "[c={}]{}[/c]".format(col, ch))
+            term.puts(x + 14, y + 1, "[c={}]{}[/c]".format(col, ch))
 
     # very first thing is game logger initialized to output messages on terminal
     # gamelog = GameLogger(4, ptt=True)
