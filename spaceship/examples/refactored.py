@@ -1,5 +1,192 @@
 # refactored code -- saved for future reference
 '''
+def testdraw(self):
+        """probably should only be called on main script"""
+        def scroll(position, screen, worldmap):
+            @position: current position of player 1D axis
+            
+            @screen  : size of the screen
+            
+            @worldmap: size of the map           
+            halfscreen = screen//2
+            # less than half the screen - nothing
+            if position < halfscreen:
+                return 0
+            elif position >= worldmap - halfscreen:
+                return worldmap - screen
+            else:
+                return position - halfscreen
+
+        def geotop():
+            for j in range(cy, cy+GH-1):
+                for i in range(cx, cx+GW):
+                    if len(self.data[j][i].char) > 1:
+                        term.puts(i-cx, j-cy+1, "[c={}]{}[/c]".format(self.data[j][i].color, chr(int(self.data[j][i].char, 16))))
+                    else:
+                        term.puts(i-cx, j-cy+1, "[c={}]{}[/c]".format(self.data[j][i].color, self.data[j][i].char))
+            term.bkcolor('white')
+            term.puts(0, 0, "#"*GW)
+            term.puts(center("Geography of Calabaston  ", GW), 0,
+                "[c=black]Geography of Calabaston[/c]")
+            term.bkcolor('black')
+
+        def geopol():
+            for j in range(cy, cy+GH-1):
+                for i in range(cx, cx+GW):
+                    char, color, _, terr, tcol, _, _, _ = self.data[j][i]
+                    if terr != "None":
+                        term.puts(i-cx, j-cy+1, "[c={}]{}[/c]".format(tcol, chr(int("2261", 16))))
+                    else:
+                        if len(char) > 1:
+                            term.puts(i-cx, j-cy+1, "[c={}]{}[/c]".format(color, chr(int(char, 16))))
+                        else:
+                            term.puts(i-cx, j-cy+1, "[c={}]{}[/c]".format(color, char))     
+            term.bkcolor('white')
+            term.puts(0, 0, "#"*GW)
+            term.puts(center("Territories of Calabaston  ", GW), 0,
+                "[c=black]Territories of Calabaston[/c]")
+            term.bkcolor('black')      
+
+        def geoking():
+            for j in range(cy, cy+GH-1):
+                for i in range(cx, cx+GW):
+                    char, color, _, _, _, k, kc, _ = self.data[j][i]
+                    if k != "None":
+                        term.puts(i-cx, j-cy+1, "[c={}]{}[/c]".format(kc, chr(int("2261", 16))))
+                    else:
+                        if len(char) > 1:
+                            term.puts(i-cx, j-cy+1, "[c={}]{}[/c]".format(color, chr(int(char, 16))))
+                        else:
+                            term.puts(i-cx, j-cy+1, "[c={}]{}[/c]".format(color, char, 16))    
+            term.bkcolor('white')
+            term.puts(0, 0, "#"*GW)
+            term.puts(center("Kingdoms of Calabaston  ", GW), 0,
+                "[c=black]Kingdoms of Calabaston[/c]")
+            term.bkcolor('black')     
+
+        global GH, GW, FH, FW
+        current = "g"
+        lastposition = None
+        while True:
+            x, y = self.pointer
+            cx = scroll(self.pointer[0], GW, self.w)
+            cy = scroll(self.pointer[1], GH-1, self.h)
+
+            term.clear()
+            if self.level <= 0:
+                # print(self.level)
+                if current == "g":
+                    geotop()
+                elif current == "p":
+                    geopol()
+                else:
+                    geoking()
+                term.puts(x-cx, y-cy+1, '[c=white]@[/c]')
+                # print("ENTERABLE?: ", x, y, self.enterable(x, y))
+                if self.enterable(x, y):
+                    # print("ENTERABLE")
+                    term.bkcolor('white')
+                    term.puts(0, GH-1, "#"*GW)    
+                    # try:                
+                    term.puts(center("  "+self.enterable_legend[(x, y)], GW), GH-1, 
+                            "[c=black]"+self.enterable_legend[(x, y)]+"[/c]")
+                    term.bkcolor('black')
+                    # except KeyError:
+                    #     term.puts(center("  "+"Some town : to be named", GW), GH-1, 
+                    #         "[c=black]Some town : to be named[/c]")
+                    term.bkcolor("black")
+                elif self.dungeon(x, y):
+                    term.bkcolor('white')
+                    term.puts(0, GH-1, "#"*GW)
+                    term.puts(center("  "+self.dungeon_legend[(x, y)], GW), GH-1,
+                            "[c=black]"+self.dungeon_legend[(x, y)]+"[/c]")
+                    term.bkcolor('black')
+
+
+            else:
+                if self.map_data[y][x]:
+                    term.puts(center("nodata  ", GW), GH//2, "NO DATA")    
+                else:
+                    # self.level += 1
+                    # print(self.level)
+                    term.puts(center("nodata  ", GW), GH//2, "LOAD MAP")    
+                    dungeon = self.map_data[y][x]
+                    xx, yy = dungeon.width//2, dungeon.height//2
+                    dungeon.fov_calc([(xx, yy, 5),])
+                    for i, j, lit, ch, bkgd in list(dungeon.output(xx, yy, [])):
+                        term.puts(i, j, "[color={}]".format(lit)+ch+"[/color]")
+
+            term.refresh()
+
+            k = term.read()
+            # print(k)
+            while k in (term.TK_SHIFT, term.TK_ALT, term.TK_CONTROL):
+                k = term.read()
+
+            # exit logic
+            if k == term.TK_CLOSE or k == term.TK_ESCAPE or k == term.TK_Q:
+                break
+
+            # map functions
+            elif k == term.TK_P and current != "p":
+                current = "p"
+            elif k == term.TK_G and current != "g":
+                current = "g"
+            elif k == term.TK_K and current != "k":
+                current = "k"
+
+            # # level switching
+            # elif k == term.TK_PERIOD:
+            #     if term.state(term.TK_SHIFT) and self.enterable(x, y):
+            #         print('entering')                
+            #         self.level += 1
+            #         print('LEVEL: ',self.level)
+            #         # if self.map_data[y][x] == 
+            #         #     print('no data')
+            #         #     # if it is a city
+            #         #     if self.map_data[y][x] == None:
+            #         #         self.add_city(x, y, GW, GH)
+
+            # elif k == term.TK_COMMA:
+            #     if term.state(term.TK_SHIFT) and self.enterable(x, y):
+            #         print('exitting')                
+            #         self.level -= 1
+            #         print('LEVEL: ',self.level)
+
+
+            # terminal zooming
+            elif k == term.TK_Z:
+                change = False
+                if term.TK_Z and term.state(term.TK_SHIFT):
+                    if (GH, GW) != (24, 40):
+                        FH, FW, GH, GW = 16, 16, 24, 40
+                        change = True
+                        self.level += 1
+                else:   
+                    if (GH, GW) != (48, 80):
+                        FH, FW, GH, GW = 8, 8, 48, 80
+                        change = True
+                        self.level -= 1
+                if change:
+                    setup_font('Ibm_cga', FW, FH)
+                    term.set("window: size={}x{}, cellsize=auto".format(GW, GH))
+
+            # movement key handling
+            elif k == term.TK_UP and self.level == 0:
+                if self.walkable(x, y-1):
+                    y -= 1
+            elif k == term.TK_DOWN and self.level == 0:
+                if self.walkable(x, y+1):
+                    y += 1
+            elif k == term.TK_LEFT and self.level == 0:
+                if self.walkable(x-1, y):
+                    x -= 1
+            elif k == term.TK_RIGHT and self.level == 0:
+                if self.walkable(x+1, y):
+                    x += 1
+            self.pointer[0] = max(min(x, self.w-1), 0)
+            self.pointer[1] = max(min(y, self.h), 1)
+            self.level = max(min(self.level, 1), -1)
 
 def circle():
     term.open()

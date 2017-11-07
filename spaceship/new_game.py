@@ -500,7 +500,7 @@ def new_game(character=None):
             if debug:
                 gamelog.add("TRYING TO GO DOWN STAIRS")
             
-            if player.position() == dungeon.getDownStairs():
+            if player.position_local() == dungeon.getDownStairs():
                 if debug:
                     gamelog.add('\tPLAYER STANDING ON STAIRS LEADING DOWN')
                 
@@ -536,7 +536,7 @@ def new_game(character=None):
 
             else:
                 gamelog.add('\tPLAYER NOT STANDING ON STAIRS LEADING DOWN')
-
+        # key is "<"
         else:
             if debug:
                 gamelog.add("\tTRYING TO GO UP STAIRS")
@@ -557,9 +557,10 @@ def new_game(character=None):
                 if debug:
                     gamelog.add("\tPARENT ID: {}".format(dungeon.map_id))
 
-            elif calabaston.is_wilderness(*player.position()):
-                
-                gamelog.add('\tPLAYER IS IN WILDERNESS\nPLAYER CAN EXIT MAP ANYWHERE')
+            elif calabaston.is_wilderness(*player.position_global()):
+                if debug:
+                    gamelog.add('\tPLAYER IS IN WILDERNESS\nPLAYER CAN EXIT MAP ANYWHERE')
+
                 player.move_height(-1)
                 dungeon = dungeon.getParent()
 
@@ -643,7 +644,7 @@ def new_game(character=None):
             
             else:
                 # print('Not important city')
-                tile = calabaston.accessTile(*player.position_global())
+                tile = calabaston.access(*player.position_global())
                 
                 if debug:
                     gamelog.add("TILE TYPE: {}".format(tile.land))
@@ -659,7 +660,7 @@ def new_game(character=None):
                 v = str(x) + str(y) + str(z) + t
 
                 if wilderness:
-                    neighbors = calabaston.accessTileNeighbors(*player.position_global())
+                    neighbors = calabaston.access_neighbors(*player.position_global())
                 
                     location = Map(
                         data=build_terrain(
@@ -672,7 +673,7 @@ def new_game(character=None):
                         width=term.state(term.TK_WIDTH),
                         height=term.state(term.TK_HEIGHT))
                 
-                    x, y = player.getWorldPosOnEnter()
+                    x, y = player.get_position_global_on_enter()
                     x = max(int(location.width * x - 1), 0)
                     y = max(int(location.height * y - 1), 0)
                     
@@ -702,30 +703,24 @@ def new_game(character=None):
             location.addParent(calabaston)
             calabaston.add_location(location, *(player.position_global()))
 
+        # location already been built -- retrieve from world map_data
         else:
-            # re-enter city
-            if debug:
-                gamelog.add("PLAYER POSITION ON WORLD {}, {}".format(
-                    *player.position_global()))
-            
+            # player position is different on map enter depending on if map is a location or wilderness
+            location = calabaston.get_location(*player.position_global())
             if player.position_global() in calabaston.enterable_legend.keys():
-                location = calabaston.get_location(*player.position_global())
                 player.reset_position_local(location.width//2, location.height//2)
 
+            # re-enter dungeon
+            elif player.position_global() in calabaston.dungeon_legend.keys():
+                player.reset_position_local(location.getUpStairs())
+
+            # reenter a wilderness
             else:
-                location = calabaston.get_location(*player.position_global())
+                x, y = player.get_position_global_on_enter()
+                x = int((location.width-1) * x)
+                y = int((location.height-1) * y)
+                player.reset_position_local(x, y)
                 
-                # reenter a wilderness
-                if location.maptype in ("plains", "dark woods", "hills", "forest", "desert"):
-                    x, y = player.getWorldPosOnEnter()
-                    x = int((location.width-1) * x)
-                    y = int((location.height-1) * y)
-                    player.reset_position_local(x, y)
-                
-                # reenter a dungeon:
-                else:
-                    player.reset_position_local(*calabaston.get_location(*player.position_global()).getUpStairs())
-        
         player.move_height(1)
 
     world_actions={
@@ -868,7 +863,7 @@ def new_game(character=None):
 
         # check if player position is over a dungeon position
         elif player.position_global() in calabaston.dungeon_legend.keys():
-            dungeon_name = surround(calabaston.dungeon_legend[player.position()])
+            dungeon_name = surround(calabaston.dungeon_legend[player.position_global()])
             selected(
                 center(surround(dungeon_name) if len(dungeon_name) <= 12 else dungeon_name, 12),
                 footer,
@@ -993,9 +988,7 @@ def new_game(character=None):
                 key_process(x, y)
 
     # player.dump()
-    # gamelog.dumps()   
-    if dungeon:
-        
+    # gamelog.dumps()           
     return False
 # End New Game Menu
 

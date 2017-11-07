@@ -1,6 +1,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
+from typing import Tuple
 from spaceship.world import World
 # from spaceship.objects import Object, Character
 
@@ -33,12 +34,12 @@ class Player:
         self.setup(character.home)
         self.calculate_initial_stats()
 
-    def setup(self, home):
+    def setup(self, home: str) -> None:
         self.home, self.hpointer = home, World.capitals(home)
         self.wx, self.wy = self.hpointer
         self.wz = -1
 
-    def calculate_initial_stats(self):
+    def calculate_initial_stats(self) -> None:
         stats = tuple(s + g + r + c for s , g, r, c 
                             in zip(self.base_stats,
                                    self.gender_bonus,
@@ -55,67 +56,64 @@ class Player:
     #   Height - Z Axis Functions
     #
     ###########################################################################
-    def height(self):
+    def height(self) -> int:
         return self.wz
         
-    def move_height(self, move):
-        def check_height(move):
-            '''Make sure Z-Axis not less than -1 (WorldViewIndex)'''
+    def move_height(self, move: int) -> None:
+        def check_height(move: int) -> int:
             return max(self.wz + move, -1)
         self.wz = check_height(move)
     
-    def ascend(self):
+    def ascend(self) -> None:
         self.wz = max(self.wz + 1, -1)
     
-    def descend(self):
+    def descend(self) -> None:
         self.wz = max(self.wz - 1, -1)
+
     ###########################################################################
     #
     #   Global X, Y Position Coordinate Functions
     #
     ###########################################################################
-    def position_global(self):
+    def position_global(self) -> Tuple[int, int]:
         return self.wx, self.wy
 
-    def travel(self, dx, dy):
+    def travel(self, dx: int, dy: int) -> None:
         self.wx += dx
         self.wy += dy
 
-    def save_position_global(self):
+    def save_position_global(self) -> None:
         self.last_position_global = self.wx, self.wy
     
-    def get_position_global_on_enter(self):
+    def get_position_global_on_enter(self) -> Tuple[float, float]:
+        def direction(x: float, y: float) -> Tuple[float, float]:
+            '''Normalizes the position of the coordinates from 0 to 1'''
+            return (x + 1) / 2, (y + 1) / 2
+
         if not hasattr(self, "last_position_global"):
             raise AttributeError("Cant call this func without a last_position_global")
-
-        def direction(x, y):
-            '''Normalizes the position of the coordinates from 0 to 1'''
-            return (x+1)/2, (y+1)/2
-
         try:
-            print(self.wx - self.last_position_global[0], self.wy - self.last_position_global[1])
-            print(self.last_position_global[0]-self.wx, self.last_position_global[1]-self.wy)
-            print(direction(self.wx - self.last_position_global[0], self.wy - self.last_position_global[1]))
             return direction(self.last_position_global[0]-self.wx, self.last_position_global[1]-self.wy)
         
         except KeyError:
             raise KeyError("direction not yet added or calculations were wrong")
+
     ###########################################################################
     #
     #   Local X, Y Position Coordinate Functions
     #
     ###########################################################################
-    def position_local(self):
+    def position_local(self) -> Tuple[int, int]:
         return self.mx, self.my
 
-    def move(self, dx, dy):
+    def move(self, dx: int, dy: int) -> None:
         self.mx += dx
         self.my += dy
 
-    def save_position_local(self):
+    def save_position_local(self) -> None:
         self.last_position_local = self.mx, self.my
 
-    def reset_position_local(self, x, y):
+    def reset_position_local(self, x: int, y: int) -> None:
         self.mx, self.my = x, y
 
     ###########################################################################
@@ -123,15 +121,12 @@ class Player:
     #   Player Data Print Function
     #
     ########################################################################### 
-    def dump(self):
+    def dump(self) -> str:
         GREEN='\x1b[1;32;40m'
         RED='\x1b[1;31;40m'
         BLUE='\x1b[0;34;40m'
         YELLOW='\x1b[0;33;40m'
-        END='\x1b[0m'
-        ISATTY = sys.stdout.isatty()
-        stat = GREEN+"{:<7}"+END if ISATTY else "{}"
-        expe = BLUE+"{:>7}"+END if ISATTY else "{}"
+        
         dump_template="""
             [Character Sheet -- Spaceship]
             ======== Player Stats ========
@@ -157,12 +152,12 @@ class Player:
             ========  Alignments  ========
             ========  Relations   ========
             """[1:]
+
         # print(self.backpack.dump())
-        print(dump_template.format(
+        return dump_template.format(
             self.name,
             self.gender,
             self.race,
             self.job,
             self.level,
-            self.exp,
-        ))
+            self.exp)
