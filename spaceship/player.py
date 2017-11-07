@@ -1,8 +1,9 @@
 import os
 import sys
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from typing import Tuple
-from spaceship.world import World
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
+from world import World
+
 # from spaceship.objects import Object, Character
 
 class Player:

@@ -10,15 +10,15 @@ def read(fname):
 
 setup(
     name = "Spaceship",
-    version = "0.0.4",
+    version = "0.1.3",
     author = "Sam Whang",
     author_email = "sangwoowhang@gmail.com",
-    description = ("A sprite animation tutorial using bearlibterminal."),
+    description = ("A python roguelike made with bearlibterminal."),
     license = "MIT",
     keywords = "example documentation tutorial",
     url = "http://github.com/whitegreyblack/Spaceship.git",
     packages=['spaceship', 'tests'],
-    long_description=read('README'),
+    long_description=read('README.md'),
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Topic :: Terminal",
