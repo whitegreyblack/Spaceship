@@ -71,8 +71,8 @@ EXTRA = 3
 
 start="""
 Welcome to the realm of Calabaston. Your spirit has drifited to this place filled with intelligent races, a multitude of
-creatures and monsters, and history colored with tragedy, betrayal, and conquest. If you are willing, come and choose
-the vessel in which you will enter this world. Take careful consideration as your starting point depends on the choices
+ creatures and monsters, and history colored with tragedy, betrayal, and conquest. If you are willing, come and choose
+the vessel in which you will enter this world. Take careful consideration as your starting point depends on the choices 
 you make here. Good luck adventurer.
 """[1:]
 

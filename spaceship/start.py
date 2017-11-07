@@ -131,5 +131,5 @@ def start():
 if __name__ == "__main__":
     term.open()
     setup_font('Ibm_cga', 8, 8)
-    term.set('window: size=40x25, cellsize=auto, title="Spaceship", fullscreen=false')    
+    term.set('window: size=80x25, cellsize=auto, title="Spaceship", fullscreen=false')    
     start()
