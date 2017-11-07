@@ -75,12 +75,6 @@ def equal(p1, p2):
         print(p1, p2)
         raise
 
-def point_oob(i, j):
-    return 0 <= i < X_TEMP-1 and 0 <= j < Y_TEMP-1
-
-def point_oob_ext(i, j, xlim, ylim):
-    return xlim[0] <= i < xlim[1] and ylim[0] <= j < ylim[1]
-
 def ooe(i, j):
     h = rx = X_TEMP//2-1
     k = ry = Y_TEMP//2-1
@@ -116,40 +110,6 @@ def smooth(dungeon):
             newmap[i][j] = neighbor(i, j)
 
     return newmap
-
-def lpath(b1, b2):
-    x1, y1 = center(b1)
-    x2, y2 = center(b2)
-
-    # check if xs are on the same axis -- returns a vertical line
-    if x1 == x2 or y1 == y2:
-        return bresenhams((x1, y1), (x2, y2))
-    # return bresenhams((x1, y1), (x2, y2))
-    # check if points are within x bounds of each other == returns the midpoint vertical line
-    elif b2.x1 <= x1 < b2.x2 and b1.x1 <= x2 < b1.x2:
-        x = (x1+x2)//2
-        return bresenhams((x, y1), (x, y2))
-
-    # check if points are within y bounds of each other -- returns the midpoint horizontal line
-    elif b2.y1 <= y1 < b2.x2 and b1.y1 <= y2 < b2.y2:
-        y = (y1+y2)//2
-        return bresenhams((x1, y), (x2, y))
-
-    else:
-        slope = abs((max(y1, y2) - min(y1, y2))/((max(x1, x2) - min(x1, x2)))) <= 1.0
-        # short = (b1.x2 - b1.x2) + (b2.x2-b2.x1) + 1 > x2 - x1
-        # low slope -- go horizontal lpath
-        if slope:
-            # width is short enough - make lpath else zpath
-            # if short:
-            return bresenhams((x1, y1), (x1, y2)) \
-                + bresenhams((x1, y2), (x2, y2))
-
-        # high slope -- go vertical
-        else:
-            # if short:
-            return bresenhams((x1, y1), (x2, y1)) \
-                + bresenhams((x2, y1), (x2, y2))
 
 def path(p1, p2, dungeon):
     node = namedtuple("Node", "df dg dh parent node")
@@ -194,6 +154,14 @@ def decay(dungeon, n=1000):
     exprienced years of degeneration along with decay and collapse. This
     leads to growth of fauna, broken tunnels and such. Should start with 
     a well-formed dungeon and then start decay for n turns"""
+    def point_oob(i, j):
+        '''Uses size of dungeon to determine out of bounds error'''
+        return 0 <= i < len(dungeon[0])-1 and 0 <= j < len(dungeon)-1
+
+    def point_oob_ext(i, j, xlim, ylim):
+        '''Same as function of the same name but uses custom bounds'''
+        return xlim[0] <= i < xlim[1] and ylim[0] <= j < ylim[1]
+
     def cellauto(i, j):
         val = 0
         # check the value of the cell
@@ -483,6 +451,39 @@ def build_dungeon(width, height, rot=0):
     '''Places rooms in a box of size width by height and applies rot if
     is not 0 and returns the box to be parsed as a dungeon'''
 
+    def lpath(b1, b2):
+        x1, y1 = center(b1)
+        x2, y2 = center(b2)
+
+        # check if xs are on the same axis -- returns a vertical line
+        if x1 == x2 or y1 == y2:
+            return bresenhams((x1, y1), (x2, y2))
+
+        # check if points are within x bounds of each other == returns the midpoint vertical line
+        elif b2.x1 <= x1 < b2.x2 and b1.x1 <= x2 < b1.x2:
+            x = (x1+x2)//2
+            return bresenhams((x, y1), (x, y2))
+
+        # check if points are within y bounds of each other -- returns the midpoint horizontal line
+        elif b2.y1 <= y1 < b2.x2 and b1.y1 <= y2 < b2.y2:
+            y = (y1+y2)//2
+            return bresenhams((x1, y), (x2, y))
+
+        else:
+            # we check the slope value between two boxes to plan the path
+            slope = abs((max(y1, y2) - min(y1, y2))/((max(x1, x2) - min(x1, x2)))) <= 1.0
+        
+            # low slope -- go horizontal
+            if slope:
+                # width is short enough - make else zpath
+                return bresenhams((x1, y1), (x1, y2)) \
+                    + bresenhams((x1, y2), (x2, y2))
+
+            # high slope -- go vertical
+            else:
+                return bresenhams((x1, y1), (x2, y1)) \
+                    + bresenhams((x2, y1), (x2, y2))
+
     def box_oob(box):
         return box.x1 < 0 or box.y1 < 0 or \
             box.x2 >= width-1 or box.y2 >= height-1
@@ -547,27 +548,27 @@ def build_dungeon(width, height, rot=0):
 
     floor = []
     # drawing rooms
-    try:
-        for r in rooms:
-            for x in range(r.x1, r.x2+1):
-                for y in range(r.y1, r.y2+1):
-                    dungeon[y][x] = '.'
-                    floor.append((x, y))
-
-                for y in (r.y1, r.y2):
-                    dungeon[y][x] = '%'
-
+    for r in rooms:
+        for x in range(r.x1, r.x2+1):
             for y in range(r.y1, r.y2+1):
-                for x in (r.x1, r.x2):
-                    dungeon[y][x] = '%'
-    except:
-        raise IndexError(x, y)
+                dungeon[y][x] = '.'
+                floor.append((x, y))
+
+            for y in (r.y1, r.y2):
+                dungeon[y][x] = '%'
+
+        for y in range(r.y1, r.y2+1):
+            for x in (r.x1, r.x2):
+                dungeon[y][x] = '%'
+
+    # draw paths/hallways
     paths = []
     for k in graph.keys():
         for x, y in lpath(rooms[k], rooms[graph[k]]):
             dungeon[y][x] = '#'
             paths.append((x, y))
 
+    # draw doors
     doors = []
     for i, j in paths:
         if dungeon[j][i] == '#':
@@ -575,7 +576,7 @@ def build_dungeon(width, height, rot=0):
             vwalls = (dungeon[j+1][i] == '%' and dungeon[j-1][i] == '%')
             if hwalls or vwalls:
                 doors.append((i, j))
-    
+
     for i, j in doors:
         skip = False
         for ii in range(-1, 2):
