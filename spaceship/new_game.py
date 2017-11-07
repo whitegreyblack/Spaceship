@@ -94,6 +94,7 @@ def new_game(character=None):
         else:
             if debug:
                 gamelog.add("unrecognized command")
+                
         # make sure we clear any inputs before the next action is processed
         # allows for the program to go slow enough for human playability
         while term.has_input(): 
@@ -106,14 +107,16 @@ def new_game(character=None):
         '''Key Processing while player in local map'''
         nonlocal proceed
         keydown = namedtuple("Key_Down", ("x", "y", "a"))
-        # movement
         act, x, y = 0, 0, 0
         code = term.read()
+
         while code in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
             code = term.read()
+        
         if any([term.state(tk) for tk in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT)]):
             if debug:
                 gamelog.add("CTRL | ALT | SHIFT")
+        
         if code in (term.TK_ESCAPE, term.TK_CLOSE):
             gamelog.dumps()
             proceed = False
@@ -131,10 +134,12 @@ def new_game(character=None):
         else:
             if debug:
                 gamelog.add("[KEY_IN]: unrecognized command")
+        
         # make sure we clear any inputs before the next action is processed
         # allows for the program to go slow enough for human playability
         while term.has_input(): 
             term.read()
+
         return keydown(x, y, act)
 
     # try creating a general purpose key input function that is called by both
@@ -162,12 +167,12 @@ def new_game(character=None):
             if debug:
                 gamelog.add('[KEY_PROCESS_WORLD]:\n\tMOVING ON WORLD MAP')
 
-            player.saveWorldPos()
+            player.save_position_global()
 
             if debug:
                 gamelog.add("\tSAVED LAST WORLD POSITION")
 
-            player.moveOnWorld(x, y)
+            player.travel(x, y)
             # description = calabaston.tilehasdescription(tposx, tposy)
             # if description:
             #     gamelog.add(description)
@@ -237,22 +242,22 @@ def new_game(character=None):
             gamelog.print_off()
 
         if debug:
-            gamelog.add('\tCURRENT LOCATION: {}'.format(player.mapPosition()))
+            gamelog.add('\tCURRENT LOCATION: {}'.format(player.position()))
 
         # (not blocked) and (not occupied) and (inbounds)
         if walkable:
             if debug:
                 gamelog.add('\tMOVING IN DUNGEON')
 
-            player.saveMapPos()
+            player.save_position_global()
 
             if debug:
                 gamelog.add("\tSAVED LAST MAP POSITION")
 
-            player.moveOnMap(x, y)
+            player.move(x, y)
 
             if debug:
-                gamelog.add("\tPLAYER POSITION - {}".format(player.mapPosition()))
+                gamelog.add("\tPLAYER POSITION - {}".format(player.position()))
 
             if dungeon.square(tposx, tposy).items:
                 gamelog.add("There is something here")
@@ -495,7 +500,7 @@ def new_game(character=None):
             if debug:
                 gamelog.add("TRYING TO GO DOWN STAIRS")
             
-            if player.mapPosition() == dungeon.getDownStairs():
+            if player.position() == dungeon.getDownStairs():
                 if debug:
                     gamelog.add('\tPLAYER STANDING ON STAIRS LEADING DOWN')
                 
@@ -526,8 +531,8 @@ def new_game(character=None):
                     dungeon.addSublevel(sublevel)
 
                 dungeon = dungeon.getSublevel()
-                player.moveZAxis(1)
-                player.resetMapPos(*dungeon.getUpStairs())
+                player.move_height(1)
+                player.reset_position_local(*dungeon.getUpStairs())
 
             else:
                 gamelog.add('\tPLAYER NOT STANDING ON STAIRS LEADING DOWN')
@@ -537,12 +542,12 @@ def new_game(character=None):
                 gamelog.add("\tTRYING TO GO UP STAIRS")
 
             # check if you're in a city
-            if player.worldPosition() in calabaston.enterable_legend.keys():
+            if player.position_global() in calabaston.enterable_legend.keys():
                 if debug:
                     gamelog.add('\tPLAYER IN CITY MAP')
                     gamelog.add('\tPLAYER MOVES FREELY IN CITY')
 
-                player.moveZAxis(-1)
+                player.move_height(-1)
 
                 if debug:
                     gamelog.add("\tCHECKING PARENT")
@@ -552,14 +557,14 @@ def new_game(character=None):
                 if debug:
                     gamelog.add("\tPARENT ID: {}".format(dungeon.map_id))
 
-            elif calabaston.is_wilderness(*player.worldPosition()):
+            elif calabaston.is_wilderness(*player.position()):
                 
                 gamelog.add('\tPLAYER IS IN WILDERNESS\nPLAYER CAN EXIT MAP ANYWHERE')
-                player.moveZAxis(-1)
+                player.move_height(-1)
                 dungeon = dungeon.getParent()
 
             # check if you're in a dungeon
-            elif player.mapPosition() == dungeon.getUpStairs():
+            elif player.position() == dungeon.getUpStairs():
                 if debug:
                     gamelog.add('\tPLAYER STANDING ON STAIRS LEADING UP')
 
@@ -568,7 +573,7 @@ def new_game(character=None):
                 if debug:
                     gamelog.add("\tGOING UP STAIRS")
 
-                player.moveZAxis(-1)
+                player.move_height(-1)
 
                 if debug:
                     gamelog.add("\tZAXIS AFTER GOING UP STAIRS: {}".format(player.wz))
@@ -578,9 +583,7 @@ def new_game(character=None):
 
                 if debug:
                     gamelog.add("\tPARENT ID: {}".format(dungeon.map_id))
-                # if isinstance(dungeon, World):
-                #     dungeon = None
-                #     player.resetMapPos(0, 0)
+
             else:
                 if debug:
                     gamelog.add('\tPLAYER NOT STANDING ON STAIRS LEADING UP')
@@ -593,173 +596,137 @@ def new_game(character=None):
                     gamelog.add('\tPARENT IS OVERWORLD -- DESTROYING DUNGEON REFERENCE')
 
                 dungeon = None
-                player.resetMapPos(0, 0)
+                player.reset_position_local(0, 0)
 
             else:
                 if debug:
                     gamelog.add('\tPARENT IS NOT OVERWORLD -- DUNGEON REFERENCE STILL EXISTS')
                 
     def enter_map():
-        '''World Action:
-        Logic:
+        '''Logic:
             if at world level, check if there exists a map
             if exists -> enter
             else -> build the map and add it to the world
         '''
-        if debug:
-            gamelog.add('[ENTER MAP]:')
+        if not calabaston.mapAt(*player.position_global()):
 
-        if player.wz == -1:
-            if debug:
-                gamelog.add("\tCalabaston has map: {}".format(calabaston.mapAt(*player.worldPosition())))
-                gamelog.add("\tPlayer @ {},{}".format(*player.worldPosition()))
+            # entering a city location
+            # TODO: change enterables into locations_legend.keys()
+            #       change dungeons into dungeons_legend.keys() 
+            #       if location is not in locations or dungeons -> must be a wilderness
+            if player.position_global() in calabaston.enterable_legend.keys():
+                fileloc = calabaston.enterable_legend[player.position_global()].lower().replace(' ','_')
+                img_name = "./assets/maps/" + fileloc + ".png"
+                cfg_name = "./assets/maps/" + fileloc + ".cfg"
 
-            # builds the map
-            player.moveZAxis(1)
-
-            # check for non existance at map at player's world position
-            if not calabaston.mapAt(*player.worldPosition()):
-                # print("in legend", player.worldPosition() in calabaston.enterable_legend.keys())
-                # print(player.worldPosition())
-                # entering a city location
-                if player.worldPosition() in calabaston.enterable_legend.keys():
-                    fileloc = calabaston.enterable_legend[player.worldPosition()].lower().replace(' ','_')
-                    img_name = "./assets/maps/" + fileloc + ".png"
-                    cfg_name = "./assets/maps/" + fileloc + ".cfg"
-                    # print(filename)
-                    try:
-                        x = player.wx
-                        y = player.wy
-                        z = player.wz
-                        t = 'city'
-                        v = str(x) + str(y) + str(z) + t
-                        
-                        if debug:
-                            gamelog.add('CITY HASH ID: {}'.format(hash(v)))
-
-                        location = Map(
-                            data=stringify(img_name, cfg_name), 
-                            map_type="city", 
-                            map_id=hash(v), 
-                            width=term.state(term.TK_WIDTH), 
-                            height=term.state(term.TK_HEIGHT))
-                    except FileNotFoundError:
-                        # print('no file of that name')
-                        raise FileNotFoundError("Map for {} not yet implemented".format(fileloc))
-                    # basically spawn in town center
-                    player.resetMapPos(location.width//2, location.height//2)
-
-                else:
-                    # print('Not important city')
-                    tile = calabaston.accessTile(*player.worldPosition())
-                    
-                    if debug:
-                        gamelog.add("TILE TYPE: {}".format(tile.land))
-                    
-                    # get options based on land tile
-                    # build_options = Dungeon.build_options()
-                    wilderness = tile.land in ("plains", "dark woods", "hills", "forest", "desert")
-                    
+                try:
                     x = player.wx
                     y = player.wy
                     z = player.wz
-                    t = 'wilderness'
+                    t = 'city'
                     v = str(x) + str(y) + str(z) + t
-
-                    if wilderness:
-                        neighbors = calabaston.accessTileNeighbors(*player.worldPosition())
-                    
-                        location = Map(
-                            data=build_terrain(
-                                width=66,
-                                height=22,
-                                tiletype=tile.land, 
-                                buildopts=neighbors), 
-                            map_type=tile.land,
-                            map_id=hash(v),
-                            width=term.state(term.TK_WIDTH),
-                            height=term.state(term.TK_HEIGHT))
-                    
-                        x, y = player.getWorldPosOnEnter()
-                        x = max(int(location.width * x - 1), 0)
-                        y = max(int(location.height * y - 1), 0)
-                        
-                        if debug:
-                            gamelog.add("location w,h {}, {}".format(location.width, location.height))
-                        
-                        player.resetMapPos(x, y)
-                    
-                    # Build a dungeon tile
-                    else:
-                        location = Map(
-                            data=build_dungeon(
-                                width=66,
-                                height=22,
-                                rot=0), 
-                            map_type=tile.land,
-                            map_id=hash(v), # dungeon.build(options)
-                            width=term.state(term.TK_WIDTH),
-                            height=term.state(term.TK_HEIGHT))
-                    
-                        player.resetMapPos(*location.getUpStairs())
                     
                     if debug:
-                        gamelog.add("\tLocation Exit : {}".format(location.getUpStairs()))
-                        gamelog.add("\tLocation Enter: {}".format(location.getDownStairs()))
-                    # print('PP:',player.mapPosition())
-                    # print('Exit', location.getExit())
+                        gamelog.add('CITY HASH ID: {}'.format(hash(v)))
 
-                location.addParent(calabaston)
-                calabaston.add_location(location, *(player.worldPosition()))
-
-            else:
-                # re-enter city
-                if debug:
-                    gamelog.add("PLAYER POSITION ON WORLD {}, {}".format(
-                        *player.worldPosition()))
-                
-                if player.worldPosition() in calabaston.enterable_legend.keys():
-                    location = calabaston.get_location(*player.worldPosition())
-                    player.resetMapPos(location.width//2, location.height//2)
-
-                else:
-                    location = calabaston.get_location(*player.worldPosition())
-                    
-                    # reenter a wilderness
-                    if location.maptype in ("plains", "dark woods", "hills", "forest", "desert"):
-                        x, y = player.getWorldPosOnEnter()
-                        x = int((location.width-1) * x)
-                        y = int((location.height-1) * y)
-                        player.resetMapPos(x, y)
-                    
-                    # reenter a dungeon:
-                    else:
-                        player.resetMapPos(*calabaston.get_location(*player.worldPosition()).getUpStairs())
+                    location = Map(
+                        data=stringify(img_name, cfg_name), 
+                        map_type="city", 
+                        map_id=hash(v), 
+                        width=term.state(term.TK_WIDTH), 
+                        height=term.state(term.TK_HEIGHT))
+                except FileNotFoundError:
+                    # print('no file of that name')
+                    raise FileNotFoundError("Map for {} not yet implemented".format(fileloc))
+                # basically spawn in town center
+                player.reset_position_local(location.width//2, location.height//2)
             
-        # probably in a dungeon
-        elif player.wz == 0:
-            gamelog.add("Map Level 0")
-            player.moveZAxis(1)
-            if player.mapPosition() == dungeon.getEntrance():
-                gamelog.add('ill allow it -- move down')
-                pass
             else:
-                gamelog.add("cannot enter on current tile")
+                # print('Not important city')
+                tile = calabaston.accessTile(*player.position_global())
+                
+                if debug:
+                    gamelog.add("TILE TYPE: {}".format(tile.land))
+                
+                # get options based on land tile
+                # build_options = Dungeon.build_options()
+                wilderness = tile.land in ("plains", "dark woods", "hills", "forest", "desert")
+                
+                x = player.wx
+                y = player.wy
+                z = player.wz
+                t = 'wilderness'
+                v = str(x) + str(y) + str(z) + t
 
-            # if in city then shouldnt really have a dungeon
-            # could add a basement/attic level
-            # also add check to make sure not inside a building -- if in building then '<' wouldnt work
-            # i mean it could work but just wouldnt zoom out to world view you know
-            # if in wilderness can only '>' on a dungeon enterance
-            # if in a dungeon then goes down one sublevel
-        elif player.wz > 0:
-            gamelog.add('at level 0 -- trying sublevel')
-        
-            # processes all other dungeon subleves
-        
+                if wilderness:
+                    neighbors = calabaston.accessTileNeighbors(*player.position_global())
+                
+                    location = Map(
+                        data=build_terrain(
+                            width=66,
+                            height=22,
+                            tiletype=tile.land, 
+                            buildopts=neighbors), 
+                        map_type=tile.land,
+                        map_id=hash(v),
+                        width=term.state(term.TK_WIDTH),
+                        height=term.state(term.TK_HEIGHT))
+                
+                    x, y = player.getWorldPosOnEnter()
+                    x = max(int(location.width * x - 1), 0)
+                    y = max(int(location.height * y - 1), 0)
+                    
+                    if debug:
+                        gamelog.add("location w,h {}, {}".format(location.width, location.height))
+                    
+                    player.reset_position_local(x, y)
+                
+                # Build a dungeon tile
+                else:
+                    location = Map(
+                        data=build_dungeon(
+                            width=66,
+                            height=22,
+                            rot=0), 
+                        map_type=tile.land,
+                        map_id=hash(v), # dungeon.build(options)
+                        width=term.state(term.TK_WIDTH),
+                        height=term.state(term.TK_HEIGHT))
+                
+                    player.reset_position_local(*location.getUpStairs())
+                
+                if debug:
+                    gamelog.add("\tLocation Exit : {}".format(location.getUpStairs()))
+                    gamelog.add("\tLocation Enter: {}".format(location.getDownStairs()))
+
+            location.addParent(calabaston)
+            calabaston.add_location(location, *(player.position_global()))
+
         else:
-            gamelog.add('no enter_map action')
-            pass
+            # re-enter city
+            if debug:
+                gamelog.add("PLAYER POSITION ON WORLD {}, {}".format(
+                    *player.position_global()))
+            
+            if player.position_global() in calabaston.enterable_legend.keys():
+                location = calabaston.get_location(*player.position_global())
+                player.reset_position_local(location.width//2, location.height//2)
+
+            else:
+                location = calabaston.get_location(*player.position_global())
+                
+                # reenter a wilderness
+                if location.maptype in ("plains", "dark woods", "hills", "forest", "desert"):
+                    x, y = player.getWorldPosOnEnter()
+                    x = int((location.width-1) * x)
+                    y = int((location.height-1) * y)
+                    player.reset_position_local(x, y)
+                
+                # reenter a dungeon:
+                else:
+                    player.reset_position_local(*calabaston.get_location(*player.position_global()).getUpStairs())
+        
+        player.move_height(1)
 
     world_actions={
         # '<': exit_map,
@@ -890,7 +857,7 @@ def new_game(character=None):
         # check if player position is over a city/enterable area
         # this is purely a ui enhancement. Actually entering a city is not that much different
         # than entering a dungeon/wilderness area
-        if player.worldPosition() in calabaston.enterable_legend.keys():
+        if player.position_global() in calabaston.enterable_legend.keys():
             enterable_name = surround(
                 calabaston.enterable_legend[(player.wx, player.wy)],
                 times=2)       
@@ -900,8 +867,8 @@ def new_game(character=None):
                 surround(enterable_name) if len(enterable_name) <= 12 else enterable_name)
 
         # check if player position is over a dungeon position
-        elif player.worldPosition() in calabaston.dungeon_legend.keys():
-            dungeon_name = surround(calabaston.dungeon_legend[player.worldPosition()])
+        elif player.position_global() in calabaston.dungeon_legend.keys():
+            dungeon_name = surround(calabaston.dungeon_legend[player.position()])
             selected(
                 center(surround(dungeon_name) if len(dungeon_name) <= 12 else dungeon_name, 12),
                 footer,
@@ -909,7 +876,7 @@ def new_game(character=None):
         footer += 1
 
         # Add land types to the overworld ui
-        landtype = calabaston.get_landtype(*player.worldPosition())
+        landtype = calabaston.get_landtype(*player.position_global())
         if landtype:
             selected(
                 center(surround(landtype), 12),
@@ -917,11 +884,11 @@ def new_game(character=None):
                 surround(landtype))
         
 
-    def worldmap_box():
+    def world_map_box():
         '''Displays the world map tiles in the terminal'''
 
         screen_off_x, screen_off_y = 14, 1
-        for x, y, col, ch in calabaston.draw(*(player.worldPosition())):
+        for x, y, col, ch in calabaston.draw(*(player.position_global())):
             term.puts(
                 x + screen_off_x, 
                 y + screen_off_y, 
@@ -947,19 +914,13 @@ def new_game(character=None):
                 "./assets/worldmap.png", 
                 "./assets/worldmap_territories.png",
                 "./assets/worldmap_kingdoms.png")   
-    # Before anything happens we create our character
-    # LIMIT_FPS = 30 -- later used in sprite implementation
-    blocked = []
 
-    # End graphics functions
-    # global game variables
-    #MAP_WIDTH, MAP_HEIGHT = 24, 48
+    blocked = []
 
     MAP_FACTOR = 2
     COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
     COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
-    wpx, wpy = player.worldPosition()
-    # dpx, dpy = dungeon.start_position()
+    wpx, wpy = player.position_global()
 
     # blanks
         #px, py = 0, 0
@@ -987,41 +948,31 @@ def new_game(character=None):
         # dungeon.add_item(87, 31, Item("sword", "(", "grey"))
 
     proceed = True
-    # lr = 5
     lights = []
     dungeon = None
     while proceed:
-        # gamelog.add('-' * 30)
-        # gamelog.add('[MAIN GAME LOOP]:')
         term.clear()
-        # gamelog.add('\tWORLD PLAYER LEVEL - {}'.format(player.wz))
-        # player is on overworld level == -1
-        if player.wz == -1:
+        if player.height() == -1:
 
             # World View
-            worldmap_box()
+            world_map_box()
             world_legend_box()
             term.refresh()
 
             x, y, a = key_in_world()
-            # gamelog.add('\tACTION - {} {} {}'.format(x, y, a))
             if a != "Do Nothing" and a != 0:
                 processWorldAction(a)
+
             elif (x, y) != (0, 0):
-                # gamelog.add('\tNOT MOVING')
                 key_process_world(x, y)
-            # else:
-                # gamelog.add('\tDOING NOTHING')
-                # pass
 
         # player is on local map level >= 0
         else:
-            # gamelog.add('\tPLAYER IN LOCAL MAP')
-            # gamelog.add('\tPLAYER WORLD POSITION: {}'.format(player.worldPosition()))
             # City, Wilderness, Level 0 Dungeon
             if dungeon == None:
-                dungeon = calabaston.get_location(*player.worldPosition())
-
+                player.move_height(-1)
+                dungeon = calabaston.get_location(*player.position_global())
+                player.move_height(1)
                 if debug:
                     gamelog.add('\tMAP ID: {}, {}'.format(
                         dungeon.maptype,
@@ -1043,6 +994,8 @@ def new_game(character=None):
 
     # player.dump()
     # gamelog.dumps()   
+    if dungeon:
+        
     return False
 # End New Game Menu
 

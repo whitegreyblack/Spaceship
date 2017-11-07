@@ -8,9 +8,9 @@ class Config:
         with open(cfg_path, 'r') as cfg:
             self.lines = cfg.readlines()
         self.units = []
-        self.build()
+        self.parse()
 
-    def build(self):
+    def parse(self):
         unit = namedtuple("Unit", "race unit")
         modifier = ""
         for line in self.lines:
@@ -26,13 +26,18 @@ class Config:
                 for _ in range(int(number)):
                     self.units.append(unit(modifier, job.lower()))
                 
+    def build(self):
+        '''Builds all units and returns the unit list'''
+        # TODO npc builder (character/creature)
+        return self.units
+
     def dump(self):
         if self.units:
             for r, u in self.units:
                 print(r, u)
         else:
             raise ValueError("Configuration: class has no units yet")
-            
+
 if __name__ == "__main__":
     path = "./assets/maps/shadowbarrow.cfg"
     cfg = Config(path)
