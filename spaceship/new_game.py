@@ -847,36 +847,22 @@ def new_game(character=None):
         
         for char, color, desc, i in calabaston.legend():
             term.puts(0, i + 2, "[c={}] {}[/c] {}".format(color, char, desc))
-        footer = i + 4
 
         # check if player position is over a city/enterable area
         # this is purely a ui enhancement. Actually entering a city is not that much different
         # than entering a dungeon/wilderness area
         if player.position_global() in calabaston.enterable_legend.keys():
-            enterable_name = surround(
-                calabaston.enterable_legend[(player.wx, player.wy)],
-                times=2)       
-            selected(
-                center(surround(enterable_name) if len(enterable_name) <= 12 else enterable_name, 12),
-                footer,
-                surround(enterable_name) if len(enterable_name) <= 12 else enterable_name)
+            enterable_name = surround(calabaston.enterable_legend[player.position_global()], length=14)
+            selected(center(enterable_name, 12), i + 4, enterable_name)
 
         # check if player position is over a dungeon position
         elif player.position_global() in calabaston.dungeon_legend.keys():
-            dungeon_name = surround(calabaston.dungeon_legend[player.position_global()])
-            selected(
-                center(surround(dungeon_name) if len(dungeon_name) <= 12 else dungeon_name, 12),
-                footer,
-                surround(dungeon_name) if len(dungeon_name) <= 12 else dungeon_name)
-        footer += 1
+            dungeon_name = surround(calabaston.dungeon_legend[player.position_global()], length=14)
+            selected(center(dungeon_name, 12), i + 4, dungeon_name)
 
         # Add land types to the overworld ui
-        landtype = calabaston.get_landtype(*player.position_global())
-        if landtype:
-            selected(
-                center(surround(landtype), 12),
-                footer,
-                surround(landtype))
+        landtype = surround(calabaston.get_landtype(*player.position_global()), length=14)
+        selected(center(landtype, 12), i + 5, landtype)
         
 
     def world_map_box():
