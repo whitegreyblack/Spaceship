@@ -45,14 +45,6 @@ chars_key = {
 chars_block_move= {"#", "+", "o", "x", "~", "%", "Y", "T"}
 chars_block_light = {"#", "+", "o", "%", "Y", "T"}
 
-class Item:
-    def __init__(self, n, s, c):
-        self.name = n
-        self.char = s
-        self.color = c
-
-    def classifier(self):
-        pass
 
 class Object:
     def __init__(self, n, x, y, i, c='white', r="human", h=10):
@@ -472,8 +464,8 @@ class Map:
     # Output and Display Functions                                            #
     ###########################################################################
     def output(self, player_x, player_y, units):
-        shorten_x = self.map_display_width >= 66
-        shorten_y = self.map_display_height >= 44
+        shorten_x = self.map_display_width > 66
+        shorten_y = self.map_display_height > 44
 
         # get camera location for x coordinate
         cam_x = scroll(
@@ -481,14 +473,14 @@ class Map:
             self.map_display_width + (-14 if shorten_x else 0), 
             self.width)
         ext_x = cam_x + self.map_display_width + (-14 if shorten_x else 0)
-
+        
         # get camera location for y coordinate
         cam_y = scroll(
             player_y, 
-            self.map_display_height + (-6 if shorten_y else -4), 
+            self.map_display_height + (-6 if shorten_y else 0), 
             self.height)
-        ext_y = cam_y + self.map_display_height + (-6 if shorten_y else -4)
-        
+        ext_y = cam_y + self.map_display_height + (-6 if shorten_y else 0)
+
         if debug:
             print("[MAP CLASS - OUTPUT]:")
             print("\tCX:{}, CXE:{}".format(cam_x, ext_x))

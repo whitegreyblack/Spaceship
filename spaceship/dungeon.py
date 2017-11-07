@@ -75,9 +75,6 @@ def equal(p1, p2):
         print(p1, p2)
         raise
 
-def box_oob(box):
-    return box.x1 < 0 or box.y1 < 0 or box.x2 >= X_TEMP-1 or box.y2 >= Y_TEMP-1
-
 def point_oob(i, j):
     return 0 <= i < X_TEMP-1 and 0 <= j < Y_TEMP-1
 
@@ -423,8 +420,7 @@ def decay(dungeon, n=1000):
 def dwalk_lake(x, y):
     pass
 
-
-def buildTerrain(tiletype, entropy=0, buildopts=None):
+def build_terrain(width, height, tiletype, entropy=0, buildopts=None):
     if buildopts:
         rocks = None
         water = None
@@ -432,33 +428,35 @@ def buildTerrain(tiletype, entropy=0, buildopts=None):
     
     if tiletype == "plains":
         vegatation = .33
-        vege_chars = (",","`","\"",";")
-        terrain = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
-        for i in range(X_TEMP):
-            for j in range(Y_TEMP):
-                terrain[j][i] = choice(vege_chars)
         num_trees = 100
+        vege_chars = (",","`","\"",";")
+        terrain = [[' ' for _ in range(width)] for _ in range(height)]
+
+        for i in range(width):
+            for j in range(height):
+                terrain[j][i] = choice(vege_chars)
+
         for t in range(num_trees):
-            terrain[randint(0, Y_TEMP-1)][randint(0, X_TEMP-1)] = "T"
+            terrain[randint(0, height-1)][randint(0, width-1)] = "T"
             stop_chance = randint(0, num_trees-t)
             if stop_chance == 0:
                 break
-        print('NUM TREES: ', t)
         return terrain
 
     elif tiletype == "hills":
-        vege_chars = (",","`","\"","~")
-        terrain = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
-        for i in range(X_TEMP):
-            for j in range(Y_TEMP):
-                terrain[j][i] = choice(vege_chars)
         num_trees = 10
+        vege_chars = (",","`","\"","~")
+        terrain = [[' ' for _ in range(width)] for _ in range(height)]
+        
+        for i in range(width):
+            for j in range(height):
+                terrain[j][i] = choice(vege_chars)
+                
         for t in range(num_trees):
-            terrain[randint(0, Y_TEMP-1)][randint(0, X_TEMP-1)] = "T"
+            terrain[randint(0, height-1)][randint(0, width-1)] = "T"
             stop_chance = randint(0, num_trees-t)
             if stop_chance == 0:
                 break
-        print('NUM TREES: ', t)
         return terrain
 
     elif tiletype == "mountains":
@@ -481,29 +479,37 @@ def buildTerrain(tiletype, entropy=0, buildopts=None):
         print(tiletype)
         raise ValueError("Tiletype not implemented")
 
-def buildDungeon(rot=0):
-    # constructor -- (-1 = impassable) start with a map of walls
-    # dungeon = [[-1 for _ in range(x)] for _ in range(y)]
-    dungeon = [[' ' for _ in range(X_TEMP)] for _ in range(Y_TEMP)]
+def build_dungeon(width, height, rot=0):
+    '''Places rooms in a box of size width by height and applies rot if
+    is not 0 and returns the box to be parsed as a dungeon'''
+
+    def box_oob(box):
+        return box.x1 < 0 or box.y1 < 0 or \
+            box.x2 >= width-1 or box.y2 >= height-1
+
+    print("BUILD DUNGEON: {}x{}".format(width, height))
+    dungeon = [[' ' for _ in range(width)] for _ in range(height)]
     rooms, large_rooms, other_rooms = [], [], []
     graph = {}
     tries = 0
 
     # Expansion Algorithm
     while len(rooms) < 25 and tries < 2000:
-        key = choice([i for i in range(-1, 5)])
+        key = choice([i for i in range(-1, 4)])
+
         if key == 4:
             x, y = randint(16, 24), randint(12, 18)
-            px, py = randint(9, X_TEMP-9), randint(9, Y_TEMP-9)
+            px, py = randint(9, width-9), randint(9, height-9)
         elif key >= 2:
             x, y = randint(12, 16), randint(8, 12)
-            px, py = randint(6, X_TEMP-6), randint(6, Y_TEMP-6)
+            px, py = randint(x//2, width-x//2), randint(y//2, height-y//2)
         elif key >= 0:
             x, y = randint(8, 12), randint(4, 6)
-            px, py = randint(4, X_TEMP-4), randint(4, Y_TEMP-4)
+            px, py = randint(x//2, width-x//2), randint(y//2, height-y//2)
         else:
             x, y = randint(6, 8), randint(3, 4)
-            px, py = randint(3, X_TEMP-3), randint(3, Y_TEMP-3)    
+            px, py = randint(x//2, width-x//2), randint(y//2, height-y//2)
+
         temp = box(px-int(round(x/2)), py-int(round(y/2)), px-int(round(x/2))+x, py-int(round(y/2))+y)
         intersects = any(intersect(room, temp) for room in rooms)
 
@@ -541,19 +547,21 @@ def buildDungeon(rot=0):
 
     floor = []
     # drawing rooms
-    for r in rooms:
-        for x in range(r.x1, r.x2+1):
+    try:
+        for r in rooms:
+            for x in range(r.x1, r.x2+1):
+                for y in range(r.y1, r.y2+1):
+                    dungeon[y][x] = '.'
+                    floor.append((x, y))
+
+                for y in (r.y1, r.y2):
+                    dungeon[y][x] = '%'
+
             for y in range(r.y1, r.y2+1):
-                dungeon[y][x] = '.'
-                floor.append((x, y))
-
-            for y in (r.y1, r.y2):
-                dungeon[y][x] = '%'
-
-        for y in range(r.y1, r.y2+1):
-            for x in (r.x1, r.x2):
-                dungeon[y][x] = '%'
-
+                for x in (r.x1, r.x2):
+                    dungeon[y][x] = '%'
+    except:
+        raise IndexError(x, y)
     paths = []
     for k in graph.keys():
         for x, y in lpath(rooms[k], rooms[graph[k]]):

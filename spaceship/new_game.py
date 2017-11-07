@@ -6,7 +6,8 @@ from spaceship.action import key_movement, num_movement, key_actions, action, ke
 from spaceship.setup import setup_game
 from spaceship.tools import bresenhams, deltanorm, movement
 from spaceship.maps import stringify, hextup, hexone, toInt
-from spaceship.objects import Map, Object, Character, Item
+from spaceship.objects import Map, Object, Character
+from spaceship.item import Item
 from spaceship.player import Player
 from spaceship.create_character import create_character as create
 from spaceship.screen_functions import center, surround, selected
@@ -16,7 +17,7 @@ from spaceship.gamelog import GameLogger
 from random import randint, choice
 from collections import namedtuple
 from namedlist import namedlist
-from spaceship.dungeon import buildTerrain, buildDungeon
+from spaceship.dungeon import build_terrain, build_dungeon
 from spaceship.setup import setup, output, setup_font
 from spaceship.world import World
 from time import clock
@@ -331,15 +332,15 @@ def new_game(character=None):
     def openInventory():
         def backback():
             term.clear()
-            for i in range(SCREEN_WIDTH):
+            for i in range(screen_width):
                 term.puts(i, 1, '#')
-            term.puts(center('backback  ', SCREEN_WIDTH), 1, ' Backpack ')
+            term.puts(center('backback  ', screen_width), 1, ' Backpack ')
             
         def inventory():
             term.clear()
-            for i in range(SCREEN_WIDTH):
+            for i in range(screen_width):
                 term.puts(i, 1, '#')
-            term.puts(center(' inventory ', SCREEN_WIDTH), 1, ' Inventory ')
+            term.puts(center(' inventory ', screen_width), 1, ' Inventory ')
             col, row = 1, 3
             gamelog.add("EQ: {}".format(*player.equipment))
             for i, l, e in zip(range(len(inventory_list)), inventory_list, player.equipment):
@@ -509,7 +510,10 @@ def new_game(character=None):
                         gamelog.add("\tHASH: {}".format(hash(v)))
                     
                     sublevel = Map(
-                        data=buildDungeon(), 
+                        data=build_dungeon(
+                            width=66,
+                            height=22,
+                            rot=0), 
                         map_type="dungeon", 
                         map_id=hash(v), 
                         width=term.state(term.TK_WIDTH), 
@@ -666,7 +670,11 @@ def new_game(character=None):
                         neighbors = calabaston.accessTileNeighbors(*player.worldPosition())
                     
                         location = Map(
-                            data=buildTerrain(tile.land, buildopts=neighbors), 
+                            data=build_terrain(
+                                width=66,
+                                height=22,
+                                tiletype=tile.land, 
+                                buildopts=neighbors), 
                             map_type=tile.land,
                             map_id=hash(v),
                             width=term.state(term.TK_WIDTH),
@@ -684,7 +692,10 @@ def new_game(character=None):
                     # Build a dungeon tile
                     else:
                         location = Map(
-                            data=buildDungeon(1000), 
+                            data=build_dungeon(
+                                width=66,
+                                height=22,
+                                rot=0), 
                             map_type=tile.land,
                             map_id=hash(v), # dungeon.build(options)
                             width=term.state(term.TK_WIDTH),
@@ -810,24 +821,25 @@ def new_game(character=None):
         # y axis
         for i in range(0, 80, 2):
             if i < 20:
-                term.puts(SCREEN_WIDTH-20+i, 0, border_line)
-                term.puts(SCREEN_WIDTH-20+i, 10, border_line)
+                term.puts(screen_width-20+i, 0, border_line)
+                term.puts(screen_width-20+i, 10, border_line)
             if i < 60:
-                term.puts(i, SCREEN_HEIGHT-6, border_line)
-            term.puts(i, SCREEN_HEIGHT-1, border_line)
+                term.puts(i, screen_height-6, border_line)
+            term.puts(i, screen_height-1, border_line)
         
         # x axis
         for j in range(35):
             if j < 6:
-                term.puts(0, SCREEN_HEIGHT-6+j, border_line)
-            term.puts(SCREEN_WIDTH-20, j, border_line)
-            term.puts(SCREEN_WIDTH-1, j, border_line)
+                term.puts(0, screen_height-6+j, border_line)
+            term.puts(screen_width-20, j, border_line)
+            term.puts(screen_width-1, j, border_line)
 
     turn = 0
     def status_box():
         col, row = 1, 2
-        term.puts(col, row+0, player.name)
-        term.puts(col, row+1, player.gender + " " + player.race)
+        term.puts(col, row-1, player.name)
+        term.puts(col, row+0, player.gender)
+        term.puts(col, row+1, player.race)
         term.puts(col, row+2, player.job)
 
         term.puts(col, row+4, "LVL: {:>6}".format(player.level))
@@ -862,18 +874,18 @@ def new_game(character=None):
         dungeon.fov_calc(lights+[(player.mx, player.my, player.sight)])
         for x, y, lit, ch, bkgd in dungeon.output(player.mx, player.my, []):
             # ch = ch if len(str(ch)) > 1 else chr(toInt(palette[ch]))
-            term.puts(x + 14, y + 1, "[color={}]".format(lit) + ch + "[/color]")
+            term.puts(x + 13, y, "[color={}]".format(lit) + ch + "[/color]")
         term.refresh()
         
     def world_legend_box():
         x, y = screen_width-12, 1
-        boxheader = "Map Legend"
+        # boxheader = "Map Legend"
         selected(center(surround(calabaston.name), 14), 1, surround(calabaston.name))   
-        selected(center(boxheader, 12), 3, surround(boxheader))
+        # selected(center(boxheader, 12), 3, surround(boxheader))
         
         for char, color, desc, i in calabaston.legend():
-            term.puts(0, i + 4, "[c={}] {}[/c] {}".format(color, char, desc))
-        footer = i + 5 + 3
+            term.puts(0, i + 2, "[c={}] {}[/c] {}".format(color, char, desc))
+        footer = i + 4
 
         # check if player position is over a city/enterable area
         # this is purely a ui enhancement. Actually entering a city is not that much different
