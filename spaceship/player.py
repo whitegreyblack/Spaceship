@@ -14,7 +14,7 @@ class Player:
         # unpack everything here
         self.exp = 0
         self.level = 1
-        self.sight = 12
+        self.sight = 5
         self.advexp = 80
         self.job = character.job
         self.race = character.race
