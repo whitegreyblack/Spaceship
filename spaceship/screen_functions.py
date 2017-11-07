@@ -45,8 +45,18 @@ def passed(x, y, text):
     term.puts(x, y, text)
     term.bkcolor("black")      
 
-def surround(text, char=' ', times=1):
-    return char*times+text+char*times
+def surround(text, char=' ', times=1, length=0):
+    '''Surrounds the text inputted with a character by a number of times
+    or until given length is reached'''
+    if length:
+        while len(text) <= length:
+            if len(text) % 2:
+                text += char
+            else:
+                text = char + text
+        return text
+    else:
+        return char * times + text + char * times
 
 def modify(increment, index, options):
     index += increment

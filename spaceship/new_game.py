@@ -891,7 +891,9 @@ def new_game(character=None):
         # this is purely a ui enhancement. Actually entering a city is not that much different
         # than entering a dungeon/wilderness area
         if player.worldPosition() in calabaston.enterable_legend.keys():
-            enterable_name = surround(calabaston.enterable_legend[(player.wx, player.wy)])       
+            enterable_name = surround(
+                calabaston.enterable_legend[(player.wx, player.wy)],
+                times=2)       
             selected(
                 center(surround(enterable_name) if len(enterable_name) <= 12 else enterable_name, 12),
                 footer,

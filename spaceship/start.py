@@ -89,7 +89,7 @@ def start():
         # options
         length, option = longest(title_options)
         x = center(length-2, width)
-        
+
         for option, i in zip(title_options, range(len(title_options))):
             text = "[color=#00FFFF]{}[/color]".format(option) if i == title_index else option
             term.puts(x, options_height[i], text)
@@ -131,5 +131,5 @@ def start():
 if __name__ == "__main__":
     term.open()
     setup_font('Ibm_cga', 8, 8)
-    term.set('window: size=80x50, cellsize=auto, title="Spaceship", fullscreen=false')    
+    term.set('window: size=80x25, cellsize=auto, title="Spaceship", fullscreen=false')    
     start()
