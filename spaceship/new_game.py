@@ -335,21 +335,27 @@ def new_game(character=None):
     ]
 
     def openInventory():
-        def backback():
+        def backpack():
             term.clear()
             for i in range(screen_width):
                 term.puts(i, 1, '#')
-            term.puts(center('backback  ', screen_width), 1, ' Backpack ')
+            term.puts(center('backpack  ', screen_width), 1, ' Backpack ')
             
         def inventory():
+            col, row = 1, 3
             term.clear()
+
             for i in range(screen_width):
                 term.puts(i, 1, '#')
+
             term.puts(center(' inventory ', screen_width), 1, ' Inventory ')
-            col, row = 1, 3
-            gamelog.add("EQ: {}".format(*player.equipment))
+            
             for i, l, e in zip(range(len(inventory_list)), inventory_list, player.equipment):
-                term.puts(col, row+i*2, chr(ord('a')+i)+'. '+ l+(e if isinstance(e, str) else ''))
+                term.puts(
+                    col, 
+                    row + i * (2 if screen_height > 25 else 1), 
+                    chr(ord('a') + i) + '. ' + l + (e if isinstance(e, str) else ''))
+
         debug=False
         if debug:
             gamelog.add("opening inventory")
@@ -369,7 +375,7 @@ def new_game(character=None):
             if code in (term.TK_ESCAPE, term.TK_I,):
                 break
             elif code == term.TK_V:
-                # this is where our backback will be accessed
+                # this is where our backpack will be accessed
                 pass
             elif code == term.TK_UP:
                 if current_range > 0: current_range -= 1
@@ -535,7 +541,8 @@ def new_game(character=None):
                 player.reset_position_local(*dungeon.getUpStairs())
 
             else:
-                gamelog.add('\tPLAYER NOT STANDING ON STAIRS LEADING DOWN')
+                gamelog.add('You cannot go downstairs without stairs.')
+                
         # key is "<"
         else:
             if debug:
@@ -565,7 +572,7 @@ def new_game(character=None):
                 dungeon = dungeon.getParent()
 
             # check if you're in a dungeon
-            elif player.position() == dungeon.getUpStairs():
+            elif player.position_local() == dungeon.getUpStairs():
                 if debug:
                     gamelog.add('\tPLAYER STANDING ON STAIRS LEADING UP')
 
@@ -588,6 +595,7 @@ def new_game(character=None):
             else:
                 if debug:
                     gamelog.add('\tPLAYER NOT STANDING ON STAIRS LEADING UP')
+                gamelog.add('You cannot go upstairs without stairs.')
 
             if debug:
                 gamelog.add('\tCHECKING IF PARENT IS OVERWORLD')

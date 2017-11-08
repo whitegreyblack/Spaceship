@@ -13,6 +13,10 @@ MONSTER_LIST = ("RAT",)
 
 class ObjectTypeError(ValueError): pass
 
+class UnitGenerator:
+    def generate(self, unit_type: str):
+        return unit_type
+
 class DataType(Enum):
     HUMAN = 0
     RAT = 1
@@ -54,3 +58,4 @@ if __name__ == "__main__":
         print(build("do", DataType))
     except ValueError:
         print("ValueError")
+

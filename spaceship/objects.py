@@ -3,11 +3,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from namedlist import namedlist
 from collections import namedtuple
-from spaceship.imports import *
 from random import randint, choice
-from math import sqrt
-from spaceship.constants import GAME_SCREEN_HEIGHT as sh
-from spaceship.constants import GAME_SCREEN_WIDTH as sw
 from spaceship.color import Color
 from spaceship.maps import hextup, hexone, output, blender, gradient, evaluate_blocks
 from spaceship.setup import toInt
@@ -17,6 +13,10 @@ from spaceship.world import World
 from spaceship.tools import scroll
 # TODO: Maybe move map to a new file called map and create a camera class?
 
+'''Object holds all prototype objects used in the game until they are fully fleshed out
+and are needed to be moved to their own respective files.
+'''
+
 errormessage=namedtuple("ErrMsg", "x y ch lvl vis lit")
 symboltype = namedtuple("Symbol", "ascii unicode")
 visibility = namedtuple("Visiblity", "movement visibility lightlevel")
@@ -24,8 +24,9 @@ visibility = namedtuple("Visiblity", "movement visibility lightlevel")
 class Light: Unexplored, Explored, Visible = range(3)    
 class Letter: Ascii, Unicode = range(2)
 
-map_init_debug = True
+map_init_debug = False
 map_func_debug = False
+
 debug = False
 # change variables to dictioanry -- more tight and accessible
 # allows for more 
@@ -167,7 +168,48 @@ class Map:
                 [0,  1,  1,  0,  0, -1, -1,  0],
                 [1,  0,  0,  1, -1,  0,  0, -1]
             ]
-    
+    wilderness = {
+        "grassland": {
+            ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
+            "T": (wcm.TREES.chars, blender(wcm.GRASS.hexcode)),
+        },
+        "plains": {
+            ".": (".", blender(wcm.PLAIN.hexcode)),
+            "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
+        },
+        "hills": {
+            ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
+            "~": (wcm.HILLS.chars, blender(wcm.HILLS.hexcode)),
+        },
+        "forest": {
+            ".": ("\"", blender([wcm.GRASS.hexcode[0], wcm.TREES.hexcode[0]])),
+            "T": (wcm.TREES.chars, blender(wcm.GRASS.hexcode)),
+        },
+        "woods": {
+            ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
+            "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),            
+        }
+    }
+
+    landmarks = {
+        ".": (dcm.TILES.chars, blender(dcm.TILES.hexcode)),
+        ",": (dcm.GRASS.chars, blender(dcm.GRASS.hexcode)),
+        "#": (dcm.WALLS.chars, blender(dcm.WALLS.hexcode)),
+        "~": (dcm.WATER.chars, blender(dcm.WATER.hexcode)),
+        "+": (dcm.DOORS.chars, blender(dcm.DOORS.hexcode)),
+        "x": (dcm.POSTS.chars, blender(dcm.POSTS.hexcode)), 
+        "|": (dcm.PLANT.chars, blender(dcm.PLANT.hexcode)),
+        "o": (dcm.LAMPS.chars, blender(dcm.LAMPS.hexcode)),
+        ":": (dcm.ROADS.chars, blender(dcm.ROADS.hexcode)),
+        "=": (dcm.HOUSE.chars, blender(dcm.HOUSE.hexcode)),
+        " ": (' ', '#000000'),
+        "%": (dcm.WALLS.chars, blender(dcm.WALLS.hexcode)),
+        "^": (dcm.WALLS.chars, blender(dcm.WALLS.hexcode)),
+        "<": (dcm.LTHAN.chars, blender(dcm.LTHAN.hexcode)),
+        ">": (dcm.GTHAN.chars, blender(dcm.GTHAN.hexcode)),
+        "^": (dcm.TRAPS.chars, blender(dcm.TRAPS.hexcode)),
+    }
+
     tile = namedlist("Tile", "char color bkgd light block_mov block_lit items")
 
     def __init__(self, data, map_type, map_id, width=80, height=50):
@@ -189,7 +231,7 @@ class Map:
             print("\tMAP DIS:{} {}".format(self.map_display_width, self.map_display_height))
  
     ###########################################################################
-    # Level Initialization, Setup and Evaluation                              #
+    # Level Initialization, Setup, Terraform and Evaluation                   #
     ###########################################################################
     @staticmethod
     def dimensions(data):
@@ -198,59 +240,16 @@ class Map:
             data = [[col for col in row] for row in data.split('\n')]
         height = len(data)
         width = max(len(col) for col in data)
-        # return data, height, width
-        print(height, width)
         return data, height, width
 
     def fill(self, d, w, h):
         # Should only be called once by init
-        wilderness = {
-            "grassland": {
-                ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
-                "T": (wcm.TREES.chars, blender(wcm.GRASS.hexcode)),
-            },
-            "plains": {
-                ".": (".", blender(wcm.PLAIN.hexcode)),
-                "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
-            },
-            "hills": {
-                ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
-                "~": (wcm.HILLS.chars, blender(wcm.HILLS.hexcode)),
-            },
-            "forest": {
-                ".": ("\"", blender([wcm.GRASS.hexcode[0], wcm.TREES.hexcode[0]])),
-                "T": (wcm.TREES.chars, blender(wcm.GRASS.hexcode)),
-            },
-            "woods": {
-                ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
-                "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),            
-            }
-        }
-        locchar={
-            ".": (dcm.TILES.chars, blender(dcm.TILES.hexcode)),
-            ",": (dcm.GRASS.chars, blender(dcm.GRASS.hexcode)),
-            "#": (dcm.WALLS.chars, blender(dcm.WALLS.hexcode)),
-            "~": (dcm.WATER.chars, blender(dcm.WATER.hexcode)),
-            "+": (dcm.DOORS.chars, blender(dcm.DOORS.hexcode)),
-            "x": (dcm.POSTS.chars, blender(dcm.POSTS.hexcode)), 
-            "|": (dcm.PLANT.chars, blender(dcm.PLANT.hexcode)),
-            "o": (dcm.LAMPS.chars, blender(dcm.LAMPS.hexcode)),
-            ":": (dcm.ROADS.chars, blender(dcm.ROADS.hexcode)),
-            "=": (dcm.HOUSE.chars, blender(dcm.HOUSE.hexcode)),
-            " ": (' ', '#000000'),
-            "%": (dcm.WALLS.chars, blender(dcm.WALLS.hexcode)),
-            "^": (dcm.WALLS.chars, blender(dcm.WALLS.hexcode)),
-            "<": (dcm.LTHAN.chars, blender(dcm.LTHAN.hexcode)),
-            ">": (dcm.GTHAN.chars, blender(dcm.GTHAN.hexcode)),
-            "^": (dcm.TRAPS.chars, blender(dcm.TRAPS.hexcode)),
-        }
-
         def evaluate(char):
             try:
                 if self.maptype not in ("dungeon", "city"):
-                    t = wilderness[self.maptype][char]
+                    t = self.wilderness[self.maptype][char]
                 else:
-                    t = locchar[char]
+                    t = self.landmarks[char]
             except KeyError:
                 raise KeyError("Evaluate Map: {} not in keys".format(char))
             return t
@@ -281,7 +280,7 @@ class Map:
         if debug:
             print('\tTiles - {}'.format(tiles))
 
-        return rows
+        return rows        
 
     ###########################################################################
     # Connected Map/Dungeon Functions and Properties                          #

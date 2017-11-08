@@ -4,7 +4,58 @@ from typing import Tuple
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from world import World
 
-# from spaceship.objects import Object, Character
+class Unit:
+    def __init__(self, x, y, char, color):
+        self.x, self.y = x, y
+        self.char = char
+        self.color = color
+
+    def position(self):
+        return self.x, self.y
+
+    def move(self, dx, dy):
+        self.x += dx
+        self.y += dy
+
+    def talk(self):
+        return self.name + ': ' + self.message
+
+    def draw(self):
+        return self.x, self.y, self.char, self.color
+
+class Object:
+    def __init__(self, n, x, y, i, c='white', r="human", h=10):
+        """@parameters :- x, y, i, c
+            x: positional argument,
+            y: positional argument,
+            i: char/image for object representation,
+            c: color for object fill
+        """
+        self.name = n
+        self.x = x
+        self.y = y
+        self.i = i
+        self.c = c
+        self.r = r
+        self.h = h
+        self.message = "Im just an object"
+
+    def move(self, dx, dy):
+        self.x += dx
+        self.y += dy
+
+    def talk(self):
+        return self.name + ": " +self.message
+
+
+class Character(Object):
+    def __init__(self, n, x, y, i, c='white', r='human', m=10, s=10, b=6, l=5):
+        super().__init__(n, x, y, i, c, r)
+        self.m=m
+        self.s=s
+        self.l=l
+        self.inventory = Inventory(b)
+        self.backpack = Backpack()
 
 class Player:
     def __init__(self, character):
@@ -41,22 +92,17 @@ class Player:
         self.wz = -1
 
     def calculate_initial_stats(self) -> None:
-        stats = tuple(s + g + r + c for s , g, r, c 
+        stats = tuple(s + g + r + c for s, g, r, c
                             in zip(self.base_stats,
                                    self.gender_bonus,
                                    self.race_bonus,
                                    self.job_bonus))
-        
+
         self.str, self.con, self.dex, self.int, self.wis, self.cha = stats
         self.hp = self.total_hp = self.str + self.con * 2
         self.mp = self.total_mp = self.int * self.wis * 2
         self.sp = self.dex // 5
 
-    ###########################################################################
-    #
-    #   Height - Z Axis Functions
-    #
-    ###########################################################################
     def height(self) -> int:
         return self.wz
         
@@ -71,11 +117,6 @@ class Player:
     def descend(self) -> None:
         self.wz = max(self.wz - 1, -1)
 
-    ###########################################################################
-    #
-    #   Global X, Y Position Coordinate Functions
-    #
-    ###########################################################################
     def position_global(self) -> Tuple[int, int]:
         return self.wx, self.wy
 
@@ -92,42 +133,35 @@ class Player:
             return (x + 1) / 2, (y + 1) / 2
 
         if not hasattr(self, "last_position_global"):
-            raise AttributeError("Cant call this func without a last_position_global")
+            raise AttributeError("No last position global variable")
         try:
-            return direction(self.last_position_global[0]-self.wx, self.last_position_global[1]-self.wy)
+            return direction(
+                self.last_position_global[0]-self.wx, 
+                self.last_position_global[1]-self.wy)
         
         except KeyError:
-            raise KeyError("direction not yet added or calculations were wrong")
+            raise KeyError("Error in -directions-")
 
-    ###########################################################################
-    #
-    #   Local X, Y Position Coordinate Functions
-    #
-    ###########################################################################
     def position_local(self) -> Tuple[int, int]:
+
         return self.mx, self.my
 
     def move(self, dx: int, dy: int) -> None:
+
         self.mx += dx
         self.my += dy
 
     def save_position_local(self) -> None:
+
         self.last_position_local = self.mx, self.my
 
     def reset_position_local(self, x: int, y: int) -> None:
+
         self.mx, self.my = x, y
 
-    ###########################################################################
-    #
-    #   Player Data Print Function
-    #
-    ########################################################################### 
     def dump(self) -> str:
-        GREEN='\x1b[1;32;40m'
-        RED='\x1b[1;31;40m'
-        BLUE='\x1b[0;34;40m'
-        YELLOW='\x1b[0;33;40m'
-        
+        '''Prints out player information to terminal'''
+
         dump_template="""
             [Character Sheet -- Spaceship]
             ======== Player Stats ========
@@ -140,12 +174,12 @@ class Player:
             Exp      : {}
             ========   Equipment  ========
             Head     :
-            Neck     : 
+            Neck     :
             Torso    : Peasant garb
             Ring(L)  :
             Hand(L)  : Sword
             Ring(R)  :
-            Hand(R)  : 
+            Hand(R)  :
             Waist    : Thin rope
             Legs     : Common pants
             Feet     : Sandals
@@ -154,7 +188,6 @@ class Player:
             ========  Relations   ========
             """[1:]
 
-        # print(self.backpack.dump())
         return dump_template.format(
             self.name,
             self.gender,

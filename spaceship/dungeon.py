@@ -394,8 +394,8 @@ def build_terrain(width, height, tiletype, entropy=0, buildopts=None):
         water = None
         trees = None
     
+    terrain = None
     if tiletype == "plains":
-        vegatation = .33
         num_trees = 10
         terrain = [["." for _ in range(width)] for _ in range(height)]
 
@@ -409,9 +409,7 @@ def build_terrain(width, height, tiletype, entropy=0, buildopts=None):
             if stop_chance == 0:
                 break
 
-        return terrain
-
-    if tiletype == "grassland":
+    elif tiletype == "grassland":
         num_trees = 100
         terrain = [["." for _ in range(width)] for _ in range(height)]
         
@@ -425,18 +423,10 @@ def build_terrain(width, height, tiletype, entropy=0, buildopts=None):
             if stop_chance == 0:
                 break
 
-        return terrain 
-
     elif tiletype == "hills":
         num_trees = 10
         vege_chars = (".", "~")
         terrain = [[choice(vege_chars) for _ in range(width)] for _ in range(height)]
-                
-        # for t in range(num_trees):
-        #     terrain[randint(0, height-1)][randint(0, width-1)] = "T"
-        #     stop_chance = randint(0, num_trees-t)
-        #     if stop_chance == 0:
-        #         break
 
         return terrain
 
@@ -449,8 +439,6 @@ def build_terrain(width, height, tiletype, entropy=0, buildopts=None):
             stop_chance = randint(0, num_trees)
             if stop_chance == 0:
                 break
-
-        return terrain
         
     elif tiletype == 'fields':
         # ALGO: BSP seperates areas into 'fields' which then contain a couple of rectangles and
@@ -459,9 +447,13 @@ def build_terrain(width, height, tiletype, entropy=0, buildopts=None):
         # Maybe a bezier curve could be used to add a river that flows between the fields
         # Even add a chance for river to split within the map
         pass
+
     else:
         print(tiletype)
         raise ValueError("Tiletype not implemented")
+
+    return terrain
+
 
 def build_dungeon(width, height, rot=0):
     '''Places rooms in a box of size width by height and applies rot if
@@ -511,23 +503,31 @@ def build_dungeon(width, height, rot=0):
     tries = 0
 
     # Expansion Algorithm
-    while len(rooms) < 25 and tries < 2000:
+    while len(rooms) < 15 and tries < 2000:
         key = choice([i for i in range(-1, 4)])
 
         if key == 4:
-            x, y = randint(16, 24), randint(12, 18)
-            px, py = randint(9, width-9), randint(9, height-9)
+            x, y = randint(16, 20), randint(12, 16)
+            px, py = randint(9, width - 9), randint(9, height - 9)
+
         elif key >= 2:
             x, y = randint(12, 16), randint(8, 12)
-            px, py = randint(x//2, width-x//2), randint(y//2, height-y//2)
+            px, py = randint(x // 2, width - x // 2), randint(y // 2, height - y // 2)
+
         elif key >= 0:
             x, y = randint(8, 12), randint(4, 6)
-            px, py = randint(x//2, width-x//2), randint(y//2, height-y//2)
+            px, py = randint(x // 2, width - x // 2), randint(y // 2, height - y // 2)
+
         else:
             x, y = randint(6, 8), randint(3, 4)
-            px, py = randint(x//2, width-x//2), randint(y//2, height-y//2)
+            px, py = randint(x // 2, width - x // 2), randint(y // 2, height - y // 2)
 
-        temp = box(px-int(round(x/2)), py-int(round(y/2)), px-int(round(x/2))+x, py-int(round(y/2))+y)
+        temp = box(
+                px - int(round(x / 2)), 
+                py - int(round(y / 2)), 
+                px - int(round(x / 2)) + x, 
+                py - int(round(y / 2)) + y)
+
         intersects = any(intersect(room, temp) for room in rooms)
 
         if not intersects and not box_oob(temp):
