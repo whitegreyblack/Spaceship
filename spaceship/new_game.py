@@ -643,7 +643,7 @@ def new_game(character=None):
                 player.reset_position_local(location.width//2, location.height//2)
             
             else:
-                # print('Not important city')
+                # differentiate between dungeon and wilderness
                 tile = calabaston.access(*player.position_global())
                 
                 if debug:
@@ -651,7 +651,7 @@ def new_game(character=None):
                 
                 # get options based on land tile
                 # build_options = Dungeon.build_options()
-                wilderness = tile.land in ("plains", "dark woods", "hills", "forest", "desert")
+                wilderness = tile.land is not "dungeon"
                 
                 x = player.wx
                 y = player.wy

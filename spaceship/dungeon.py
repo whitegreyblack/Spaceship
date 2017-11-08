@@ -396,45 +396,61 @@ def build_terrain(width, height, tiletype, entropy=0, buildopts=None):
     
     if tiletype == "plains":
         vegatation = .33
-        num_trees = 100
-        vege_chars = (",","`","\"",";")
-        terrain = [[' ' for _ in range(width)] for _ in range(height)]
+        num_trees = 10
+        terrain = [["." for _ in range(width)] for _ in range(height)]
 
-        for i in range(width):
-            for j in range(height):
-                terrain[j][i] = choice(vege_chars)
+        # for sure at least 3 trees
+        for t in range(3):
+             terrain[randint(0, height-1)][randint(0, width-1)] = "T"
 
-        for t in range(num_trees):
+        for t in range(num_trees-3):
             terrain[randint(0, height-1)][randint(0, width-1)] = "T"
             stop_chance = randint(0, num_trees-t)
             if stop_chance == 0:
                 break
+
         return terrain
+
+    if tiletype == "grassland":
+        num_trees = 100
+        terrain = [["." for _ in range(width)] for _ in range(height)]
+        
+        # for sure at least 3 trees
+        for t in range(3):
+             terrain[randint(0, height-1)][randint(0, width-1)] = "T"
+
+        for t in range(num_trees-3):
+            terrain[randint(0, height-1)][randint(0, width-1)] = "T"
+            stop_chance = randint(0, num_trees-t)
+            if stop_chance == 0:
+                break
+
+        return terrain 
 
     elif tiletype == "hills":
         num_trees = 10
-        vege_chars = (",","`","\"","~")
-        terrain = [[' ' for _ in range(width)] for _ in range(height)]
-        
-        for i in range(width):
-            for j in range(height):
-                terrain[j][i] = choice(vege_chars)
+        vege_chars = (".", "~")
+        terrain = [[choice(vege_chars) for _ in range(width)] for _ in range(height)]
+                
+        # for t in range(num_trees):
+        #     terrain[randint(0, height-1)][randint(0, width-1)] = "T"
+        #     stop_chance = randint(0, num_trees-t)
+        #     if stop_chance == 0:
+        #         break
+
+        return terrain
+
+    elif tiletype == 'woods' or tiletype == 'forest':
+        num_trees = 200
+        terrain = [[choice(".") for _ in range(width)] for _ in range(height)]
                 
         for t in range(num_trees):
             terrain[randint(0, height-1)][randint(0, width-1)] = "T"
-            stop_chance = randint(0, num_trees-t)
+            stop_chance = randint(0, num_trees)
             if stop_chance == 0:
                 break
+
         return terrain
-
-    elif tiletype == "mountains":
-        pass
-
-    elif tiletype == 'woods':
-        pass
-
-    elif tiletype == 'shore':
-        pass
         
     elif tiletype == 'fields':
         # ALGO: BSP seperates areas into 'fields' which then contain a couple of rectangles and

@@ -43,6 +43,7 @@ chars_key = {
 }
 
 chars_block_move= {"#", "+", "o", "x", "~", "%", "Y", "T"}
+chars_block_move_hills =  {"#", "+", "o", "x", "%", "Y", "T"}
 chars_block_light = {"#", "+", "o", "%", "Y", "T"}
 
 
@@ -173,7 +174,11 @@ class Map:
         self.maptype = map_type
         self.data, self.height, self.width = self.dimensions(data)
         self.map_id = map_id
-        self.block = [[self.data[y][x] in chars_block_move for x in range(self.width)] for y in range(self.height)]
+
+        # explicitely do not block "~" in hills
+        self.block_chars = chars_block_move_hills if map_type == "hills" else chars_block_move
+        self.block = [[self.data[y][x] in self.block_chars for x in range(self.width)] for y in range(self.height)]
+
         self.tilemap = self.fill(data, self.width, self.height)
         self.map_display_width = min(self.width, width)
         self.map_display_height = min(self.height, height)
@@ -198,20 +203,29 @@ class Map:
         return data, height, width
 
     def fill(self, d, w, h):
-        # Light.Unexplored, Explored, Visible
-        # city, wilderness, dungeon
-        plainschar = {
-            ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
-            ",": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
-            ";": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
-            "`": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
-            "\"": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
-            # "Y": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
-            "T": (choice(wcm.TREES.chars), blender(wcm.TREES.hexcode)),
-            # "f": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
-            "~": (wcm.HILLS.chars, blender(wcm.HILLS.hexcode)),
+        # Should only be called once by init
+        wilderness = {
+            "grassland": {
+                ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
+                "T": (wcm.TREES.chars, blender(wcm.GRASS.hexcode)),
+            },
+            "plains": {
+                ".": (".", blender(wcm.PLAIN.hexcode)),
+                "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
+            },
+            "hills": {
+                ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
+                "~": (wcm.HILLS.chars, blender(wcm.HILLS.hexcode)),
+            },
+            "forest": {
+                ".": ("\"", blender([wcm.GRASS.hexcode[0], wcm.TREES.hexcode[0]])),
+                "T": (wcm.TREES.chars, blender(wcm.GRASS.hexcode)),
+            },
+            "woods": {
+                ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
+                "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),            
+            }
         }
-
         locchar={
             ".": (dcm.TILES.chars, blender(dcm.TILES.hexcode)),
             ",": (dcm.GRASS.chars, blender(dcm.GRASS.hexcode)),
@@ -233,10 +247,8 @@ class Map:
 
         def evaluate(char):
             try:
-                if self.maptype == "plains":
-                    t = plainschar[char]
-                elif self.maptype == "hills":
-                    t = plainschar[char]
+                if self.maptype not in ("dungeon", "city"):
+                    t = wilderness[self.maptype][char]
                 else:
                     t = locchar[char]
             except KeyError:
@@ -244,14 +256,15 @@ class Map:
             return t
         
         rows = []
-        d = d if isinstance(d, list) else d.split('\n')
         tiles = set()
+        tree, ground = None, None
+        d = d if isinstance(d, list) else d.split('\n')
         for row in d:
             cols = []
             for col in row:
                 chars, hexcodes = evaluate(col)
                 light = Light.Unexplored
-                block_mov = col in chars_block_move
+                block_mov = col in self.block_chars
                 block_lit = col not in chars_block_light
                 tile = self.tile(
                     choice(chars), 
