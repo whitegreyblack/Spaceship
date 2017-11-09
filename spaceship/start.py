@@ -4,7 +4,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 
 from bearlibterminal import terminal as term
 
-import spaceship.constants as consts
 from spaceship.constants import GAME_TITLE as TITLE
 from spaceship.constants import GAME_TITLE_HEIGHT as TITLE_HEIGHT
 from spaceship.constants import GAME_TITLE_VERSION as VERSION
@@ -15,12 +14,9 @@ if term.state(term.TK_HEIGHT) <= 24:
 else:
     from spaceship.constants import GAME_TITLE as GTAS
 
-from spaceship.constants import GAME_SCREEN_HEIGHT as SCREEN_HEIGHT
-from spaceship.constants import GAME_SCREEN_WIDTH as SCREEN_WIDTH
 from spaceship.continue_game import continue_game
 from spaceship.create_character import create_character as create_character
 from spaceship.new_game import new_game
-from spaceship.new_name import new_name
 from spaceship.options import options
 from spaceship.screen_functions import center, colored, longest
 from spaceship.setup import setup, setup_font, setup_game, setup_menu, toChr
