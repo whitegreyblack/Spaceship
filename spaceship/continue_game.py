@@ -5,7 +5,7 @@ from spaceship.constants import MENU_SCREEN_WIDTH as SCREEN_WIDTH
 from spaceship.constants import MENU_SCREEN_HEIGHT as SCREEN_HEIGHT
 from spaceship.screen_functions import *
 from bearlibterminal import terminal as term
-from spaceship.setup import setup
+from spaceship.setup_game import setup
 
 # Begin continue Menu
 def continue_game():

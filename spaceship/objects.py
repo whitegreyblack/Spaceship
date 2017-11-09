@@ -6,7 +6,7 @@ from collections import namedtuple
 from random import randint, choice
 from spaceship.color import Color
 from spaceship.maps import hextup, hexone, output, blender, gradient, evaluate_blocks
-from spaceship.setup import toInt
+from spaceship.setup_game import toInt
 from spaceship.charmap import DungeonCharmap as dcm
 from spaceship.charmap import WildernessCharmap as wcm
 from spaceship.world import World

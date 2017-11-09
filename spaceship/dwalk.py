@@ -5,7 +5,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 
 from bearlibterminal import terminal as t
-from spaceship.setup import setup
+from spaceship.setup_game import setup
 width, height, size = 150, 100, 8
 reverse = -1
 world = None

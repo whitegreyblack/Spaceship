@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 import spaceship.constants as consts
 from spaceship.screen_functions import center, longest, colored
 from bearlibterminal import terminal as term
-from spaceship.setup import setup
+from spaceship.setup_game import setup
 from collections import namedtuple
 
 debug = False

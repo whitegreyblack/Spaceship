@@ -17,7 +17,7 @@ import spaceship.cc_strings as strings
 from spaceship.continue_game import continue_game
 from spaceship.new_name import new_name
 from spaceship.screen_functions import *
-from spaceship.setup import output, setup, setup_font, setup_menu, toChr, setup_ext
+from spaceship.setup_game import output, setup, setup_font, setup_menu, toChr, setup_ext
 from random import randint 
 # str_title = "Character Creation"
 # str_help = "Press (?) for info on a selected race, subrace or class"

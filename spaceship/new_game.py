@@ -3,7 +3,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.action import key_movement, num_movement, key_actions, action, keypress, world_key_actions
-from spaceship.setup import setup_game
+from spaceship.setup_game import setup_game
 from spaceship.tools import bresenhams, deltanorm, movement
 from spaceship.maps import stringify, hextup, hexone, toInt
 from spaceship.objects import Map, Object, Character
@@ -18,7 +18,7 @@ from random import randint, choice
 from collections import namedtuple
 from namedlist import namedlist
 from spaceship.dungeon import build_terrain, build_dungeon
-from spaceship.setup import setup, output, setup_font
+from spaceship.setup_game import setup, output, setup_font
 from spaceship.world import World
 from time import clock
 
@@ -526,8 +526,9 @@ def new_game(character=None):
                     sublevel = Map(
                         data=build_dungeon(
                             width=66,
-                            height=22,
-                            rot=100), 
+                            height=22 if screen_height <= 25 else 44,
+                            rot=0,
+                            max_rooms=15 if screen_height <= 25 else 20), 
                         map_type="dungeon", 
                         map_id=hash(v), 
                         width=term.state(term.TK_WIDTH), 
@@ -698,8 +699,9 @@ def new_game(character=None):
                     location = Map(
                         data=build_dungeon(
                             width=66,
-                            height=22,
-                            rot=0), 
+                            height=22 if screen_height <= 25 else 44,
+                            rot=0,
+                            max_rooms=15 if screen_height <= 25 else 20), 
                         map_type=tile.land,
                         map_id=hash(v), # dungeon.build(options)
                         width=term.state(term.TK_WIDTH),
@@ -794,42 +796,42 @@ def new_game(character=None):
         # y axis
         for i in range(0, 80, 2):
             if i < 20:
-                term.puts(screen_width-20+i, 0, border_line)
-                term.puts(screen_width-20+i, 10, border_line)
+                term.puts(screen_width - 20 + i, 0, border_line)
+                term.puts(screen_width - 20 + i, 10, border_line)
             if i < 60:
-                term.puts(i, screen_height-6, border_line)
-            term.puts(i, screen_height-1, border_line)
+                term.puts(i, screen_height - 6, border_line)
+            term.puts(i, screen_height - 1, border_line)
         
         # x axis
         for j in range(35):
             if j < 6:
-                term.puts(0, screen_height-6+j, border_line)
-            term.puts(screen_width-20, j, border_line)
-            term.puts(screen_width-1, j, border_line)
+                term.puts(0, screen_height - 6 + j, border_line)
+            term.puts(screen_width - 20, j, border_line)
+            term.puts(screen_width - 1, j, border_line)
 
     turn = 0
     def status_box():
         col, row = 1, 2
-        term.puts(col, row-1, player.name)
-        term.puts(col, row+0, player.gender)
-        term.puts(col, row+1, player.race)
-        term.puts(col, row+2, player.job)
+        term.puts(col, row - 1, player.name)
+        term.puts(col, row + 0, player.gender)
+        term.puts(col, row + 1, player.race)
+        term.puts(col, row + 2, player.job)
 
-        term.puts(col, row+4, "LVL: {:>6}".format(player.level))
-        term.puts(col, row+5, "EXP: {:>6}".format("{}/{}".format(player.exp, player.advexp)))
+        term.puts(col, row + 4, "LVL: {:>6}".format(player.level))
+        term.puts(col, row + 5, "EXP: {:>6}".format("{}/{}".format(player.exp, player.advexp)))
 
-        term.puts(col, row+7, "HP:  {:>6}".format("{}/{}".format(player.hp, player.total_hp)))
-        term.puts(col, row+8, "MP:  {:>6}".format("{}/{}".format(player.mp, player.total_mp)))
-        term.puts(col, row+9, "SP:  {:>6}".format(player.sp))
+        term.puts(col, row + 7, "HP:  {:>6}".format("{}/{}".format(player.hp, player.total_hp)))
+        term.puts(col, row + 8, "MP:  {:>6}".format("{}/{}".format(player.mp, player.total_mp)))
+        term.puts(col, row + 9, "SP:  {:>6}".format(player.sp))
 
-        term.puts(col, row+11, "STR: {:>6}".format(player.str)) 
-        term.puts(col, row+12, "CON: {:>6}".format(player.con))
-        term.puts(col, row+13, "DEX: {:>6}".format(player.dex))
-        term.puts(col, row+14, "INT: {:>6}".format(player.int))
-        term.puts(col, row+15, "WIS: {:>6}".format(player.wis))
-        term.puts(col, row+16, "CHA: {:>6}".format(player.cha))
+        term.puts(col, row + 11, "STR: {:>6}".format(player.str)) 
+        term.puts(col, row + 12, "CON: {:>6}".format(player.con))
+        term.puts(col, row + 13, "DEX: {:>6}".format(player.dex))
+        term.puts(col, row + 14, "INT: {:>6}".format(player.int))
+        term.puts(col, row + 15, "WIS: {:>6}".format(player.wis))
+        term.puts(col, row + 16, "CHA: {:>6}".format(player.cha))
 
-        term.puts(col, row+18, "GOLD:{:>6}".format(player.gold))
+        term.puts(col, row + 18, "GOLD:{:>6}".format(player.gold))
 
     def log_box():
         messages = gamelog.write().messages
@@ -904,6 +906,7 @@ def new_game(character=None):
     # pointer to the current view
     wview = WorldView.Geo
     screen_width, screen_height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
+    print(screen_height, screen_width)
     calabaston = World(screen_width, screen_height)
     calabaston.load(
                 "./assets/worldmap.png", 
