@@ -454,8 +454,7 @@ def build_terrain(width, height, tiletype, entropy=0, buildopts=None):
 
     return terrain
 
-
-def build_dungeon(width, height, rot=0):
+def build_dungeon(width, height, rot=0, max_rooms=15):
     '''Places rooms in a box of size width by height and applies rot if
     is not 0 and returns the box to be parsed as a dungeon'''
 
@@ -503,8 +502,9 @@ def build_dungeon(width, height, rot=0):
     tries = 0
 
     # Expansion Algorithm
-    while len(rooms) < 15 and tries < 2000:
-        key = choice([i for i in range(-1, 4)])
+    key_range = 3 if height <= 25 else 4
+    while len(rooms) < max_rooms and tries < 2000:
+        key = choice([i for i in range(-1, key_range)])
 
         if key == 4:
             x, y = randint(16, 20), randint(12, 16)
@@ -522,16 +522,20 @@ def build_dungeon(width, height, rot=0):
             x, y = randint(6, 8), randint(3, 4)
             px, py = randint(x // 2, width - x // 2), randint(y // 2, height - y // 2)
 
+        if randint(0, 3):
+            x, y = y, x
+            px, py = py, px
+
         temp = box(
                 px - int(round(x / 2)), 
                 py - int(round(y / 2)), 
                 px - int(round(x / 2)) + x, 
                 py - int(round(y / 2)) + y)
 
-        intersects = any(intersect(room, temp) for room in rooms)
-
-        if not intersects and not box_oob(temp):
-                rooms.append(temp)
+        # check for out of bounds error first -- makes for filtering easier and does not check
+        # intersections with temp and other rooms due to first failure -- thus faster looping 
+        if not box_oob(temp) and not any(intersect(room, temp) for room in rooms):
+            rooms.append(temp)
         else:
             tries += 1
 
