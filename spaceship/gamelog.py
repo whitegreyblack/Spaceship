@@ -110,14 +110,14 @@ class GameLogger:
 
     def update(self, n=0):
         """Updates the points to the message position to start printing from"""
-        self.index = len(self.messages)-self.maxlines if not n else n
+        self.index = len(self.messages) - self.maxlines if not n else n
 
     def write(self):
         """Return a set of messages for game loop to print"""
-        if len(self.messages) < self.maxlines:
+        if len(self.messages) < self.maxlines:  
             return log(self.messages)
 
-        return log([self.messages[self.index+i] for i in range(self.maxlines)])
+        return log([self.messages[i] for i in range(self.maxlines)])
 
     def dump(self, message):
         """Write log to disk"""

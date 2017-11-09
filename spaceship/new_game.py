@@ -180,6 +180,9 @@ def new_game(character=None):
             # Individually log the specific reason
             if debug:
                 gamelog.add('\tNOT MOVING ON WORLD MAP')
+
+            sentence = "You cannot move there"
+            gamelog.add(sentence)
             # if blocked:
                 # =============  START WALK LOG  =================================
                 # gamelog.add("Cannot go there {}, {}".format(tx, ty))
@@ -194,7 +197,7 @@ def new_game(character=None):
                     calabaston.h,
                     tx, ty
                 ))
-                gamelog.add("Not walkable")
+            gamelog.add("Not walkable")
 
     def key_process(x, y):
         walkChars = {
@@ -524,7 +527,7 @@ def new_game(character=None):
                         data=build_dungeon(
                             width=66,
                             height=22,
-                            rot=0), 
+                            rot=100), 
                         map_type="dungeon", 
                         map_id=hash(v), 
                         width=term.state(term.TK_WIDTH), 
@@ -833,7 +836,9 @@ def new_game(character=None):
         if messages:
             for idx in range(len(messages)):
                 # offput by 1 for border and then # of lines logger is currently set at
-                term.puts(1, screen_height - len(messages) + idx - 1, messages[idx])
+                term.puts(
+                    14 if player.height() == -1 else 1, 
+                    screen_height - len(messages) + idx - 1, messages[idx])
 
     def map_box():
         """ Logic:
@@ -841,42 +846,43 @@ def new_game(character=None):
                 Then print units/interactables?
                 Finally light sources and player?"""
         term.composition(False)
-        dungeon.fov_calc(lights+[(player.mx, player.my, player.sight)])
+        dungeon.fov_calc(lights+[(player.mx, player.my, player.sight * 2)])
         for x, y, lit, ch, bkgd in dungeon.output(player.mx, player.my, []):
             # ch = ch if len(str(ch)) > 1 else chr(toInt(palette[ch]))
             term.puts(x + 13, y, "[color={}]".format(lit) + ch + "[/color]")
         term.refresh()
         
     def world_legend_box():
-        x, y = screen_width-12, 1
+        length, offset, height = 14, 12, 0
         # boxheader = "Map Legend"
-        selected(center(surround(calabaston.name), 14), 1, surround(calabaston.name))   
+        world_name = surround(calabaston.name, length=length)
+        selected(center(world_name, offset), height, world_name)   
         # selected(center(boxheader, 12), 3, surround(boxheader))
         
-        for char, color, desc, i in calabaston.legend():
-            term.puts(0, i + 2, "[c={}] {}[/c] {}".format(color, char, desc))
-
         # check if player position is over a city/enterable area
         # this is purely a ui enhancement. Actually entering a city is not that much different
         # than entering a dungeon/wilderness area
+        height += 1
         if player.position_global() in calabaston.enterable_legend.keys():
-            enterable_name = surround(calabaston.enterable_legend[player.position_global()], length=14)
-            selected(center(enterable_name, 12), i + 4, enterable_name)
+            enterable_name = surround(calabaston.enterable_legend[player.position_global()], length=length)
+            selected(center(enterable_name, offset), height, enterable_name)
 
         # check if player position is over a dungeon position
         elif player.position_global() in calabaston.dungeon_legend.keys():
-            dungeon_name = surround(calabaston.dungeon_legend[player.position_global()], length=14)
-            selected(center(dungeon_name, 12), i + 4, dungeon_name)
-
-        # Add land types to the overworld ui
-        landtype = surround(calabaston.get_landtype(*player.position_global()), length=14)
-        selected(center(landtype, 12), i + 5, landtype)
+            dungeon_name = surround(calabaston.dungeon_legend[player.position_global()], length=length)
+            selected(center(dungeon_name, offset), height, dungeon_name)
+        else:
+            # Add land types to the overworld ui
+            landtype = surround(calabaston.get_landtype(*player.position_global()), length=length)
+            selected(center(landtype, offset), height, landtype)
         
+        for char, color, desc, i in calabaston.legend():
+            term.puts(0, height + i + 2, "[c={}] {}[/c] {}".format(color, char, desc))
 
     def world_map_box():
         '''Displays the world map tiles in the terminal'''
 
-        screen_off_x, screen_off_y = 14, 1
+        screen_off_x, screen_off_y = 14, 0
         for x, y, col, ch in calabaston.draw(*(player.position_global())):
             term.puts(
                 x + screen_off_x, 
@@ -885,7 +891,7 @@ def new_game(character=None):
 
     # very first thing is game logger initialized to output messages on terminal
     # gamelog = GameLogger(4, ptt=True)
-    gamelog = GameLogger(4 if term.state(term.TK_HEIGHT) > 25 else 2)
+    gamelog = GameLogger(1)
     print("MAX LINES: {}".format(gamelog.maxlines))
     # if character is None then improperly accessed new_game
     # else unpack the character
@@ -942,10 +948,12 @@ def new_game(character=None):
     while proceed:
         term.clear()
         if player.height() == -1:
-
+            if gamelog.maxlines == 2:
+                gamelog.maxlines = 1
             # World View
             world_map_box()
             world_legend_box()
+            log_box()
             term.refresh()
 
             x, y, a = key_in_world()
@@ -957,6 +965,8 @@ def new_game(character=None):
 
         # player is on local map level >= 0
         else:
+            if gamelog.maxlines == 1:
+                gamelog.maxlines = 4 if term.state(term.TK_HEIGHT) > 25 else 2
             # City, Wilderness, Level 0 Dungeon
             if dungeon == None:
                 player.move_height(-1)

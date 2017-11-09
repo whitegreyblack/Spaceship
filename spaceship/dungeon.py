@@ -455,7 +455,8 @@ def build_terrain(width, height, tiletype, entropy=0, buildopts=None):
     return terrain
 
 
-def build_dungeon(width, height, rot=0):
+def build_dungeon(width, height, rot):
+    print(width, height, rot)
     '''Places rooms in a box of size width by height and applies rot if
     is not 0 and returns the box to be parsed as a dungeon'''
 
@@ -504,7 +505,7 @@ def build_dungeon(width, height, rot=0):
 
     # Expansion Algorithm
     while len(rooms) < 15 and tries < 2000:
-        key = choice([i for i in range(-1, 4)])
+        key = choice([i for i in range(-1, 1)])
 
         if key == 4:
             x, y = randint(16, 20), randint(12, 16)
@@ -639,37 +640,16 @@ def build_dungeon(width, height, rot=0):
     dungeon[uj][ui] = '<'
 
     # remove downstairs from floors and replace char
-    floor_clear.remove(downStairs)
-    di, dj = downStairs
-    dungeon[dj][di] = '>'
-
-    # i, j = choice(floor_clear)
-    # floor_clear.remove((i, j))
-    # dungeon[j][i] = '>'
-
-    # i, j = choice(floor_clear)
-    # floor_clear.remove((i, j))
-    # dungeon[j][i] = '<'
-
-    # for j in range(len(dungeon)):
-    #     for i in range(len(dungeon[0])):
-    #         if dungeon[j][i] == '%':
-    #             term.puts(i, j, "[c=#ffffff]{}[/c]".format(dungeon[j][i]))
-    #         elif dungeon[j][i] == '.':
-    #             term.puts(i, j, "[c=#808080]{}[/c]".format(dungeon[j][i]))
-    #         else:
-    #             term.puts(i, j, dungeon[j][i])
-
-    # term.refresh()
-    # term.read()
-
-    # create backstory
-    backstory = ""
+    if randint(0, 5):
+        floor_clear.remove(downStairs)
+        di, dj = downStairs
+        dungeon[dj][di] = '>'
 
     # the output is more for debugging
     print("Rooms:", len(rooms))
-
-    if rot:
+    print(rot)
+    if rot > 0:
+        print('rot')
         dungeon = decay(dungeon, n=rot)
 
     return dungeon
