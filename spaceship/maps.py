@@ -105,43 +105,6 @@ def picturfy(string, filename="picturfy-img.png", folder="./", debug=False):
     img_to_save.save(folder+filename)
     return folder+filename
 
-def build_location(image_file, cfg_file):
-    return
-
-def stringify(img_file, cfg_file, debug=False):
-    """Takes in a file location string and a bool for debug
-    to determine output. Sister function to asciify. Uses 
-    only keyboard accessible characters in the map."""
-
-    lines = []
-    colors = set()
-
-    with Image.open(img_file) as img:
-        pixels = img.load()
-        w, h = img.size
-
-    for j in range(h):
-        line = ""
-        for i in range(w):
-            # sometimes alpha channel is included so test for all values first
-            try:
-                r, g, b, _ = pixels[i, j]
-            except ValueError:
-                r, g, b = pixels[i, j]
-            if (r, g, b) not in colors:
-                colors.add((r, g, b))
-            try:
-                line += stringify_chars[(r, g, b)]
-            except KeyError:
-                print((r, g, b))
-        lines.append(line)
-
-    if debug:
-        print("\n".join(lines))
-        print(colors)
-
-    return "\n".join(lines)
-
 def asciify(string, debug=False):
     """Takes in a file location string and a debug parameter
     to determine output. Sister function to stringify. Uses

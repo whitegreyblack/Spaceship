@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.action import key_movement, num_movement, key_actions, action, keypress, world_key_actions
 from spaceship.setup_game import setup_game
 from spaceship.tools import bresenhams, deltanorm, movement
-from spaceship.maps import stringify, hextup, hexone, toInt
+from spaceship.maps import hextup, hexone, toInt
 from spaceship.objects import Map, Object, Character
 from spaceship.item import Item
 from spaceship.player import Player
@@ -632,25 +632,22 @@ def new_game(character=None):
                 img_name = "./assets/maps/" + fileloc + ".png"
                 cfg_name = "./assets/maps/" + fileloc + ".cfg"
 
-                try:
-                    x = player.wx
-                    y = player.wy
-                    z = player.wz
-                    t = 'city'
-                    v = str(x) + str(y) + str(z) + t
-                    
-                    if debug:
-                        gamelog.add('CITY HASH ID: {}'.format(hash(v)))
+                x = player.wx
+                y = player.wy
+                z = player.wz
+                t = 'city'
+                v = str(x) + str(y) + str(z) + t
+                
+                if debug:
+                    gamelog.add('CITY HASH ID: {}'.format(hash(v)))
 
-                    location = Map(
-                        data=stringify(img_name, cfg_name), 
-                        map_type="city", 
-                        map_id=hash(v), 
-                        width=term.state(term.TK_WIDTH), 
-                        height=term.state(term.TK_HEIGHT))
-                except FileNotFoundError:
-                    # print('no file of that name')
-                    raise FileNotFoundError("Map for {} not yet implemented".format(fileloc))
+                location = Map(
+                    data=img_name, 
+                    cfg_path=cfg_name if cfg_name else None,
+                    map_type="city", 
+                    map_id=hash(v), 
+                    width=term.state(term.TK_WIDTH), 
+                    height=term.state(term.TK_HEIGHT))
                 # basically spawn in town center
                 player.reset_position_local(location.width//2, location.height//2)
             
@@ -848,7 +845,7 @@ def new_game(character=None):
                 Then print units/interactables?
                 Finally light sources and player?"""
         term.composition(False)
-        dungeon.fov_calc(lights+[(player.mx, player.my, player.sight * 2)])
+        dungeon.fov_calc([(player.mx, player.my, player.sight * 2)])
         for x, y, lit, ch, bkgd in dungeon.output(player.mx, player.my, []):
             # ch = ch if len(str(ch)) > 1 else chr(toInt(palette[ch]))
             term.puts(x + 13, y, "[color={}]".format(lit) + ch + "[/color]")
@@ -883,7 +880,6 @@ def new_game(character=None):
 
     def world_map_box():
         '''Displays the world map tiles in the terminal'''
-
         screen_off_x, screen_off_y = 14, 0
         for x, y, col, ch in calabaston.draw(*(player.position_global())):
             term.puts(
@@ -906,18 +902,11 @@ def new_game(character=None):
     # pointer to the current view
     wview = WorldView.Geo
     screen_width, screen_height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
-    print(screen_height, screen_width)
     calabaston = World(screen_width, screen_height)
     calabaston.load(
                 "./assets/worldmap.png", 
                 "./assets/worldmap_territories.png",
                 "./assets/worldmap_kingdoms.png")   
-
-    blocked = []
-
-    MAP_FACTOR = 2
-    COLOR_DARK_WALL = term.color_from_argb(128, 0, 0, 100)
-    COLOR_DARK_GROUND = term.color_from_argb(128, 50, 50, 150)
     wpx, wpy = player.position_global()
 
     # blanks
@@ -946,7 +935,6 @@ def new_game(character=None):
         # dungeon.add_item(87, 31, Item("sword", "(", "grey"))
 
     proceed = True
-    lights = []
     dungeon = None
     while proceed:
         term.clear()

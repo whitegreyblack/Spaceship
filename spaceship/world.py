@@ -6,7 +6,6 @@ from collections import namedtuple
 from namedlist import namedlist
 from spaceship.screen_functions import center
 from spaceship.setup_game import setup, setup_font
-from spaceship.maps import stringify
 from textwrap import wrap
 # from objects import Map
 from spaceship.tools import bresenhams, scroll

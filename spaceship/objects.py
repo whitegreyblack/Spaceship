@@ -1,6 +1,7 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
+from PIL import Image
 from namedlist import namedlist
 from collections import namedtuple
 from random import randint, choice
@@ -212,16 +213,20 @@ class Map:
 
     tile = namedlist("Tile", "char color bkgd light block_mov block_lit items")
 
-    def __init__(self, data, map_type, map_id, width=80, height=50):
+    def __init__(self, data, map_type, map_id, width=80, height=50, cfg_path=None):
         self.maptype = map_type
-        self.data, self.height, self.width = self.dimensions(data)
+        # data holds the raw characters
+        self.data, self.height, self.width = self.dimensions(self.stringify(data))
         self.map_id = map_id
 
         # explicitely do not block "~" in hills
         self.block_chars = chars_block_move_hills if map_type == "hills" else chars_block_move
         self.block = [[self.data[y][x] in self.block_chars for x in range(self.width)] for y in range(self.height)]
 
-        self.tilemap = self.fill(data, self.width, self.height)
+        if cfg_path:
+            self.units = self.add_units(cfg_path)
+
+        self.tilemap = self.fill(self.data, self.width, self.height)
         self.map_display_width = min(self.width, width)
         self.map_display_height = min(self.height, height)
 
@@ -242,6 +247,76 @@ class Map:
         width = max(len(col) for col in data)
         return data, height, width
 
+    def stringify(self, img_file):
+        """Takes in a file location string and a bool for debug
+        to determine output. Sister function to asciify. Uses 
+        only keyboard accessible characters in the map."""
+        stringify_chars = { 
+            (0, 0, 0): "#",
+            (136, 0, 21): "%",
+            (255, 242, 0): "=",
+            (34, 177, 76): ",",
+            (185, 122, 87): "+",
+            (127, 127, 127): ".",
+            (112, 146, 190): "=",   
+            (153, 217, 234): "=",
+            (255, 255, 255): ".",
+            (195, 195, 195): ":",
+            (241, 203, 88): "|",
+            (255, 201, 14): "|",
+            (0, 162, 232): "~",
+            (98, 81, 43): "x",
+            (239, 228, 176): ",",
+        }
+        lines = []
+        colors = set()
+        print(img_file)
+        try:
+            with Image.open(img_file) as img:
+                pixels = img.load()
+                w, h = img.size
+        except FileNotFoundError:
+            raise FileNotFoundError("Cannot find file for stringify: {}".format(img_file))
+
+        for j in range(h):
+            line = ""
+            for i in range(w):
+                # sometimes alpha channel is included so test for all values first
+                try:
+                    r, g, b, _ = pixels[i, j]
+                except ValueError:
+                    r, g, b = pixels[i, j]
+                if (r, g, b) not in colors:
+                    colors.add((r, g, b))
+                try:
+                    line += stringify_chars[(r, g, b)]
+                except KeyError:
+                    print((r, g, b))
+            lines.append(line)
+
+        return "\n".join(lines)
+
+    def add_units(self, cfg_path):
+        self.units = []
+        try:
+            with open(cfg_path, 'r') as cfg:
+                unit = namedtuple("Unit", "race unit")
+                modifier = ""
+                for line in cfg:
+                    if line.strip().startswith('#'):
+                        pass # these are comments in the file
+                    elif line.strip().startswith('['):
+                        modifier = line.replace('[', '').replace(']', '').lower().strip()
+                    else:
+                        job, number = line.split()
+                        if modifier == "":
+                            raise ValueError("Configuration file has no race specifier")
+                        for _ in range(int(number)):
+                            self.units.append(unit(modifier, job.lower()))
+            print(list(u for u in self.units))
+        except FileNotFoundError:
+            print("No unit configuration file found")
+            
     def fill(self, d, w, h):
         # Should only be called once by init
         def evaluate(char):
