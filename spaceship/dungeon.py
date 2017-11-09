@@ -627,11 +627,12 @@ def build_dungeon(width, height, rot=0, max_rooms=15):
         if val == 9:
             floor_clear.append((i, j))
 
-    traps = []
-    for i in range(3):
-        i, j = choice(floor_clear)
-        floor_clear.remove((i, j))
-        dungeon[j][i] = '^'
+    # TODO: REMOVE TRAPS UNTIL TRAPS CAN BE IMPLEMENTED -- CURRENT ERRROR IS TRAPS IS HIDDEN UNTIL STEPPED ON
+    # traps = []
+    # for i in range(3):
+    #     i, j = choice(floor_clear)
+    #     floor_clear.remove((i, j))
+    #     dungeon[j][i] = '^'
 
     upStairs, downStairs = choice(floor_clear), choice(floor_clear)
     while distance(upStairs, downStairs) <= 15:
