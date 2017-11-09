@@ -4,13 +4,14 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from PIL import Image
 from namedlist import namedlist
 from collections import namedtuple
-from random import randint, choice
+from random import randint, choice, shuffle
 from spaceship.color import Color
 from spaceship.maps import hextup, hexone, output, blender, gradient, evaluate_blocks
 from spaceship.setup_game import toInt
 from spaceship.charmap import DungeonCharmap as dcm
 from spaceship.charmap import WildernessCharmap as wcm
 from spaceship.world import World
+from player import Unit
 from spaceship.tools import scroll
 # TODO: Maybe move map to a new file called map and create a camera class?
 
@@ -49,44 +50,44 @@ chars_block_move_hills =  {"#", "+", "o", "x", "%", "Y", "T"}
 chars_block_light = {"#", "+", "o", "%", "Y", "T"}
 
 
-class Object:
-    def __init__(self, n, x, y, i, c='white', r="human", h=10):
-        """@parameters :- x, y, i, c
-            x: positional argument,
-            y: positional argument,
-            i: char/image for object representation,
-            c: color for object fill
-        """
-        self.name = n
-        self.x = x
-        self.y = y
-        self.i = i
-        self.c = c
-        self.r = r
-        self.h = h
-        self.message = "Im just an object"
+# class Object:
+#     def __init__(self, n, x, y, i, c='white', r="human", h=10):
+#         """@parameters :- x, y, i, c
+#             x: positional argument,
+#             y: positional argument,
+#             i: char/image for object representation,
+#             c: color for object fill
+#         """
+#         self.name = n
+#         self.x = x
+#         self.y = y
+#         self.i = i
+#         self.c = c
+#         self.r = r
+#         self.h = h
+#         self.message = "Im just an object"
 
-    def move(self, dx, dy):
-        self.x += dx
-        self.y += dy
+#     def move(self, dx, dy):
+#         self.x += dx
+#         self.y += dy
 
-    def talk(self):
-        return self.name + ": " +self.message
+#     def talk(self):
+#         return self.name + ": " +self.message
 
-    def draw(self):
-        return (self.x, self.y, self.i, self.c)
+#     def draw(self):
+#         return (self.x, self.y, self.i, self.c)
 
-    def pos(self):
-        return self.x, self.y
+#     def pos(self):
+#         return self.x, self.y
 
-class Character(Object):
-    def __init__(self, n, x, y, i, c='white', r='human', m=10, s=10, b=6, l=5):
-        super().__init__(n, x, y, i, c, r)
-        self.m=m
-        self.s=s
-        self.l=l
-        self.inventory = Inventory(b)
-        self.backpack = Backpack()
+# class Character(Object):
+#     def __init__(self, n, x, y, i, c='white', r='human', m=10, s=10, b=6, l=5):
+#         super().__init__(n, x, y, i, c, r)
+#         self.m=m
+#         self.s=s
+#         self.l=l
+#         self.inventory = Inventory(b)
+#         self.backpack = Backpack()
 
 class Slot:
     def __init__(self, current=None):
@@ -270,6 +271,7 @@ class Map:
         }
         lines = []
         colors = set()
+        self.spaces = []
         print(img_file)
         try:
             with Image.open(img_file) as img:
@@ -289,18 +291,24 @@ class Map:
                 if (r, g, b) not in colors:
                     colors.add((r, g, b))
                 try:
-                    line += stringify_chars[(r, g, b)]
+                    char = stringify_chars[(r, g, b)]
+                    if char in (".", ":", ",", "="):
+                        self.spaces.append((i, j))
+                    line += char
                 except KeyError:
                     print((r, g, b))
             lines.append(line)
-
+        shuffle(self.spaces)
         return "\n".join(lines)
 
     def add_units(self, cfg_path):
-        self.units = []
+        units = []
+        if not self.spaces:
+            print("No world configuration")
+            return
         try:
             with open(cfg_path, 'r') as cfg:
-                unit = namedtuple("Unit", "race unit")
+                unit = namedtuple("Unit", "race unit char color")
                 modifier = ""
                 for line in cfg:
                     if line.strip().startswith('#'):
@@ -308,15 +316,25 @@ class Map:
                     elif line.strip().startswith('['):
                         modifier = line.replace('[', '').replace(']', '').lower().strip()
                     else:
-                        job, number = line.split()
+                        job, color, character, number= line.split()
                         if modifier == "":
                             raise ValueError("Configuration file has no race specifier")
                         for _ in range(int(number)):
-                            self.units.append(unit(modifier, job.lower()))
-            print(list(u for u in self.units))
+                            i, j = self.spaces.pop()
+                            units.append(
+                                Unit(
+                                    x=i, 
+                                    y=j,
+                                    desc=modifier + ' ' + job.lower(),
+                                    char=character,
+                                    color=color))
+            for u in units:
+                print(u)
         except FileNotFoundError:
             print("No unit configuration file found")
-            
+        finally:
+            return units    
+        
     def fill(self, d, w, h):
         # Should only be called once by init
         def evaluate(char):
@@ -574,8 +592,10 @@ class Map:
             print("\tCY:{}, CYE:{}".format(cam_y, ext_y))
 
         positions = {}
-        for unit in units:
-            positions[unit.pos()] = unit
+        if self.units:
+            print('Has Unit List')
+            for unit in self.units:
+                positions[unit.position()] = unit
 
         col = "#ffffff"
         # width should total 80 units
@@ -591,56 +611,61 @@ class Map:
 
                 elif (x, y) in positions.keys():
                     # Current position holds a unit
+                    print("UNIT")
                     lit = self.lit(x, y)
-                    ch = positions[(x, y)].i
-                    col = positions[(x, y)].c if lit == 2 else "black"
+                    if lit == 2:
+                        ch = positions[(x, y)].character
+                        col = positions[(x, y)].color
+                    elif lit == 1:
+                        ch, col = self.square(x, y).char, 'darkest grey'
+                    else:
+                        ch, col = " ", "black"
+
 
                 # Current position holds an item
-                # elif self.square(x, y).items:
-                #     if self.lit(x, y):
-                #         item = choice(self.square(x, y).items)
-                #         level = ""
-                #         ch = item.char
-                #         col = item.color
-                #     else:
-                #         level = ""
-                #         ch = " "
-                #         lit = "black"
+                    # elif self.square(x, y).items:
+                    #     if self.lit(x, y):
+                    #         item = choice(self.square(x, y).items)
+                    #         level = ""
+                    #         ch = item.char
+                    #         col = item.color
+                    #     else:
+                    #         level = ""
+                    #         ch = " "
+                    #         lit = "black"
 
-                # # Current position holds a Lamp
-                # elif (x, y, 10) in self.lamps:
-                #     level = ""
-                #     ch = self.square(x, y).char
-                #     col = "white"
+                # Current position holds a Lamp
+                    # elif (x, y, 10) in self.lamps:
+                    #     level = ""
+                    #     ch = self.square(x, y).char
+                    #     col = "white"
 
                 # deal with displaying traps
-                elif self.square(x, y).char == '^':
-                    lit = self.lit(x, y)
-                    if lit:
-                        if lit == 2:
-                            ch = self.square(x, y).char
-                            col = self.square(x, y).color
-                        else:
-                            ch = self.square(x, y).char
-                            col = Color.color('grey darkest')
-                    else:
-                        ch, col, bkgd = ".", "black", None
+                    # elif self.square(x, y).char == '^':
+                    #     lit = self.lit(x, y)
+                    #     if lit:
+                    #         if lit == 2:
+                    #             ch = self.square(x, y).char
+                    #             col = self.square(x, y).color
+                    #         else:
+                    #             ch = self.square(x, y).char
+                    #             col = Color.color('grey darkest')
+                    #     else:
+                    #         ch, col, bkgd = ".", "black", None
 
                 else:
                     # all other environment features
                     lit = self.lit(x, y)
-                    if lit:
-                        if lit == 2:
-                            ch = self.square(x, y).char
-                            col = self.square(x, y).color
-                            # col = "white"
-                        else:
-                            ch = self.square(x, y).char
-                            col = "darkest grey"
+                    if lit == 2:
+                        ch = self.square(x, y).char
+                        col = self.square(x, y).color
+                    elif lit == 1:
+                        ch = self.square(x, y).char
+                        col = "darkest grey"
                     else:
-                        ch, col, bkgd = " ", "black", None
+                        ch, col = " ", "black"
 
-                yield (x-cam_x, y-cam_y, col, ch, None)
+                yield (x-cam_x, y-cam_y, col, ch)
         self.lit_reset()
 
 

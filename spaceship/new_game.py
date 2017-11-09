@@ -6,7 +6,7 @@ from spaceship.action import key_movement, num_movement, key_actions, action, ke
 from spaceship.setup_game import setup_game
 from spaceship.tools import bresenhams, deltanorm, movement
 from spaceship.maps import hextup, hexone, toInt
-from spaceship.objects import Map, Object, Character
+from spaceship.objects import Map
 from spaceship.item import Item
 from spaceship.player import Player
 from spaceship.create_character import create_character as create
@@ -846,7 +846,7 @@ def new_game(character=None):
                 Finally light sources and player?"""
         term.composition(False)
         dungeon.fov_calc([(player.mx, player.my, player.sight * 2)])
-        for x, y, lit, ch, bkgd in dungeon.output(player.mx, player.my, []):
+        for x, y, lit, ch in dungeon.output(player.mx, player.my, []):
             # ch = ch if len(str(ch)) > 1 else chr(toInt(palette[ch]))
             term.puts(x + 13, y, "[color={}]".format(lit) + ch + "[/color]")
         term.refresh()

@@ -5,9 +5,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from world import World
 
 class Unit:
-    def __init__(self, x, y, char, color):
+    def __init__(self, x, y, desc, char, color):
         self.x, self.y = x, y
-        self.char = char
+        self.character = char
+        self.description = desc
         self.color = color
 
     def position(self):
@@ -22,6 +23,9 @@ class Unit:
 
     def draw(self):
         return self.x, self.y, self.char, self.color
+
+    def __repr__(self):
+        return "{}[{}]: ({},{})".format(self.description, self.character, self.x, self. y)
 
 class Object:
     def __init__(self, n, x, y, i, c='white', r="human", h=10):
