@@ -3,7 +3,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.action import key_movement, num_movement, key_actions, action, keypress, world_key_actions
-from spaceship.setup import setup_game
+from spaceship.setup_game import setup_game
 from spaceship.tools import bresenhams, deltanorm, movement
 from spaceship.maps import stringify, hextup, hexone, toInt
 from spaceship.objects import Map, Object, Character
@@ -18,7 +18,7 @@ from random import randint, choice
 from collections import namedtuple
 from namedlist import namedlist
 from spaceship.dungeon import build_terrain, build_dungeon
-from spaceship.setup import setup, output, setup_font
+from spaceship.setup_game import setup, output, setup_font
 from spaceship.world import World
 from time import clock
 

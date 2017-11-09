@@ -8,7 +8,7 @@ from copy import deepcopy
 from random import choice, randint, shuffle
 from collections import namedtuple
 from tools import bresenhams
-from spaceship.setup import setup_font
+from spaceship.setup_game import setup_font
 import math
 import time
 from copy import deepcopy
