@@ -310,8 +310,10 @@ class Map:
 
     tile = namedlist("Tile", "char color bkgd light block_mov block_lit items")
 
-    def __init__(self, data, map_type, map_id, width=80, height=50, cfg_path=None, map_name=None):
-        self.levels = 0
+    # def __init__(self, data, map_type, map_id, width=80, height=50, cfg_path=None, map_name=None):
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
         self.maptype = map_type
 
         # data holds the raw characters
@@ -341,6 +343,14 @@ class Map:
             print("\tMAP DIM: {} {}".format(self.width, self.height))
             print("\tMAP DIS:{} {}".format(self.map_display_width, self.map_display_height))
  
+    def build(self):
+        raise NotImplementedError("cannot build the base map class")
+
+    def __str__(self):
+        return "\n".join("".join(row) for row in self.data)
+
+    def __repr__(self):
+        return "{}: ({}, {})".format(self.__class__.__name__, self.width, self.height)
     ###########################################################################
     # Level Initialization, Setup, Terraform and Evaluation                   #
     ###########################################################################
