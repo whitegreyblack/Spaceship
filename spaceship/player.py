@@ -5,12 +5,14 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from world import World
 
 class Unit:
-    def __init__(self, x, y, desc, char, color):
+    def __init__(self, x, y, race, job, char, color):
         self.x, self.y = x, y
         self.character = char
-        self.description = desc
+        self.job = job
+        self.race = race
         self.color = color
-
+        self.health = 10
+        
     def position(self):
         return self.x, self.y
 

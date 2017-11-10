@@ -93,7 +93,7 @@ class GameLogger:
             print(message)
 
         # Checks if message is the same as before
-        if self.messages and message in self.messages[-1]:
+        if self.messages and message == self.messages[-1]:
             self.messages.pop(-1)
             self.counter += 1
             message += "(x{})".format(self.counter)
@@ -102,7 +102,7 @@ class GameLogger:
         
         # Dump the messages as long as they are not repeats of the same message
         if len(self.messages) + 1 > self.maxlines:
-            if self.counter: # don't need to repeatedly dump the same message every time
+            if not self.counter: # don't need to repeatedly dump the same message every time
                 self.dump(self.messages.pop(0))
 
         self.messages.append(message)

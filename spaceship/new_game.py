@@ -21,6 +21,7 @@ from spaceship.dungeon import build_terrain, build_dungeon
 from spaceship.setup_game import setup, output, setup_font
 from spaceship.world import World
 from time import clock
+from textwrap import wrap
 
 class Level: World, City, Dungeon = range(3)
 class WorldView: Geo, Pol, King = range(3)
@@ -153,7 +154,9 @@ def new_game(character=None):
 
     def eightsquare(x, y):
         space = namedtuple("Space", ("x","y"))
-        return [space(x+i,y+j) for i, j in list(num_movement.values())]
+        for i, j in num_movement.values():
+            yield space(x + i, y + j)
+        # return [space(x+i,y+j) for i, j in list(num_movement.values())]
 
     def key_process_world(x, y):
         walkBlock = "walked into {}"
@@ -161,12 +164,12 @@ def new_game(character=None):
         ty = player.wy + y
 
         # inbounds = 0 <= tx < calabaston.w and 0 <= ty < calabaston.h
-        walkable = calabaston.walkable(tx, ty)
+        walkable = calabaston.walkable(tx, ty) # checks bounds and blocked tiles
 
         if walkable:
             if debug:
                 gamelog.add('[KEY_PROCESS_WORLD]:\n\tMOVING ON WORLD MAP')
-
+        
             player.save_position_global()
 
             if debug:
@@ -240,64 +243,56 @@ def new_game(character=None):
         walkable = dungeon.walkable(tposx, tposy)
 
         if debug:
-            gamelog.print_on()
-            gamelog.add('\tWALKABLE: {}'.format(walkable))
-            gamelog.print_off()
-
-        if debug:
             gamelog.add('\tCURRENT LOCATION: {}'.format(player.position()))
 
         # (not blocked) and (not occupied) and (inbounds)
         if walkable:
             if debug:
                 gamelog.add('\tMOVING IN DUNGEON')
+            # occupied = dungeon.get_unit_positions()
+            occupied = dungeon.occupied(tposx, tposy)
+            if not occupied:
+                # player.save_position_local()
 
-            player.save_position_global()
+                player.move(x, y)
 
-            if debug:
-                gamelog.add("\tSAVED LAST MAP POSITION")
-
-            player.move(x, y)
-
-            if debug:
-                gamelog.add("\tPLAYER POSITION - {}".format(player.position()))
-
-            if dungeon.square(tposx, tposy).items:
-                gamelog.add("There is something here")
-
-        else:
-            if debug:
-                gamelog.add('\tNOT MOVING IN DUNGEON BECAUSE: ')
-
-            # elif occupied:
-                # ============= START COMBAT LOG =================================
-                # unit = positions[(tposx, tposy)]
-                # if unit.r is not "human": # condition should be more complex
-                #     unit.h -= 1
-                #     gamelog.add("You attack the {}".format(unit.name))
-                #     gamelog.add("The {} has {} left".format(unit.name, unit.h))
-                #     if unit.h < 1:
-                #         gamelog.add("You have killed the {}! You gain 15 exp".format(unit.name))
-                #         units.remove(unit)
-                # =============== END COMBAD LOG =================================
-                # else:
-                #     gamelog.add(walkBlock.format(unit.r))
-                # pass
-
-            if not walkable:
-                # =============  START WALK LOG  =================================
-                # find out if it was due to out of bounds error or block error
                 if debug:
-                    gamelog.add("\t\tNOT WALKABLE")
-                if dungeon.out_of_bounds(tposx, tposy):
-                    gamelog.add("Reached the edge of the map")
+                    gamelog.add("\tPLAYER POSITION - {}".format(player.position()))
+
+                if dungeon.square(tposx, tposy).items:
+                    gamelog.add("There is something here")
+            else:
+                unit = dungeon.get_unit(tposx, tposy)
+                if dungeon.friendly():
+                    gamelog.add("You displace the {}".format(unit.job))
+                    unit.move(-x, -y)
+                    player.move(x, y)
+
                 else:
-                    ch = dungeon.square(tposx, tposy).char
-                    if ch == "~":
-                        gamelog.add('you cannot swim')
-                    else:
-                        gamelog.add(walkBlock.format(walkChars[ch]))
-                # ===============  END WALK LOG  =================================
+                    # ============= START COMBAT LOG =================================
+                    unit.health -= 1
+                    log = "You attack the {}. ".format(unit.job)
+                    log += "The {} has {} health left".format(unit.job, unit.health)
+                    gamelog.add(log)
+                    # if unit.r is not "human": # condition should be more complex
+                    if unit.health < 1:
+                        gamelog.add("You have killed the {}! You gain 15 exp".format(unit.job))
+                        dungeon.remove_unit(unit)
+                    # =============== END COMBAD LOG =================================
+        else:
+            # =============  START WALK LOG  =================================
+            # find out if it was due to out of bounds error or block error
+            if debug:
+                gamelog.add("\t\tNOT WALKABLE")
+            if dungeon.out_of_bounds(tposx, tposy):
+                gamelog.add("Reached the edge of the map")
+            else:
+                ch = dungeon.square(tposx, tposy).char
+                if ch == "~":
+                    gamelog.add('you cannot swim')
+                else:
+                    gamelog.add(walkBlock.format(walkChars[ch]))
+            # ===============  END WALK LOG  =================================
 
 
             # elif not inbounds:
@@ -388,16 +383,60 @@ def new_game(character=None):
             gamelog.add("Closing inventoryy")
         term.clear()
 
+    def attackUnit(x, y, k):
+        def attack(x, y):
+            unit = dungeon.get_unit(x, y)
+            log = "You attack the {}. ".format(unit.job)
+            unit.health -= 1           
+            log += "The {} has {} health left. ".format(unit.job, unit.health)
+            if dungeon.maptype == "city" and dungeon.friendly():
+                dungeon.reduce_relationship(100)
+                log += "Your relationship with {} has decreased by {} ".format(
+                    dungeon.map_name, 100)
+            for l in wrap(log, width=screen_width):
+                gamelog.add(l)
+
+            # if unit.r is not "human": # condition should be more complex
+            if unit.health < 1:
+                gamelog.add("You have killed the {}! You gain 15 exp".format(unit.job))
+                dungeon.remove_unit(unit)
+
+        attackables = []
+        for i, j in eightsquare(x, y):
+            if (i, j) != (x, y) and dungeon.get_unit(i, j):
+                attackables.append((i, j))
+        
+        if not attackables:
+            gamelog.add("Nothing you can attack. You want to punch the floor?")
+        
+        elif onlyOne(attackables):
+            attack(*attackables.pop())
+
+        else:
+            gamelog.add("Who do you want to attack?")
+            code = term.read()
+            if code in key_movement:
+                cx, cy = key_movement[code]
+            elif code in num_movement:
+                cx, cy = num_movement[code]
+            else:
+                return
+            if (x+cx, y+cy) in attackables:
+                attack(x + cx, y + cy)
+
+
     def interactUnit(x, y):
         """Allows talking with other units"""
         def talkUnit(x, y):
-            gamelog.add(um.talkTo(x, y))
+            unit = dungeon.get_unit(x, y)
+            gamelog.add("The {} says hello".format(unit.job))
+            # gamelog.add(um.talkTo(x, y))
             refresh()
 
         interactables = []
         for i, j in eightsquare(x, y):
             # dungeon.has_unit(i, j) -> returns true or false if unit is on the square
-            if (i, j) != (x, y) and um.unitat(i, j):
+            if (i, j) != (x, y) and dungeon.get_unit(i, j):
                 interactables.append((i, j))
 
         # no interactables
@@ -406,8 +445,8 @@ def new_game(character=None):
 
         # only one interactable
         elif onlyOne(interactables):
-            i, j = interactables.pop()
-            talkUnit(i, j)
+            # i, j = interactables.pop()
+            talkUnit(*interactables.pop())
 
         # many interactables
         else:
@@ -645,6 +684,7 @@ def new_game(character=None):
                     data=img_name, 
                     cfg_path=cfg_name if cfg_name else None,
                     map_type="city", 
+                    map_name=fileloc,
                     map_id=hash(v), 
                     width=term.state(term.TK_WIDTH), 
                     height=term.state(term.TK_HEIGHT))
@@ -744,6 +784,7 @@ def new_game(character=None):
             world_actions[key]()
 
     actions={
+        'a': attackUnit,
         'o': interactDoor,
         'c': interactDoor,
         'i': openInventory,
@@ -759,9 +800,9 @@ def new_game(character=None):
         # gamelog.add("[PROCESS ACTION]: KEY - {}".format(key))
         if key in ("o", "c"):
             actions[key](x, y, key)
+        elif key in ("a"):
+            actions[key](x, y, key)
         elif key in ("<"):
-            if debug:
-                gamelog.add('[PROCESS ACTION]: EXIT')
             actions[key](x, y, key)
         elif key in (">"):
             gamelog.add('enter')

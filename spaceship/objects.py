@@ -49,46 +49,6 @@ chars_block_move= {"#", "+", "o", "x", "~", "%", "Y", "T"}
 chars_block_move_hills =  {"#", "+", "o", "x", "%", "Y", "T"}
 chars_block_light = {"#", "+", "o", "%", "Y", "T"}
 
-
-# class Object:
-#     def __init__(self, n, x, y, i, c='white', r="human", h=10):
-#         """@parameters :- x, y, i, c
-#             x: positional argument,
-#             y: positional argument,
-#             i: char/image for object representation,
-#             c: color for object fill
-#         """
-#         self.name = n
-#         self.x = x
-#         self.y = y
-#         self.i = i
-#         self.c = c
-#         self.r = r
-#         self.h = h
-#         self.message = "Im just an object"
-
-#     def move(self, dx, dy):
-#         self.x += dx
-#         self.y += dy
-
-#     def talk(self):
-#         return self.name + ": " +self.message
-
-#     def draw(self):
-#         return (self.x, self.y, self.i, self.c)
-
-#     def pos(self):
-#         return self.x, self.y
-
-# class Character(Object):
-#     def __init__(self, n, x, y, i, c='white', r='human', m=10, s=10, b=6, l=5):
-#         super().__init__(n, x, y, i, c, r)
-#         self.m=m
-#         self.s=s
-#         self.l=l
-#         self.inventory = Inventory(b)
-#         self.backpack = Backpack()
-
 class Slot:
     def __init__(self, current=None):
         self._slot = current
@@ -214,11 +174,16 @@ class Map:
 
     tile = namedlist("Tile", "char color bkgd light block_mov block_lit items")
 
-    def __init__(self, data, map_type, map_id, width=80, height=50, cfg_path=None):
+    def __init__(self, data, map_type, map_id, width=80, height=50, cfg_path=None, map_name=None):
         self.maptype = map_type
         # data holds the raw characters
         self.data, self.height, self.width = self.dimensions(self.stringify(data))
         self.map_id = map_id
+
+        # Map Relationship with Player Entity
+        self.relationship = 100 if self.maptype == "city" else -100
+        if map_name:
+            self.map_name = map_name
 
         # explicitely do not block "~" in hills
         self.block_chars = chars_block_move_hills if map_type == "hills" else chars_block_move
@@ -325,13 +290,18 @@ class Map:
                                 Unit(
                                     x=i, 
                                     y=j,
-                                    desc=modifier + ' ' + job.lower(),
+                                    race=modifier,
+                                    job=job.lower(),
                                     char=character,
-                                    color=color))
+                                    color=color
+                                )
+                            )
             for u in units:
                 print(u)
         except FileNotFoundError:
             print("No unit configuration file found")
+        except:
+            raise
         finally:
             return units    
         
@@ -449,16 +419,16 @@ class Map:
         return not self.within_bounds(x, y)
 
     def walkable(self, x, y):
-        if debug:
-            print("WITHIN BOUNDS: {} {}".format(x, y))
-            print("\tRESULTS: {}".format(self.within_bounds(x, y)))
-            print("DUNGEON BOUNDS: {} {}".format(self.width, self.height))
-
+        '''Checks for bounds of map and blockable tile objects'''
         return self.within_bounds(x, y) and not self.square(x, y).block_mov
 
     def viewable(self, x, y):
         '''Only acts on objects within the bounds of the map'''
         return self.within_bounds(x, y) and self.square(x, y).block_lit
+
+    def occupied(self, x, y):
+        '''Only acts on unit objects in the map'''
+        return self.within_bounds(x, y) and (x, y) in self.get_unit_positions()
 
     def blocked(self, x, y):
         '''Only acts on objects within the bounds of the map'''
@@ -482,6 +452,8 @@ class Map:
     def unblock(self, x, y):
         self.square(x, y).block_mov = False
 
+    def friendly(self):
+        return self.relationship > 0
     ###########################################################################
     # Sight, Light and Color Functions                                        #
     ###########################################################################
@@ -560,10 +532,42 @@ class Map:
                 break
             
     ###########################################################################
-    # Item and Object Functions                                               #
+    # Item object Functions                                                   #
     ###########################################################################
     def add_item(self, x, y, i):
         self.tilemap[y][x].items.append(i)
+    ###########################################################################
+    # Unit object Functions                                                   #
+    ###########################################################################
+    def reduce_relationship(self, reduce):
+        self.relationship = min(-100, max(self.relationship - reduce, 100))
+
+    def increase_relationship(self, increase):
+        self.relationship = min(-100, max(self.relationship - increase, 100))
+        return "Your relationship with {} has decreased by {}".format(
+            self.map_name)
+    ###########################################################################
+    # Unit object Functions                                                   #
+    ###########################################################################
+    def get_unit(self, x, y):
+        if hasattr(self, 'units'):
+            for u in self.units:
+                if (x, y) == u.position():
+                    return u
+
+    def get_units(self):
+        if hasattr(self, 'units'):
+            return self.units
+        return []
+
+    def get_unit_positions(self):
+        if hasattr(self, 'units'):
+            return {u.position() for u in self.units}
+        return {}
+
+    def remove_unit(self, unit):
+        if hasattr(self, 'units'):
+            self.units.remove(unit)
 
     ###########################################################################
     # Output and Display Functions                                            #
@@ -593,7 +597,6 @@ class Map:
 
         positions = {}
         if self.units:
-            print('Has Unit List')
             for unit in self.units:
                 positions[unit.position()] = unit
 
@@ -611,7 +614,6 @@ class Map:
 
                 elif (x, y) in positions.keys():
                     # Current position holds a unit
-                    print("UNIT")
                     lit = self.lit(x, y)
                     if lit == 2:
                         ch = positions[(x, y)].character

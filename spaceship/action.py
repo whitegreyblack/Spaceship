@@ -47,6 +47,7 @@ num_movement={
 
 # Open|Close -> Openable/Closable classes? --> Doors/Chests/Hatch?
 key_actions={
+    term.TK_A: action("a", "attack"),
     term.TK_O: action("o", "open"),
     term.TK_C: action("c", "close"),
     term.TK_T: action("t", "talk"),
