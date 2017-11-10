@@ -124,6 +124,7 @@ terrain = {
     "grass": Grassland,
     "forest": Forest,
     "plains": Plains,
+    'woods': Woods,
 }
 
 if __name__ == "__main__":
