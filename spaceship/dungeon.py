@@ -454,13 +454,7 @@ def build_terrain(width, height, tiletype, entropy=0, buildopts=None):
 
     return terrain
 
-<<<<<<< HEAD
-
-def build_dungeon(width, height, rot):
-    print(width, height, rot)
-=======
 def build_dungeon(width, height, rot=0, max_rooms=15):
->>>>>>> 3fd882624c15f7347381be6c950e044614d0c67e
     '''Places rooms in a box of size width by height and applies rot if
     is not 0 and returns the box to be parsed as a dungeon'''
 
