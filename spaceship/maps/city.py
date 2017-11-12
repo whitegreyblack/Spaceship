@@ -1,10 +1,11 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../../')
-from spaceship.maps.base import Map
-from charmap import DungeonCharmap as dcm
-from charmap import WildernessCharmap as wcm
-from base import blender
+from spaceship.maps.base import Map, blender
+from PIL import Image
+from spaceship.maps.charmap import DungeonCharmap as dcm
+from spaceship.maps.charmap import WildernessCharmap as wcm
+from random import shuffle, choice, randint
 
 class City(Map):
     chars = {
@@ -25,12 +26,18 @@ class City(Map):
         ">": (dcm.GTHAN.chars, blender(dcm.GTHAN.hexcode)),
         "^": (dcm.TRAPS.chars, blender(dcm.TRAPS.hexcode)),
     }
-    def __init__(self, map_id, map_img, map_cfg):
+    def __init__(self, map_id, map_img, map_cfg, width, height):
         self.map_id = map_id
-        self.map_data = map_data
+        self.map_img = map_img
+        self.map_cfg = map_cfg
+        self.parse_img() # <== creates initial data map
+        self.dimensions() # <== retrienves width, height
+        self.create_tile_map()
+        self.map_display_width = min(self.width, width)
+        self.map_display_height = min(self.height, height)
 
     # Unique to city map
-    def parse_img(self, map_image):
+    def parse_img(self):
         """Takes in a file location string and a bool for debug
         to determine output. Sister function to asciify. Uses 
         only keyboard accessible characters in the map."""
@@ -52,16 +59,16 @@ class City(Map):
             (239, 228, 176): ",",
         }
 
-        lines = []
+        self.data = []
         colors = set()
         self.spaces = []
 
         try:
-            with Image.open(map_image) as img:
+            with Image.open(self.map_img) as img:
                 pixels = img.load()
                 w, h = img.size
         except FileNotFoundError:
-            raise FileNotFoundError("Cannot find file for stringify: {}".format(map_image))
+            raise FileNotFoundError("Cannot find file for stringify: {}".format(self.map_img))
 
         for j in range(h):
             line = ""
@@ -80,22 +87,20 @@ class City(Map):
                     line += char
                 except KeyError:
                     print((r, g, b))
-            lines.append(line)
+            self.data.append(line)
 
         # make sure accesses to the set are random
         shuffle(self.spaces)
 
-        return "\n".join(lines)
-
     # Unique to city map
-    def parse_cfg(self, map_cfg):
+    def parse_cfg(self):
         units = []
 
         if not self.spaces:
             raise AttributeError("No world configuration")
 
         try:
-            with open(map_cfg, 'r') as cfg:
+            with open(self.map_cfg, 'r') as cfg:
                 unit = namedtuple("Unit", "race unit char color")
                 modifier = ""
                 for line in cfg:
@@ -104,7 +109,7 @@ class City(Map):
                     elif line.strip().startswith('['):
                         modifier = line.replace('[', '').replace(']', '').lower().strip()
                     else:
-                        job, color, character, number= line.split()
+                        job, color, character, number = line.split()
                         if modifier == "":
                             raise ValueError("Configuration file has no race specifier")
                         for _ in range(int(number)):
@@ -119,10 +124,6 @@ class City(Map):
                                     color=color
                                 )
                             )
-            if debug:
-                for u in units:
-                    print(u)
-        
         except FileNotFoundError:
             print("No unit configuration file found")
         
@@ -132,29 +133,22 @@ class City(Map):
         finally:
             return units   
 
-    def fill(self, d, w, h):
+    def create_tile_map(self):
         # Should only be called once by init
-        def evaluate(char):
-            try:
-                if self.maptype not in ("dungeon", "city"):
-                    t = self.wilderness[self.maptype][char]
-                else:
-                    t = self.landmarks[char]
-            except KeyError:
-                raise KeyError("Evaluate Map: {} not in keys".format(char))
-            return t
-        
         rows = []
         tiles = set()
         tree, ground = None, None
-        d = d if isinstance(d, list) else d.split('\n')
-        for row in d:
+        for row in self.data:
             cols = []
-            for col in row:
-                chars, hexcodes = evaluate(col)
-                light = Light.Unexplored
-                block_mov = col in self.block_chars
-                block_lit = col not in chars_block_light
+            for char in row:
+                try:
+                    chars, hexcodes = self.chars[char]
+                except KeyError:
+                    raise KeyError("Evaluate Map: {} not in keys".format(char))
+                light = 0
+                block_mov = char in self.chars_block_move
+                block_lit = char not in self.chars_block_light
+
                 tile = self.tile(
                     choice(chars), 
                     choice(hexcodes), 
@@ -166,9 +160,5 @@ class City(Map):
                 tiles.add((tile.char, tile.block_mov, tile.block_lit))
                 cols.append(tile)
             rows.append(cols)
-
-        if debug:
-            print('\tTiles - {}'.format(tiles))
-
-        return rows      
+        self.tilemap = rows  
 

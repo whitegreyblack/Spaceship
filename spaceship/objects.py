@@ -1,18 +1,10 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
-from PIL import Image
 from namedlist import namedlist
 from collections import namedtuple
 from random import randint, choice, shuffle
 from spaceship.color import Color
-from spaceship.maps import hextup, hexone, output, blender, gradient, evaluate_blocks
-from spaceship.setup_game import toInt
-from spaceship.charmap import DungeonCharmap as dcm
-from spaceship.charmap import WildernessCharmap as wcm
-from spaceship.world import World
-from player import Unit
-from spaceship.tools import scroll
 # TODO: Maybe move map to a new file called map and create a camera class?
 
 '''Object holds all prototype objects used in the game until they are fully fleshed out

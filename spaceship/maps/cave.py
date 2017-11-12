@@ -1,14 +1,13 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../../')
-from spaceship.maps.base import Map
+from spaceship.maps.base import Map, blender
 from collections import namedtuple
 from namedlist import namedlist
-from charmap import DungeonCharmap as dcm
-from charmap import WildernessCharmap as wcm
+from spaceship.maps.charmap import DungeonCharmap as dcm
+from spaceship.maps.charmap import WildernessCharmap as wcm
 from random import choice, randint
 from math import sqrt, inf
-from base import blender
 from spaceship.tools import bresenhams
 
 box = namedtuple("Box", "x1 y1 x2 y2")

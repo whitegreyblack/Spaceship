@@ -1,9 +1,9 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../../')
-from base import Map, blender
-from charmap import DungeonCharmap as dcm
-from charmap import WildernessCharmap as wcm
+from spaceship.maps.base import Map, blender
+from spaceship.maps.charmap import DungeonCharmap as dcm
+from spaceship.maps.charmap import WildernessCharmap as wcm
 from random import randint, choice
 
 class Desert(Map):

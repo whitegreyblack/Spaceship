@@ -5,8 +5,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.action import key_movement, num_movement, key_actions, action, keypress, world_key_actions
 from spaceship.setup_game import setup_game
 from spaceship.tools import bresenhams, deltanorm, movement
-from spaceship.maps import hextup, hexone, toInt
-from spaceship.objects import Map
+from spaceship.maps.base import hextup, hexone, toInt
+from spaceship.maps.base import Map
+from spaceship.maps.city import City
+from spaceship.maps.wild import *
+from spaceship.maps.cave import Cave
 from spaceship.item import Item
 from spaceship.player import Player
 from spaceship.create_character import create_character as create
@@ -22,6 +25,7 @@ from spaceship.setup_game import setup, output, setup_font
 from spaceship.world import World
 from time import clock
 from textwrap import wrap
+
 
 class Level: World, City, Dungeon = range(3)
 class WorldView: Geo, Pol, King = range(3)
@@ -660,6 +664,8 @@ def new_game(character=None):
             if exists -> enter
             else -> build the map and add it to the world
         '''
+        def determine_map(map_type):
+            return
         if not calabaston.mapAt(*player.position_global()):
 
             # entering a city location
@@ -680,14 +686,20 @@ def new_game(character=None):
                 if debug:
                     gamelog.add('CITY HASH ID: {}'.format(hash(v)))
 
-                location = Map(
-                    data=img_name, 
-                    cfg_path=cfg_name if cfg_name else None,
-                    map_type="city", 
-                    map_name=fileloc,
-                    map_id=hash(v), 
+                location = City(
+                    map_id=fileloc,
+                    map_img=img_name,
+                    map_cfg=cfg_name,
                     width=term.state(term.TK_WIDTH), 
                     height=term.state(term.TK_HEIGHT))
+                # location = Map(
+                #     data=img_name, 
+                #     cfg_path=cfg_name if cfg_name else None,
+                #     map_type="city", 
+                #     map_name=fileloc,
+                #     map_id=hash(v), 
+                #     width=term.state(term.TK_WIDTH), 
+                #     height=term.state(term.TK_HEIGHT))
                 # basically spawn in town center
                 player.reset_position_local(location.width//2, location.height//2)
             

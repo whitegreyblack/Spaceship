@@ -15,6 +15,7 @@ from namedlist import namedlist
 from collections import namedtuple
 from spaceship.maps.charmap import DungeonCharmap as dcm
 from spaceship.maps.charmap import WildernessCharmap as wcm
+from spaceship.tools import scroll
 
 """Maps file holds template functions that return randomized data maps used\
 in creating procedural worlds"""
@@ -309,7 +310,9 @@ class Map:
             ]
 
     tile = namedlist("Tile", "char color bkgd light block_mov block_lit items")
-
+    chars_block_move = {"#", "+", "o", "x", "~", "%", "Y", "T"}
+    chars_block_move_hills =  {"#", "+", "o", "x", "%", "Y", "T"}
+    chars_block_light = {"#", "+", "o", "%", "Y", "T"}
     # def __init__(self, data, map_type, map_id, width=80, height=50, cfg_path=None, map_name=None):
     def __init__(self, width, height):
         self.width = width
@@ -354,17 +357,11 @@ class Map:
     ###########################################################################
     # Level Initialization, Setup, Terraform and Evaluation                   #
     ###########################################################################
-    def dimensions(self, data):
+    def dimensions(self):
         '''takes in a string map and returns a 2D list map and map dimensions'''
-        if self.maptype == "city":
-            data = self.stringify(data)
-
-        if isinstance(data, str):
-            data = [[col for col in row] for row in data.split('\n')]
-
-        height = len(data)
-        width = max(len(col) for col in data)
-        return data, height, width
+        if hasattr(self, 'data'):
+            self.height = len(self.data)
+            self.width = max(len(col) for col in self.data)
         
     def fill(self, d, w, h):
         # Should only be called once by init
@@ -651,13 +648,8 @@ class Map:
             self.height)
         ext_y = cam_y + self.map_display_height + (-6 if shorten_y else 0)
 
-        if debug:
-            print("[MAP CLASS - OUTPUT]:")
-            print("\tCX:{}, CXE:{}".format(cam_x, ext_x))
-            print("\tCY:{}, CYE:{}".format(cam_y, ext_y))
-
         positions = {}
-        if self.units:
+        if hasattr(self, 'units') and self.units:
             for unit in self.units:
                 positions[unit.position()] = unit
 
