@@ -7,7 +7,7 @@ from collections import namedtuple
 from spaceship.maps.charmap import DungeonCharmap as dcm
 from spaceship.maps.charmap import WildernessCharmap as wcm
 from random import shuffle, choice, randint
-from spaceship.player import Unit, Shopkeeper, Innkeeper, Bishop
+from spaceship.player import Unit, Shopkeeper, Innkeeper, Bishop, Soldier
 
 class City(Map):
     chars = {
@@ -39,6 +39,19 @@ class City(Map):
         self.create_tile_map()
         self.relationship = 100
 
+    def __repr__(self):
+        return "{}:\n{}\n{}".format(
+            self.map_id,
+            self.print_map(),
+            self.print_units())
+
+    def __str__(self):
+        return "{}:{} ({}, {})".format(
+            self.__class__.__name__,
+            self.map_id,
+            self.width,
+            self.height)
+
     # Unique to city map
     def parse_img(self):
         """Takes in a file location string and a bool for debug
@@ -48,7 +61,7 @@ class City(Map):
             (0, 0, 0): "#",
             (136, 0, 21): "%",
             (255, 242, 0): "=",
-            (34, 177, 76): ".",
+            (34, 177, 76): ",",
             (185, 122, 87): "+",
             (127, 127, 127): ".",
             (112, 146, 190): "=",   
@@ -59,7 +72,7 @@ class City(Map):
             (255, 201, 14): "|",
             (0, 162, 232): "~",
             (98, 81, 43): "x",
-            (239, 228, 176): ".",
+            (239, 228, 176): ",",
         }
 
         self.data = []
@@ -90,20 +103,23 @@ class City(Map):
                     line += char
                 except KeyError:
                     print((r, g, b))
-            print(line)
             self.data.append(line)
 
         # make sure accesses to the set are random
         shuffle(self.spaces)
 
-
     # Unique to city map
     def parse_cfg(self):
-        self.units = []
-
         if not self.spaces:
             raise AttributeError("No world configuration")
 
+        jobs = {
+            "bishop": Bishop,
+            "innkeeper": Innkeeper,
+            "shopkeeper": Shopkeeper,
+            "soldier": Soldier,
+        }
+        self.stats = "{}: Unit List\n".format(self.map_id)
         try:
             with open(self.map_cfg, 'r') as cfg:
                 modifier = ""
@@ -114,35 +130,14 @@ class City(Map):
                         modifier = line.replace('[', '').replace(']', '').lower().strip()
                     else:
                         job, color, character, number = line.split()
+                        self.stats += "{}: {}\n".format(job, number)
+
                         if modifier == "":
                             raise ValueError("Configuration file has no race specifier")
-                        if job.lower() == "innkeeper":
+                        if job.lower() in jobs.keys():
                             for _ in range(int(number)):
                                 i, j = self.spaces.pop()
-                                print("created innkeeper")
-                                self.units.append(Innkeeper(
-                                            x=i, 
-                                            y=j,
-                                            race=modifier,
-                                            job=job.lower(),
-                                            char=character,
-                                            color=color))
-                        elif job.lower() == "shopkeeper":
-                            for _ in range(int(number)):
-                                i, j = self.spaces.pop()
-                                print("created shopkeeper")
-                                self.units.append(Shopkeeper(
-                                            x=i, 
-                                            y=j,
-                                            race=modifier,
-                                            job=job.lower(),
-                                            char=character,
-                                            color=color))
-                        elif job.lower() == "bishop":
-                            for _ in range(int(number)):
-                                i, j = self.spaces.pop()
-                                print("created bishop")
-                                self.units.append(Bishop(
+                                self.units.append(jobs[job.lower()](
                                             x=i, 
                                             y=j,
                                             race=modifier,
@@ -152,7 +147,6 @@ class City(Map):
                         else:
                             for _ in range(int(number)):
                                 i, j = self.spaces.pop()
-                                print("created unit")
                                 self.units.append(Unit(
                                             x=i, 
                                             y=j,
@@ -168,29 +162,17 @@ class City(Map):
             # any other error should be raised
             raise
 
-    # def create_tile_map(self):
-    #     # Should only be called once by init
-    #     rows = []
-    #     for row in self.data:
-    #         cols = []
-    #         for char in row:
-    #             try:
-    #                 chars, hexcodes = self.chars[char]
-    #             except KeyError:
-    #                 raise KeyError("Evaluate Map: {} not in keys".format(char))
-    #             light = 0
-    #             block_mov = char in self.chars_block_move
-    #             block_lit = char not in self.chars_block_light
+    def print_map(self):
+        if hasattr(self, 'data'):
+            return "\n".join(self.data)
 
-    #             tile = self.tile(
-    #                 choice(chars), 
-    #                 choice(hexcodes), 
-    #                 "black", 
-    #                 light, 
-    #                 block_mov,
-    #                 block_lit, 
-    #                 [])
-    #             cols.append(tile)
-    #         rows.append(cols)
-    #     self.tilemap = rows  
+    def print_units(self):
+        if hasattr(self, 'stats'):
+            return self.stats
 
+if __name__ == "__main__":
+    img = "./assets/maps/shadowbarrow.png"
+    cfg = "./assets/maps/shadowbarrow.cfg"
+    test = City("shadowbarrow", img, cfg, 80, 25)
+    print(test)
+    print(repr(test))

@@ -2,7 +2,7 @@ import os
 import sys
 from typing import Tuple
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
-from world import World
+from spaceship.world import World
 
 class Unit:
     def __init__(self, x, y, race, job, char, color):

@@ -317,6 +317,7 @@ class Map:
         self.width, self.height = 66, 22
         self.map_display_width = min(self.width, width)
         self.map_display_height = min(self.height, height)
+        self.units = []
 
     def build(self):
         raise NotImplementedError("cannot build the base map class -- use a child map object")
@@ -692,6 +693,7 @@ class Map:
                 yield (x-cam_x, y-cam_y, col, ch)
         self.lit_reset()
 
+# TEST: blender function
 # if __name__ == "__main__":
 #     if len(sys.argv) < 4:
 #         print(sys.argv)
@@ -708,3 +710,8 @@ class Map:
 #                 term.puts(step*i+x, y, "[color={}]%[/color]".format(colors[i]))
 #     term.refresh()
 #     term.read()
+
+# Test: Map class
+# if __name__ == "__main__":
+#     test = Map(66, 22)
+#     print(test)
