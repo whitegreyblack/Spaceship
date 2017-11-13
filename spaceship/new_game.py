@@ -170,23 +170,13 @@ def new_game(character=None):
         walkable = calabaston.walkable(tx, ty) # checks bounds and blocked tiles
 
         if walkable:
-            if debug:
-                gamelog.add('[KEY_PROCESS_WORLD]:\n\tMOVING ON WORLD MAP')
-        
             player.save_position_global()
-
-            if debug:
-                gamelog.add("\tSAVED LAST WORLD POSITION")
-
             player.travel(x, y)
             # description = calabaston.tilehasdescription(tposx, tposy)
             # if description:
             #     gamelog.add(description)
         else:
             # Individually log the specific reason
-            if debug:
-                gamelog.add('\tNOT MOVING ON WORLD MAP')
-
             sentence = "You cannot move there"
             gamelog.add(sentence)
             # if blocked:
@@ -196,13 +186,6 @@ def new_game(character=None):
             # elif not inbounds:
             #     gamelog.add(walkBlock.format("the edge of the map"))
             #     print("cannot go there", tx, ty)
-            
-            if not walkable and debug:
-                gamelog.add("\tNOT WALKABLE: GW,GH: {},{}, PX,PY: {},{}".format(
-                    calabaston.w,
-                    calabaston.h,
-                    tx, ty
-                ))
             gamelog.add("Not walkable")
 
     def key_process(x, y):
@@ -236,11 +219,10 @@ def new_game(character=None):
                     gamelog.add("There is something here")
             else:
                 unit = dungeon.get_unit(tposx, tposy)
-                if dungeon.friendly():
+                if unit.friendly():
                     gamelog.add("You displace the {}".format(unit.job))
                     unit.move(-x, -y)
                     player.move(x, y)
-
                 else:
                     # ============= START COMBAT LOG =================================
                     unit.health -= 1
@@ -249,7 +231,8 @@ def new_game(character=None):
                     gamelog.add(log)
                     # if unit.r is not "human": # condition should be more complex
                     if unit.health < 1:
-                        gamelog.add("You have killed the {}! You gain 15 exp".format(unit.job))
+                        gamelog.add("You have killed the {}! You gain {} exp".format(unit.job, unit.xp))
+                        player.gain_exp(unit.xp)
                         dungeon.remove_unit(unit)
                     # =============== END COMBAD LOG =================================
         else:
@@ -290,23 +273,22 @@ def new_game(character=None):
                             other = player
                         else:
                             other = dungeon.get_unit(tposx, tposy)
-                        if dungeon.friendly():
-                            # gamelog.add("The {} displaces {}".format(
-                            #     unit.job,
-                            #     "you" if other == player else "the " + other.job))
-                            other.move(-x, -y)
-                            unit.move(x, y)
+                        if unit.friendly():
+                            # other.move(-x, -y)
+                            # unit.move(x, y)
+                            unit.displace(other, x, y)
                         else:
                             other.health -= 1
                             log = "The {} attacks {}. ".format(
                                 unit.job, 
                                 "you" if other == player else "the " + other.job)
-                            log = "{} {} health left".format(
+                            log += "{} {} health left".format(
                                 "You have " if other == player else "the " + other.job + " has",
                                 player.health if other == player else other.health)
                             gamelog.add(log)
                             if other.health < 1:
                                 gamelog.add("The {} has killed {}".format(
+                                    unit.job,
                                     "you" if other == player else "the " + other.job))
                                 if other == player:
                                     gamelog.add("You Died!")

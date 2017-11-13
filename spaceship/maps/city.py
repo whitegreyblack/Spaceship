@@ -132,7 +132,7 @@ class City(Map):
                             raise ValueError("Configuration file has no race specifier")
                         if job.lower() in jobs.keys():
                             for _ in range(int(number)):
-                                i, j = self.spaces.pop()
+                                i, j = self.spaces[randint(0, len(self.spaces)-1)]
                                 self.units.append(jobs[job.lower()](
                                             x=i, 
                                             y=j,

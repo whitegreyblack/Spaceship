@@ -6,7 +6,7 @@ from collections import namedtuple
 from namedlist import namedlist
 from spaceship.maps.charmap import DungeonCharmap as dcm
 from spaceship.maps.charmap import WildernessCharmap as wcm
-from random import choice, randint
+from random import choice, randint, shuffle
 from math import sqrt, inf
 from spaceship.tools import bresenhams
 
@@ -38,7 +38,8 @@ class Cave(Map):
         self.levels = levels
         self.build(rot, max_rooms)
         self.create_tile_map()        
-
+        self.generate_units()
+        
     def build(self, rot=0, max_rooms=15):
         '''Places rooms in a box of size width by height and applies rot if
         is not 0 and returns the box to be parsed as a dungeon'''
@@ -123,6 +124,7 @@ class Cave(Map):
 
         dungeon = [[' ' for _ in range(self.width)] for _ in range(self.height)]
         rooms, large_rooms, other_rooms = [], [], []
+        self.spaces = []
         graph = {}
         tries = 0
 
@@ -280,7 +282,8 @@ class Cave(Map):
             dungeon = decay(dungeon, n=rot)
 
         self.data = dungeon
-
+        self.spaces = floor
+        
     def current_level():
         return self.levels
     

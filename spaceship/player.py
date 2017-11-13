@@ -4,15 +4,27 @@ from typing import Tuple
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.world import World
 
+class RelationTable:
+    def __init__(self, unit):
+        pass
+
+    def calculate_relations(self):
+        pass
+
 class Unit:
     def __init__(self, x, y, race, job, char, color):
         self.x, self.y = x, y
         self.character = char
+        self.exp = 0
         self.job = job
         self.race = race
         self.color = color
         self.health = 10
         self.movable = True
+        self.relation = 100
+
+    def __repr__(self):
+        return "{}[{}]: ({},{})".format(self.description, self.character, self.x, self. y)
 
     def position(self):
         return self.x, self.y
@@ -27,11 +39,18 @@ class Unit:
     def draw(self):
         return self.x, self.y, self.char, self.color
 
-    def __repr__(self):
-        return "{}[{}]: ({},{})".format(self.description, self.character, self.x, self. y)
+    def displace(self, other, x, y):
+        self.move(x, y)
+        other.move(-x, -y)
 
     def attack(self, other):
         pass
+
+    def friendly(self):
+        return self.relation > 0
+
+    def gain_exp(self, exp):
+        self.exp += exp
 
 class Player:
     def __init__(self, character):
@@ -77,9 +96,12 @@ class Player:
                                    self.job_bonus))
 
         self.str, self.con, self.dex, self.int, self.wis, self.cha = stats
-        self.hp = self.total_hp = self.str + self.con * 2
+        self.hp = self.total_hp = self.health = self.str + self.con * 2
         self.mp = self.total_mp = self.int * self.wis * 2
         self.sp = self.dex // 5
+
+    def gain_exp(self, exp):
+        self.exp += exp
 
     def height(self) -> int:
         return self.wz
@@ -205,18 +227,42 @@ class Soldier(Unit):
         return "{}: Don't be causing trouble. Move along.".format(self.__class__.__name__)
 
 class Rat(Unit):
-    def __init__(self, x, y, race, job, char, color):
-        super().__init__(x, y, race, job, char, color)
-        
+    def __init__(self, x, y):
+        self.x, self.y = x, y
+        self.xp = 10
+        self.health = 5
+        self.character = "r"
+        self.job = "rat"
+        self.race = "monster"
+        self.color = "brown"
+        self.relation = -100
     def talk(self):
         return "Reeeee!!"
 
 class GiantRat(Unit):
-    def __init__(self, x, y, race, job, char, color):
-        super().__init__(x, y, race, job, char, color)
-        
+    def __init__(self, x, y):
+        self.x, self.y = x, y
+        self.xp = 15
+        self.health = 10
+        self.character = "r"
+        self.job = "giant rat"
+        self.race = "monster"
+        self.color = "brown"        
     def talk(self):
         return "Screeeee!!"
+
+class Bat(Unit):
+    def __init__(self, x, y):
+        self.x, self.y = x, y
+        self.xp = 10
+        self.health = 5
+        self.character = "b"
+        self.job = "bat"
+        self.race = "monster"
+        self.color = "brown"
+
+    def talk(self):
+        return "Screech"
 
 class Object:
     def __init__(self, n, x, y, i, c='white', r="human", h=10):

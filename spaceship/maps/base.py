@@ -6,7 +6,7 @@ from spaceship.action import num_movement
 from bearlibterminal import terminal as term
 from PIL import Image, ImageDraw
 from functools import lru_cache
-from random import randint, choice
+from random import randint, choice, shuffle
 from spaceship.tools import bresenhams
 from math import hypot
 from copy import deepcopy
@@ -16,6 +16,7 @@ from collections import namedtuple
 from spaceship.maps.charmap import DungeonCharmap as dcm
 from spaceship.maps.charmap import WildernessCharmap as wcm
 from spaceship.tools import scroll
+from spaceship.player import Rat
 
 """Maps file holds template functions that return randomized data maps used\
 in creating procedural worlds"""
@@ -478,9 +479,6 @@ class Map:
 
     def unblock(self, x, y):
         self.square(x, y).block_mov = False
-
-    def friendly(self):
-        return self.relationship > 0
     ###########################################################################
     # Sight, Light and Color Functions                                        #
     ###########################################################################
@@ -597,6 +595,19 @@ class Map:
         if hasattr(self, 'units'):
             self.units.remove(unit)
 
+    def generate_units(self):
+        if self.height <= 25:
+            max_units = 15
+        else:
+            max_units = 10
+
+        if hasattr(self, 'spaces'):
+            shuffle(self.spaces)
+            for i in range(max_units):
+                i, j = self.spaces[randint(0, len(self.spaces)-1)]
+                self.units.append(Rat(x=i, y=j))
+        else:
+            raise AttributeError("Spaces has not yet been initialized")
     ###########################################################################
     # Output and Display Functions                                            #
     ###########################################################################
