@@ -136,8 +136,6 @@ class City(Map):
     def create_tile_map(self):
         # Should only be called once by init
         rows = []
-        tiles = set()
-        tree, ground = None, None
         for row in self.data:
             cols = []
             for char in row:
@@ -157,7 +155,6 @@ class City(Map):
                     block_mov,
                     block_lit, 
                     [])
-                tiles.add((tile.char, tile.block_mov, tile.block_lit))
                 cols.append(tile)
             rows.append(cols)
         self.tilemap = rows  

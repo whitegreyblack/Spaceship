@@ -72,8 +72,11 @@ class Plains(Map):
             "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
     }
     def __init__(self, width, height):
-        self.width, self.height = width, height
+        self.width, self.height = 66, 22
         self.build()
+        self.create_tile_map()
+        self.map_display_width = min(self.width, width)
+        self.map_display_height = min(self.height, height)
 
     def build(self):
         num_trees = 10
@@ -88,6 +91,31 @@ class Plains(Map):
             stop_chance = randint(0, num_trees-t)
             if stop_chance == 0:
                 break
+
+    def create_tile_map(self):
+        rows = []   
+        for row in self.data:
+            cols = []
+            for char in row:
+                try:
+                    chars, hexcodes = self.chars[char]
+                except KeyError:
+                    raise KeyError("Evaluate Map: {} not in keys".format(char))
+                light = 0
+                block_mov = char in self.chars_block_move
+                block_lit = char not in self.chars_block_light
+
+                tile = self.tile(
+                    choice(chars),
+                    choice(hexcodes),
+                    "black",
+                    light,
+                    block_mov,
+                    block_lit,
+                    [])
+                cols.append(tile)
+            rows.append(cols)
+        self.tilemap = rows     
 
 class Woods(Map):
     chars = {

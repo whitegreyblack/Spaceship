@@ -665,7 +665,15 @@ def new_game(character=None):
             else -> build the map and add it to the world
         '''
         def determine_map(map_type):
-            return
+            if map_type == "plains":
+                return Plains
+            elif map_type == "grasslands":
+                return Grassland
+            elif map_type == "forest":
+                return Forest
+            else:
+                raise ValueError("Map Type Not Implemented")
+                
         if not calabaston.mapAt(*player.position_global()):
 
             # entering a city location
@@ -673,18 +681,10 @@ def new_game(character=None):
             #       change dungeons into dungeons_legend.keys() 
             #       if location is not in locations or dungeons -> must be a wilderness
             if player.position_global() in calabaston.enterable_legend.keys():
+                
                 fileloc = calabaston.enterable_legend[player.position_global()].lower().replace(' ','_')
                 img_name = "./assets/maps/" + fileloc + ".png"
                 cfg_name = "./assets/maps/" + fileloc + ".cfg"
-
-                x = player.wx
-                y = player.wy
-                z = player.wz
-                t = 'city'
-                v = str(x) + str(y) + str(z) + t
-                
-                if debug:
-                    gamelog.add('CITY HASH ID: {}'.format(hash(v)))
 
                 location = City(
                     map_id=fileloc,
@@ -692,76 +692,44 @@ def new_game(character=None):
                     map_cfg=cfg_name,
                     width=term.state(term.TK_WIDTH), 
                     height=term.state(term.TK_HEIGHT))
-                # location = Map(
-                #     data=img_name, 
-                #     cfg_path=cfg_name if cfg_name else None,
-                #     map_type="city", 
-                #     map_name=fileloc,
-                #     map_id=hash(v), 
-                #     width=term.state(term.TK_WIDTH), 
-                #     height=term.state(term.TK_HEIGHT))
-                # basically spawn in town center
                 player.reset_position_local(location.width//2, location.height//2)
-            
+            # differentiate between dungeon and wilderness
+            elif player.position_global() in calabaston.dungeon_legend.keys():
+
+                location = Cave(
+                    width=term.state(term.TK_WIDTH),
+                    height=term.state(term.TK_HEIGHT),
+                    max_rooms=randint(15, 20))
+
+                player.reset_position_local(*location.getUpStairs())
             else:
-                # differentiate between dungeon and wilderness
                 tile = calabaston.access(*player.position_global())
+                # neighbors = calabaston.access_neighbors(*player.position_global())
+                
+                location = determine_map(tile.land)(
+                    width=term.state(term.TK_WIDTH),
+                    height=term.state(term.TK_HEIGHT))
+
+                # location = Map(
+                #     data=build_terrain(
+                #         width=66,
+                #         height=22,
+                #         tiletype=tile.land, 
+                #         buildopts=neighbors), 
+                #     map_type=tile.land,
+                #     map_id=hash(v),
+                #     width=term.state(term.TK_WIDTH),
+                #     height=term.state(term.TK_HEIGHT))
+            
+                x, y = player.get_position_global_on_enter()
+                x = max(int(location.width * x - 1), 0)
+                y = max(int(location.height * y - 1), 0)
                 
                 if debug:
-                    gamelog.add("TILE TYPE: {}".format(tile.land))
+                    gamelog.add("location w,h {}, {}".format(location.width, location.height))
                 
-                # get options based on land tile
-                # build_options = Dungeon.build_options()
-                wilderness = tile.land is not "dungeon"
-                
-                x = player.wx
-                y = player.wy
-                z = player.wz
-                t = 'wilderness'
-                v = str(x) + str(y) + str(z) + t
-
-                if wilderness:
-                    neighbors = calabaston.access_neighbors(*player.position_global())
-                
-                    location = Map(
-                        data=build_terrain(
-                            width=66,
-                            height=22,
-                            tiletype=tile.land, 
-                            buildopts=neighbors), 
-                        map_type=tile.land,
-                        map_id=hash(v),
-                        width=term.state(term.TK_WIDTH),
-                        height=term.state(term.TK_HEIGHT))
-                
-                    x, y = player.get_position_global_on_enter()
-                    x = max(int(location.width * x - 1), 0)
-                    y = max(int(location.height * y - 1), 0)
-                    
-                    if debug:
-                        gamelog.add("location w,h {}, {}".format(location.width, location.height))
-                    
-                    player.reset_position_local(x, y)
-                
-                # Build a dungeon tile
-                else:
-                    location = Map(
-                        data=build_dungeon(
-                            width=66,
-                            height=22 if screen_height <= 25 else 44,
-                            rot=0,
-                            max_rooms=15 if screen_height <= 25 else 20), 
-                        map_type=tile.land,
-                        map_id=hash(v), # dungeon.build(options)
-                        width=term.state(term.TK_WIDTH),
-                        height=term.state(term.TK_HEIGHT))
-                
-                    player.reset_position_local(*location.getUpStairs())
-                
-                if debug:
-                    gamelog.add("\tLocation Exit : {}".format(location.getUpStairs()))
-                    gamelog.add("\tLocation Enter: {}".format(location.getDownStairs()))
-
+                player.reset_position_local(x, y)
+        
             location.addParent(calabaston)
             calabaston.add_location(location, *(player.position_global()))
 

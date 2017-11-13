@@ -65,7 +65,6 @@ class Cave(Map):
                             q[z] = graph[u][z]  
             return p
 
-
         def lpath(b1, b2):
             x1, y1 = center(b1)
             x2, y2 = center(b2)
