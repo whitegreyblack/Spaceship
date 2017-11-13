@@ -12,7 +12,8 @@ class Unit:
         self.race = race
         self.color = color
         self.health = 10
-        
+        self.movable = True
+
     def position(self):
         return self.x, self.y
 
@@ -32,13 +33,15 @@ class Unit:
 class Shopkeeper(Unit):
     def __init__(self, x, y, race, job, char, color):
         super().__init__(x, y, race, job, char, color)
-
+        self.moveable = False
+        
     def talk(self):
         return "{}: What you looking for?".format(self.__class__.__name__)
 
 class Innkeeper(Unit):
     def __init__(self, x, y, race, job, char, color):
         super().__init__(x, y, race, job, char, color)
+        self.movable = False
 
     def talk(self):
         return "{}: Need a room to stay?".format(self.__class__.__name__)

@@ -216,6 +216,7 @@ def new_game(character=None):
             "T": "a tree",
             "f": "a tree",
             "Y": "a tree",
+            "%": "a wall",
         }
         walkBlock = "walked into {}"
         tposx = player.mx + x

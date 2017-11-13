@@ -31,6 +31,7 @@ class City(Map):
     def __init__(self, map_id, map_img, map_cfg, width, height):
         super().__init__(width, height)
         self.map_id = map_id
+        print(map_id)
         self.map_img = map_img
         self.map_cfg = map_cfg
         self.parse_img() # <== creates initial data map
@@ -47,7 +48,7 @@ class City(Map):
             (0, 0, 0): "#",
             (136, 0, 21): "%",
             (255, 242, 0): "=",
-            (34, 177, 76): ",",
+            (34, 177, 76): ".",
             (185, 122, 87): "+",
             (127, 127, 127): ".",
             (112, 146, 190): "=",   
@@ -58,7 +59,7 @@ class City(Map):
             (255, 201, 14): "|",
             (0, 162, 232): "~",
             (98, 81, 43): "x",
-            (239, 228, 176): ",",
+            (239, 228, 176): ".",
         }
 
         self.data = []
@@ -89,10 +90,12 @@ class City(Map):
                     line += char
                 except KeyError:
                     print((r, g, b))
+            print(line)
             self.data.append(line)
 
         # make sure accesses to the set are random
         shuffle(self.spaces)
+
 
     # Unique to city map
     def parse_cfg(self):
