@@ -233,6 +233,9 @@ def new_game(character=None):
                     if unit.health < 1:
                         gamelog.add("You have killed the {}! You gain {} exp".format(unit.job, unit.xp))
                         player.gain_exp(unit.xp)
+                        if player.check_exp():
+                            gamelog.add("You level up. You are now level {}".format(player.level))
+                            gamelog.add("You feel much stronger")
                         dungeon.remove_unit(unit)
                     # =============== END COMBAD LOG =================================
         else:

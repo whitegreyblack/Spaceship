@@ -63,7 +63,7 @@ class Player:
         self.exp = 0
         self.level = 1
         self.sight = 5
-        self.advexp = 80
+        self.advexp = self.level * 150
         self.job = character.job
         self.race = character.race
         self.gold = character.gold
@@ -102,6 +102,14 @@ class Player:
 
     def gain_exp(self, exp):
         self.exp += exp
+
+    def check_exp(self):
+        if self.exp >= self.advexp:
+            self.level += 1
+            self.exp = 0
+            self.advexp = self.level * 150
+            return True
+        return False
 
     def height(self) -> int:
         return self.wz
@@ -229,7 +237,7 @@ class Soldier(Unit):
 class Rat(Unit):
     def __init__(self, x, y):
         self.x, self.y = x, y
-        self.xp = 10
+        self.xp = 25
         self.health = 5
         self.character = "r"
         self.job = "rat"
@@ -242,7 +250,7 @@ class Rat(Unit):
 class GiantRat(Unit):
     def __init__(self, x, y):
         self.x, self.y = x, y
-        self.xp = 15
+        self.xp = 35
         self.health = 10
         self.character = "r"
         self.job = "giant rat"
@@ -254,7 +262,7 @@ class GiantRat(Unit):
 class Bat(Unit):
     def __init__(self, x, y):
         self.x, self.y = x, y
-        self.xp = 10
+        self.xp = 20
         self.health = 5
         self.character = "b"
         self.job = "bat"
