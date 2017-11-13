@@ -436,7 +436,6 @@ def new_game(character=None):
             if (x+cx, y+cy) in attackables:
                 attack(x + cx, y + cy)
 
-
     def interactUnit(x, y):
         """Allows talking with other units"""
         def talkUnit(x, y):
@@ -565,29 +564,10 @@ def new_game(character=None):
                     gamelog.add('\tPLAYER STANDING ON STAIRS LEADING DOWN')
                 
                 if not dungeon.hasSublevel():
-                    x = player.wx
-                    y = player.wy
-                    z = player.wz
-                    t = "dungeon"
-                    v = str(x) + str(y) + str(z) + t
-                    
-                    if debug:
-                        gamelog.add("\tHASH: {}".format(hash(v)))
-                    
-                    sublevel = Map(
-                        data=build_dungeon(
-                            width=66,
-                            height=22 if screen_height <= 25 else 44,
-                            rot=0,
-                            max_rooms=15 if screen_height <= 25 else 20), 
-                        map_type="dungeon", 
-                        map_id=hash(v), 
-                        width=term.state(term.TK_WIDTH), 
-                        height=term.state(term.TK_HEIGHT))
-                    
-                    if debug:
-                        print('\tSUBLEVEL ID: {}'.format(sublevel.map_id))
-                    
+                    sublevel = Cave(
+                        width=term.state(term.TK_WIDTH),
+                        height=term.state(term.TK_HEIGHT),
+                        max_rooms=randint(15, 20))
                     sublevel.addParent(dungeon)
                     dungeon.addSublevel(sublevel)
 
@@ -847,6 +827,15 @@ def new_game(character=None):
         term.puts(col, row + 16, "CHA: {:>6}".format(player.cha))
 
         term.puts(col, row + 18, "GOLD:{:>6}".format(player.gold))
+        
+        # sets the location name at the bottom of the status bar
+        if player.position_global() in calabaston.enterable_legend.keys():
+            location = calabaston.enterable_legend[player.position_global()]
+        elif player.position_global() in calabaston.dungeon_legend.keys():
+            location = calabaston.dungeon_legend[player.position_global()]
+        else:
+            location = ""
+        term.puts(col, row + 20, "{}".format(location))
 
     def log_box():
         messages = gamelog.write().messages
@@ -907,7 +896,7 @@ def new_game(character=None):
 
     # very first thing is game logger initialized to output messages on terminal
     # gamelog = GameLogger(4, ptt=True)
-    gamelog = GameLogger(1)
+    gamelog = GameLogger(2 if term.state(term.TK_HEIGHT) <= 25 else 4)
     print("MAX LINES: {}".format(gamelog.maxlines))
     # if character is None then improperly accessed new_game
     # else unpack the character

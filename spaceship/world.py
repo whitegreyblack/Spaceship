@@ -50,7 +50,7 @@ class World:
         (63, 7): "Dun Baras",
         (55, 14): "Dun Caden",
         (82, 19): "Dun Kaldergen",
-        (93, 25): "Dun Mogan",
+        (88, 28): "Dun Mogan",
         (48, 14): "Dun Molbur",
         (33, 7): "Dun Vargar",
         (65, 36): "Eastshore",

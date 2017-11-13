@@ -36,7 +36,6 @@ class Cave(Map):
         # builds a raw data map with given inputs
         super().__init__(width, height)
         self.levels = levels
-        self.build()
         self.build(rot, max_rooms)
         self.create_tile_map()        
 

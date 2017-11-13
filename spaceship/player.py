@@ -30,69 +30,8 @@ class Unit:
     def __repr__(self):
         return "{}[{}]: ({},{})".format(self.description, self.character, self.x, self. y)
 
-class Shopkeeper(Unit):
-    def __init__(self, x, y, race, job, char, color):
-        super().__init__(x, y, race, job, char, color)
-        self.moveable = False
-        
-    def talk(self):
-        return "{}: What you looking for?".format(self.__class__.__name__)
-
-class Innkeeper(Unit):
-    def __init__(self, x, y, race, job, char, color):
-        super().__init__(x, y, race, job, char, color)
-        self.movable = False
-
-    def talk(self):
-        return "{}: Need a room to stay?".format(self.__class__.__name__)
-
-class Bishop(Unit):
-    def __init__(self, x, y, race, job, char, color):
-        super().__init__(x, y, race, job, char, color)
-
-    def talk(self):
-        return "{}: Blessings. Need some healing?".format(self.__class__.__name__)
-
-class Soldier(Unit):
-    def __init__(self, x, y, race, job, char, color):
-        super().__init__(x, y, race, job, char, color)
-
-    def talk(self):
-        return "{}: Don't be causing trouble. Move along.".format(self.__class__.__name__)
-
-class Object:
-    def __init__(self, n, x, y, i, c='white', r="human", h=10):
-        """@parameters :- x, y, i, c
-            x: positional argument,
-            y: positional argument,
-            i: char/image for object representation,
-            c: color for object fill
-        """
-        self.name = n
-        self.x = x
-        self.y = y
-        self.i = i
-        self.c = c
-        self.r = r
-        self.h = h
-        self.message = "Im just an object"
-
-    def move(self, dx, dy):
-        self.x += dx
-        self.y += dy
-
-    def talk(self):
-        return self.name + ": " +self.message
-
-
-class Character(Object):
-    def __init__(self, n, x, y, i, c='white', r='human', m=10, s=10, b=6, l=5):
-        super().__init__(n, x, y, i, c, r)
-        self.m=m
-        self.s=s
-        self.l=l
-        self.inventory = Inventory(b)
-        self.backpack = Backpack()
+    def attack(self, other):
+        pass
 
 class Player:
     def __init__(self, character):
@@ -109,6 +48,8 @@ class Player:
         self.job = character.job
         self.race = character.race
         self.gold = character.gold
+        # self.color = None
+        # self.character = None
         self.gender = character.gender
         self.skills = character.skills
         self.base_stats = character.stats
@@ -232,3 +173,81 @@ class Player:
             self.job,
             self.level,
             self.exp)
+
+class Shopkeeper(Unit):
+    def __init__(self, x, y, race, job, char, color):
+        super().__init__(x, y, race, job, char, color)
+        self.moveable = False
+        
+    def talk(self):
+        return "{}: What you looking for?".format(self.__class__.__name__)
+
+class Innkeeper(Unit):
+    def __init__(self, x, y, race, job, char, color):
+        super().__init__(x, y, race, job, char, color)
+        self.movable = False
+
+    def talk(self):
+        return "{}: Need a room to stay?".format(self.__class__.__name__)
+
+class Bishop(Unit):
+    def __init__(self, x, y, race, job, char, color):
+        super().__init__(x, y, race, job, char, color)
+
+    def talk(self):
+        return "{}: Blessings. Need some healing?".format(self.__class__.__name__)
+
+class Soldier(Unit):
+    def __init__(self, x, y, race, job, char, color):
+        super().__init__(x, y, race, job, char, color)
+
+    def talk(self):
+        return "{}: Don't be causing trouble. Move along.".format(self.__class__.__name__)
+
+class Rat(Unit):
+    def __init__(self, x, y, race, job, char, color):
+        super().__init__(x, y, race, job, char, color)
+        
+    def talk(self):
+        return "Reeeee!!"
+
+class GiantRat(Unit):
+    def __init__(self, x, y, race, job, char, color):
+        super().__init__(x, y, race, job, char, color)
+        
+    def talk(self):
+        return "Screeeee!!"
+
+class Object:
+    def __init__(self, n, x, y, i, c='white', r="human", h=10):
+        """@parameters :- x, y, i, c
+            x: positional argument,
+            y: positional argument,
+            i: char/image for object representation,
+            c: color for object fill
+        """
+        self.name = n
+        self.x = x
+        self.y = y
+        self.i = i
+        self.c = c
+        self.r = r
+        self.h = h
+        self.message = "Im just an object"
+
+    def move(self, dx, dy):
+        self.x += dx
+        self.y += dy
+
+    def talk(self):
+        return self.name + ": " +self.message
+
+
+class Character(Object):
+    def __init__(self, n, x, y, i, c='white', r='human', m=10, s=10, b=6, l=5):
+        super().__init__(n, x, y, i, c, r)
+        self.m=m
+        self.s=s
+        self.l=l
+        self.inventory = Inventory(b)
+        self.backpack = Backpack()

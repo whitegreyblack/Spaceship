@@ -31,7 +31,6 @@ class City(Map):
     def __init__(self, map_id, map_img, map_cfg, width, height):
         super().__init__(width, height)
         self.map_id = map_id
-        print(map_id)
         self.map_img = map_img
         self.map_cfg = map_cfg
         self.parse_img() # <== creates initial data map
@@ -76,7 +75,6 @@ class City(Map):
         }
 
         self.data = []
-        colors = set()
         self.spaces = []
 
         try:
@@ -94,8 +92,6 @@ class City(Map):
                     r, g, b, _ = pixels[i, j]
                 except ValueError:
                     r, g, b = pixels[i, j]
-                if (r, g, b) not in colors:
-                    colors.add((r, g, b))
                 try:
                     char = stringify_chars[(r, g, b)]
                     if char in (".", ":", ",", "="):
