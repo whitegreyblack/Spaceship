@@ -440,7 +440,7 @@ def new_game(character=None):
         """Allows talking with other units"""
         def talkUnit(x, y):
             unit = dungeon.get_unit(x, y)
-            gamelog.add("The {} says hello".format(unit.job))
+            gamelog.add(unit.talk())
             # gamelog.add(um.talkTo(x, y))
             refresh()
 

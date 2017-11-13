@@ -75,6 +75,7 @@ class GameLogger:
             print('Log folder does not exist -- Creating "./logs')
             os.makedirs('logs')
 
+        self.last_message = ""
         self.filename = "logs/log_"+"_".join(filter(lambda x: ":" not in x, ctime().split(" ")))+".txt"
         print("Setup log file in {}".format(self.filename))
         
@@ -92,14 +93,18 @@ class GameLogger:
         if self.print_to_term:
             print(message)
 
-        # Checks if message is the same as before
-        if self.messages and message == self.messages[-1]:
+        # Checks if messages are in the queue and if message is the same as before
+        if self.messages and message == self.last_message:
             self.messages.pop(-1)
             self.counter += 1
+
+            # save the unaltered message for comparison
+            self.last_message = message            
             message += "(x{})".format(self.counter)
         else:
             self.counter = 0
-        
+            self.last_message = message            
+
         # Dump the messages as long as they are not repeats of the same message
         if len(self.messages) + 1 > self.maxlines:
             if not self.counter: # don't need to repeatedly dump the same message every time

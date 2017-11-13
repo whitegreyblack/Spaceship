@@ -7,7 +7,7 @@ from collections import namedtuple
 from spaceship.maps.charmap import DungeonCharmap as dcm
 from spaceship.maps.charmap import WildernessCharmap as wcm
 from random import shuffle, choice, randint
-from spaceship.player import Unit
+from spaceship.player import Unit, Shopkeeper, Innkeeper, Bishop
 
 class City(Map):
     chars = {
@@ -113,15 +113,50 @@ class City(Map):
                         job, color, character, number = line.split()
                         if modifier == "":
                             raise ValueError("Configuration file has no race specifier")
-                        for _ in range(int(number)):
-                            i, j = self.spaces.pop()
-                            self.units.append(Unit(
-                                                x=i, 
-                                                y=j,
-                                                race=modifier,
-                                                job=job.lower(),
-                                                char=character,
-                                                color=color))
+                        if job.lower() == "innkeeper":
+                            for _ in range(int(number)):
+                                i, j = self.spaces.pop()
+                                print("created innkeeper")
+                                self.units.append(Innkeeper(
+                                            x=i, 
+                                            y=j,
+                                            race=modifier,
+                                            job=job.lower(),
+                                            char=character,
+                                            color=color))
+                        elif job.lower() == "shopkeeper":
+                            for _ in range(int(number)):
+                                i, j = self.spaces.pop()
+                                print("created shopkeeper")
+                                self.units.append(Shopkeeper(
+                                            x=i, 
+                                            y=j,
+                                            race=modifier,
+                                            job=job.lower(),
+                                            char=character,
+                                            color=color))
+                        elif job.lower() == "bishop":
+                            for _ in range(int(number)):
+                                i, j = self.spaces.pop()
+                                print("created bishop")
+                                self.units.append(Bishop(
+                                            x=i, 
+                                            y=j,
+                                            race=modifier,
+                                            job=job.lower(),
+                                            char=character,
+                                            color=color))
+                        else:
+                            for _ in range(int(number)):
+                                i, j = self.spaces.pop()
+                                print("created unit")
+                                self.units.append(Unit(
+                                            x=i, 
+                                            y=j,
+                                            race=modifier,
+                                            job=job.lower(),
+                                            char=character,
+                                            color=color))
         except FileNotFoundError:
             # not explicitely needed
             print("No unit configuration file found")

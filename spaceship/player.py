@@ -21,13 +21,41 @@ class Unit:
         self.y += dy
 
     def talk(self):
-        return self.name + ': ' + self.message
+        return self.job + ': Hello there.'
 
     def draw(self):
         return self.x, self.y, self.char, self.color
 
     def __repr__(self):
         return "{}[{}]: ({},{})".format(self.description, self.character, self.x, self. y)
+
+class Shopkeeper(Unit):
+    def __init__(self, x, y, race, job, char, color):
+        super().__init__(x, y, race, job, char, color)
+
+    def talk(self):
+        return "{}: What you looking for?".format(self.__class__.__name__)
+
+class Innkeeper(Unit):
+    def __init__(self, x, y, race, job, char, color):
+        super().__init__(x, y, race, job, char, color)
+
+    def talk(self):
+        return "{}: Need a room to stay?".format(self.__class__.__name__)
+
+class Bishop(Unit):
+    def __init__(self, x, y, race, job, char, color):
+        super().__init__(x, y, race, job, char, color)
+
+    def talk(self):
+        return "{}: Blessings. Need some healing?".format(self.__class__.__name__)
+
+class Soldier(Unit):
+    def __init__(self, x, y, race, job, char, color):
+        super().__init__(x, y, race, job, char, color)
+
+    def talk(self):
+        return "{}: Don't be causing trouble. Move along.".format(self.__class__.__name__)
 
 class Object:
     def __init__(self, n, x, y, i, c='white', r="human", h=10):
