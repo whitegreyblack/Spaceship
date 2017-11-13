@@ -14,10 +14,11 @@ class Forest(Map):
         ".": ("\"", blender([wcm.GRASS.hexcode[0], wcm.TREES.hexcode[0]])),
         "T": (wcm.TREES.chars, blender(wcm.GRASS.hexcode)),
     }
+    chars_block_move =  {"#", "+", "o", "x", "%"}
     def __init__(self, width, height):
-        self.width, self.height = width, height
+        super().__init__(width, height)
         self.build()
-        print(self.__repr__())
+        self.create_tile_map()
 
     def build(self):
         num_trees = 200
@@ -34,10 +35,12 @@ class Grassland(Map):
         ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
         "T": (wcm.TREES.chars, blender(wcm.GRASS.hexcode)),
     }
+    chars_block_move = {"#", "+", "o", "x", "~", "%"}
     def __init__(self, width, height):
-        self.width, self.height = width, height
+        super().__init__(width, height)
         self.build()
-    
+        self.create_tile_map()
+
     def build(self):
         num_trees = 10
         self.data = [["." for _ in range(self.width)] for _ in range(self.height)]
@@ -57,9 +60,13 @@ class Hills(Map):
             ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
             "~": (wcm.HILLS.chars, blender(wcm.HILLS.hexcode)),
     }
+    # Hills has a modified block_move char set due to hills having the same char as water
+    #   The modified set has removed the hill char while other maps include it
+    chars_block_move =  {"#", "+", "o", "x", "%", "Y", "T"}
     def __init__(self, width, height):
-        self.width, self.height = width, height
+        super().__init__(width, height)
         self.build()
+        self.create_tile_map()
 
     def build(self):
         num_trees = 10
@@ -72,11 +79,9 @@ class Plains(Map):
             "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
     }
     def __init__(self, width, height):
-        self.width, self.height = 66, 22
+        super().__init__(width, height)
         self.build()
         self.create_tile_map()
-        self.map_display_width = min(self.width, width)
-        self.map_display_height = min(self.height, height)
 
     def build(self):
         num_trees = 10
@@ -92,39 +97,15 @@ class Plains(Map):
             if stop_chance == 0:
                 break
 
-    def create_tile_map(self):
-        rows = []   
-        for row in self.data:
-            cols = []
-            for char in row:
-                try:
-                    chars, hexcodes = self.chars[char]
-                except KeyError:
-                    raise KeyError("Evaluate Map: {} not in keys".format(char))
-                light = 0
-                block_mov = char in self.chars_block_move
-                block_lit = char not in self.chars_block_light
-
-                tile = self.tile(
-                    choice(chars),
-                    choice(hexcodes),
-                    "black",
-                    light,
-                    block_mov,
-                    block_lit,
-                    [])
-                cols.append(tile)
-            rows.append(cols)
-        self.tilemap = rows     
-
 class Woods(Map):
     chars = {
             ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
             "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),            
     }
     def __init__(self, width, height):
-        self.width, self.height = width, height
+        super().__init__(width, height)
         self.build()
+        self.create_tile_map()
 
     def build(self):
         num_trees = 200

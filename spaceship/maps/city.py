@@ -27,14 +27,14 @@ class City(Map):
         "^": (dcm.TRAPS.chars, blender(dcm.TRAPS.hexcode)),
     }
     def __init__(self, map_id, map_img, map_cfg, width, height):
+        super().__init__(width, height)
         self.map_id = map_id
         self.map_img = map_img
         self.map_cfg = map_cfg
         self.parse_img() # <== creates initial data map
         self.dimensions() # <== retrienves width, height
         self.create_tile_map()
-        self.map_display_width = min(self.width, width)
-        self.map_display_height = min(self.height, height)
+        self.relationship = 100
 
     # Unique to city map
     def parse_img(self):

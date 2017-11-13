@@ -667,13 +667,21 @@ def new_game(character=None):
         def determine_map(map_type):
             if map_type == "plains":
                 return Plains
-            elif map_type == "grasslands":
+            elif map_type == "grassland":
                 return Grassland
             elif map_type == "forest":
                 return Forest
+            elif map_type == "dark woods":
+                return Woods
+            elif map_type == "hills":
+                return Hills
             else:
-                raise ValueError("Map Type Not Implemented")
-                
+                raise ValueError("Map Type Not Implemented: {}".format(map_type))
+
+        def get_wilderness_enterance(x, y):
+            return (max(int(location.width * x - 1), 0), 
+                    max(int(location.height * y - 1), 0))
+
         if not calabaston.mapAt(*player.position_global()):
 
             # entering a city location
@@ -692,7 +700,7 @@ def new_game(character=None):
                     map_cfg=cfg_name,
                     width=term.state(term.TK_WIDTH), 
                     height=term.state(term.TK_HEIGHT))
-                player.reset_position_local(location.width//2, location.height//2)
+                player.reset_position_local(location.width // 2, location.height // 2)
             # differentiate between dungeon and wilderness
             elif player.position_global() in calabaston.dungeon_legend.keys():
 
@@ -710,25 +718,8 @@ def new_game(character=None):
                     width=term.state(term.TK_WIDTH),
                     height=term.state(term.TK_HEIGHT))
 
-                # location = Map(
-                #     data=build_terrain(
-                #         width=66,
-                #         height=22,
-                #         tiletype=tile.land, 
-                #         buildopts=neighbors), 
-                #     map_type=tile.land,
-                #     map_id=hash(v),
-                #     width=term.state(term.TK_WIDTH),
-                #     height=term.state(term.TK_HEIGHT))
-            
                 x, y = player.get_position_global_on_enter()
-                x = max(int(location.width * x - 1), 0)
-                y = max(int(location.height * y - 1), 0)
-                
-                if debug:
-                    gamelog.add("location w,h {}, {}".format(location.width, location.height))
-                
-                player.reset_position_local(x, y)
+                player.reset_position_local(*get_wilderness_enterance(x, y))
         
             location.addParent(calabaston)
             calabaston.add_location(location, *(player.position_global()))
@@ -738,7 +729,7 @@ def new_game(character=None):
             # player position is different on map enter depending on if map is a location or wilderness
             location = calabaston.get_location(*player.position_global())
             if player.position_global() in calabaston.enterable_legend.keys():
-                player.reset_position_local(location.width//2, location.height//2)
+                player.reset_position_local(location.width // 2, location.height // 2)
 
             # re-enter dungeon
             elif player.position_global() in calabaston.dungeon_legend.keys():
@@ -747,9 +738,7 @@ def new_game(character=None):
             # reenter a wilderness
             else:
                 x, y = player.get_position_global_on_enter()
-                x = int((location.width-1) * x)
-                y = int((location.height-1) * y)
-                player.reset_position_local(x, y)
+                player.reset_position_local(*get_wilderness_enterance(x, y))
                 
         player.move_height(1)
 

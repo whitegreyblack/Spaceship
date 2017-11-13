@@ -21,9 +21,9 @@ from spaceship.tools import scroll
 in creating procedural worlds"""
 class Light: Unexplored, Explored, Visible = range(3)    
 class Letter: Ascii, Unicode = range(2)
-chars_block_move= {"#", "+", "o", "x", "~", "%", "Y", "T"}
-chars_block_move_hills =  {"#", "+", "o", "x", "%", "Y", "T"}
-chars_block_light = {"#", "+", "o", "%", "Y", "T"}
+# chars_block_move= {"#", "+", "o", "x", "~", "%", "Y", "T"}
+# chars_block_move_hills =  {"#", "+", "o", "x", "%", "Y", "T"}
+# chars_block_light = {"#", "+", "o", "%", "Y", "T"}
 
 # Key-value pairs are mapped from characters to color tuples
 # used when converting maps into color images
@@ -311,43 +311,16 @@ class Map:
 
     tile = namedlist("Tile", "char color bkgd light block_mov block_lit items")
     chars_block_move = {"#", "+", "o", "x", "~", "%", "Y", "T"}
-    chars_block_move_hills =  {"#", "+", "o", "x", "%", "Y", "T"}
     chars_block_light = {"#", "+", "o", "%", "Y", "T"}
     # def __init__(self, data, map_type, map_id, width=80, height=50, cfg_path=None, map_name=None):
     def __init__(self, width, height):
-        self.width = width
-        self.height = height
-        self.maptype = map_type
-
-        # data holds the raw characters
-        self.data, self.height, self.width = self.dimensions(data)
-        self.map_id = map_id
-
-        # Map Relationship with Player Entity
-        self.relationship = 100 if self.maptype == "city" else -100
-        if map_name:
-            self.map_name = map_name
-
-        # explicitely do not block "~" in hills
-        self.block_chars = chars_block_move_hills if map_type == "hills" else chars_block_move
-        self.block = [[self.data[y][x] in self.block_chars for x in range(self.width)] for y in range(self.height)]
-
-        if cfg_path:
-            self.units = self.populate(cfg_path)
-        elif self.maptype == "dungeon":
-            self.units = self.add_units(limit=15 if self.width >= 25 else 10)
-
-        self.tilemap = self.fill(self.data, self.width, self.height)
+        self.width = 66
+        self.height = 22
         self.map_display_width = min(self.width, width)
         self.map_display_height = min(self.height, height)
 
-        if map_init_debug:
-            print('[MAP CLASS]:\n\t{}'.format(self.map_id))
-            print("\tMAP DIM: {} {}".format(self.width, self.height))
-            print("\tMAP DIS:{} {}".format(self.map_display_width, self.map_display_height))
- 
     def build(self):
-        raise NotImplementedError("cannot build the base map class")
+        raise NotImplementedError("cannot build the base map class -- use a child map object")
 
     def __str__(self):
         return "\n".join("".join(row) for row in self.data)
@@ -362,47 +335,56 @@ class Map:
         if hasattr(self, 'data'):
             self.height = len(self.data)
             self.width = max(len(col) for col in self.data)
-        
-    def fill(self, d, w, h):
-        # Should only be called once by init
-        def evaluate(char):
-            try:
-                if self.maptype not in ("dungeon", "city"):
-                    t = self.wilderness[self.maptype][char]
-                else:
-                    t = self.landmarks[char]
-            except KeyError:
-                raise KeyError("Evaluate Map: {} not in keys".format(char))
-            return t
-        
-        rows = []
-        tiles = set()
-        tree, ground = None, None
-        d = d if isinstance(d, list) else d.split('\n')
-        for row in d:
+        else:
+            raise AttributeError("No self.data")
+
+    def create_tile_map(self):
+        if not hasattr(self, 'data'):
+            raise AttributeError("No self.data")
+        if not hasattr(self, 'chars'):
+            raise AttributeError("No self.chars")
+
+        rows = []   
+        for row in self.data:
             cols = []
-            for col in row:
-                chars, hexcodes = evaluate(col)
-                light = Light.Unexplored
-                block_mov = col in self.block_chars
-                block_lit = col not in chars_block_light
+            for char in row:
+                try:
+                    chars, hexcodes = self.chars[char]
+                except KeyError:
+                    raise KeyError("Evaluate Map: {} not in keys".format(char))
+                light = 0
+                block_mov = char in self.chars_block_move
+                block_lit = char not in self.chars_block_light
+
                 tile = self.tile(
-                    choice(chars), 
-                    choice(hexcodes), 
-                    "black", 
-                    light, 
+                    choice(chars),
+                    choice(hexcodes),
+                    "black",
+                    light,
                     block_mov,
-                    block_lit, 
+                    block_lit,
                     [])
-                tiles.add((tile.char, tile.block_mov, tile.block_lit))
                 cols.append(tile)
             rows.append(cols)
+        self.tilemap = rows        
 
-        if debug:
-            print('\tTiles - {}'.format(tiles))
-
-        return rows        
-
+    def check_data(self):
+        if hasattr(self, 'data'):
+            return True
+        else:
+            raise AttributeError("No self.data")
+    
+    def check_chars(self):
+        if hasattr(self, 'chars'):
+            return True
+        else:
+            raise AttributeError("No self.chars")
+    
+    def check_exists(self, attrs):
+        for attr in attrs:
+            if not hasattr(self, attr):
+                raise AttributeError("No self.{}".format(attr))
+        return True
     ###########################################################################
     # Connected Map/Dungeon Functions and Properties                          #
     ###########################################################################
