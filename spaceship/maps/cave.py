@@ -32,10 +32,13 @@ class Cave(Map):
         ">": (dcm.GTHAN.chars, blender(dcm.GTHAN.hexcode)),
         "^": (dcm.TRAPS.chars, blender(dcm.TRAPS.hexcode)),
     }
-    def __init__(self, width, height, rot=0, max_rooms=15):
+    def __init__(self, width, height, rot=0, max_rooms=15, levels=3):
         # builds a raw data map with given inputs
-        self.width, self.height = width, height
+        super().__init__(width, height)
+        self.levels = levels
+        self.build()
         self.build(rot, max_rooms)
+        self.create_tile_map()        
 
     def build(self, rot=0, max_rooms=15):
         '''Places rooms in a box of size width by height and applies rot if
@@ -279,7 +282,9 @@ class Cave(Map):
 
         self.data = dungeon
 
-
+    def current_level():
+        return self.levels
+    
 if __name__ == "__main__":
     cave = Cave(66, 22)
     print(cave.__repr__())

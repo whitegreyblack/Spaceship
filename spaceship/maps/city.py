@@ -3,9 +3,11 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../../')
 from spaceship.maps.base import Map, blender
 from PIL import Image
+from collections import namedtuple
 from spaceship.maps.charmap import DungeonCharmap as dcm
 from spaceship.maps.charmap import WildernessCharmap as wcm
 from random import shuffle, choice, randint
+from spaceship.player import Unit
 
 class City(Map):
     chars = {
@@ -32,7 +34,7 @@ class City(Map):
         self.map_img = map_img
         self.map_cfg = map_cfg
         self.parse_img() # <== creates initial data map
-        self.dimensions() # <== retrienves width, height
+        self.parse_cfg()
         self.create_tile_map()
         self.relationship = 100
 
@@ -94,14 +96,13 @@ class City(Map):
 
     # Unique to city map
     def parse_cfg(self):
-        units = []
+        self.units = []
 
         if not self.spaces:
             raise AttributeError("No world configuration")
 
         try:
             with open(self.map_cfg, 'r') as cfg:
-                unit = namedtuple("Unit", "race unit char color")
                 modifier = ""
                 for line in cfg:
                     if line.strip().startswith('#'):
@@ -114,48 +115,44 @@ class City(Map):
                             raise ValueError("Configuration file has no race specifier")
                         for _ in range(int(number)):
                             i, j = self.spaces.pop()
-                            units.append(
-                                Unit(
-                                    x=i, 
-                                    y=j,
-                                    race=modifier,
-                                    job=job.lower(),
-                                    char=character,
-                                    color=color
-                                )
-                            )
+                            self.units.append(Unit(
+                                                x=i, 
+                                                y=j,
+                                                race=modifier,
+                                                job=job.lower(),
+                                                char=character,
+                                                color=color))
         except FileNotFoundError:
+            # not explicitely needed
             print("No unit configuration file found")
         
         except:
+            # any other error should be raised
             raise
-        
-        finally:
-            return units   
 
-    def create_tile_map(self):
-        # Should only be called once by init
-        rows = []
-        for row in self.data:
-            cols = []
-            for char in row:
-                try:
-                    chars, hexcodes = self.chars[char]
-                except KeyError:
-                    raise KeyError("Evaluate Map: {} not in keys".format(char))
-                light = 0
-                block_mov = char in self.chars_block_move
-                block_lit = char not in self.chars_block_light
+    # def create_tile_map(self):
+    #     # Should only be called once by init
+    #     rows = []
+    #     for row in self.data:
+    #         cols = []
+    #         for char in row:
+    #             try:
+    #                 chars, hexcodes = self.chars[char]
+    #             except KeyError:
+    #                 raise KeyError("Evaluate Map: {} not in keys".format(char))
+    #             light = 0
+    #             block_mov = char in self.chars_block_move
+    #             block_lit = char not in self.chars_block_light
 
-                tile = self.tile(
-                    choice(chars), 
-                    choice(hexcodes), 
-                    "black", 
-                    light, 
-                    block_mov,
-                    block_lit, 
-                    [])
-                cols.append(tile)
-            rows.append(cols)
-        self.tilemap = rows  
+    #             tile = self.tile(
+    #                 choice(chars), 
+    #                 choice(hexcodes), 
+    #                 "black", 
+    #                 light, 
+    #                 block_mov,
+    #                 block_lit, 
+    #                 [])
+    #             cols.append(tile)
+    #         rows.append(cols)
+    #     self.tilemap = rows  
 

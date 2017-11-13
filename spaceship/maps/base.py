@@ -312,10 +312,9 @@ class Map:
     tile = namedlist("Tile", "char color bkgd light block_mov block_lit items")
     chars_block_move = {"#", "+", "o", "x", "~", "%", "Y", "T"}
     chars_block_light = {"#", "+", "o", "%", "Y", "T"}
-    # def __init__(self, data, map_type, map_id, width=80, height=50, cfg_path=None, map_name=None):
+
     def __init__(self, width, height):
-        self.width = 66
-        self.height = 22
+        self.width, self.height = 66, 22
         self.map_display_width = min(self.width, width)
         self.map_display_height = min(self.height, height)
 
@@ -352,18 +351,18 @@ class Map:
                     chars, hexcodes = self.chars[char]
                 except KeyError:
                     raise KeyError("Evaluate Map: {} not in keys".format(char))
-                light = 0
+
                 block_mov = char in self.chars_block_move
                 block_lit = char not in self.chars_block_light
 
                 tile = self.tile(
-                    choice(chars),
-                    choice(hexcodes),
-                    "black",
-                    light,
-                    block_mov,
-                    block_lit,
-                    [])
+                    char=choice(chars),
+                    color=choice(hexcodes),
+                    bkgd="black",
+                    light=0,
+                    block_mov=block_mov,
+                    block_lit=block_lit,
+                    items=[])
                 cols.append(tile)
             rows.append(cols)
         self.tilemap = rows        
@@ -402,27 +401,14 @@ class Map:
 
     def getDownStairs(self):
         '''same logic as getExit'''
-        if debug:
-            print('[GET DOWNSTAIRS]:')
-
         try:
             if hasattr(self, self.enterance):
-                if debug:
-                    print('\tMAP HAS ENTERANCE')
-
                 return self.enterance
         except AttributeError:
             # manually look through the map to check for '>'
             for j in range(len(self.data)):
                 for i in range(len(self.data[0])):
                     if self.data[j][i] == ">":
-
-                        if debug:
-                            print('\tHAS ENTERANCE AFTER LOOPING')
-                            print(self.data[j][i], i, j)
-                            print("\tLOCATION - {}, {}; CHAR - {}".format(
-                                self.tilemap[j][i].char, i, j))
-
                         self.entrance = i, j
                         return i, j
             return 'Doesnt have a sublevel?'
@@ -597,7 +583,8 @@ class Map:
 
     def get_units(self):
         if hasattr(self, 'units'):
-            return self.units
+            for unit in self.units:
+                yield unit
         return []
 
     def get_unit_positions(self):

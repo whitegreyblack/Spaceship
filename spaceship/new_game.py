@@ -15,7 +15,6 @@ from spaceship.player import Player
 from spaceship.create_character import create_character as create
 from spaceship.screen_functions import center, surround, selected
 from bearlibterminal import terminal as term
-from spaceship.manager import UnitManager
 from spaceship.gamelog import GameLogger
 from random import randint, choice
 from collections import namedtuple
@@ -222,47 +221,16 @@ def new_game(character=None):
         tposx = player.mx + x
         tposy = player.my + y
 
-        # positions = {}
-        # for unit in units:
-        #     positions[unit.pos()] = unit
-        # unit_pos = [(unit.x, unit.y) for unit in units]
-
         # 3 variables involved in walking
         # OUT-OF-BOUNDS -- is player within the map?
         # WALKABLE -- is the tile a walkable tile?
         # BLOCKEd -- is the tile blocked?
-        unit_pos = []
-
-        # inbounds = 0 <= tposx < dungeon.width \
-        #     and 0 <= tposy < dungeon.height
-        if debug:
-            gamelog.add("[KEY PROCESS]:\n\tDUNGEON BOUNDS: DW, DH: {}, {} PX, PY: {} {}".format(
-                dungeon.width, 
-                dungeon.height, 
-                tposx, 
-                tposy))
-
-        occupied = (tposx, tposy) in unit_pos
-        # walkable = not dungeon.blocked(tposx, tposy)
         walkable = dungeon.walkable(tposx, tposy)
-
-        if debug:
-            gamelog.add('\tCURRENT LOCATION: {}'.format(player.position()))
-
         # (not blocked) and (not occupied) and (inbounds)
         if walkable:
-            if debug:
-                gamelog.add('\tMOVING IN DUNGEON')
-            # occupied = dungeon.get_unit_positions()
             occupied = dungeon.occupied(tposx, tposy)
             if not occupied:
-                # player.save_position_local()
-
                 player.move(x, y)
-
-                if debug:
-                    gamelog.add("\tPLAYER POSITION - {}".format(player.position()))
-
                 if dungeon.square(tposx, tposy).items:
                     gamelog.add("There is something here")
             else:
@@ -303,7 +271,46 @@ def new_game(character=None):
             #     gamelog.add(walkBlock.format("the edge of the map"))
 
         # refresh units
-    #     units = list(filter(lambda u: u.h > 0, units))
+        #     units = list(filter(lambda u: u.h > 0, units))
+        for unit in list(dungeon.get_units()):
+            x, y = 0, 0
+            # if true then the unit is moving
+            if randint(0, 1):
+                x, y = num_movement[choice(list(num_movement.keys()))]
+                tposx, tposy = unit.x + x, unit.y + y
+                walkable = dungeon.walkable(tposx, tposy)
+                if walkable:
+                    occupied = dungeon.occupied(tposx, tposy) or \
+                        (tposx, tposy) == player.position_local()
+                    if not occupied:
+                        unit.move(x, y)
+                    else:
+                        if (tposx, tposy) == player.position_local():
+                            other = player
+                        else:
+                            other = dungeon.get_unit(tposx, tposy)
+                        if dungeon.friendly():
+                            # gamelog.add("The {} displaces {}".format(
+                            #     unit.job,
+                            #     "you" if other == player else "the " + other.job))
+                            other.move(-x, -y)
+                            unit.move(x, y)
+                        else:
+                            other.health -= 1
+                            log = "The {} attacks {}. ".format(
+                                unit.job, 
+                                "you" if other == player else "the " + other.job)
+                            log = "{} {} health left".format(
+                                "You have " if other == player else "the " + other.job + " has",
+                                player.health if other == player else other.health)
+                            gamelog.add(log)
+                            if other.health < 1:
+                                gamelog.add("The {} has killed {}".format(
+                                    "you" if other == player else "the " + other.job))
+                                if other == player:
+                                    gamelog.add("You Died!")
+                                else:
+                                    dungeon.remove_unit(other)
 
     #     for unit in units:
     # #     if unit.c != "grey":
