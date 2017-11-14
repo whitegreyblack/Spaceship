@@ -386,8 +386,9 @@ def new_game(character=None):
             log = "You attack the {}. ".format(unit.job)
             unit.health -= 1           
             log += "The {} has {} health left. ".format(unit.job, unit.health)
-            if dungeon.maptype == "city" and dungeon.friendly():
-                dungeon.reduce_relationship(100)
+            if dungeon.maptype == "city":
+                dungeon.reduce_unit_relationships(100)
+                # dungeon.reduce_relationship(100)
                 log += "Your relationship with {} has decreased by {} ".format(
                     dungeon.map_name, 100)
             for l in wrap(log, width=screen_width):
@@ -955,13 +956,9 @@ def new_game(character=None):
                 player.move_height(-1)
                 dungeon = calabaston.get_location(*player.position_global())
                 player.move_height(1)
-                if debug:
-                    gamelog.add('\tMAP ID: {}, {}'.format(
-                        dungeon.maptype,
-                        dungeon.map_id
-                    ))
 
                 if player.wz > 0:
+                    # iterates down until sublevel is found
                     for i in range(player.wz):
                         dungeon = dungeon.getSublevel()
             status_box()

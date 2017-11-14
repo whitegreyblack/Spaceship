@@ -314,7 +314,8 @@ class Map:
     chars_block_move = {"#", "+", "o", "x", "~", "%", "Y", "T"}
     chars_block_light = {"#", "+", "o", "%", "Y", "T"}
 
-    def __init__(self, width, height):
+    def __init__(self, width, height, map_type):
+        self.map_type = map_type
         self.width, self.height = 66, 22
         self.map_display_width = min(self.width, width)
         self.map_display_height = min(self.height, height)
@@ -564,16 +565,6 @@ class Map:
     ###########################################################################
     # Unit object Functions                                                   #
     ###########################################################################
-    def reduce_relationship(self, reduce):
-        self.relationship = min(-100, max(self.relationship - reduce, 100))
-
-    def increase_relationship(self, increase):
-        self.relationship = min(-100, max(self.relationship - increase, 100))
-        return "Your relationship with {} has decreased by {}".format(
-            self.map_name)
-    ###########################################################################
-    # Unit object Functions                                                   #
-    ###########################################################################
     def get_unit(self, x, y):
         if hasattr(self, 'units'):
             for u in self.units:
@@ -608,6 +599,13 @@ class Map:
                 self.units.append(Rat(x=i, y=j))
         else:
             raise AttributeError("Spaces has not yet been initialized")
+
+    def reduce_unit_relationships(self, reduce):
+        self.relationship = min(-100, max(self.relationship - reduce, 100))
+
+    def increase_unit_relationships(self, increase):
+        self.relationship = min(-100, max(self.relationship - increase, 100))
+        return "Your relationship with {} has decreased by {}".format(self.map_id)
     ###########################################################################
     # Output and Display Functions                                            #
     ###########################################################################

@@ -16,7 +16,7 @@ class Forest(Map):
     }
     chars_block_move =  {"#", "+", "o", "x", "%"}
     def __init__(self, width, height):
-        super().__init__(width, height)
+        super().__init__(width, height, self.__class__.__name__.lower())
         self.build()
         self.create_tile_map()
 
@@ -37,7 +37,7 @@ class Grassland(Map):
     }
     chars_block_move = {"#", "+", "o", "x", "~", "%"}
     def __init__(self, width, height):
-        super().__init__(width, height)
+        super().__init__(width, height, self.__class__.__name__.lower())
         self.build()
         self.create_tile_map()
 
@@ -64,7 +64,7 @@ class Hills(Map):
     #   The modified set has removed the hill char while other maps include it
     chars_block_move =  {"#", "+", "o", "x", "%", "Y", "T"}
     def __init__(self, width, height):
-        super().__init__(width, height)
+        super().__init__(width, height, self.__class__.__name__.lower())
         self.build()
         self.create_tile_map()
 
@@ -79,7 +79,7 @@ class Plains(Map):
             "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
     }
     def __init__(self, width, height):
-        super().__init__(width, height)
+        super().__init__(width, height, self.__class__.__name__.lower())
         self.build()
         self.create_tile_map()
 
@@ -103,7 +103,7 @@ class Woods(Map):
             "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),            
     }
     def __init__(self, width, height):
-        super().__init__(width, height)
+        super().__init__(width, height, self.__class__.__name__.lower())
         self.build()
         self.create_tile_map()
 

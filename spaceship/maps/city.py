@@ -29,7 +29,7 @@ class City(Map):
         "^": (dcm.TRAPS.chars, blender(dcm.TRAPS.hexcode)),
     }
     def __init__(self, map_id, map_img, map_cfg, width, height):
-        super().__init__(width, height)
+        super().__init__(width, height, self.__class__.__name__.lower())
         self.map_id = map_id
         self.map_img = map_img
         self.map_cfg = map_cfg
