@@ -282,7 +282,12 @@ class Cave(Map):
             dungeon = decay(dungeon, n=rot)
 
         self.data = dungeon
-        self.spaces = floor
+
+        # get all spaces avaialable
+        for i in range(self.width):
+            for j in range(self.height):
+                if dungeon[j][i] == ".":
+                    self.spaces.append((i, j))
         
     def current_level():
         return self.levels

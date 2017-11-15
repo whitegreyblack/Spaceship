@@ -588,9 +588,9 @@ class Map:
 
     def generate_units(self):
         if self.height <= 25:
-            max_units = 15
+            max_units = 20
         else:
-            max_units = 10
+            max_units = 30
 
         if hasattr(self, 'spaces'):
             shuffle(self.spaces)
@@ -606,6 +606,7 @@ class Map:
     def increase_unit_relationships(self, increase):
         self.relationship = min(-100, max(self.relationship - increase, 100))
         return "Your relationship with {} has decreased by {}".format(self.map_id)
+
     ###########################################################################
     # Output and Display Functions                                            #
     ###########################################################################
@@ -658,13 +659,13 @@ class Map:
 
                 # Current position holds an item
                 elif self.square(x, y).items:
-                    if self.lit(x, y):
+                    if self.lit(x, y) == 2:
                         item = self.square(x, y).items[0]
                         ch = item.char
                         col = item.color
                     else:
                         ch = self.square(x, y).char
-                        col = self.square(x, y).color
+                        col = "darkest grey"
 
                 # Current position holds a Lamp
                     # elif (x, y, 10) in self.lamps:
