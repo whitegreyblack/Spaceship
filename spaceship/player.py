@@ -3,7 +3,7 @@ import sys
 from typing import Tuple
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.world import World
-from spaceship.item import items
+from spaceship.item import items, Item
 from random import randint
 
 class RelationTable:
@@ -304,6 +304,13 @@ class Rat(Unit):
         self.race = "monster"
         self.color = "brown"
         self.relation = -100
+
+    def drops(self):
+        if randint(0, 5):
+            return Item("rat corpse", "%", "red")
+        else:
+            return None
+    
     def talk(self):
         return "Reeeee!!"
 

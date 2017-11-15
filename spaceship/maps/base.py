@@ -657,16 +657,14 @@ class Map:
 
 
                 # Current position holds an item
-                    # elif self.square(x, y).items:
-                    #     if self.lit(x, y):
-                    #         item = choice(self.square(x, y).items)
-                    #         level = ""
-                    #         ch = item.char
-                    #         col = item.color
-                    #     else:
-                    #         level = ""
-                    #         ch = " "
-                    #         lit = "black"
+                elif self.square(x, y).items:
+                    if self.lit(x, y):
+                        item = self.square(x, y).items[0]
+                        ch = item.char
+                        col = item.color
+                    else:
+                        ch = self.square(x, y).char
+                        col = self.square(x, y).color
 
                 # Current position holds a Lamp
                     # elif (x, y, 10) in self.lamps:

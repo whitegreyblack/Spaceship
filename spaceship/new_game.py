@@ -133,11 +133,13 @@ def new_game(character=None):
             x, y = num_movement[code]
         # keyboard keys
         elif code in key_actions:
-            act = key_actions[code].key
+            if term.state(term.TK_SHIFT):
+                act = key_shifted_actions[code].key
+            else:
+                act = key_actions[code].key
         # any other key F-keys, Up/Down Pg, etc
         else:
-            if debug:
-                gamelog.add("[KEY_IN]: unrecognized command")
+            gamelog.add("[KEY_IN]: unrecognized command")
         
         # make sure we clear any inputs before the next action is processed
         # allows for the program to go slow enough for human playability
@@ -235,14 +237,18 @@ def new_game(character=None):
                             "crit and" if chance == 2 else "", unit.job, damage)
                         log += "The {} has {} health left".format(unit.job, max(unit.health, 0))
                         gamelog.add(log)
-                    # if unit.r is not "human": # condition should be more complex
-                    if unit.health < 1:
-                        gamelog.add("You have killed the {}! You gain {} exp".format(unit.job, unit.xp))
-                        player.gain_exp(unit.xp)
-                        if player.check_exp():
-                            gamelog.add("You level up. You are now level {}".format(player.level))
-                            gamelog.add("You feel much stronger")
-                        dungeon.remove_unit(unit)
+                        # if unit.r is not "human": # condition should be more complex
+                        if unit.health < 1:
+                            gamelog.add("You have killed the {}! You gain {} exp".format(unit.job, unit.xp))
+                            player.gain_exp(unit.xp)
+                            if player.check_exp():
+                                gamelog.add("You level up. You are now level {}".format(player.level))
+                                gamelog.add("You feel much stronger")
+                            item = unit.drops()
+                            if item:
+                                dungeon.square(*unit.position()).items.append(item)
+                                gamelog.add("The {} has dropped {}".format(unit.job, item.name))
+                            dungeon.remove_unit(unit)
                     # =============== END COMBAD LOG =================================
         else:
             # =============  START WALK LOG  =================================
@@ -467,17 +473,19 @@ def new_game(character=None):
             if (x+cx, y+cy) in interactables:
                 talkUnit(x+cx, y+cy)
 
-    def interactItem(x, y, i):
+    def interactItem(x, y, key):
         def pickItem():
             item = dungeon.square(x, y).items.pop()
             player.backpack.add_item(item)
             gamelog.add("You pick up a {}".format(item.name))
         
-        if i == ",": # pickup
-            if player.backpack.full():
+        if key == ",": # pickup
+            # if player.backpack.full():
+            if len(player.inventory) >= 25:
                 # earlly exit
                 gamelog.add("Backpack is full")
                 return
+
             items = dungeon.square(x, y).items
             if items:
                 if len(items) == 1:
@@ -487,7 +495,7 @@ def new_game(character=None):
                 #     glog.add("opening pick up menu")
                 #     pick_menu(items)
             else:
-                glog.add("Nothing to pick up")
+                gamelog.add("Nothing to pick up")
                 refresh()
 
     def interactDoor(x, y, key):
@@ -751,10 +759,9 @@ def new_game(character=None):
             actions[key](x, y, key)
         elif key in ("a"):
             actions[key](x, y, key)
-        elif key in ("<"):
+        elif key in ("<", ">"):
             actions[key](x, y, key)
-        elif key in (">"):
-            gamelog.add('enter')
+        elif key in (","):
             actions[key](x, y, key)
         elif key in ("t"):
             actions[key](x, y)
@@ -763,8 +770,6 @@ def new_game(character=None):
         elif key in ("f1, f2"):
             actions[key]()
         else:
-            if debug:
-                gamelog.add("[PROCESS ACTION]: UNKNOWN COMMAND - {} @ ({}, {})".format(key, x, y))            
             gamelog.add('invalid command')
 
     # End Keyboard Functions
