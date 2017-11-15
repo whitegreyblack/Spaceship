@@ -16,7 +16,7 @@ from collections import namedtuple
 from spaceship.maps.charmap import DungeonCharmap as dcm
 from spaceship.maps.charmap import WildernessCharmap as wcm
 from spaceship.tools import scroll
-from spaceship.player import Rat
+from spaceship.player import Rat, Bat
 
 """Maps file holds template functions that return randomized data maps used\
 in creating procedural worlds"""
@@ -562,6 +562,7 @@ class Map:
     ###########################################################################
     def add_item(self, x, y, i):
         self.tilemap[y][x].items.append(i)
+
     ###########################################################################
     # Unit object Functions                                                   #
     ###########################################################################
@@ -588,15 +589,15 @@ class Map:
 
     def generate_units(self):
         if self.height <= 25:
-            max_units = 20
+            max_units = 15
         else:
-            max_units = 30
+            max_units = 20
 
         if hasattr(self, 'spaces'):
             shuffle(self.spaces)
             for i in range(max_units):
                 i, j = self.spaces[randint(0, len(self.spaces)-1)]
-                self.units.append(Rat(x=i, y=j))
+                self.units.append(choice([Rat(x=i, y=j), Bat(x=i, y=i)]))
         else:
             raise AttributeError("Spaces has not yet been initialized")
 

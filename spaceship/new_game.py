@@ -26,6 +26,12 @@ from time import clock
 from textwrap import wrap
 
 
+# screens:
+#   Main Menu
+#     Continue, Options, Create Character, New Name
+#   Main Game:
+#     World, Local, Inventory/Backpack
+
 class Level: World, City, Dungeon = range(3)
 class WorldView: Geo, Pol, King = range(3)
 
@@ -49,7 +55,7 @@ def new_game(character=None):
 
     def key_in_world():
         '''Key processing while player in overworld'''
-        nonlocal proceed, wview
+        nonlocal proceed, exit_status
         keydown = namedtuple("Key_Press", "x y a")
         act, x, y = 0, 0, 0
         code = term.read()
@@ -58,7 +64,7 @@ def new_game(character=None):
             code = term.read()
         if code in (term.TK_CLOSE, term.TK_ESCAPE, term.TK_Q):
             proceed = False
-
+            exit_status = True
         # map draw types
         # elif code in (term.TK_P, term.TK_G, term.TK_K):
         #     if code == term.TK_P and wview != WorldView.Pol:
@@ -96,8 +102,7 @@ def new_game(character=None):
         #     act = key_actions[code].key
         # any other key F-keys, Up/Down Pg, etc
         else:
-            if debug:
-                gamelog.add("unrecognized command")
+            gamelog.add("unrecognized command")
                 
         # make sure we clear any inputs before the next action is processed
         # allows for the program to go slow enough for human playability
@@ -109,7 +114,7 @@ def new_game(character=None):
 
     def key_in():
         '''Key Processing while player in local map'''
-        nonlocal proceed
+        nonlocal proceed, exit_status
         keydown = namedtuple("Key_Down", ("x", "y", "a"))
         act, x, y = 0, 0, 0
         code = term.read()
@@ -117,13 +122,14 @@ def new_game(character=None):
         while code in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
             code = term.read()
         
-        if any([term.state(tk) for tk in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT)]):
-            if debug:
-                gamelog.add("CTRL | ALT | SHIFT")
+        # if any([term.state(tk) for tk in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT)]):
+        #     if debug:
+        #         gamelog.add("CTRL | ALT | SHIFT")
         
         if code in (term.TK_ESCAPE, term.TK_CLOSE):
-            gamelog.dumps()
-            proceed = False
+            # gamelog.dumps()
+            # proceed = False
+            pass
 
         # arrow keys
         elif code in key_movement:
@@ -150,8 +156,22 @@ def new_game(character=None):
 
     # try creating a general purpose key input function that is called by both
     # world and map functions
-    def key_input():
-        nonlocal proceed, wview
+    def key_input(level):
+        nonlocal proceed
+
+        keydown = namedtuple("Key_Down", ("x", "y", "a"))
+        act, x, y = 0, 0, 0
+
+        code = term.read()
+        while code in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
+            # skip any non-action keys
+            code = term.read()
+        
+        if code in (term.TK_ESCAPE, term.TK_CLOSE):
+            # exit command -- maybe need a back to menu screen?
+            proceed = False
+    
+
         return
 
     def onlyOne(container):
@@ -253,8 +273,6 @@ def new_game(character=None):
         else:
             # =============  START WALK LOG  =================================
             # find out if it was due to out of bounds error or block error
-            if debug:
-                gamelog.add("\t\tNOT WALKABLE")
             if dungeon.out_of_bounds(tposx, tposy):
                 gamelog.add("Reached the edge of the map")
             else:
@@ -264,17 +282,12 @@ def new_game(character=None):
                 else:
                     gamelog.add(walkBlock.format(walkChars[ch]))
             # ===============  END WALK LOG  =================================
-
-
-            # elif not inbounds:
-            #     gamelog.add(walkBlock.format("the edge of the map"))
-
         # refresh units
         #     units = list(filter(lambda u: u.h > 0, units))
         for unit in list(dungeon.get_units()):
             x, y = 0, 0
-            # if true then the unit is moving
             if randint(0, 1):
+                # if true then the unit is moving
                 x, y = num_movement[choice(list(num_movement.keys()))]
                 tposx, tposy = unit.x + x, unit.y + y
                 walkable = dungeon.walkable(tposx, tposy)
@@ -288,15 +301,20 @@ def new_game(character=None):
                             other = player
                         else:
                             other = dungeon.get_unit(tposx, tposy)
+                            if other.unit_id == unit.unit_id:
+                                continue
+                            else:
+                                print(unit.unit_id, other.unit_id)
                         if unit.friendly():
                             # other.move(-x, -y)
                             # unit.move(x, y)
                             unit.displace(other, x, y)
                         else:
                             other.health -= 1
-                            log = "The {} attacks {}. ".format(
-                                unit.job, 
-                                "you" if other == player else "the " + other.job)
+                            log = "The {}({}) attacks {}({}). ".format(
+                                unit.job, unit.unit_id,
+                                "you" if other == player else ("the " + other.job),
+                                other.unit_id)
                             log += "{} {} health left".format(
                                 "You have " if other == player else "the " + other.job + " has",
                                 player.health if other == player else other.health)
@@ -332,7 +350,7 @@ def new_game(character=None):
                 row + 1 * (2 if screen_height > 25 else 1),
                 string)
 
-        def backpack():
+        def inventory():
             term.clear()
             # title backpack
             for i in range(screen_width):
@@ -346,7 +364,7 @@ def new_game(character=None):
                     row + i * (2 if screen_height > 25 else 1),
                     chr(ord('a') + i) + ". " + (item.name if isinstance(item, Item) else item))
 
-        def inventory():
+        def equipment():
             term.clear()
 
             for i in range(screen_width):
@@ -368,9 +386,9 @@ def new_game(character=None):
             term.clear()
 
             if current_screen:
-                backpack()
-            else:
                 inventory()
+            else:
+                equipment()
 
             term.refresh()
             code = term.read()
@@ -382,6 +400,7 @@ def new_game(character=None):
                     break
 
             elif code == term.TK_V:
+                # V goes to inventory screen
                 current_screen = 1
             elif code == term.TK_UP:
                 if current_range > 0: current_range -= 1
@@ -553,14 +572,8 @@ def new_game(character=None):
             gamelog.add("[INTERACTSTAIRS]:")
 
         # first seperate logic by action take to differentiate going up versus down
-        if k is ">": # and player.mapPosition() == dungeon.get
-            if debug:
-                gamelog.add("TRYING TO GO DOWN STAIRS")
-            
-            if player.position_local() == dungeon.getDownStairs():
-                if debug:
-                    gamelog.add('\tPLAYER STANDING ON STAIRS LEADING DOWN')
-                
+        if k is ">": # and player.mapPosition() == dungeon.get            
+            if player.position_local() == dungeon.getDownStairs():                
                 if not dungeon.hasSublevel():
                     sublevel = Cave(
                         width=term.state(term.TK_WIDTH),
@@ -578,72 +591,30 @@ def new_game(character=None):
                 
         # key is "<"
         else:
-            if debug:
-                gamelog.add("\tTRYING TO GO UP STAIRS")
-
-            # check if you're in a city
+            # map at the location exists -- determine type of map
             if player.position_global() in calabaston.enterable_legend.keys():
-                if debug:
-                    gamelog.add('\tPLAYER IN CITY MAP')
-                    gamelog.add('\tPLAYER MOVES FREELY IN CITY')
-
+                # check if you're in a city
                 player.move_height(-1)
-
-                if debug:
-                    gamelog.add("\tCHECKING PARENT")
-
                 dungeon = dungeon.getParent()
 
-                if debug:
-                    gamelog.add("\tPARENT ID: {}".format(dungeon.map_id))
-
             elif calabaston.is_wilderness(*player.position_global()):
-                if debug:
-                    gamelog.add('\tPLAYER IS IN WILDERNESS\nPLAYER CAN EXIT MAP ANYWHERE')
-
+                # check for wilderness type map
                 player.move_height(-1)
                 dungeon = dungeon.getParent()
 
             # check if you're in a dungeon
             elif player.position_local() == dungeon.getUpStairs():
-                if debug:
-                    gamelog.add('\tPLAYER STANDING ON STAIRS LEADING UP')
-
                 # dungeon will have parent -- need to differentiate between
                 # world and first level dungeon
-                if debug:
-                    gamelog.add("\tGOING UP STAIRS")
-
                 player.move_height(-1)
-
-                if debug:
-                    gamelog.add("\tZAXIS AFTER GOING UP STAIRS: {}".format(player.wz))
-                    gamelog.add("\tCHECKING PARENT")
-                
                 dungeon = dungeon.getParent()
-
-                if debug:
-                    gamelog.add("\tPARENT ID: {}".format(dungeon.map_id))
-
             else:
-                if debug:
-                    gamelog.add('\tPLAYER NOT STANDING ON STAIRS LEADING UP')
                 gamelog.add('You cannot go upstairs without stairs.')
 
-            if debug:
-                gamelog.add('\tCHECKING IF PARENT IS OVERWORLD')
-
             if isinstance(dungeon, World):
-                if debug:
-                    gamelog.add('\tPARENT IS OVERWORLD -- DESTROYING DUNGEON REFERENCE')
-
                 dungeon = None
                 player.reset_position_local(0, 0)
 
-            else:
-                if debug:
-                    gamelog.add('\tPARENT IS NOT OVERWORLD -- DUNGEON REFERENCE STILL EXISTS')
-                
     def enter_map():
         '''Logic:
             if at world level, check if there exists a map
@@ -911,32 +882,8 @@ def new_game(character=None):
                 "./assets/worldmap_kingdoms.png")   
     wpx, wpy = player.position_global()
 
-    # blanks
-        #px, py = 0, 0
-        # units = Map.appendUnitList("./unitlist/test_map_colored.png")
-        # um = UnitManager()
-        # ======================================================================================
-        # player = Player(character, dpx, dpy)
-        # ======================================================================================
-        # player.inventory[0] = "sword"
-        # rat = Object("rat", dpx-5, dpy, 'r', c='#904040', r="monster")
-        # rat.message = "I am a rat"
-        # rat2 = Object("rat", 85, 29, 'R', r="monster")
-        # rat2.message = "I am a big rat"
-        # npc = Object("v1", dpx+1, dpy, '@', 'orange')
-        # npc1 = Object("v2", 5, 15, '@', 'orange')
-        # npc2 = Object("v3", 0, 56, '@', 'orange')
-        # guard3 = Object("v4", 63, 31, '@', 'orange')
-        # guard1 = Object("v5", 64, 32, "@", 'orange')
-        # guard2 = Object("v6", 63, 37, "@", 'orange')
-        # guard4 = Object("v7", 64, 37, '@', 'orange')
-        # units = [npc, guard1, guard2, guard3, guard4, npc1, npc2, rat, rat2]
-        # units = [npc, rat]
-        # um.add(units)
-        # print(um._positions.keys())
-        # dungeon.add_item(87, 31, Item("sword", "(", "grey"))
-
     proceed = True
+    exit_status = None
     dungeon = None
     while proceed:
         term.clear()
@@ -982,7 +929,7 @@ def new_game(character=None):
 
     # player.dump()
     # gamelog.dumps()           
-    return False
+    return True
 # End New Game Menu
 
 if __name__ == "__main__":

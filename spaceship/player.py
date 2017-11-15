@@ -14,7 +14,12 @@ class RelationTable:
         pass
 
 class Unit:
+    unit_id = 0
+    relation = 100
     def __init__(self, x, y, race, job, char, color):
+        self.unit_id = Unit.unit_id
+        Unit.unit_id += 1
+
         self.x, self.y = x, y
         self.character = char
         self.exp = 0
@@ -23,7 +28,6 @@ class Unit:
         self.color = color
         self.health = 10
         self.movable = True
-        self.relation = 100
 
     def __repr__(self):
         return "{}[{}]: ({},{})".format(self.description, self.character, self.x, self. y)
@@ -65,6 +69,7 @@ class Player:
         as well as the bonuses from race, gender and class
         '''
         # unpack everything here
+        self.unit_id = -1
         self.exp = 0
         self.level = 1
         self.sight = 5
@@ -105,11 +110,11 @@ class Player:
                 except KeyError:
                     setattr(self, part, self.equipment[p])
 
-        for part in self.parts:
-            if hasattr(self, part):
-                print(part, getattr(self, part))
-            else:
-                print(part, hasattr(self, part))
+        # for part in self.parts:
+        #     if hasattr(self, part):
+        #         print(part, getattr(self, part))
+        #     else:
+        #         print(part, hasattr(self, part))
 
 
     def calculate_initial_stats(self) -> None:
@@ -296,6 +301,9 @@ class Soldier(Unit):
 
 class Rat(Unit):
     def __init__(self, x, y):
+        self.unit_id = Unit.unit_id
+        Unit.unit_id += 1
+
         self.x, self.y = x, y
         self.xp = 25
         self.health = 5
@@ -328,6 +336,9 @@ class GiantRat(Unit):
 
 class Bat(Unit):
     def __init__(self, x, y):
+        self.unit_id = Unit.unit_id
+        Unit.unit_id += 1
+
         self.x, self.y = x, y
         self.xp = 20
         self.health = 5
