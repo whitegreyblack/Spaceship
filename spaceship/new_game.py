@@ -43,7 +43,6 @@ def new_game(character=None):
         for line in lines:
             gamelog.add(line)
         term.clear()
-        # border()
         map_box()
         status_box()
         log_box()
@@ -153,9 +152,10 @@ def new_game(character=None):
 
         return keydown(x, y, act)
 
-    # try creating a general purpose key input function that is called by both
-    # world and map functions
     def key_input(level):
+        '''Try creating a general purpose key input function that is called by both
+        world and map functions
+        '''
         nonlocal proceed
 
         keydown = namedtuple("Key_Down", ("x", "y", "a"))
@@ -222,6 +222,7 @@ def new_game(character=None):
             "Y": "a tree",
             "%": "a wall",
         }
+
         walkBlock = "walked into {}"
         tposx = player.mx + x
         tposy = player.my + y
@@ -231,24 +232,30 @@ def new_game(character=None):
         # WALKABLE -- is the tile a walkable tile?
         # BLOCKEd -- is the tile blocked?
         walkable = dungeon.walkable(tposx, tposy)
-        # (not blocked) and (not occupied) and (inbounds)
         if walkable:
             occupied = dungeon.occupied(tposx, tposy)
             if not occupied:
                 player.move(x, y)
-                if dungeon.square(tposx, tposy).items:
+
+                if dungeon.square(tposx, tposy).items and randint(0, 1):
+                    # randint condition to give off a chance for message print
                     gamelog.add("There is something here")
+
             else:
                 unit = dungeon.get_unit(tposx, tposy)
+
                 if unit.friendly():
                     gamelog.add("You displace the {}".format(unit.job))
                     unit.move(-x, -y)
                     player.move(x, y)
+
                 else:
                     # ============= START COMBAT LOG =================================
                     chance = player.calculate_attack_chance()
+
                     if chance == 0:
                         gamelog.add("You try attacking the {} but miss".format(unit.job))
+
                     else:
                         damage = player.calculate_attack_damage() * (2 if chance == 2 else 1)
                         unit.health -= damage
@@ -256,17 +263,21 @@ def new_game(character=None):
                             "crit and" if chance == 2 else "", unit.job, damage)
                         log += "The {} has {} health left".format(unit.job, max(unit.health, 0))
                         gamelog.add(log)
-                        # if unit.r is not "human": # condition should be more complex
+
                         if unit.health < 1:
                             gamelog.add("You have killed the {}! You gain {} exp".format(unit.job, unit.xp))
                             player.gain_exp(unit.xp)
+
                             if player.check_exp():
                                 gamelog.add("You level up. You are now level {}".format(player.level))
                                 gamelog.add("You feel much stronger")
+
                             item = unit.drops()
+
                             if item:
                                 dungeon.square(*unit.position()).items.append(item)
                                 gamelog.add("The {} has dropped {}".format(unit.job, item.name))
+
                             dungeon.remove_unit(unit)
                     # =============== END COMBAD LOG =================================
         else:
@@ -274,6 +285,7 @@ def new_game(character=None):
             # find out if it was due to out of bounds error or block error
             if dungeon.out_of_bounds(tposx, tposy):
                 gamelog.add("Reached the edge of the map")
+
             else:
                 ch = dungeon.square(tposx, tposy).char
                 if ch == "~":
@@ -281,8 +293,7 @@ def new_game(character=None):
                 else:
                     gamelog.add(walkBlock.format(walkChars[ch]))
             # ===============  END WALK LOG  =================================
-        # refresh units
-        #     units = list(filter(lambda u: u.h > 0, units))
+
         for unit in list(dungeon.get_units()):
             x, y = 0, 0
             if randint(0, 1):
@@ -568,17 +579,17 @@ def new_game(character=None):
     def interactStairs(x, y, k):
         nonlocal dungeon
         """Allows interactions with stairs"""
-        if debug:
-            gamelog.add("[INTERACTSTAIRS]:")
 
-        # first seperate logic by action take to differentiate going up versus down
-        if k is ">": # and player.mapPosition() == dungeon.get            
+        if k == ">":  
+            #  differentiate going up versus down
             if player.position_local() == dungeon.getDownStairs():                
+
                 if not dungeon.hasSublevel():
                     sublevel = Cave(
                         width=term.state(term.TK_WIDTH),
                         height=term.state(term.TK_HEIGHT),
                         max_rooms=randint(15, 20))
+
                     sublevel.addParent(dungeon)
                     dungeon.addSublevel(sublevel)
 
@@ -589,7 +600,6 @@ def new_game(character=None):
             else:
                 gamelog.add('You cannot go downstairs without stairs.')
                 
-        # key is "<"
         else:
             # map at the location exists -- determine type of map
             if player.position_global() in calabaston.enterable_legend.keys():
@@ -602,16 +612,18 @@ def new_game(character=None):
                 player.move_height(-1)
                 dungeon = dungeon.getParent()
 
-            # check if you're in a dungeon
             elif player.position_local() == dungeon.getUpStairs():
+                # check if you're in a dungeon
                 # dungeon will have parent -- need to differentiate between
                 # world and first level dungeon
                 player.move_height(-1)
                 dungeon = dungeon.getParent()
+
             else:
                 gamelog.add('You cannot go upstairs without stairs.')
 
             if isinstance(dungeon, World):
+                # we unrefrence the dungeon only if it is at level 0
                 dungeon = None
                 player.reset_position_local(0, 0)
 
@@ -622,6 +634,7 @@ def new_game(character=None):
             else -> build the map and add it to the world
         '''
         def determine_map(map_type):
+            '''Helper function to determine wilderness map'''
             if map_type == "plains":
                 return Plains
             elif map_type == "grassland":
@@ -636,17 +649,14 @@ def new_game(character=None):
                 raise ValueError("Map Type Not Implemented: {}".format(map_type))
 
         def get_wilderness_enterance(x, y):
+            '''Helper function to determine start position when entering wilderness map'''
             return (max(int(location.width * x - 1), 0), 
                     max(int(location.height * y - 1), 0))
 
         if not calabaston.mapAt(*player.position_global()):
-
-            # entering a city location
-            # TODO: change enterables into locations_legend.keys()
-            #       change dungeons into dungeons_legend.keys() 
-            #       if location is not in locations or dungeons -> must be a wilderness
+            # map does not exist yet -- create one
             if player.position_global() in calabaston.enterable_legend.keys():
-                
+                # map type should be a city
                 fileloc = calabaston.enterable_legend[player.position_global()].lower().replace(' ','_')
                 img_name = "./assets/maps/" + fileloc + ".png"
                 cfg_name = "./assets/maps/" + fileloc + ".cfg"
@@ -657,17 +667,20 @@ def new_game(character=None):
                     map_cfg=cfg_name,
                     width=term.state(term.TK_WIDTH), 
                     height=term.state(term.TK_HEIGHT))
-                player.reset_position_local(location.width // 2, location.height // 2)
-            # differentiate between dungeon and wilderness
-            elif player.position_global() in calabaston.dungeon_legend.keys():
 
+                player.reset_position_local(location.width // 2, location.height // 2)
+
+            elif player.position_global() in calabaston.dungeon_legend.keys():
+                # map type should be a cave
                 location = Cave(
                     width=term.state(term.TK_WIDTH),
                     height=term.state(term.TK_HEIGHT),
                     max_rooms=randint(15, 20))
 
                 player.reset_position_local(*location.getUpStairs())
+
             else:
+                # map type should be in the wilderness
                 tile = calabaston.access(*player.position_global())
                 # neighbors = calabaston.access_neighbors(*player.position_global())
                 
@@ -681,20 +694,22 @@ def new_game(character=None):
             location.addParent(calabaston)
             calabaston.add_location(location, *(player.position_global()))
 
-        # location already been built -- retrieve from world map_data
         else:
-            # player position is different on map enter depending on if map is a location or wilderness
+            # location already been built -- retrieve from world map_data
+            # player position is different on map enter depending on map location
             location = calabaston.get_location(*player.position_global())
             if player.position_global() in calabaston.enterable_legend.keys():
+                # re-enter a city
                 player.reset_position_local(location.width // 2, location.height // 2)
 
-            # re-enter dungeon
             elif player.position_global() in calabaston.dungeon_legend.keys():
+                # re-enter dungeon
                 player.reset_position_local(*location.getUpStairs())
 
-            # reenter a wilderness
             else:
+                # reenter a wilderness
                 x, y = player.get_position_global_on_enter()
+            
                 player.reset_position_local(*get_wilderness_enterance(x, y))
                 
         player.move_height(1)
@@ -704,8 +719,6 @@ def new_game(character=None):
         '>': enter_map
     }
     def processWorldAction(key):
-        if debug:
-            print('[PROCESS WORLD ACTION]: key - {}'.format(key))
         if key == ">":
             world_actions[key]()
 
@@ -723,7 +736,6 @@ def new_game(character=None):
     }
 
     def processAction(x, y, key):
-        # gamelog.add("[PROCESS ACTION]: KEY - {}".format(key))
         if key in ("o", "c"):
             actions[key](x, y, key)
         elif key in ("a"):
@@ -744,6 +756,7 @@ def new_game(character=None):
     # End Keyboard Functions
     # ---------------------------------------------------------------------------------------------------------------------#
     # Graphic functions
+
     def graphics(integer: int) -> None:
         def toBin(n):
             return list(bin(n).replace('0b'))
@@ -797,10 +810,13 @@ def new_game(character=None):
         # sets the location name at the bottom of the status bar
         if player.position_global() in calabaston.enterable_legend.keys():
             location = calabaston.enterable_legend[player.position_global()]
+
         elif player.position_global() in calabaston.dungeon_legend.keys():
             location = calabaston.dungeon_legend[player.position_global()]
+
         else:
             location = ""
+
         term.puts(col, row + 20, "{}".format(location))
 
     def log_box():
@@ -813,42 +829,39 @@ def new_game(character=None):
                     screen_height - len(messages) + idx, messages[idx])
 
     def map_box():
-        """ Logic:
-                Should first print map in gray/black
-                Then print units/interactables?
-                Finally light sources and player?"""
         term.composition(False)
         dungeon.fov_calc([(player.mx, player.my, player.sight * 2)])
+
         for x, y, lit, ch in dungeon.output(player.mx, player.my, []):
-            # ch = ch if len(str(ch)) > 1 else chr(toInt(palette[ch]))
             term.puts(x + 13, y, "[color={}]".format(lit) + ch + "[/color]")
+
         term.refresh()
         
     def world_legend_box():
         length, offset, height = 14, 12, 0
-        # boxheader = "Map Legend"
         world_name = surround(calabaston.name, length=length)
         selected(center(world_name, offset), height, world_name)   
-        # selected(center(boxheader, 12), 3, surround(boxheader))
-        
-        # check if player position is over a city/enterable area
+
+        height += 1        
         # this is purely a ui enhancement. Actually entering a city is not that much different
         # than entering a dungeon/wilderness area
-        height += 1
         if player.position_global() in calabaston.enterable_legend.keys():
+            # check if player position is over a city/enterable area
             enterable_name = surround(calabaston.enterable_legend[player.position_global()], length=length)
             selected(center(enterable_name, offset), height, enterable_name)
 
-        # check if player position is over a dungeon position
         elif player.position_global() in calabaston.dungeon_legend.keys():
+            # check if player position is over a dungeon position
             dungeon_name = surround(calabaston.dungeon_legend[player.position_global()], length=length)
             selected(center(dungeon_name, offset), height, dungeon_name)
+
         else:
             # Add land types to the overworld ui
             landtype = surround(calabaston.get_landtype(*player.position_global()), length=length)
             selected(center(landtype, offset), height, landtype)
         
         for char, color, desc, i in calabaston.legend():
+            # finally print the lengend with character and description
             term.puts(0, height + i + 2, "[c={}] {}[/c] {}".format(color, char, desc))
 
     def world_map_box():
@@ -861,26 +874,24 @@ def new_game(character=None):
                 "[c={}]{}[/c]".format(col, ch))
 
     # very first thing is game logger initialized to output messages on terminal
-    # gamelog = GameLogger(4, ptt=True)
     gamelog = GameLogger(3 if term.state(term.TK_HEIGHT) <= 25 else 4)
-    print("MAX LINES: {}".format(gamelog.maxlines))
-    # if character is None then improperly accessed new_game
-    # else unpack the character
+
+    # process character
     if character==None:
+        # mproperly accessed new_game --> early exit
         return output(proceed=False, value="No Character Data Input")
     else:
-        # gamelog.add("[SETUP]: CHARACTER - {}".format(*character))
+        # unpack character tuple to create a player object
         player = Player(character)
     
-    # pointer to the current view
-    wview = WorldView.Geo
     screen_width, screen_height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
+
+    # TODO: chain function so World().load() or keep as seperate functions: init() and load()?
     calabaston = World(screen_width, screen_height)
     calabaston.load(
                 "./assets/worldmap.png", 
                 "./assets/worldmap_territories.png",
                 "./assets/worldmap_kingdoms.png")   
-    wpx, wpy = player.position_global()
 
     proceed = True
     exit_status = None
@@ -903,12 +914,15 @@ def new_game(character=None):
             elif (x, y) != (0, 0):
                 key_process_world(x, y)
 
-        # player is on local map level >= 0
         else:
-            if gamelog.maxlines == 1:
-                gamelog.maxlines = 4 if term.state(term.TK_HEIGHT) > 25 else 2
-            # City, Wilderness, Level 0 Dungeon
+            # player is on local map level
+            # world map screen size differs to local map size
+            # we change the number of log lines to fit the terminal
+            if gamelog.maxlines == 3:
+                gamelog.maxlines = 4 if term.state(term.TK_HEIGHT) > 25 else 3
+
             if dungeon == None:
+                # previous dungeon was unrefrenced or first time visiting local map
                 player.move_height(-1)
                 dungeon = calabaston.get_location(*player.position_global())
                 player.move_height(1)
@@ -917,14 +931,20 @@ def new_game(character=None):
                     # iterates down until sublevel is found
                     for i in range(player.wz):
                         dungeon = dungeon.getSublevel()
+
+            # ui boxes
             status_box()
-            # border()
             log_box()
             map_box()
+            
             x, y, a = key_in()
+
             if a:
+                # non-movement action
                 processAction(player.mx, player.my, a)
+
             else:
+                # movement first action
                 key_process(x, y)
 
     # player.dump()

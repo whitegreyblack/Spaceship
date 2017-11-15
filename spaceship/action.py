@@ -47,6 +47,7 @@ num_movement={
 
 # Open|Close -> Openable/Closable classes? --> Doors/Chests/Hatch?
 key_actions={
+    "a o c t i ,"
     term.TK_A: action("a", "attack"),
     term.TK_O: action("o", "open"),
     term.TK_C: action("c", "close"),
@@ -56,14 +57,15 @@ key_actions={
     term.TK_F2: action("f2", "func_key"),
     term.TK_COMMA: action(",", "pickup"),
 }
+
 key_shifted_actions={
+    '< >'
     term.TK_PERIOD: action(">", "enter"),
     term.TK_COMMA: action("<", "exit"),
 }
 
 world_key_actions = {
     term.TK_PERIOD: action(">", "enter"),
-    term.TK_COMMA: action("<", "exit"),
 }
 
 if __name__ == "__main__":
