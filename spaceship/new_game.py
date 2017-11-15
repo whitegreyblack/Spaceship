@@ -2,7 +2,7 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
-from spaceship.action import key_movement, num_movement, key_actions, action, keypress, world_key_actions
+from spaceship.action import key_movement, num_movement, key_actions, action, keypress, world_key_actions, key_shifted_actions
 from spaceship.setup_game import setup_game
 from spaceship.tools import bresenhams, deltanorm, movement
 from spaceship.maps.base import hextup, hexone, toInt
@@ -310,22 +310,6 @@ def new_game(character=None):
                                 else:
                                     dungeon.remove_unit(other)
 
-    #     for unit in units:
-    # #     if unit.c != "grey":
-    #         x, y = 0, 0
-    #         if randint(0, 1):
-    #             x, y = num_movement[choice(list(num_movement.keys()))]
-    #         try:
-    #             blocked = blockables[unit.y+y][unit.x+x]
-    #         except:
-    #             blocked = False
-    #         occupied = (unit.x + x, unit.y + y) in unit_pos or (unit.x+x, unit.y+y) == (player.x, player.y)
-    #         outofbounds = 0 <= unit.x + x < len(blockables[0]) and 0 <= unit.y + y < len(blockables)
-    #         if not (blocked or occupied or not outofbounds):
-    #             unit.move(x, y)
-        
-    #     um.build()
-
     inventory_list = [
         "Head       : ", 
         "Neck       : ", 
@@ -342,14 +326,27 @@ def new_game(character=None):
     ]
 
     def openInventory():
+        def output(string):
+            term.puts(
+                col,
+                row + 1 * (2 if screen_height > 25 else 1),
+                string)
+
         def backpack():
             term.clear()
+            # title backpack
             for i in range(screen_width):
                 term.puts(i, 1, '#')
             term.puts(center('backpack  ', screen_width), 1, ' Backpack ')
             
+            # items in backpack
+            for i, item in enumerate(player.inventory):
+                term.puts(
+                    col,
+                    row + i * (2 if screen_height > 25 else 1),
+                    chr(ord('a') + i) + ". " + (item.name if isinstance(item, Item) else item))
+
         def inventory():
-            col, row = 1, 3
             term.clear()
 
             for i in range(screen_width):
@@ -363,33 +360,34 @@ def new_game(character=None):
                     row + i * (2 if screen_height > 25 else 1), 
                     chr(ord('a') + i) + '. ' + l + (e if isinstance(e, str) else ''))
 
-        debug=False
-        if debug:
-            gamelog.add("opening inventory")
-
+        col, row = 1, 3
         playscreen = False
-
+        current_screen = 0
         current_range = 0
         while True:
             term.clear()
-            # border()
-            # status_box()
-            # log_box()
-            # term.puts(2, 0, "[color=white]Inventory")
-            inventory()
+
+            if current_screen:
+                backpack()
+            else:
+                inventory()
+
             term.refresh()
             code = term.read()
+
             if code in (term.TK_ESCAPE, term.TK_I,):
-                break
+                if current_screen == 1:
+                    current_screen = 0
+                else:
+                    break
+
             elif code == term.TK_V:
-                # this is where our backpack will be accessed
-                pass
+                current_screen = 1
             elif code == term.TK_UP:
                 if current_range > 0: current_range -= 1
             elif code == term.TK_DOWN:
                 if current_range < 10: current_range += 1
-        if debug:
-            gamelog.add("Closing inventoryy")
+
         term.clear()
 
     def attackUnit(x, y, k):
@@ -475,8 +473,9 @@ def new_game(character=None):
 
     def interactItem(x, y, key):
         def pickItem():
+            print(player.inventory)
             item = dungeon.square(x, y).items.pop()
-            player.backpack.add_item(item)
+            player.inventory.append(item)
             gamelog.add("You pick up a {}".format(item.name))
         
         if key == ",": # pickup
@@ -496,7 +495,6 @@ def new_game(character=None):
                 #     pick_menu(items)
             else:
                 gamelog.add("Nothing to pick up")
-                refresh()
 
     def interactDoor(x, y, key):
         """Allows interaction with doors"""
