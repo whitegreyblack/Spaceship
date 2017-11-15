@@ -138,14 +138,13 @@ def new_game(character=None):
         elif code in num_movement:
             x, y = num_movement[code]
         # keyboard keys
-        elif code in key_actions:
-            if term.state(term.TK_SHIFT):
-                act = key_shifted_actions[code].key
-            else:
-                act = key_actions[code].key
+        elif code in key_actions and not term.state(term.TK_SHIFT):
+            act = key_actions[code].key
+        elif code in key_shifted_actions and term.state(term.TK_SHIFT):
+            act = key_shifted_actions[code].key
         # any other key F-keys, Up/Down Pg, etc
         else:
-            gamelog.add("[KEY_IN]: unrecognized command")
+            gamelog.add("KEY_IN: unrecognized command")
         
         # make sure we clear any inputs before the next action is processed
         # allows for the program to go slow enough for human playability
@@ -302,6 +301,7 @@ def new_game(character=None):
                         else:
                             other = dungeon.get_unit(tposx, tposy)
                             if other.unit_id == unit.unit_id:
+                                # make sure the unit being compared is not itself
                                 continue
                             else:
                                 print(unit.unit_id, other.unit_id)
@@ -690,7 +690,7 @@ def new_game(character=None):
 
             # re-enter dungeon
             elif player.position_global() in calabaston.dungeon_legend.keys():
-                player.reset_position_local(location.getUpStairs())
+                player.reset_position_local(*location.getUpStairs())
 
             # reenter a wilderness
             else:

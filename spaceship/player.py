@@ -314,7 +314,7 @@ class Rat(Unit):
         self.relation = -100
 
     def drops(self):
-        if randint(0, 5):
+        if randint(0, 1):
             return Item("rat corpse", "%", "red")
         else:
             return None
@@ -331,6 +331,7 @@ class GiantRat(Unit):
         self.job = "giant rat"
         self.race = "monster"
         self.color = "brown"        
+
     def talk(self):
         return "Screeeee!!"
 
