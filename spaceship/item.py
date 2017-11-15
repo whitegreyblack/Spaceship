@@ -37,33 +37,33 @@ Item Classifiers: (-- Based on ADOM item classifiers)
 # DV - dodge value. Attacks need to make an agility check against your DV to determine if they'll hit.
 # DOTA 
 # MAGICAL/PHYSICAL ARMOR + STATUS RESISTANCE
-weapon = namedtuple("weapon", "placement accuracy damage")
-armor = namedtuple("armor", "hands melee_hit missile_hit dv pv")
+weapon = namedtuple("weapon", "name placement accuracy damage")
+armor = namedtuple("armor", "name hands melee_hit missile_hit dv pv")
 items = {
     # TODO -- implement commented items 
-    "horned helmet": armor("head", (1, 3), (0, 1), 0, 1),
-    "metal helmet": armor("head", (0, 1), (0, 1), 0, 1),
+    "horned helmet": armor( "horned helmet", "head", (1, 3), (0, 1), 0, 1),
+    "metal helmet": armor("metal helmet", "head", (0, 1), (0, 1), 0, 1),
     # leather cap, hood
 
-    "gold necklace": armor("neck", (0, 1), (0, 0), 0, 0),
+    "gold necklace": armor("gold necklace", "neck", (0, 1), (0, 0), 0, 0),
     # holy symbol, whistle, amulet of power
 
-    "elven chainmail": armor("body", (1, 2), (0, 1), 1, 1),
-    "metal armor": armor("body", (1, 2), (0, 1), 0, 1),  
+    "elven chainmail": armor("elven chainmail", "body", (1, 2), (0, 1), 1, 1),
+    "metal armor": armor("metal armor", "body", (1, 2), (0, 1), 0, 1),  
 
     # thick fur coat, light robe, heavy cloak, leather armor
     # thick fur bracers, leather bracers    
     # cloth gloves, leather gloves
 
-    "long spear": weapon("double", 2, (2, 6)),
-    "silver sword": weapon("single", 1, (3, 7)),
-    "battle axe": weapon("double", -1, (3, 12)),
-    "copper pick": weapon("single", 1, (1, 4)),
-    "mithril dagger": weapon("single", 3, (2, 5)),
-    "broadsword": weapon("single", -1, (4, 8)),
-    "medium shield": weapon("single", -3, (1, 3)),
-    "mace": weapon("single", -1, (3, 9)),
-    "warhammer": weapon("double", -3, (8, 15)),
+    "long spear": weapon("long spear", "double", 2, (2, 6)),
+    "silver sword": weapon("silver sword", "single", 1, (3, 7)),
+    "battle axe": weapon("battle axe", "double", -1, (3, 12)),
+    "copper pick": weapon("copper pick", "single", 1, (1, 4)),
+    "mithril dagger": weapon("mithril dagger", "single", 3, (2, 5)),
+    "broadsword": weapon("broadsword", "single", -1, (4, 8)),
+    "medium shield": weapon("medium shield", "single", -3, (1, 3)),
+    "mace": weapon("mace", "single", -1, (3, 9)),
+    "warhammer": weapon("warhammer", "double", -3, (8, 15)),
     # wooden staff, small shield, short bow, quarterstaff, long sword
     # ring of earth, ring of nature, ring of power, ring of regen, ring of protection
     # ring of light, ring of ice, ring of resistance, ring of fire, ring of water

@@ -225,10 +225,16 @@ def new_game(character=None):
                     player.move(x, y)
                 else:
                     # ============= START COMBAT LOG =================================
-                    unit.health -= 1
-                    log = "You attack the {}. ".format(unit.job)
-                    log += "The {} has {} health left".format(unit.job, unit.health)
-                    gamelog.add(log)
+                    chance = player.calculate_attack_chance()
+                    if chance == 0:
+                        gamelog.add("You try attacking the {} but miss".format(unit.job))
+                    else:
+                        damage = player.calculate_attack_damage() * (2 if chance == 2 else 1)
+                        unit.health -= damage
+                        log = "You {} attack the {} for {} damage. ".format(
+                            "crit and" if chance == 2 else "", unit.job, damage)
+                        log += "The {} has {} health left".format(unit.job, max(unit.health, 0))
+                        gamelog.add(log)
                     # if unit.r is not "human": # condition should be more complex
                     if unit.health < 1:
                         gamelog.add("You have killed the {}! You gain {} exp".format(unit.job, unit.xp))
@@ -830,7 +836,7 @@ def new_game(character=None):
                 # offput by 1 for border and then # of lines logger is currently set at
                 term.puts(
                     14 if player.height() == -1 else 1, 
-                    screen_height - len(messages) + idx - 1, messages[idx])
+                    screen_height - len(messages) + idx, messages[idx])
 
     def map_box():
         """ Logic:
@@ -882,7 +888,7 @@ def new_game(character=None):
 
     # very first thing is game logger initialized to output messages on terminal
     # gamelog = GameLogger(4, ptt=True)
-    gamelog = GameLogger(2 if term.state(term.TK_HEIGHT) <= 25 else 4)
+    gamelog = GameLogger(3 if term.state(term.TK_HEIGHT) <= 25 else 4)
     print("MAX LINES: {}".format(gamelog.maxlines))
     # if character is None then improperly accessed new_game
     # else unpack the character

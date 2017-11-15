@@ -3,6 +3,8 @@ import sys
 from typing import Tuple
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.world import World
+from spaceship.item import items
+from random import randint
 
 class RelationTable:
     def __init__(self, unit):
@@ -53,6 +55,9 @@ class Unit:
         self.exp += exp
 
 class Player:
+    parts=("eq_head", "eq_neck", "eq_body", "eq_arms", "eq_hands", 
+           "eq_hand_left", "eq_hand_right", "eq_ring_left", 
+           "eq_ring_right", "eq_waist", "eq_legs", "eq_feet")
     def __init__(self, character):
         '''Unpacks the character tuple and calculates stats
 
@@ -81,12 +86,31 @@ class Player:
 
         # functions after unpacking
         self.setup(character.home)
+        self.set_equipment()
         self.calculate_initial_stats()
+        self.calculate_attack_variables()
 
     def setup(self, home: str) -> None:
         self.home, self.hpointer = home, World.capitals(home)
         self.wx, self.wy = self.hpointer
         self.wz = -1
+
+    def set_equipment(self):
+        for p, part in enumerate(self.parts):
+            if isinstance(self.equipment[p], list):
+                setattr(self, part, None) 
+            else:
+                try:
+                    setattr(self, part, items[self.equipment[p]])
+                except KeyError:
+                    setattr(self, part, self.equipment[p])
+
+        for part in self.parts:
+            if hasattr(self, part):
+                print(part, getattr(self, part))
+            else:
+                print(part, hasattr(self, part))
+
 
     def calculate_initial_stats(self) -> None:
         stats = tuple(s + g + r + c for s, g, r, c
@@ -99,6 +123,42 @@ class Player:
         self.hp = self.total_hp = self.health = self.str + self.con * 2
         self.mp = self.total_mp = self.int * self.wis * 2
         self.sp = self.dex // 5
+
+    def calculate_attack_variables(self):
+        # two items
+        if self.eq_hand_left and self.eq_hand_right:
+            self.damage_accuracy = self.eq_hand_left.accuracy + self.eq_hand_right.accuracy
+            self.damage_lower = self.eq_hand_left.damage[0] + self.eq_hand_right.damage[0]
+            self.damage_higher = self.eq_hand_left.damage[1] + self.eq_hand_right.damage[1]
+        elif self.eq_hand_left and not self.eq_hand_right:
+
+            self.damage_accuracy = self.eq_hand_left.accuracy
+            self.damage_lower = self.eq_hand_left.damage[0]
+            self.damage_higher = self.eq_hand_left.damage[1]
+        elif not self.eq_hand_left and self.eq_hand_right:
+            self.damage_accuracy = self.eq_hand_right.accuracy
+            self.damage_lower = self.eq_hand_right.damage[0]
+            self.damage_higher = self.eq_hand_right.damage[1]
+        else:
+            self.damage_accuracy = 0
+            self.damage_lower = 1
+            self.damage_higher = 2
+
+    def calculate_attack_chance(self):
+        '''Returns 0 for miss, 1 for regular hit, 2 for critical'''
+        for var in ('damage_accuracy', 'damage_lower', 'damage_higher'):
+            if not hasattr(self, var):
+                raise AttributeError("Attack Variables not set")
+        chance = randint(0, 20) + self.damage_accuracy
+        if chance <= 1:
+            return 0
+        elif chance >= 20:
+            return 2
+        else:
+            return 1
+
+    def calculate_attack_damage(self):
+        return randint(self.damage_lower, self.damage_higher) + max(self.str, self.dex)
 
     def gain_exp(self, exp):
         self.exp += exp
