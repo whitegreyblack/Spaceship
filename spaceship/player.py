@@ -6,12 +6,12 @@ from spaceship.world import World
 from spaceship.item import Armor, Weapon, Item, items
 from random import randint
 
-class RelationTable:
-    def __init__(self, unit):
-        pass
+# class RelationTable:
+#     def __init__(self, unit):
+#         pass
 
-    def calculate_relations(self):
-        pass
+#     def calculate_relations(self):
+#         pass
 
 class Unit:
     unit_id = 0
@@ -28,6 +28,9 @@ class Unit:
         self.color = color
         self.health = 10
         self.movable = True
+
+        self.damage_lower = 1
+        self.damage_higher = 2
 
         ''' TODO: implement unique attributes
         self.str, self.agi, self.int
@@ -59,8 +62,17 @@ class Unit:
         self.move(x, y)
         other.move(-x, -y)
 
-    def attack(self, other):
-        pass
+    def calculate_attack_damage(self, other):
+        return randint(self.damage_lower, self.damage_higher)
+
+    def calculate_attack_chance(self, other):
+        chance = randint(1, 20)
+        if chance == 1:
+            return 0
+        elif chance == 20:
+            return 2
+        else:
+            return 1
 
     def friendly(self):
         return self.relation > 0
@@ -143,12 +155,20 @@ class Player:
 
     def get_profile(self):
         string='''
-Name     : {name:<10}
-Gender   : {sex:<10}
-Race     : {race:<10} 
-Class    : {job:<10}
+Name     : {name:>6}
+Gender   : {sex:>6}
+Race     : {race:>6} 
+Class    : {job:>6}
+
+STR      : {:>6}
+CON      : {:>6}
+DEX      : {:>6}
+WIS      : {:>6}
+INT      : {:>6}
+CHA      : {:>6}
         '''[1:]
         return string.format(
+            *self.get_attribute_stats(),
             name=self.name,
             sex=self.gender,
             race=self.race,
@@ -165,6 +185,9 @@ Class    : {job:<10}
         self.hp = self.total_hp = self.health = self.str + self.con * 2
         self.mp = self.total_mp = self.int * self.wis * 2
         self.sp = self.dex // 5
+
+    def get_attribute_stats(self):
+        return self.str, self.con, self.dex, self.int, self.wis, self.cha
 
     def calculate_attack_variables(self):
         # two items
@@ -353,6 +376,8 @@ class Rat(Unit):
         self.race = "monster"
         self.color = "brown"
         self.relation = -100
+        self.damage_lower = 3
+        self.damage_higher = 5
 
     def drops(self):
         if randint(0, 1):

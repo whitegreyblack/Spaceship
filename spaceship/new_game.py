@@ -425,6 +425,7 @@ def new_game(character=None):
                     current_screen = 0
                 else:
                     break
+                
             elif code == term.TK_I:
                 current_screen = 'i'
 
