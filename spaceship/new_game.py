@@ -364,7 +364,8 @@ def new_game(character=None):
                 term.puts(i, 1, '#')
             term.puts(center('profile  ', screen_width), 1, ' Profile ')
 
-            term.puts(col, row, player.get_profile())
+            for colnum, column in enumerate(list(player.get_profile())):
+                term.puts(col + (20 * colnum), row, column)
 
         def inventory():
             '''Handles inventory screen'''
@@ -425,7 +426,7 @@ def new_game(character=None):
                     current_screen = 0
                 else:
                     break
-                
+
             elif code == term.TK_I:
                 current_screen = 'i'
 

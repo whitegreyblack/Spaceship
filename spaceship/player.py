@@ -154,7 +154,7 @@ class Player:
             yield index, item
 
     def get_profile(self):
-        string='''
+        string_1='''
 Name     : {name:>6}
 Gender   : {sex:>6}
 Race     : {race:>6} 
@@ -167,12 +167,20 @@ WIS      : {:>6}
 INT      : {:>6}
 CHA      : {:>6}
         '''[1:]
-        return string.format(
+
+        string_2='''
+Damage   : {dmg:>6}
+Accuracy : {acc:>5}
+        '''[1:]
+        return (string_1.format(
             *self.get_attribute_stats(),
             name=self.name,
             sex=self.gender,
             race=self.race,
-            job=self.job)
+            job=self.job), 
+            string_2.format(
+                dmg="(" + str(self.damage_lower) + ", " + str(self.damage_higher) + ")",
+                acc=self.damage_accuracy))
 
     def calculate_initial_stats(self) -> None:
         stats = tuple(s + g + r + c for s, g, r, c
@@ -198,20 +206,12 @@ CHA      : {:>6}
         if self.eq_hand_left:
             self.damage_accuracy += self.eq_hand_left.accuracy
             self.damage_lower += self.eq_hand_left.damage_lower
-            self.damage_higher += self.eq_hand_left.damage_lower
-        else:
-            self.damage_accuracy += 0
-            self.damage_lower += 1
-            self.damage_higher += 2
+            self.damage_higher += self.eq_hand_left.damage_higher
 
         if self.eq_hand_right:
             self.damage_accuracy += self.eq_hand_right.accuracy
             self.damage_lower += self.eq_hand_right.damage_lower
             self.damage_higher += self.eq_hand_right.damage_higher
-        else:
-            self.damage_accuracy = 0
-            self.damage_lower += 1
-            self.damage_higher += 2
 
     def calculate_attack_chance(self):
         '''Returns 0 for miss, 1 for regular hit, 2 for critical'''
