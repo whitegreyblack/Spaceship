@@ -3,7 +3,7 @@ import sys
 from typing import Tuple
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.world import World
-from spaceship.item import items, Item
+from spaceship.item import Armor, Weapon, Item, items
 from random import randint
 
 class RelationTable:
@@ -91,7 +91,8 @@ class Player:
 
         # functions after unpacking
         self.setup(character.home)
-        self.set_equipment()
+        self.convert_equipment()
+        self.convert_inventory()
         self.calculate_initial_stats()
         self.calculate_attack_variables()
 
@@ -100,22 +101,35 @@ class Player:
         self.wx, self.wy = self.hpointer
         self.wz = -1
 
-    def set_equipment(self):
+    def convert_equipment(self):
+        '''Transforms equipment tuples into actual item objects'''
         for p, part in enumerate(self.parts):
             if isinstance(self.equipment[p], list):
+                # No item is set for the current body part
                 setattr(self, part, None) 
             else:
+                # There exists an item -- see if it is defined in the items table already
+                # if defined: create the item, else just set the part to the tuple
                 try:
                     setattr(self, part, items[self.equipment[p]])
                 except KeyError:
                     setattr(self, part, self.equipment[p])
 
-        # for part in self.parts:
-        #     if hasattr(self, part):
-        #         print(part, getattr(self, part))
-        #     else:
-        #         print(part, hasattr(self, part))
+    def convert_inventory(self):
+        '''Transforms inventory tuples into actual item objects'''
+        for index, item in enumerate(self.inventory):
+            try:
+                self.inventory[index] = items[item]
+            except KeyError:
+                pass
 
+    def get_equipment(self):
+        for index, part in enumerate(self.parts):
+            yield index, part.replace("eq_","").replace("_", " "), getattr(self, part)
+
+    def get_inventory(self):
+        for index, item in enumerate(self.inventory):
+            yield index, item
 
     def calculate_initial_stats(self) -> None:
         stats = tuple(s + g + r + c for s, g, r, c
@@ -131,23 +145,27 @@ class Player:
 
     def calculate_attack_variables(self):
         # two items
-        if self.eq_hand_left and self.eq_hand_right:
-            self.damage_accuracy = self.eq_hand_left.accuracy + self.eq_hand_right.accuracy
-            self.damage_lower = self.eq_hand_left.damage[0] + self.eq_hand_right.damage[0]
-            self.damage_higher = self.eq_hand_left.damage[1] + self.eq_hand_right.damage[1]
-        elif self.eq_hand_left and not self.eq_hand_right:
+        self.damage_accuracy = 0
+        self.damage_lower = 0
+        self.damage_higher = 0
 
-            self.damage_accuracy = self.eq_hand_left.accuracy
-            self.damage_lower = self.eq_hand_left.damage[0]
-            self.damage_higher = self.eq_hand_left.damage[1]
-        elif not self.eq_hand_left and self.eq_hand_right:
-            self.damage_accuracy = self.eq_hand_right.accuracy
-            self.damage_lower = self.eq_hand_right.damage[0]
-            self.damage_higher = self.eq_hand_right.damage[1]
+        if self.eq_hand_left:
+            self.damage_accuracy += self.eq_hand_left.accuracy
+            self.damage_lower += self.eq_hand_left.damage_lower
+            self.damage_higher += self.eq_hand_left.damage_lower
+        else:
+            self.damage_accuracy += 0
+            self.damage_lower += 1
+            self.damage_higher += 2
+
+        if self.eq_hand_right:
+            self.damage_accuracy += self.eq_hand_right.accuracy
+            self.damage_lower += self.eq_hand_right.damage_lower
+            self.damage_higher += self.eq_hand_right.damage_higher
         else:
             self.damage_accuracy = 0
-            self.damage_lower = 1
-            self.damage_higher = 2
+            self.damage_lower += 1
+            self.damage_higher += 2
 
     def calculate_attack_chance(self):
         '''Returns 0 for miss, 1 for regular hit, 2 for critical'''

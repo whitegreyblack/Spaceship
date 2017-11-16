@@ -47,7 +47,7 @@ num_movement={
 
 # Open|Close -> Openable/Closable classes? --> Doors/Chests/Hatch?
 key_actions={
-    "a o c t i ,"
+    # "a o c t i ,"
     term.TK_A: action("a", "attack"),
     term.TK_O: action("o", "open"),
     term.TK_C: action("c", "close"),
@@ -59,7 +59,7 @@ key_actions={
 }
 
 key_shifted_actions={
-    '< >'
+    # '< >'
     term.TK_PERIOD: action(">", "enter"),
     term.TK_COMMA: action("<", "exit"),
 }

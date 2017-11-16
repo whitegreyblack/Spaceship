@@ -32,38 +32,104 @@ Item Classifiers: (-- Based on ADOM item classifiers)
 # DV - defensive value -- monsters ability to hit player
 # PV - protection value -- reduction in damage when hit
 # QUD
-# PV - penetration value, affects how many times you'll deal damage in a single hit.
+# PV - protection value, affects how many times you'll deal damage in a single hit.
 # AV - armor value, is compared vs PV to determine how much damage you'll resist.
 # DV - dodge value. Attacks need to make an agility check against your DV to determine if they'll hit.
 # DOTA 
 # MAGICAL/PHYSICAL ARMOR + STATUS RESISTANCE
-weapon = namedtuple("weapon", "name placement accuracy damage")
-armor = namedtuple("armor", "name hands melee_hit missile_hit dv pv")
+
+# weapon = namedtuple("weapon", "name char color hands accuracy damage")
+# armor = namedtuple("armor", "name char color placement melee_hit missile_hit dv pv")
+
+class Item:
+    def __init__(self, name, char, color):
+        self.name = name
+        self.char = char
+        self.color = color
+
+    def mark(self, value):
+        if isinstance(value, int):
+            if value >= 0:
+                return "+" + str(value)
+            else:
+                return value
+        return value
+
+class Armor(Item):
+    def __init__(self, name, char, color, placement, me_h, mi_h, dv, pv):
+        super().__init__(name, char, color)
+
+        self.placement = placement
+        self.melee_hit = me_h
+        self.missile_hit = mi_h
+        self.defensive_value = dv
+        self.protection_value = pv
+
+    def __repr__(self):
+        return "[{}] {:<15}: HIT=({}, {}), DEF=(DV: {}, PV: {})".format(
+            self.__class__.__name__,
+            self.name,
+            self.mark(self.melee_hit),
+            self.mark(self.missile_hit),
+            self.mark(self.defensive_value),
+            self.mark(self.protection_value))
+
+    def __str__(self):
+        return "{} ({}, {})[[{}, {}]]".format(
+            self.name,
+            self.mark(self.melee_hit),
+            self.mark(self.missile_hit),
+            self.mark(self.defensive_value),
+            self.mark(self.protection_value))
+
+class Weapon(Item):
+    def __init__(self, name, char, color, hands, accuracy, damage):
+        super().__init__(name, char, color)
+
+        self.hands = hands
+        self.accuracy = accuracy
+        self.damage_lower, self.damage_higher = damage
+
+    def __repr__(self):
+        return "[{}] {:<15}: ACC={}, DMG=({}, {})".format(
+            self.__class__.__name__,
+            self.name,
+            self.mark(self.accuracy),
+            self.mark(self.damage_lower),
+            self.mark(self.damage_higher))
+
+    def __str__(self):
+        return "{} ({}, [[{}, {}]])".format(
+            self.name,
+            self.mark(self.accuracy),
+            self.mark(self.damage_lower),
+            self.mark(self.damage_higher))
+
 items = {
     # TODO -- implement commented items 
-    "horned helmet": armor( "horned helmet", "head", (1, 3), (0, 1), 0, 1),
-    "metal helmet": armor("metal helmet", "head", (0, 1), (0, 1), 0, 1),
+    "horned helmet": Armor("horned helmet", "[", "grey", "head", 1, 0, 0, 1),
+    "metal helmet": Armor("metal helmet", "[", "grey", "head", 1, 0, 0, 1),
     # leather cap, hood
 
-    "gold necklace": armor("gold necklace", "neck", (0, 1), (0, 0), 0, 0),
+    "gold necklace": Armor("gold necklace", "'", "yellow", "neck", 0, 0, 0, 0),
     # holy symbol, whistle, amulet of power
 
-    "elven chainmail": armor("elven chainmail", "body", (1, 2), (0, 1), 1, 1),
-    "metal armor": armor("metal armor", "body", (1, 2), (0, 1), 0, 1),  
+    "elven chainmail": Armor("elven chainmail", "[", "blue", "body", 2, 1, 1, 1),
+    "metal armor": Armor("metal armor", "[", "grey", "body", 1, 1, 0, 1),  
 
     # thick fur coat, light robe, heavy cloak, leather armor
     # thick fur bracers, leather bracers    
     # cloth gloves, leather gloves
 
-    "long spear": weapon("long spear", "double", 2, (2, 6)),
-    "silver sword": weapon("silver sword", "single", 1, (3, 7)),
-    "battle axe": weapon("battle axe", "double", -1, (3, 12)),
-    "copper pick": weapon("copper pick", "single", 1, (1, 4)),
-    "mithril dagger": weapon("mithril dagger", "single", 3, (2, 5)),
-    "broadsword": weapon("broadsword", "single", -1, (4, 8)),
-    "medium shield": weapon("medium shield", "single", -3, (1, 3)),
-    "mace": weapon("mace", "single", -1, (3, 9)),
-    "warhammer": weapon("warhammer", "double", -3, (8, 15)),
+    "long spear": Weapon("long spear", "(", "grey", 2, 2, (2, 6)),
+    "silver sword": Weapon("silver sword", "(", "grey", 1, 1, (3, 7)),
+    "battle axe": Weapon("battle axe", "(", "grey", 2, -1, (3, 12)),
+    "copper pick": Weapon("copper pick", "(", "grey", 1, 1, (1, 4)),
+    "mithril dagger": Weapon("mithril dagger", "(", "grey", 1, 3, (2, 5)),
+    "broadsword": Weapon("broadsword", "(", "grey", 1, -1, (4, 8)),
+    "medium shield": Weapon("medium shield", "[", "grey", 1, -3, (1, 3)),
+    "mace": Weapon("mace", "(", "grey", 1, -1, (3, 9)),
+    "warhammer": Weapon("warhammer", "(", "grey", 2, -3, (8, 15)),
     # wooden staff, small shield, short bow, quarterstaff, long sword
     # ring of earth, ring of nature, ring of power, ring of regen, ring of protection
     # ring of light, ring of ice, ring of resistance, ring of fire, ring of water
@@ -74,24 +140,13 @@ items = {
 }
 def get_all_items():
     for key in items.keys():
-        print(items[key])
+        print(items[key].__repr__())
 
 def check_item(classifier, item):
     try:
         print(items[classifier][item])
     except KeyError:
         raise KeyError("Classifier or item name is wrong")
-
-class Item:
-    def __init__(self, name, char, color):
-        self.name = name
-        self.char = char
-        self.color = color
-    
-class Weapon(Item):
-    def __init__(self, name, char, color):
-        super().__init__(name, char, color)
-
 
 if __name__ == "__main__":
     # check_item("head", "horned helmet")

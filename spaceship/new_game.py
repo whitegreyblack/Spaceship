@@ -80,7 +80,7 @@ def new_game(character=None):
         #     elif code == term.TK_PERIOD and term.state(term.TK_SHIFT):
         #         act = "enter"
         # ENTER/EXIT COMMAND
-        elif code in (term.TK_COMMA, term.TK_PERIOD):
+        elif code in (term.TK_PERIOD,):
             if term.state(term.TK_SHIFT):
                 try:
                     act = world_key_actions[code].key
@@ -369,11 +369,19 @@ def new_game(character=None):
             term.puts(center('backpack  ', screen_width), 1, ' Backpack ')
             
             # items in backpack
-            for i, item in enumerate(player.inventory):
+            # for i, item in enumerate(player.inventory):
+            #     term.puts(
+            #         col,
+            #         row + i * (2 if screen_height > 25 else 1),
+            #         chr(ord('a') + i) + ". " + (item.name if isinstance(item, Item) else item))
+            for index, item in player.get_inventory():
+                letter = chr(ord('a') + index) + ". "
+                item_desc = item.__str__() if item else ""
+
                 term.puts(
                     col,
-                    row + i * (2 if screen_height > 25 else 1),
-                    chr(ord('a') + i) + ". " + (item.name if isinstance(item, Item) else item))
+                    row + index * (2 if screen_height > 25 else 1),
+                    letter + item_desc)
 
         def equipment():
             term.clear()
@@ -383,11 +391,20 @@ def new_game(character=None):
 
             term.puts(center(' inventory ', screen_width), 1, ' Inventory ')
             
-            for i, l, e in zip(range(len(inventory_list)), inventory_list, player.equipment):
+            # for i, l, e in zip(range(len(inventory_list)), inventory_list, player.equipment):
+            #     term.puts(
+            #         col, 
+            #         row + i * (2 if screen_height > 25 else 1), 
+            #         chr(ord('a') + i) + '. ' + l + (e if isinstance(e, str) else ''))
+            for index, part, item in player.get_equipment():
+                letter = chr(ord('a') + index)
+                body_part = ".  {:<10}: ".format(part)
+                item_desc = item.__str__() if item else ""
+
                 term.puts(
-                    col, 
-                    row + i * (2 if screen_height > 25 else 1), 
-                    chr(ord('a') + i) + '. ' + l + (e if isinstance(e, str) else ''))
+                    col,
+                    row + index * (2 if screen_height > 25 else 1),
+                    letter + body_part + item_desc)
 
         col, row = 1, 3
         playscreen = False
