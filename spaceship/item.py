@@ -55,6 +55,9 @@ class Item:
                 return value
         return value
 
+    def __str__(self):
+        return self.name
+
 class Armor(Item):
     def __init__(self, name, char, color, placement, me_h, mi_h, dv, pv):
         super().__init__(name, char, color)

@@ -29,6 +29,16 @@ class Unit:
         self.health = 10
         self.movable = True
 
+        ''' TODO: implement unique attributes
+        self.str, self.agi, self.int
+        self.armor_type = unarmored, light, medium, heavy, fort/building
+        self.damage_type = normal, magic, pierce, siege
+        self.weapon_type = normal, pierce, missle, instant, min, 
+        self.damage_physical
+        self.defense_physical
+        self.damage_magical
+        self.defense_magical
+        '''
     def __repr__(self):
         return "{}[{}]: ({},{})".format(self.description, self.character, self.x, self. y)
 
@@ -130,6 +140,19 @@ class Player:
     def get_inventory(self):
         for index, item in enumerate(self.inventory):
             yield index, item
+
+    def get_profile(self):
+        string='''
+Name     : {name:<10}
+Gender   : {sex:<10}
+Race     : {race:<10} 
+Class    : {job:<10}
+        '''[1:]
+        return string.format(
+            name=self.name,
+            sex=self.gender,
+            race=self.race,
+            job=self.job)
 
     def calculate_initial_stats(self) -> None:
         stats = tuple(s + g + r + c for s, g, r, c

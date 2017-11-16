@@ -53,6 +53,7 @@ key_actions={
     term.TK_C: action("c", "close"),
     term.TK_T: action("t", "talk"),
     term.TK_I: action("i", "inventory"),
+    term.TK_V: action("v", "equipment"),
     term.TK_F1: action("f1", "func_key"),
     term.TK_F2: action("f2", "func_key"),
     term.TK_COMMA: action(",", "pickup"),
@@ -62,6 +63,7 @@ key_shifted_actions={
     # '< >'
     term.TK_PERIOD: action(">", "enter"),
     term.TK_COMMA: action("<", "exit"),
+    term.TK_2: action("@", "profile"),
 }
 
 world_key_actions = {

@@ -101,6 +101,8 @@ def new_game(character=None):
         #     act = key_actions[code].key
         # any other key F-keys, Up/Down Pg, etc
         else:
+            if code in (term.TK_2,):
+                print("clicked 2")
             gamelog.add("unrecognized command")
                 
         # make sure we clear any inputs before the next action is processed
@@ -126,24 +128,27 @@ def new_game(character=None):
         #         gamelog.add("CTRL | ALT | SHIFT")
         
         if code in (term.TK_ESCAPE, term.TK_CLOSE):
+            if term.state(term.TK_SHIFT):
+                exit("Easy Exit")
             # gamelog.dumps()
             # proceed = False
             pass
 
-        # arrow keys
         elif code in key_movement:
+            # arrow keys
             x, y = key_movement[code]
-        # numberpad keys
         elif code in num_movement:
+            # numberpad keys
             x, y = num_movement[code]
-        # keyboard keys
         elif code in key_actions and not term.state(term.TK_SHIFT):
+            # keyboard keys
             act = key_actions[code].key
         elif code in key_shifted_actions and term.state(term.TK_SHIFT):
+            # keyboard shifted keys
             act = key_shifted_actions[code].key
-        # any other key F-keys, Up/Down Pg, etc
         else:
-            gamelog.add("KEY_IN: unrecognized command")
+            # any other key F-keys, Up/Down Pg, etc        
+            gamelog.add("unrecognized command")
         
         # make sure we clear any inputs before the next action is processed
         # allows for the program to go slow enough for human playability
@@ -249,8 +254,8 @@ def new_game(character=None):
                     unit.move(-x, -y)
                     player.move(x, y)
 
+# ================================= START COMBAT LOG ===================================================================
                 else:
-                    # ============= START COMBAT LOG =================================
                     chance = player.calculate_attack_chance()
 
                     if chance == 0:
@@ -279,20 +284,22 @@ def new_game(character=None):
                                 gamelog.add("The {} has dropped {}".format(unit.job, item.name))
 
                             dungeon.remove_unit(unit)
-                    # =============== END COMBAD LOG =================================
+# ========================== END COMBAD LOG ============================================================================
+# =========================  START WALK LOG  ===========================================================================
         else:
-            # =============  START WALK LOG  =================================
-            # find out if it was due to out of bounds error or block error
             if dungeon.out_of_bounds(tposx, tposy):
+                # out of bounds error
                 gamelog.add("Reached the edge of the map")
 
             else:
+                # block error -- differentiate between land and water blocks
                 ch = dungeon.square(tposx, tposy).char
+
                 if ch == "~":
                     gamelog.add('you cannot swim')
                 else:
                     gamelog.add(walkBlock.format(walkChars[ch]))
-            # ===============  END WALK LOG  =================================
+# ===========================  END WALK LOG  ===========================================================================
 
         for unit in list(dungeon.get_units()):
             x, y = 0, 0
@@ -301,27 +308,33 @@ def new_game(character=None):
                 x, y = num_movement[choice(list(num_movement.keys()))]
                 tposx, tposy = unit.x + x, unit.y + y
                 walkable = dungeon.walkable(tposx, tposy)
+
                 if walkable:
                     occupied = dungeon.occupied(tposx, tposy) or \
                         (tposx, tposy) == player.position_local()
+
                     if not occupied:
                         unit.move(x, y)
+
                     else:
                         if (tposx, tposy) == player.position_local():
                             other = player
+
                         else:
                             other = dungeon.get_unit(tposx, tposy)
+
                             if other.unit_id == unit.unit_id:
                                 # make sure the unit being compared is not itself
                                 continue
-                            else:
-                                print(unit.unit_id, other.unit_id)
+
                         if unit.friendly():
                             # other.move(-x, -y)
                             # unit.move(x, y)
                             unit.displace(other, x, y)
+
                         else:
                             other.health -= 1
+                            
                             log = "The {}({}) attacks {}({}). ".format(
                                 unit.job, unit.unit_id,
                                 "you" if other == player else ("the " + other.job),
@@ -330,50 +343,38 @@ def new_game(character=None):
                                 "You have " if other == player else "the " + other.job + " has",
                                 player.health if other == player else other.health)
                             gamelog.add(log)
+
                             if other.health < 1:
                                 gamelog.add("The {} has killed {}".format(
                                     unit.job,
                                     "you" if other == player else "the " + other.job))
+
                                 if other == player:
                                     gamelog.add("You Died!")
                                 else:
                                     dungeon.remove_unit(other)
 
-    inventory_list = [
-        "Head       : ", 
-        "Neck       : ", 
-        "Body       : ", 
-        "Arms       : ",
-        'Hands      : ', 
-        "Left hand  : ",
-        "Right hand : ", 
-        "Left ring  : ",
-        "Right ring : ",
-        "Waist      : ",
-        "Legs       : ",
-        "Feet       : ",
-    ]
+    def open_player_screen(key):
+        '''Game function to handle player equipment and inventory'''
+        def profile():
+            '''Handles player profile screen'''
+            term.clear()
 
-    def openInventory():
-        def output(string):
-            term.puts(
-                col,
-                row + 1 * (2 if screen_height > 25 else 1),
-                string)
+            for i in range(screen_width):
+                term.puts(i, 1, '#')
+            term.puts(center('profile  ', screen_width), 1, ' Profile ')
+
+            term.puts(col, row, player.get_profile())
 
         def inventory():
+            '''Handles inventory screen'''
             term.clear()
+
             # title backpack
             for i in range(screen_width):
                 term.puts(i, 1, '#')
             term.puts(center('backpack  ', screen_width), 1, ' Backpack ')
-            
-            # items in backpack
-            # for i, item in enumerate(player.inventory):
-            #     term.puts(
-            #         col,
-            #         row + i * (2 if screen_height > 25 else 1),
-            #         chr(ord('a') + i) + ". " + (item.name if isinstance(item, Item) else item))
+
             for index, item in player.get_inventory():
                 letter = chr(ord('a') + index) + ". "
                 item_desc = item.__str__() if item else ""
@@ -384,6 +385,7 @@ def new_game(character=None):
                     letter + item_desc)
 
         def equipment():
+            '''Handles equipment screen'''
             term.clear()
 
             for i in range(screen_width):
@@ -391,11 +393,6 @@ def new_game(character=None):
 
             term.puts(center(' inventory ', screen_width), 1, ' Inventory ')
             
-            # for i, l, e in zip(range(len(inventory_list)), inventory_list, player.equipment):
-            #     term.puts(
-            #         col, 
-            #         row + i * (2 if screen_height > 25 else 1), 
-            #         chr(ord('a') + i) + '. ' + l + (e if isinstance(e, str) else ''))
             for index, part, item in player.get_equipment():
                 letter = chr(ord('a') + index)
                 body_part = ".  {:<10}: ".format(part)
@@ -408,30 +405,40 @@ def new_game(character=None):
 
         col, row = 1, 3
         playscreen = False
-        current_screen = 0
+        current_screen = key
         current_range = 0
         while True:
             term.clear()
 
-            if current_screen:
+            if current_screen == "i":
+                equipment()
+            elif current_screen == "v":
                 inventory()
             else:
-                equipment()
+                profile()
 
             term.refresh()
             code = term.read()
 
-            if code in (term.TK_ESCAPE, term.TK_I,):
+            if code in (term.TK_ESCAPE,):
                 if current_screen == 1:
                     current_screen = 0
                 else:
                     break
+            elif code == term.TK_I:
+                current_screen = 'i'
 
             elif code == term.TK_V:
                 # V goes to inventory screen
-                current_screen = 1
+                current_screen = 'v'
+            
+            elif code == term.TK_2 and term.state(term.TK_SHIFT):
+                # @ goes to profile
+                current_screen = '@'
+
             elif code == term.TK_UP:
                 if current_range > 0: current_range -= 1
+
             elif code == term.TK_DOWN:
                 if current_range < 10: current_range += 1
 
@@ -520,7 +527,6 @@ def new_game(character=None):
 
     def interactItem(x, y, key):
         def pickItem():
-            print(player.inventory)
             item = dungeon.square(x, y).items.pop()
             player.inventory.append(item)
             gamelog.add("You pick up a {}".format(item.name))
@@ -743,10 +749,12 @@ def new_game(character=None):
         'a': attackUnit,
         'o': interactDoor,
         'c': interactDoor,
-        'i': openInventory,
+        'i': open_player_screen,
+        'v': open_player_screen,
         't': interactUnit,
         '>': interactStairs,
         '<': interactStairs,
+        '@': open_player_screen,
         # 'f1': dungeon._sundown,
         # 'f2': dungeon._sunup,
         ',': interactItem,
@@ -763,8 +771,8 @@ def new_game(character=None):
             actions[key](x, y, key)
         elif key in ("t"):
             actions[key](x, y)
-        elif key in ("i"):
-            actions[key]()
+        elif key in ("i", "v", "@"):
+            actions[key](key)
         elif key in ("f1, f2"):
             actions[key]()
         else:
