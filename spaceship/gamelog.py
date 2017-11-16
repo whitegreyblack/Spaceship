@@ -72,7 +72,7 @@ class GameLogger:
     def setupFileWriting(self):
         '''Adds the filename attribute to class for use in message log recording'''
         if not os.path.isdir('logs'):
-            print('Log folder does not exist -- Creating "./logs')
+            print('Log folder does not exist -- Creating "./logs"')
             os.makedirs('logs')
 
         self.last_message = ""

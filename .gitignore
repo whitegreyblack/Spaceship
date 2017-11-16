@@ -118,3 +118,6 @@ ENV/
 
 # swp files
 *.swp
+
+# game save files
+saves/

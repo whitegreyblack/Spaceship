@@ -24,7 +24,7 @@ from spaceship.setup_game import setup, output, setup_font
 from spaceship.world import World
 from time import clock
 from textwrap import wrap
-
+import shelve
 
 # screens:
 #   Main Menu
@@ -38,6 +38,15 @@ class WorldView: Geo, Pol, King = range(3)
 debug = False
 
 def new_game(character=None):
+    def save_game():
+        if not os.path.isdir('saves'):
+            print('saved folder does not exist - creating folder: "./saves"')
+            os.makedirs('saves')
+
+        with shelve.open('./saves/{}.dat'.format(player.name.replace(' ', '_')), 'n') as save_file:
+            save_file['player'] = player
+            save_file['world'] = calabaston
+
 
     def refresh(lines=[]):
         for line in lines:
@@ -96,13 +105,18 @@ def new_game(character=None):
         elif code in num_movement:
             x, y = num_movement[code]
 
+        elif code in (term.TK_S,) and term.state(term.TK_SHIFT):
+            gamelog.add("Save and exit game? (Y/N)")
+            code = term.read()
+            if code == term.TK_Y:
+                save_game()
+                proceed = False
+                exit("Saved and exit")
         # keyboard keys
         # elif code in key_actions:
         #     act = key_actions[code].key
         # any other key F-keys, Up/Down Pg, etc
         else:
-            if code in (term.TK_2,):
-                print("clicked 2")
             gamelog.add("unrecognized command")
                 
         # make sure we clear any inputs before the next action is processed
