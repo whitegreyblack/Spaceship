@@ -6,11 +6,22 @@ from bearlibterminal import terminal as term
 from spaceship.setup_game import setup
 from spaceship.new_game import new_game
 import shelve
-# Begin continue Menu
+'''
+# The flow tree for playing the game
+Main Menu
+ | \
+ |  \
+ |  Continue Game
+ |  /
+ | /
+New Game
+'''
+
 def continue_game():
+    '''Handles save file opening to continue previously saved games'''
 
     def get_saves():
-        '''Retrieves save files'''
+        '''Handles the retrieving of saved data files'''
         save_files = []
         for root, dirs, files in os.walk('saves', topdown=True):
             # get all files in the save directory and parse their file names
@@ -20,7 +31,7 @@ def continue_game():
         return save_files
 
     def no_saves():
-        '''Prints no save ui screen to terminal'''
+        '''Handles printing the no save ui screen to terminal'''
         term.puts(
             center(
                 'No Saved Games', 
@@ -29,7 +40,7 @@ def continue_game():
             'NO SAVED GAMES')
 
     def saves_exists():
-        '''Prints saved files to terminal'''
+        '''Handles printing the saved files to terminal'''
         # save screen header
         for i in range(term.state(term.TK_WIDTH)):
             term.puts(i, 0, '#')
@@ -44,25 +55,33 @@ def continue_game():
     
     save_index = 0
     save_files = get_saves()
+
     while True:    
         term.clear()
+
         if not os.path.isdir('saves') or os.listdir('saves') == []:
+            # make sure either folder does not exist or empty folder
             no_saves()
+
         else:
+            # any other case triggers branch
             saves_exists()
 
         term.refresh()
         code = term.read()
 
         if code == term.TK_ENTER and save_files:
-            print('/saves/' + save_files[save_index])
-            with shelve.open("./saves/" + save_files[save_index], 'r') as save:
-                world_map = save['world']
-                player = save['player']
-                new_game(character=player, world=world_map)
-                break
-            # exit("Finished opening file")
 
+            try:
+                # use context manager to make sure file handling is safe
+                with shelve.open("./saves/" + save_files[save_index], 'r') as save:
+                    # since shelve serializes objects into data we can unpack directly from the dictionary
+                    new_game(character=save['player'], world=save['world'])
+            except FileNotFoundError:
+                term.puts(0, term.state(term.TK_HEIGHT - 1), 'File Not Found')
+            finally:    
+                break # --> makes sure we exit loop to return directly to new screen
+                    
         elif code == term.TK_DOWN:
             save_index = min(save_index + 1, len(save_files)-1)
 
