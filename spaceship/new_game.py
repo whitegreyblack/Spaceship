@@ -37,7 +37,7 @@ class WorldView: Geo, Pol, King = range(3)
 
 debug = False
 
-def new_game(character=None):
+def new_game(character=None, world=None):
     def save_game():
         if not os.path.isdir('saves'):
             print('saved folder does not exist - creating folder: "./saves"')
@@ -52,7 +52,10 @@ def new_game(character=None):
         for line in lines:
             gamelog.add(line)
         term.clear()
-        map_box()
+        if player.height == -1:
+            world_map_box()
+        else:
+            map_box()
         status_box()
         log_box()
         term.refresh()
@@ -70,9 +73,11 @@ def new_game(character=None):
 
         while code in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
             code = term.read()
+
         if code in (term.TK_CLOSE, term.TK_ESCAPE, term.TK_Q):
             proceed = False
             exit_status = True
+
         # map draw types
         # elif code in (term.TK_P, term.TK_G, term.TK_K):
         #     if code == term.TK_P and wview != WorldView.Pol:
@@ -89,6 +94,7 @@ def new_game(character=None):
         #     elif code == term.TK_PERIOD and term.state(term.TK_SHIFT):
         #         act = "enter"
         # ENTER/EXIT COMMAND
+
         elif code in (term.TK_PERIOD,):
             if term.state(term.TK_SHIFT):
                 try:
@@ -106,7 +112,10 @@ def new_game(character=None):
             x, y = num_movement[code]
 
         elif code in (term.TK_S,) and term.state(term.TK_SHIFT):
+            print('pressed shift-s')
             gamelog.add("Save and exit game? (Y/N)")
+            log_box()
+            term.refresh()
             code = term.read()
             if code == term.TK_Y:
                 save_game()
@@ -123,8 +132,7 @@ def new_game(character=None):
         # allows for the program to go slow enough for human playability
         while term.has_input(): 
             term.read()
-        if debug:
-            gamelog.add("KEY-IN-WORLD: {}, {}, {}".format(x, y, act))
+
         return keydown(x, y, act)
 
     def key_in():
@@ -757,6 +765,7 @@ def new_game(character=None):
         # '<': exit_map,
         '>': enter_map
     }
+
     def processWorldAction(key):
         if key == ">":
             world_actions[key]()
@@ -869,6 +878,8 @@ def new_game(character=None):
                     14 if player.height() == -1 else 1, 
                     screen_height - len(messages) + idx, messages[idx])
 
+        term.puts(screen_width-10, screen_height-1, 'Turns: {:<4}'.format(turns))
+
     def map_box():
         term.composition(False)
         dungeon.fov_calc([(player.mx, player.my, player.sight * 2)])
@@ -927,13 +938,18 @@ def new_game(character=None):
     
     screen_width, screen_height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
 
-    # TODO: chain function so World().load() or keep as seperate functions: init() and load()?
-    calabaston = World(screen_width, screen_height)
-    calabaston.load(
-                "./assets/worldmap.png", 
-                "./assets/worldmap_territories.png",
-                "./assets/worldmap_kingdoms.png")   
-
+    if world:
+        # coming from a save file -- world already definied
+        calabaston = world
+    else:
+        # create the world from scratch
+        # TODO: chain function so World().load() or keep as seperate functions: init() and load()?
+        calabaston = World(screen_width, screen_height)
+        calabaston.load(
+                    "./assets/worldmap.png", 
+                    "./assets/worldmap_territories.png",
+                    "./assets/worldmap_kingdoms.png")   
+    turns = 0
     proceed = True
     exit_status = None
     dungeon = None
@@ -987,7 +1003,7 @@ def new_game(character=None):
             else:
                 # movement first action
                 key_process(x, y)
-
+        turns += 1
     # player.dump()
     # gamelog.dumps()           
     return True
