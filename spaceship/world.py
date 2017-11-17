@@ -142,8 +142,15 @@ class World:
         (20, 57): "Beach Cave",
         (22, 50): "Small Dungeon",
     }
+    
+    class Tile:
+        def __init__(self, char, color, land, enterable):
+            self.char = char
+            self.color = color
+            self.land = land
+            self.enterable = enterable
 
-    tile = namedlist("Tile", "char color land territory tcol kingdom kcol enterable")
+    # tile = namedlist("Tile", "char color land territory tcol kingdom kcol enterable")
 
     def __init__(self, width: int, height: int) -> None:
         self.pointer = list(World.capitals('Renmar'))
@@ -160,6 +167,9 @@ class World:
         self.map_display_width = width
         self.map_display_height = height
         self.display_key = 0
+
+    def __repr__(self):
+        return self.__class__.__name__
 
     @staticmethod
     def capitals(capital: str) -> str:
@@ -263,7 +273,8 @@ class World:
                     raise
 
                 enterable = char in self.enterables
-                row.append(self.tile(char, color, land, territory, tcolor, kingdom, kcolor, enterable))
+                # row.append(self.tile(char, color, land, territory, tcolor, kingdom, kcolor, enterable))
+                row.append(self.Tile(char, color, land, enterable))
 
             self.data.append(row)
 
@@ -285,26 +296,31 @@ class World:
             if not y:
                 return "."
             return ":"
+        # -- Cities --
         # "Tiphmore": (42, 62),
         # "Dun Badur": (83, 9),
         # "Aurundel": (41, 20),
         # "Renmar": (16, 46),
-        # "Lok Gurrah": (72, 51),    
+        # "Lok Gurrah": (72, 51),   
+        # -- Dungeons -- 
+        # (12, 52): "Pig Beach",
+        # (20, 57): "Beach Cave",
+        # (22, 50): "Small Dungeon",
         connections = (
             ((12, 52), (16, 46)),
             ((22, 50), (16, 46)),
             ((26, 57), (20, 57)),
             ((26, 57), (22, 50)),
         )
-        # (12, 52): "Pig Beach",
-        # (20, 57): "Beach Cave",
-        # (22, 50): "Small Dungeon",
+
         for c in connections:
             points = bresenhams(*c)
             char = slope(*c)
             for i, j in points[1:len(points)-1]:
-                _, _, l, t, c, k, kc, e = self.data[j][i]
-                self.data[j][i] = self.tile(char, "#542605", "road", t, c, k, kc, e)    
+                # _, _, l, t, c, k, kc, e = self.data[j][i]
+                # self.data[j][i] = self.tile(char, "#542605", "road", t, c, k, kc, e)    
+                
+                self.data[j][i] = self.Tile(char, "#542605", "road", self.data[j][i].enterable)    
             
     def colorize(self) -> None:
         '''Colorize modifies lakes and rivers with new characters and colors'''
@@ -493,36 +509,48 @@ class World:
 
         for j in range(cam_y, ext_y):
             for i in range(cam_x, ext_x):
-                try:
-                    char, color, _, terr, tcol, king, kcol, _ = self.data[j][i]
-                except IndexError:
-                    raise IndexError("{}, {}".format(i, j))
-
                 if (player_x, player_y) == (i, j):
                     color = "white"
                     char = "@"
-
-                if self.display_key == 0:
+                else:
+                    try:
+                        # char, color, _, terr, tcol, king, kcol, _ = self.data[j][i]
+                        tile = self.data[j][i]
+                    except IndexError:
+                        raise IndexError("{}, {}".format(i, j))
+                    
+                    char = tile.char
+                    
                     if len(char) > 1:
                         try:
                             char = chr(int(char, 16))
                         except ValueError:
                             raise ValueError(char)
 
-                elif self.display_key == 1:
-                    color = tcol
-                    if terr != "None":
-                        char = chr(int("2261", 16))
-                    else:
-                        if len(char) > 1:
-                            char = chr(int(char, 16))
+                    color = tile.color
+
+            
+                # if self.display_key == 0:
+                #     if len(char) > 1:
+                #         try:
+                #             char = chr(int(char, 16))
+                #         except ValueError:
+                #             raise ValueError(char)
+
+                # elif self.display_key == 1:
+                #     color = tcol
+                #     if terr != "None":
+                #         char = chr(int("2261", 16))
+                #     else:
+                #         if len(char) > 1:
+                #             char = chr(int(char, 16))
                 
-                else:
-                    color = kcol
-                    if king != "None:":
-                        char = chr(int("2261", 16))
-                    elif len(char) > 1:
-                        char = chr(int(char, 16))
+                # else:
+                #     color = kcol
+                #     if king != "None:":
+                #         char = chr(int("2261", 16))
+                #     elif len(char) > 1:
+                #         char = chr(int(char, 16))
                 
                 yield (i-cam_x, j-cam_y, color, char)
 

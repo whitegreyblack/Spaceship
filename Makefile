@@ -13,6 +13,9 @@ clean: clean-logs
 clean-logs:
 	rm -rf logs/*.txt
 
+clean-saves:
+	rm -rf saves/*
+
 lint-flake: lint-flake-source lint-flake-tests
 
 lint-pep8-tests:

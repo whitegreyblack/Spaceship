@@ -121,3 +121,7 @@ ENV/
 
 # game save files
 saves/
+
+# game log folder
+log/
+logs/

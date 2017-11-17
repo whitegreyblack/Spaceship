@@ -43,7 +43,7 @@ def new_game(character=None):
             print('saved folder does not exist - creating folder: "./saves"')
             os.makedirs('saves')
 
-        with shelve.open('./saves/{}.dat'.format(player.name.replace(' ', '_')), 'n') as save_file:
+        with shelve.open('./saves/{}'.format(player.name.replace(' ', '_')), 'n') as save_file:
             save_file['player'] = player
             save_file['world'] = calabaston
 

@@ -303,6 +303,15 @@ For example
 '''
 class Map:
     ''' Ray Tracing Implementation based off of Rogue Basin Python Tutorial '''
+    class Tile:
+        def __init__(self, char, color, block_mov, block_lit):
+            self.char = char
+            self.color = color
+            self.block_mov = block_mov
+            self.block_lit = block_lit
+            self.items = []
+            self.light = 0
+
     mult = [
                 [1,  0,  0, -1, -1,  0,  0,  1],
                 [0,  1, -1,  0,  0, -1,  1,  0],
@@ -310,7 +319,7 @@ class Map:
                 [1,  0,  0,  1, -1,  0,  0, -1]
             ]
 
-    tile = namedlist("Tile", "char color bkgd light block_mov block_lit items")
+    # tile = namedlist("Tile", "char color bkgd light block_mov block_lit items")
     chars_block_move = {"#", "+", "o", "x", "~", "%", "Y", "T"}
     chars_block_light = {"#", "+", "o", "%", "Y", "T"}
 
@@ -358,14 +367,12 @@ class Map:
                 block_mov = char in self.chars_block_move
                 block_lit = char not in self.chars_block_light
 
-                tile = self.tile(
+                tile = self.Tile(
                     char=choice(chars),
                     color=choice(hexcodes),
-                    bkgd="black",
-                    light=0,
                     block_mov=block_mov,
-                    block_lit=block_lit,
-                    items=[])
+                    block_lit=block_lit)
+
                 cols.append(tile)
             rows.append(cols)
         self.tilemap = rows        
