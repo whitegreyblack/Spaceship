@@ -4,6 +4,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.screen_functions import *
 from bearlibterminal import terminal as term
 from spaceship.setup_game import setup
+from spaceship.new_game import new_game
 import shelve
 # Begin continue Menu
 def continue_game():
@@ -36,9 +37,10 @@ def continue_game():
 
         # list the saved files
         for i, save in enumerate(save_files):
+            letter = chr(ord('a') + i) + '. '
             if i == save_index:
                 save = "[c=#00FFFF]{}[/c]".format(save)
-            term.puts(1, 3 + i, save)
+            term.puts(1, 3 + i, letter + save)
     
     save_index = 0
     save_files = get_saves()
@@ -57,16 +59,18 @@ def continue_game():
             with shelve.open("./saves/" + save_files[save_index], 'r') as save:
                 world_map = save['world']
                 player = save['player']
+                new_game(character=player, world=world_map)
+                break
+            # exit("Finished opening file")
 
-            print(player.name, world_map)
-            exit("Finished opening file")
+        elif code == term.TK_DOWN:
+            save_index = min(save_index + 1, len(save_files)-1)
 
-        elif 
+        elif code == term.TK_UP:
+            save_index = max(save_index - 1, 0)
 
         elif code == term.TK_ESCAPE:
             break
-
-
 
     return True
 # End Continue Menu

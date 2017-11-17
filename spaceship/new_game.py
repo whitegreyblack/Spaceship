@@ -925,23 +925,19 @@ def new_game(character=None, world=None):
                 y + screen_off_y, 
                 "[c={}]{}[/c]".format(col, ch))
 
+    screen_width, screen_height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
+    
     # very first thing is game logger initialized to output messages on terminal
     gamelog = GameLogger(3 if term.state(term.TK_HEIGHT) <= 25 else 4)
 
     # process character
-    if character==None:
-        # mproperly accessed new_game --> early exit
+    if not character:
+        # improperly accessed new_game --> early exit
         return output(proceed=False, value="No Character Data Input")
-    else:
+    elif not world:
         # unpack character tuple to create a player object
         player = Player(character)
-    
-    screen_width, screen_height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
 
-    if world:
-        # coming from a save file -- world already definied
-        calabaston = world
-    else:
         # create the world from scratch
         # TODO: chain function so World().load() or keep as seperate functions: init() and load()?
         calabaston = World(screen_width, screen_height)
@@ -949,6 +945,13 @@ def new_game(character=None, world=None):
                     "./assets/worldmap.png", 
                     "./assets/worldmap_territories.png",
                     "./assets/worldmap_kingdoms.png")   
+    else:
+        # coming from a save file -- player object already defined
+        player = character
+
+        # coming from a save file -- world already definied
+        calabaston = world    
+
     turns = 0
     proceed = True
     exit_status = None

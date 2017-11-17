@@ -10,35 +10,10 @@ from textwrap import wrap
 from bearlibterminal import terminal as term
 
 import spaceship.cc_strings as strings
-# from spaceship.constants import CM_BORDER_HEIGHT as BORDER_HEIGHT
-# from spaceship.constants import CM_BORDER_WIDTH as BORDER_WIDTH
-# from spaceship.constants import MENU_SCREEN_HEIGHT as SCREEN_HEIGHT
-# from spaceship.constants import MENU_SCREEN_WIDTH as SCREEN_WIDTH
-from spaceship.continue_game import continue_game
 from spaceship.new_name import new_name
 from spaceship.screen_functions import *
 from spaceship.setup_game import output, setup, setup_font, setup_menu, toChr, setup_ext
 from random import randint 
-# str_title = "Character Creation"
-# str_help = "Press (?) for info on a selected race, subrace or class"
-# def create_character_small_term():
-#     def cc_border():
-#     '''Border for Create Character Screen'''
-#     # border(BORDER_WIDTH, [0], "#")
-#     # border(BORDER_WIDTH, [10, 39], toChr("2550"))
-#     term.bkcolor('darkest grey')
-#     for i in range(BORDER_WIDTH-2):
-#         term.puts(i+1, 1, ' ')
-#         term.puts(i+1, 35, ' ')
-#     for i in range(35):
-#         term.puts(1, i+1, ' ')
-#         term.puts(BORDER_WIDTH-2, i+1, ' ')
-#     term.bkcolor('dark brown')
-#     for i in range(20):
-#         term.puts(BORDER_WIDTH//2-10+i, 1, ' ')
-#     term.bkcolor('black')
-
-#     term.border()
 
 def create_character():
     shorten = term.state(term.TK_HEIGHT) <= 25
