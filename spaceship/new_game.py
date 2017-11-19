@@ -32,10 +32,8 @@ import shelve
 #   Main Game:
 #     World, Local, Inventory/Backpack
 
-class Level: World, City, Dungeon = range(3)
-class WorldView: Geo, Pol, King = range(3)
-
-debug = False
+# class Level: World, City, Dungeon = range(3)
+# class WorldView: Geo, Pol, King = range(3)
 
 def new_game(character=None, world=None):
     def save_game():
@@ -146,8 +144,6 @@ def new_game(character=None, world=None):
             code = term.read()
         
         # if any([term.state(tk) for tk in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT)]):
-        #     if debug:
-        #         gamelog.add("CTRL | ALT | SHIFT")
         
         if code in (term.TK_ESCAPE, term.TK_CLOSE):
             if term.state(term.TK_SHIFT):

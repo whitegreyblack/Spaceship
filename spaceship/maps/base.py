@@ -20,11 +20,6 @@ from spaceship.player import Rat, Bat
 
 """Maps file holds template functions that return randomized data maps used\
 in creating procedural worlds"""
-class Light: Unexplored, Explored, Visible = range(3)    
-class Letter: Ascii, Unicode = range(2)
-# chars_block_move= {"#", "+", "o", "x", "~", "%", "Y", "T"}
-# chars_block_move_hills =  {"#", "+", "o", "x", "%", "Y", "T"}
-# chars_block_light = {"#", "+", "o", "%", "Y", "T"}
 
 # Key-value pairs are mapped from characters to color tuples
 # used when converting maps into color images
