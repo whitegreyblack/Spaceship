@@ -30,6 +30,19 @@ def continue_game():
                     save_files.append(f.replace('.dat', ''))
         return save_files
 
+    def get_saves_desc():
+        '''Handles the retrieving of saved data file descriptions'''
+        if not save_files:
+            # no save files yet -- early exit
+            return []
+        
+        file_descs = []
+        for save_file in save_files:
+            with shelve.open("./saves/" + save_file, 'r') as save:
+                file_descs.append(save['save'])
+
+        return file_descs
+
     def no_saves():
         '''Handles printing the no save ui screen to terminal'''
         term.puts(
@@ -41,20 +54,27 @@ def continue_game():
 
     def saves_exists():
         '''Handles printing the saved files to terminal'''
+        if len(save_files) != len(save_files_desc):
+            raise ValueError("Save files number does not match save files descs number")
+
         # save screen header
         for i in range(term.state(term.TK_WIDTH)):
             term.puts(i, 0, '#')
         term.puts(center('Saved Files  ', term.state(term.TK_WIDTH)), 0, ' Saved Files ')
 
         # list the saved files
-        for i, save in enumerate(save_files):
+        for i, (save, desc) in enumerate(zip(save_files, save_files_desc)):
+            # split the save file string from plain and hash text
+            save = save.split('(')[0]
             letter = chr(ord('a') + i) + '. '
             if i == save_index:
                 save = "[c=#00FFFF]{}[/c]".format(save)
-            term.puts(1, 3 + i, letter + save)
+            term.puts(1, 3 + i, letter + save + " :- " + desc)
     
+    # saved files list and index
     save_index = 0
     save_files = get_saves()
+    save_files_desc = get_saves_desc()
 
     while True:    
         term.clear()
@@ -77,8 +97,10 @@ def continue_game():
                 with shelve.open("./saves/" + save_files[save_index], 'r') as save:
                     # since shelve serializes objects into data we can unpack directly from the dictionary
                     new_game(character=save['player'], world=save['world'])
+
             except FileNotFoundError:
                 term.puts(0, term.state(term.TK_HEIGHT - 1), 'File Not Found')
+                
             finally:    
                 break # --> makes sure we exit loop to return directly to new screen
                     

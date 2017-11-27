@@ -85,6 +85,7 @@ def test_sprite():
                         bottle.position = 0
                 dx, dy = bottle.positions[bottle.position]
                 term.put_ext(x, y, dx, dy, bottle.images[bottle.image])
+                
             while proceed and term.has_input():
                 code = term.read()
                 if code in (term.TK_ESCAPE,):

@@ -41,7 +41,11 @@ def new_game(character=None, world=None):
             print('saved folder does not exist - creating folder: "./saves"')
             os.makedirs('saves')
 
-        with shelve.open('./saves/{}'.format(player.name.replace(' ', '_')), 'n') as save_file:
+        # prepare strings for file writing -- player_hash used for same name/different character saves
+        name = player.name.replace(' ', '_')
+        desc = player.job + " " + str(player.level)
+        with shelve.open('./saves/{}'.format(name + "(" + str(abs(hash(desc)))) + ")", 'n') as save_file:
+            save_file['save'] = desc
             save_file['player'] = player
             save_file['world'] = calabaston
 
@@ -65,8 +69,8 @@ def new_game(character=None, world=None):
     def key_in_world():
         '''Key processing while player in overworld'''
         nonlocal proceed, exit_status
-        keydown = namedtuple("Key_Press", "x y a")
-        act, x, y = 0, 0, 0
+        keydown = namedtuple("Key_Press", "x y a e")
+        act, x, y, error = None, None, None, None
         code = term.read()
 
         while code in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
@@ -99,6 +103,7 @@ def new_game(character=None, world=None):
                     act = world_key_actions[code].key
                 except KeyError:
                     raise
+
         # elif code == term.TK_Z:
         #     act = "Zoom"
         
@@ -118,7 +123,8 @@ def new_game(character=None, world=None):
             if code == term.TK_Y:
                 save_game()
                 proceed = False
-                exit("Saved and exit")
+                return keydown(x, y, act, 'QUIT')
+
         # keyboard keys
         # elif code in key_actions:
         #     act = key_actions[code].key
@@ -131,13 +137,13 @@ def new_game(character=None, world=None):
         while term.has_input(): 
             term.read()
 
-        return keydown(x, y, act)
+        return keydown(x, y, act, error)
 
     def key_in():
         '''Key Processing while player in local map'''
         nonlocal proceed, exit_status
-        keydown = namedtuple("Key_Down", ("x", "y", "a"))
-        act, x, y = 0, 0, 0
+        keydown = namedtuple("Key_Press", "x y a e")
+        act, x, y, error = None, None, None, None
         code = term.read()
 
         while code in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
@@ -173,7 +179,7 @@ def new_game(character=None, world=None):
         while term.has_input(): 
             term.read()
 
-        return keydown(x, y, act)
+        return keydown(x, y, act, error)
 
     def key_input(level):
         '''Try creating a general purpose key input function that is called by both
@@ -759,7 +765,10 @@ def new_game(character=None, world=None):
 
     world_actions={
         # '<': exit_map,
-        '>': enter_map
+        '>': enter_map,
+        '@': open_player_screen,
+        'i': open_player_screen,
+        'v': open_player_screen,
     }
 
     def processWorldAction(key):
@@ -932,6 +941,7 @@ def new_game(character=None, world=None):
         return output(proceed=False, value="No Character Data Input")
     elif not world:
         # unpack character tuple to create a player object
+        print(character.equipment)
         player = Player(character)
 
         # create the world from scratch
@@ -963,12 +973,16 @@ def new_game(character=None, world=None):
             log_box()
             term.refresh()
 
-            x, y, a = key_in_world()
-            if a != "Do Nothing" and a != 0:
+            x, y, a, e = key_in_world()
+            if a is not None:
                 processWorldAction(a)
 
-            elif (x, y) != (0, 0):
+            elif all(z is not None for z in [x, y]):
                 key_process_world(x, y)
+            
+            else:
+                print(e)
+                print('menu screen actions')
 
         else:
             # player is on local map level
@@ -993,16 +1007,22 @@ def new_game(character=None, world=None):
             log_box()
             map_box()
             
-            x, y, a = key_in()
+            x, y, a, e = key_in()
 
-            if a:
+            if a is not None:
                 # non-movement action
                 processAction(player.mx, player.my, a)
+                turns += 1
 
-            else:
+            elif all(z is not None for z in [x, y]):
                 # movement first action
                 key_process(x, y)
-        turns += 1
+                turns += 1
+
+            else:
+                print(e)
+                print('access menu screens -- inv, eqp, profile, main menu')
+
     # player.dump()
     # gamelog.dumps()           
     return True

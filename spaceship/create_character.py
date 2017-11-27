@@ -413,9 +413,12 @@ def create_character():
         elif code == term.TK_V and character_index > 1:
             inv_screen *= -1
 
-        # Randomize selection
+        # Randomize selection -- maybe remove since its more of a debugging usage
         elif code == term.TK_8:
-            if term.state(term.TK_SHIFT):
+            # only randomizes if shift-8 is pressed -- else it's just pressing 8
+            if term.state(term.TK_SHIFT) and character_index <= 1:
+                # lets not randomize if you've already selected a gender
+                # its not much more effort to finish creating your character
                 name = "Random name"
                 gender_index = randint(0, 1)
                 gender = gender_row(1)
