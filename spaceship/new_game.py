@@ -960,6 +960,18 @@ def new_game(character=None, world=None):
     proceed = True
     exit_status = None
     dungeon = None
+    
+    '''
+    while True:
+        clear()
+        render()
+        refresh()
+        
+        for unit in unitlist:
+            unit.take_turn
+    '''
+
+
     while proceed:
         term.clear()
         if player.height() == -1:

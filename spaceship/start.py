@@ -120,3 +120,14 @@ if __name__ == "__main__":
     setup_font('Ibm_cga', 8, 8)
     term.set('window: size=80x25, cellsize=auto, title="Spaceship", fullscreen=false')
     start()
+
+"""
+# main_menu:
+    # new_game
+    # continue_game
+    # play_game
+
+    while 1: # main menu
+        while 1: # game loop
+            while 1: # key handler
+"""
