@@ -198,8 +198,6 @@ def new_game(character=None, world=None):
         if code in (term.TK_ESCAPE, term.TK_CLOSE):
             # exit command -- maybe need a back to menu screen?
             proceed = False
-    
-
         return
 
     def onlyOne(container):
