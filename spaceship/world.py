@@ -76,20 +76,25 @@ class World:
         (67, 42): "Whitewater",
         (21, 18): "Yarrin",
     }
-
-    pol_legend = {
-        (0, 0, 0): ("None", "black"),
-        (185, 122, 87): ("dwarven","#ff0000"),
-        (34, 177, 76): ("elven", "#228022"),
-        (237, 28, 36): ("beast", "#ff8844"),
-        (181, 230, 29): ("elven", "#77ff77"),
-        (255, 201, 14): ("human", "#ffAA00"),
-        (255, 242, 0): ("human", "#ff88ff"),
-        (255, 127, 39): ("human", "#ffff00"),
-        (255, 174, 201): ("orken", "#ff2255"),
-        (136, 0, 21): ("dwarven", "#550000"),
-        (239, 228, 176): ("orken", "#dddddd"),
+    city_descriptions = {
+        "Westwatch": "A medium size town that protects the Rane Empire \
+            from enemies that approach from the west",
+        "Renmar": "The capital city of the Rane Empire and largest city in the west",
+        "Tiphmore": "A large merchant town. The new capital for the beast-folk",
     }
+    # pol_legend = {
+    #     (0, 0, 0): ("None", "black"),
+    #     (185, 122, 87): ("dwarven","#ff0000"),
+    #     (34, 177, 76): ("elven", "#228022"),
+    #     (237, 28, 36): ("beast", "#ff8844"),
+    #     (181, 230, 29): ("elven", "#77ff77"),
+    #     (255, 201, 14): ("human", "#ffAA00"),
+    #     (255, 242, 0): ("human", "#ff88ff"),
+    #     (255, 127, 39): ("human", "#ffff00"),
+    #     (255, 174, 201): ("orken", "#ff2255"),
+    #     (136, 0, 21): ("dwarven", "#550000"),
+    #     (239, 228, 176): ("orken", "#dddddd"),
+    # }
 
     geo_legend = {
         (200, 191, 231): ("city(elven)", "&", ("#FF8844",)),
@@ -124,25 +129,25 @@ class World:
         (0, 0, 0): ("dungeon", "*", ("#FF00FF",)),
     }
 
-    king_legend = {
-        (0, 0, 0): ("None", "black"),
-        (34, 177, 76): ("Emerald Forest", "#006400"),
-        (255, 201, 14): ("Zagos", "#FFBF00"),
-        (237, 28, 36): ("Frostshield", "#880000"),
-        (136, 0, 21): ("Goldbeard", "#FF0000"),
-        (181, 230, 29): ("Arundel", "#568203"),
-        (255, 242, 0): ("Rane", "#FFFF00"),
-        (255, 127, 39): ("Tempest", "#FF8800"),
-        (239, 228, 176): ("Endless Dunes", "#FFFF88"),
-        (255, 174, 201): ("Beast Nation", "#ff88ff"),
-    }
+    # king_legend = {
+    #     (0, 0, 0): ("None", "black"),
+    #     (34, 177, 76): ("Emerald Forest", "#006400"),
+    #     (255, 201, 14): ("Zagos", "#FFBF00"),
+    #     (237, 28, 36): ("Frostshield", "#880000"),
+    #     (136, 0, 21): ("Goldbeard", "#FF0000"),
+    #     (181, 230, 29): ("Arundel", "#568203"),
+    #     (255, 242, 0): ("Rane", "#FFFF00"),
+    #     (255, 127, 39): ("Tempest", "#FF8800"),
+    #     (239, 228, 176): ("Endless Dunes", "#FFFF88"),
+    #     (255, 174, 201): ("Beast Nation", "#ff88ff"),
+    # }
 
     dungeon_legend = {
         (12, 52): "Pig Beach",
         (20, 57): "Beach Cave",
         (22, 50): "Small Dungeon",
     }
-    
+
     class Tile:
         def __init__(self, char, color, land, enterable):
             self.char = char
@@ -190,23 +195,23 @@ class World:
             geopix = img.load()
             gw, gh = img.size
 
-        # territory map
-        with Image.open(pol) as img:
-            polpix = img.load()
-            pw, ph = img.size
+        # # territory map
+        # with Image.open(pol) as img:
+        #     polpix = img.load()
+        #     pw, ph = img.size
 
-        # kingdom map
-        with Image.open(king) as img:
-            kingpix = img.load()
-            kw, kh = img.size
+        # # kingdom map
+        # with Image.open(king) as img:
+        #     kingpix = img.load()
+        #     kw, kh = img.size
 
-        # make sure these maps are all the same size since they
-        # are the same map with different properties
-        assert (gw, gh) == (pw, ph)
-        assert (gw, gh) == (kw, kh)
+        # # make sure these maps are all the same size since they
+        # # are the same map with different properties
+        # assert (gw, gh) == (pw, ph)
+        # assert (gw, gh) == (kw, kh)
 
         # width height should be same for both so just use one
-        self.width, self.height = pw, ph
+        self.width, self.height = gw, gh
         self.map_display_width = min(self.width, self.map_display_width)
         self.map_display_height = min(self.height, self.map_display_height)
 
@@ -227,17 +232,17 @@ class World:
                 except ValueError:
                     gr, gg, gb = geopix[i, j]
 
-                # territory map
-                try:
-                    pr, pg, pb, _ = polpix[i, j]
-                except ValueError:
-                    pr, pg, pb = polpix[i,j]
+                # # territory map
+                # try:
+                #     pr, pg, pb, _ = polpix[i, j]
+                # except ValueError:
+                #     pr, pg, pb = polpix[i,j]
 
-                # kingdom map
-                try:
-                    kr, kg, kb, _ = kingpix[i, j]
-                except ValueError:
-                    kr, kg, kb = kingpix[i, j]
+                # # kingdom map
+                # try:
+                #     kr, kg, kb, _ = kingpix[i, j]
+                # except ValueError:
+                #     kr, kg, kb = kingpix[i, j]
 
                 # done with geo/pol/king -- onto namedtuples                
                 # try/except Key-Value used to increase speed of 
@@ -258,19 +263,19 @@ class World:
                 else:
                     color = colors[0]
 
-                # then political properties are evaluated
-                try:
-                    territory, tcolor = self.pol_legend[(pr, pg, pb)]
-                except KeyError:
-                    raise KeyError("{}, {}, ({}, {}, {})".format(
-                        i, j, pr, pg, pb
-                    ))
+                # # then political properties are evaluated
+                # try:
+                #     territory, tcolor = self.pol_legend[(pr, pg, pb)]
+                # except KeyError:
+                #     raise KeyError("{}, {}, ({}, {}, {})".format(
+                #         i, j, pr, pg, pb
+                #     ))
 
-                # finally kingdom properties
-                try:
-                    kingdom, kcolor = self.king_legend[(kr, kg, kb)]
-                except KeyError:
-                    raise
+                # # finally kingdom properties
+                # try:
+                #     kingdom, kcolor = self.king_legend[(kr, kg, kb)]
+                # except KeyError:
+                #     raise
 
                 enterable = char in self.enterables
                 # row.append(self.tile(char, color, land, territory, tcolor, kingdom, kcolor, enterable))

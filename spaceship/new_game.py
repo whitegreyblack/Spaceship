@@ -2,7 +2,7 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
-from spaceship.action import key_movement, num_movement, key_actions, action, keypress, world_key_actions, key_shifted_actions
+from spaceship.action import commands
 from spaceship.setup_game import setup_game
 from spaceship.tools import bresenhams, deltanorm, movement
 from spaceship.maps.base import hextup, hexone, toInt
@@ -32,7 +32,7 @@ import shelve
 #   Main Game:
 #     World, Local, Inventory/Backpack
 
-# class Level: World, City, Dungeon = range(3)
+class Level: Global, World, Local = -1, 0, 1
 # class WorldView: Geo, Pol, King = range(3)
 
 def new_game(character=None, world=None):
@@ -181,7 +181,7 @@ def new_game(character=None, world=None):
 
         return keydown(x, y, act, error)
 
-    def key_input(level):
+    def key_input():
         '''Try creating a general purpose key input function that is called by both
         world and map functions
         '''
@@ -190,15 +190,20 @@ def new_game(character=None, world=None):
         keydown = namedtuple("Key_Down", ("x", "y", "a"))
         act, x, y = 0, 0, 0
 
-        code = term.read()
-        while code in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
+        key = term.read()
+        while key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
             # skip any non-action keys
-            code = term.read()
+            key = term.read()
         
-        if code in (term.TK_ESCAPE, term.TK_CLOSE):
+        if key in (term.TK_ESCAPE, term.TK_CLOSE):
             # exit command -- maybe need a back to menu screen?
-            proceed = False
-        return
+            if term.state(term.TK_SHIFT):
+                proceed = False
+            return tuple(None for _ in range(4))
+        elif any(key == press for press, shift in commands.keys()):
+            return commands[(key, term.state(term.TK_SHIFT))]
+        else:
+            return tuple(None for _ in range(4))
 
     def onlyOne(container):
         return len(container) == 1
@@ -209,6 +214,80 @@ def new_game(character=None, world=None):
             yield space(x + i, y + j)
         # return [space(x+i,y+j) for i, j in list(num_movement.values())]
 
+    def process_movement(character, x, y):
+        if  character.height() == Level.World:
+            if (x, y) == (0, 0):
+                gamelog.add("You wait in the area")
+            else:
+                tx = character.wx + x
+                ty = character.wy + y
+
+                if calabaston.walkable(tx, ty):
+                    character.save_position_global()
+                    character.travel(x, y)
+                else:
+                    travel_error = "You cannot travel there"
+                    gamelog.add(travel_error)
+
+        else:
+            if (x, y) == (0, 0):
+                gamelog.add("You rest for a while")
+            else:
+                tx = character.mx + x
+                ty = character.my + y
+
+                if dungeon.walkable(tx, ty):
+                    if not dungeon.occupied(tx, ty):
+                        character.move(x, y)
+                        if dungeon.square(tx, ty).items and randint(0, 5):
+                            pass_item_messages = [
+                                "You pass by an item.",
+                                "There is something here."
+                                "Your feet touches an object."
+                            ]
+                            gamelog.add(pass_item_message[randint(0, len(pass_item_messages)-1)])
+                    else:
+                        unit = dungeon.get_unit(tx, ty)
+                        if unit.friendly():
+                            unit.move(-x, -y)
+                            character.move(x, y)
+                            gamelog.add("You switch places with the {}".format(unit.job))
+                        else:
+                            if character.calculate_attack_chance() == 0:
+                                gamelog.add("You try attacking the {} but miss".format(unit.job))
+                            else:
+                                damage = character.calculate_attack_damage() * (2 if chance == 2 else 1)
+                                unit.health -= damage
+                                log = "You {} attack the {} for {} damage. ".format(
+                                    "crit and" if chance == 2 else "", unit.job, damage)
+                                log += "The {} has {} health left".format(unit.job, max(unit.health, 0))
+                                gamelog.add(log)
+
+                                if unit.health < 1:
+                                    gamelog.add("You have killed the {}! You gain {} exp".format(unit.job, unit.xp))
+                                    character.gain_exp(unit.xp)
+
+                                    if character.check_exp():
+                                        gamelog.add("You level up. You are now level {}".format(character.level))
+                                        gamelog.add("You feel much stronger")
+
+                                    item = unit.drops()
+
+                                    if item:
+                                        dungeon.square(*unit.position()).items.append(item)
+                                        gamelog.add("The {} has dropped {}".format(unit.job, item.name))
+
+                                    dungeon.remove_unit(unit)
+                else:
+                    if dungeon.out_of_bounds(tx, ty):
+                        gamelog.add("You reached the edge of the map")
+                    else:
+                        ch = dungeon.square(tposx, tposy).char
+                        if ch == "~":
+                            gamelog.add("You cannot swim")
+                        else:
+                            gamelog.add("You walk into {}".format(walkChars[ch]))
+        
     def key_process_world(x, y):
         walkBlock = "walked into {}"
         tx = player.wx + x
@@ -276,7 +355,6 @@ def new_game(character=None, world=None):
                     unit.move(-x, -y)
                     player.move(x, y)
 
-# ================================= START COMBAT LOG ===================================================================
                 else:
                     chance = player.calculate_attack_chance()
 
@@ -306,8 +384,7 @@ def new_game(character=None, world=None):
                                 gamelog.add("The {} has dropped {}".format(unit.job, item.name))
 
                             dungeon.remove_unit(unit)
-# ========================== END COMBAD LOG ============================================================================
-# =========================  START WALK LOG  ===========================================================================
+       
         else:
             if dungeon.out_of_bounds(tposx, tposy):
                 # out of bounds error
@@ -321,7 +398,6 @@ def new_game(character=None, world=None):
                     gamelog.add('you cannot swim')
                 else:
                     gamelog.add(walkBlock.format(walkChars[ch]))
-# ===========================  END WALK LOG  ===========================================================================
 
         for unit in list(dungeon.get_units()):
             x, y = 0, 0
@@ -510,7 +586,7 @@ def new_game(character=None, world=None):
             if (x+cx, y+cy) in attackables:
                 attack(x + cx, y + cy)
 
-    def interactUnit(x, y):
+    def interactUnit(x, y, action):
         """Allows talking with other units"""
         def talkUnit(x, y):
             unit = dungeon.get_unit(x, y)
@@ -674,7 +750,7 @@ def new_game(character=None, world=None):
                 dungeon = None
                 player.reset_position_local(0, 0)
 
-    def enter_map():
+    def enter_map(x, y, a):
         '''Logic:
             if at world level, check if there exists a map
             if exists -> enter
@@ -761,50 +837,46 @@ def new_game(character=None, world=None):
                 
         player.move_height(1)
 
-    world_actions={
-        # '<': exit_map,
-        '>': enter_map,
-        '@': open_player_screen,
-        'i': open_player_screen,
-        'v': open_player_screen,
-    }
-
-    def processWorldAction(key):
-        if key == ">":
-            world_actions[key]()
-
     actions={
-        'a': attackUnit,
-        'o': interactDoor,
-        'c': interactDoor,
-        'i': open_player_screen,
-        'v': open_player_screen,
-        't': interactUnit,
-        '>': interactStairs,
-        '<': interactStairs,
-        '@': open_player_screen,
-        # 'f1': dungeon._sundown,
-        # 'f2': dungeon._sunup,
-        ',': interactItem,
+        0: {
+            '>': enter_map,
+            '@': open_player_screen,
+            'i': open_player_screen,
+            'v': open_player_screen,
+        },
+        1: {
+            'a': attackUnit,
+            'o': interactDoor,
+            'c': interactDoor,
+            ',': interactItem,
+            '@': open_player_screen,
+            'i': open_player_screen,
+            'v': open_player_screen,
+        },
     }
+    # def processAction(x, y, key):
+    #     if key in ("o", "c"):
+    #         actions[key](x, y, key)
+    #     elif key in ("a"):
+    #         actions[key](x, y, key)
+    #     elif key in ("<", ">"):
+    #         actions[key](x, y, key)
+    #     elif key in (","):
+    #         actions[key](x, y, key)
+    #     elif key in ("t"):
+    #         actions[key](x, y)
+    #     elif key in ("i", "v", "@"):
+    #         actions[key](key)
+    #     elif key in ("f1, f2"):
+    #         actions[key]()
+    #     else:
+    #         gamelog.add('invalid command')
 
-    def processAction(x, y, key):
-        if key in ("o", "c"):
-            actions[key](x, y, key)
-        elif key in ("a"):
-            actions[key](x, y, key)
-        elif key in ("<", ">"):
-            actions[key](x, y, key)
-        elif key in (","):
-            actions[key](x, y, key)
-        elif key in ("t"):
-            actions[key](x, y)
-        elif key in ("i", "v", "@"):
-            actions[key](key)
-        elif key in ("f1, f2"):
-            actions[key]()
-        else:
-            gamelog.add('invalid command')
+    def process_action(character, x, y, action):
+        try:
+            actions[max(0, min(character.height(), 1))][action](x, y, action)
+        except KeyError:
+            gamelog.add("Invalid CommanD")
 
     # End Keyboard Functions
     # ---------------------------------------------------------------------------------------------------------------------#
@@ -879,9 +951,10 @@ def new_game(character=None, world=None):
                 # offput by 1 for border and then # of lines logger is currently set at
                 term.puts(
                     14 if player.height() == -1 else 1, 
-                    screen_height - len(messages) + idx, messages[idx])
+                    screen_height - len(messages) + idx, 
+                    messages[idx][1])
 
-        term.puts(screen_width-10, screen_height-1, 'Turns: {:<4}'.format(turns))
+        term.puts(1, screen_height-1, 'Turns: {:<4}'.format(turns))
 
     def map_box():
         term.composition(False)
@@ -902,8 +975,13 @@ def new_game(character=None, world=None):
         # than entering a dungeon/wilderness area
         if player.position_global() in calabaston.enterable_legend.keys():
             # check if player position is over a city/enterable area
-            enterable_name = surround(calabaston.enterable_legend[player.position_global()], length=length)
+            city_name = calabaston.enterable_legend[player.position_global()]
+            enterable_name = surround(city_name, length=length)
             selected(center(enterable_name, offset), height, enterable_name)
+            try:
+                gamelog.add(calabaston.city_descriptions[city_name])
+            except:
+                gamelog.add("\n\n")
 
         elif player.position_global() in calabaston.dungeon_legend.keys():
             # check if player position is over a dungeon position
@@ -914,7 +992,8 @@ def new_game(character=None, world=None):
             # Add land types to the overworld ui
             landtype = surround(calabaston.get_landtype(*player.position_global()), length=length)
             selected(center(landtype, offset), height, landtype)
-        
+            
+
         for char, color, desc, i in calabaston.legend():
             # finally print the lengend with character and description
             term.puts(0, height + i + 2, "[c={}] {}[/c] {}".format(color, char, desc))
@@ -970,68 +1049,103 @@ def new_game(character=None, world=None):
         for unit in unitlist:
             unit.take_turn
     '''
-
-
     while proceed:
         term.clear()
-        if player.height() == -1:
-            if gamelog.maxlines == 2:
-                gamelog.maxlines = 1
-            # World View
+
+        if player.height() == Level.World:
+            gamelog.maxlines = 2
             world_map_box()
             world_legend_box()
             log_box()
-            term.refresh()
-
-            x, y, a, e = key_in_world()
-            if a is not None:
-                processWorldAction(a)
-
-            elif all(z is not None for z in [x, y]):
-                key_process_world(x, y)
-            
-            else:
-                print(e)
-                print('menu screen actions')
-
         else:
-            # player is on local map level
-            # world map screen size differs to local map size
-            # we change the number of log lines to fit the terminal
-            if gamelog.maxlines == 3:
-                gamelog.maxlines = 4 if term.state(term.TK_HEIGHT) > 25 else 3
+            gamelog.maxlines = 4 if term.state(term.TK_HEIGHT) > 25 else 2
 
             if dungeon == None:
-                # previous dungeon was unrefrenced or first time visiting local map
                 player.move_height(-1)
                 dungeon = calabaston.get_location(*player.position_global())
                 player.move_height(1)
 
-                if player.wz > 0:
+                if player.height() == 0:
                     # iterates down until sublevel is found
                     for i in range(player.wz):
                         dungeon = dungeon.getSublevel()
 
-            # ui boxes
             status_box()
             log_box()
-            map_box()
+        term.refresh()
+
+        # handle player movements
+        x, y, k, action = key_input()
+        if k is not None:
+            process_action(player, x, y, k)
+            turn += 1
+
+        elif all(z is not None for z in [x, y]):
+            process_movement(player, x, y)
+            turn += 1
+
+        else:
+            print('accessing menu probably')
+    # while proceed:
+    #     term.clear()
+    #     if player.height() == -1:
+    #         if gamelog.maxlines == 2:
+    #             gamelog.maxlines = 1
+    #         # World View
+    #         world_map_box()
+    #         world_legend_box()
+    #         log_box()
+    #         term.refresh()
+
+    #         x, y, a, e = key_in_world()
+    #         if a is not None:
+    #             processWorldAction(a)
+
+    #         elif all(z is not None for z in [x, y]):
+    #             key_process_world(x, y)
             
-            x, y, a, e = key_in()
+    #         else:
+    #             print(e)
+    #             print('menu screen actions')
 
-            if a is not None:
-                # non-movement action
-                processAction(player.mx, player.my, a)
-                turns += 1
+    #     else:
+    #         # player is on local map level
+    #         # world map screen size differs to local map size
+    #         # we change the number of log lines to fit the terminal
+    #         if gamelog.maxlines == 3:
+    #             gamelog.maxlines = 4 if term.state(term.TK_HEIGHT) > 25 else 3
 
-            elif all(z is not None for z in [x, y]):
-                # movement first action
-                key_process(x, y)
-                turns += 1
+    #         if dungeon == None:
+    #             # previous dungeon was unrefrenced or first time visiting local map
+    #             player.move_height(-1)
+    #             dungeon = calabaston.get_location(*player.position_global())
+    #             player.move_height(1)
 
-            else:
-                print(e)
-                print('access menu screens -- inv, eqp, profile, main menu')
+    #             if player.wz > 0:
+    #                 # iterates down until sublevel is found
+    #                 for i in range(player.wz):
+    #                     dungeon = dungeon.getSublevel()
+
+    #         # ui boxes
+    #         status_box()
+    #         log_box()
+    #         map_box()
+            
+    #         x, y, a, e = key_in()
+
+    #         if a is not None:
+    #             # non-movement action
+    #             processAction(player.mx, player.my, a)
+    #             turns += 1
+
+    #         elif all(z is not None for z in [x, y]):
+    #             # movement first action
+    #             key_process(x, y)
+    #             turns += 1
+
+    #         else:
+    #             print(e)
+    #             print('access menu screens -- inv, eqp, profile, main menu')
 
     # player.dump()
     # gamelog.dumps()           

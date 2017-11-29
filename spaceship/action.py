@@ -23,53 +23,39 @@ from bearlibterminal import terminal as term
         (Esc|Escape) (menu): -> escape screen/main menu
 """
     
-keypress = namedtuple("Keypress", ("x", "y"))
-movement = namedtuple("Movement", ("x", "y"))
-action = namedtuple("Action", ("key", "action"))
+keypress = namedtuple("Keypress", "x y char action")
 
-key_movement={
-    term.TK_UP: movement(0, -1),
-    term.TK_DOWN: movement(0, 1),
-    term.TK_LEFT: movement(-1, 0),
-    term.TK_RIGHT: movement(1, 0),
-}
-num_movement={
-    term.TK_KP_1: movement(-1, 1),
-    term.TK_KP_2: movement(0, 1),
-    term.TK_KP_3: movement(1, 1),
-    term.TK_KP_4: movement(-1, 0),
-    term.TK_KP_5: movement(0, 0),
-    term.TK_KP_6: movement(1, 0),
-    term.TK_KP_7: movement(-1, -1),
-    term.TK_KP_8: movement(0, -1),
-    term.TK_KP_9: movement(1, -1),
-}
+commands = {
+    (term.TK_UP, 0): keypress(0, -1, None, "move"),
+    (term.TK_DOWN, 0): keypress(0, 1, None, "move"),
+    (term.TK_LEFT, 0): keypress(-1, 0, None, "move"),
+    (term.TK_RIGHT, 0): keypress(1, 0, None, "move"),    
+    (term.TK_KP_1, 0): keypress(-1, 1, None, "move"),
+    (term.TK_KP_2, 0): keypress(0, 1, None, "move"),
+    (term.TK_KP_3, 0): keypress(1, 1, None, "move"),
+    (term.TK_KP_4, 0): keypress(-1, 0, None, "move"),
+    (term.TK_KP_5, 0): keypress(0, 0, None, "move"),
+    (term.TK_KP_6, 0): keypress(1, 0, None, "move"),
+    (term.TK_KP_7, 0): keypress(-1, -1, None, "move"),
+    (term.TK_KP_8, 0): keypress(0, -1, None, "move"),
+    (term.TK_KP_9, 0): keypress(1, -1, None, "move"),
 
-# Open|Close -> Openable/Closable classes? --> Doors/Chests/Hatch?
-key_actions={
-    # "a o c t i ,"
-    term.TK_A: action("a", "attack"),
-    term.TK_O: action("o", "open"),
-    term.TK_C: action("c", "close"),
-    term.TK_T: action("t", "talk"),
-    term.TK_I: action("i", "inventory"),
-    term.TK_V: action("v", "equipment"),
-    term.TK_F1: action("f1", "func_key"),
-    term.TK_F2: action("f2", "func_key"),
-    term.TK_COMMA: action(",", "pickup"),
-}
-
-key_shifted_actions={
-    # '< >'
-    term.TK_PERIOD: action(">", "enter"),
-    term.TK_COMMA: action("<", "exit"),
-    term.TK_2: action("@", "profile"),
-}
-
-world_key_actions = {
-    term.TK_PERIOD: action(">", "enter"),
+    (term.TK_A, 0): keypress(None, None, "a", "attack"),
+    (term.TK_O, 0): keypress(None, None, "o", "open"),
+    (term.TK_C, 0): keypress(None, None, "c", "close"),
+    (term.TK_T, 0): keypress(None, None, "t", "talk"),
+    (term.TK_I, 0): keypress(None, None, "i", "inventory"),
+    (term.TK_V, 0): keypress(None, None, "v", "equipment"),
+    # term.TK_F1: keypress("f1", "func_key"),
+    # term.TK_F2: keypress("f2", "func_key"),
+    (term.TK_COMMA, 0): keypress(None, None, ",", "pickup"),
+    (term.TK_COMMA, 1): keypress(None, None, "<", "exit"),
+    (term.TK_PERIOD, 1): keypress(None, None, ">", "enter"),
+    (term.TK_I, 0): keypress(None, None, "i", "equipment"),
+    (term.TK_V, 0): keypress(None, None, "v", "inventory"),
+    (term.TK_2, 1): keypress(None, None, "@", "profile"),
 }
 
 if __name__ == "__main__":
-    for i in world_key_actions.keys():
-        print(i)
+    for i in keys:
+        print(keys)

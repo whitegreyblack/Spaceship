@@ -50,7 +50,10 @@ def start():
         '''Calls create_character, checks return and sends it to new game'''
         cc = create_character()
         if "Exit" not in cc.value:
-            return new_game(cc.value)
+            val =  new_game(cc.value)
+            print(val)
+            print(val)
+            return val
         return cc.proceed
 
     proceed = True

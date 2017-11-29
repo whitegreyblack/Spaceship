@@ -110,7 +110,7 @@ class GameLogger:
             if not self.counter: # don't need to repeatedly dump the same message every time
                 self.dump(self.messages.pop(0))
 
-        self.messages.append(message)
+        self.messages.append([self.getHeader(), message])
         self.update()
 
     def update(self, n=0):
@@ -126,22 +126,25 @@ class GameLogger:
 
     def dump(self, message):
         """Write log to disk"""
+        # transform list into string
+        message = "".join(message)
         try:
             with open(self.filename, 'a') as f:
-                f.write(self.getHeader() + message + "\n")
+                f.write(message + "\n")
 
         except OSError:
             with open(self.filename, 'w') as f:
-                f.write(self.getHeader() + message + "\n")
+                f.write(message + "\n")
 
         except:
             raise
 
     def dumps(self):
         """Write entire message queue to disk"""
-        print("writing dump to {}".format(self.filename))
+        # print("writing dump to {}".format(self.filename))
         # with open(self.filename, 'a') as f:
         for message in self.messages:
                 # f.write(self.getHeader() + message + "\n")
             self.dump(message)
+        self.messages = []
 

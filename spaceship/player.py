@@ -121,7 +121,7 @@ class Player:
     def setup(self, home: str) -> None:
         self.home, self.hpointer = home, World.capitals(home)
         self.wx, self.wy = self.hpointer
-        self.wz = -1
+        self.wz = 0
 
     def convert_equipment(self):
         '''Transforms equipment tuples into actual item objects'''
