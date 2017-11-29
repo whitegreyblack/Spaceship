@@ -519,7 +519,8 @@ class Map:
                         break
                     else:
                         if dx*dx + dy*dy < radius_squared:
-                            if self.square(X, Y).block_lit:
+                            if self.within_bounds(X, y) and self.square(X, Y).block_lit:
+                                print(X, Y)
                                 vision_tiles.add((X, Y))
 
                         if blocked:
@@ -536,6 +537,22 @@ class Map:
                                 new_start = r_slope
                 if blocked:
                     break
+        def split_blocks():
+            '''Returns "interesting details from the map positions in
+            the line of sight of unit
+            '''
+            nonlocal vision_tiles
+            # get units
+            units = []
+            items = []
+            for x, y in vision_tiles:
+               unit = self.get_unit(x, y)
+               if unit:
+                   units += [unit, x, y]
+               item = self.get_item(x, y)
+               if item:
+                   items += [item, x, y]
+            return units, items
 
         vision_tiles = set()
         for o in range(8):
@@ -544,7 +561,7 @@ class Map:
                         self.mult[1][o], 
                         self.mult[2][o], 
                         self.mult[3][o], 0)
-        return vision_tiles
+        return split_blocks()
 
     def fov_calc(self, unit):
         # self.lamps = lights
@@ -611,8 +628,10 @@ class Map:
     # Item object Functions                                                   #
     ###########################################################################
     def add_item(self, x, y, i):
-        self.tilemap[y][x].items.append(i)
+        self.square(x, y).items.append(i)
 
+    def get_item(self, x, y):
+        return self.square(x, y).items
     ###########################################################################
     # Unit object Functions                                                   #
     ###########################################################################
@@ -622,6 +641,7 @@ class Map:
             for u in self.units:
                 if (x, y) == u.position():
                     return u
+        return []
 
     def get_units(self):
         '''Returns all units within the list'''
@@ -642,8 +662,8 @@ class Map:
     def process_unit_actions(self):
         for unit in self.units:
             if hasattr(unit, 'do_ai_stuff'):
-                blocks = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
-                unit.do_ai_stuff(blocks)
+                units, items = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
+                unit.do_ai_stuff(units, items)
 
     def generate_units(self):
         if self.height <= 25:

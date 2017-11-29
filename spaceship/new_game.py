@@ -100,8 +100,11 @@ def new_game(character=None, world=None, turns=0):
         return len(container) == 1
 
     def eightsquare(x, y):
+        print(x, y)
+        squares = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
         space = namedtuple("Space", ("x","y"))
-        for i, j in num_movement.values():
+        for i, j in squares:
+            print(i, j)
             yield space(x + i, y + j)
         # return [space(x+i,y+j) for i, j in list(num_movement.values())]
 
@@ -747,10 +750,13 @@ def new_game(character=None, world=None, turns=0):
         },
     }
 
-    def process_action(player, x, y, action):
+    def process_action(player, action):
         nonlocal turns
         try:
-            actions[max(0, min(player.height(), 1))][action](x, y, action)
+            if player.height() == Level.World:
+                actions[max(0, min(player.height(), 1))][action](player.wx, player.wy, action)
+            else:
+                actions[max(0, min(player.height(), 1))][action](player.mx, player.my, action)
         except KeyError:
             gamelog.add("Invalid CommanD")
     # End Keyboard Functions
@@ -958,7 +964,7 @@ def new_game(character=None, world=None, turns=0):
         # handle player movements and action
         x, y, k, action = key_input()
         if k is not None:
-            process_action(player, x, y, k)
+            process_action(player, k)
 
         elif all(z is not None for z in [x, y]):
             process_movement(x, y)
