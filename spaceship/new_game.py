@@ -11,16 +11,16 @@ from spaceship.maps.city import City
 from spaceship.maps.wild import *
 from spaceship.maps.cave import Cave
 from spaceship.item import Item
-from spaceship.player import Player
+from spaceship.units.player import Player
 from spaceship.create_character import create_character as create
 from spaceship.screen_functions import center, surround, selected
+from spaceship.dungeon import build_terrain, build_dungeon
+from spaceship.setup_game import setup, output, setup_font
 from bearlibterminal import terminal as term
 from spaceship.gamelog import GameLogger
 from random import randint, choice
 from collections import namedtuple
 from namedlist import namedlist
-from spaceship.dungeon import build_terrain, build_dungeon
-from spaceship.setup_game import setup, output, setup_font
 from spaceship.world import World
 from time import clock
 from textwrap import wrap
@@ -955,7 +955,7 @@ def new_game(character=None, world=None, turns=0):
 
         term.refresh()
 
-        # handle player movements
+        # handle player movements and action
         x, y, k, action = key_input()
         if k is not None:
             process_action(player, x, y, k)
@@ -966,7 +966,12 @@ def new_game(character=None, world=None, turns=0):
         else:
             print('Command not yet implemented')
 
+        if not proceed:
+            break
+
         # for all units -- do action
+        if player.height() != Level.World and dungeon:
+            dungeon.process_unit_actions()
 
     # player.dump()
     # gamelog.dumps()           

@@ -15,7 +15,7 @@ from collections import namedtuple
 from spaceship.maps.charmap import DungeonCharmap as dcm
 from spaceship.maps.charmap import WildernessCharmap as wcm
 from spaceship.tools import scroll
-from spaceship.player import Rat, Bat
+from spaceship.units.monsters import Rat, Bat
 
 """Maps file holds template functions that return randomized data maps used\
 in creating procedural worlds"""
@@ -295,8 +295,8 @@ For example
     For each land tile that is not a mountain:
         it has a chance to hold a dungeon i guess
 '''
+
 class Map:
-    ''' Ray Tracing Implementation based off of Rogue Basin Python Tutorial '''
     class Tile:
         def __init__(self, char, color, block_mov, block_lit):
             self.char = char
@@ -305,6 +305,7 @@ class Map:
             self.block_lit = block_lit
             self.items = []
             self.light = 0
+            self.current_unit = False
 
     mult = [
                 [1,  0,  0, -1, -1,  0,  0,  1],
@@ -497,9 +498,57 @@ class Map:
                 if self.square(x, y).light:
                     self.square(x, y).light = 1 # if self.square(x, y).light > 0 else 0
 
-    def fov_calc(self, lights):
-        self.lamps = lights
-        for x, y, radius in lights:
+    def fov_calc_blocks(self, x, y, r):
+        def fov_block(cx, cy, row, start, end, radius, xx, xy, yx, yy, id):
+            nonlocal vision_tiles
+            if start < end:
+                return
+
+            radius_squared = radius * radius
+
+            for j in range(row, radius+1):
+                dx, dy = -j-1, -j
+                blocked = False
+                while dx <= 0:
+                    dx += 1
+                    X, Y = cx + dx * xx + dy * xy, cy + dx * yx + dy * yy
+                    l_slope, r_slope = (dx-0.5)/(dy+0.5), (dx+0.5)/(dy-0.5)
+                    if start < r_slope:
+                        continue
+                    elif end > l_slope:
+                        break
+                    else:
+                        if dx*dx + dy*dy < radius_squared:
+                            if self.square(X, Y).block_lit:
+                                vision_tiles.add((X, Y))
+
+                        if blocked:
+                            if self.blocked(X, Y) and not self.viewable(X, Y):
+                                new_start = r_slope
+                            else:
+                                blocked = False
+                                start = new_start
+                        else:
+                            if self.blocked(X, Y) and not self.viewable(X, Y) and j < radius:
+                                blocked = True
+                                self.sight(cx, cy, j+1, start, l_slope,
+                                                radius, xx, xy, yx, yy, id+1)
+                                new_start = r_slope
+                if blocked:
+                    break
+
+        vision_tiles = set()
+        for o in range(8):
+            fov_block(x, y, 1, 1.0, 0.0, r,
+                        self.mult[0][o], 
+                        self.mult[1][o], 
+                        self.mult[2][o], 
+                        self.mult[3][o], 0)
+        return vision_tiles
+
+    def fov_calc(self, unit):
+        # self.lamps = lights
+        for x, y, radius in unit:
             for o in range(8):
                 self.sight(x, y, 1, 1.0, 0.0, 
                         radius,
@@ -568,12 +617,14 @@ class Map:
     # Unit object Functions                                                   #
     ###########################################################################
     def get_unit(self, x, y):
+        '''Returns units by positional values'''
         if hasattr(self, 'units'):
             for u in self.units:
                 if (x, y) == u.position():
                     return u
 
     def get_units(self):
+        '''Returns all units within the list'''
         if hasattr(self, 'units'):
             for unit in self.units:
                 yield unit
@@ -587,6 +638,12 @@ class Map:
     def remove_unit(self, unit):
         if hasattr(self, 'units'):
             self.units.remove(unit)
+
+    def process_unit_actions(self):
+        for unit in self.units:
+            if hasattr(unit, 'do_ai_stuff'):
+                blocks = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
+                unit.do_ai_stuff(blocks)
 
     def generate_units(self):
         if self.height <= 25:

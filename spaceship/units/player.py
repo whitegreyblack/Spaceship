@@ -1,7 +1,7 @@
 import os
 import sys
 from typing import Tuple
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../../')
 from spaceship.world import World
 from spaceship.item import Armor, Weapon, Item, items
 from random import randint
@@ -12,73 +12,6 @@ from random import randint
 
 #     def calculate_relations(self):
 #         pass
-
-class Unit:
-    unit_id = 0
-    relation = 100
-    def __init__(self, x, y, race, job, char, color):
-        self.unit_id = Unit.unit_id
-        Unit.unit_id += 1
-
-        self.x, self.y = x, y
-        self.character = char
-        self.exp = 0
-        self.job = job
-        self.race = race
-        self.color = color
-        self.health = 10
-        self.movable = True
-
-        self.damage_lower = 1
-        self.damage_higher = 2
-
-        ''' TODO: implement unique attributes
-        self.str, self.agi, self.int
-        self.armor_type = unarmored, light, medium, heavy, fort/building
-        self.damage_type = normal, magic, pierce, siege
-        self.weapon_type = normal, pierce, missle, instant, min, 
-        self.damage_physical
-        self.defense_physical
-        self.damage_magical
-        self.defense_magical
-        '''
-    def __repr__(self):
-        return "{}[{}]: ({},{})".format(self.description, self.character, self.x, self. y)
-
-    def position(self):
-        return self.x, self.y
-
-    def move(self, dx, dy):
-        self.x += dx
-        self.y += dy
-
-    def talk(self):
-        return self.job + ': Hello there.'
-
-    def draw(self):
-        return self.x, self.y, self.char, self.color
-
-    def displace(self, other, x, y):
-        self.move(x, y)
-        other.move(-x, -y)
-
-    def calculate_attack_damage(self, other):
-        return randint(self.damage_lower, self.damage_higher)
-
-    def calculate_attack_chance(self, other):
-        chance = randint(1, 20)
-        if chance == 1:
-            return 0
-        elif chance == 20:
-            return 2
-        else:
-            return 1
-
-    def friendly(self):
-        return self.relation > 0
-
-    def gain_exp(self, exp):
-        self.exp += exp
 
 class Player:
     parts=("eq_head", "eq_neck", "eq_body", "eq_arms", "eq_hands", 
@@ -332,90 +265,6 @@ Accuracy : {acc:>5}
             self.job,
             self.level,
             self.exp)
-
-class Shopkeeper(Unit):
-    def __init__(self, x, y, race, job, char, color):
-        super().__init__(x, y, race, job, char, color)
-        self.moveable = False
-        
-    def talk(self):
-        return "{}: What you looking for?".format(self.__class__.__name__)
-
-class Innkeeper(Unit):
-    def __init__(self, x, y, race, job, char, color):
-        super().__init__(x, y, race, job, char, color)
-        self.movable = False
-
-    def talk(self):
-        return "{}: Need a room to stay?".format(self.__class__.__name__)
-
-class Bishop(Unit):
-    def __init__(self, x, y, race, job, char, color):
-        super().__init__(x, y, race, job, char, color)
-
-    def talk(self):
-        return "{}: Blessings. Need some healing?".format(self.__class__.__name__)
-
-class Soldier(Unit):
-    def __init__(self, x, y, race, job, char, color):
-        super().__init__(x, y, race, job, char, color)
-
-    def talk(self):
-        return "{}: Don't be causing trouble. Move along.".format(self.__class__.__name__)
-
-class Rat(Unit):
-    def __init__(self, x, y):
-        self.unit_id = Unit.unit_id
-        Unit.unit_id += 1
-
-        self.x, self.y = x, y
-        self.xp = 25
-        self.health = 5
-        self.character = "r"
-        self.job = "rat"
-        self.race = "monster"
-        self.color = "brown"
-        self.relation = -100
-        self.damage_lower = 3
-        self.damage_higher = 5
-
-    def drops(self):
-        if randint(0, 1):
-            return Item("rat corpse", "%", "red")
-        else:
-            return None
-    
-    def talk(self):
-        return "Reeeee!!"
-
-class GiantRat(Unit):
-    def __init__(self, x, y):
-        self.x, self.y = x, y
-        self.xp = 35
-        self.health = 10
-        self.character = "r"
-        self.job = "giant rat"
-        self.race = "monster"
-        self.color = "brown"        
-
-    def talk(self):
-        return "Screeeee!!"
-
-class Bat(Unit):
-    def __init__(self, x, y):
-        self.unit_id = Unit.unit_id
-        Unit.unit_id += 1
-
-        self.x, self.y = x, y
-        self.xp = 20
-        self.health = 5
-        self.character = "b"
-        self.job = "bat"
-        self.race = "monster"
-        self.color = "brown"
-
-    def talk(self):
-        return "Screech"
 
 class Object:
     def __init__(self, n, x, y, i, c='white', r="human", h=10):

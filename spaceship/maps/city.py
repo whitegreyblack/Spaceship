@@ -7,7 +7,8 @@ from collections import namedtuple
 from spaceship.maps.charmap import DungeonCharmap as dcm
 from spaceship.maps.charmap import WildernessCharmap as wcm
 from random import shuffle, choice, randint
-from spaceship.player import Unit, Shopkeeper, Innkeeper, Bishop, Soldier
+from spaceship.units.unit import Unit
+from spaceship.units.neutrals import Shopkeeper, Innkeeper, Bishop, Soldier
 
 class City(Map):
     chars = {
