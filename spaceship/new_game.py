@@ -37,10 +37,10 @@ class Level: Global, World, Local = -1, 0, 1
 
 def new_game(character=None, world=None):
     def save_game(x, y, action):
+        nonlocal proceed
         if not os.path.isdir('saves'):
             print('saved folder does not exist - creating folder: "./saves"')
             os.makedirs('saves')
-
         # prepare strings for file writing -- player_hash used for same name/different character saves
         name = player.name.replace(' ', '_')
         desc = player.job + " " + str(player.level)
@@ -48,7 +48,7 @@ def new_game(character=None, world=None):
             save_file['save'] = desc
             save_file['player'] = player
             save_file['world'] = calabaston
-
+        proceed = False
 
     def refresh(lines=[]):
         for line in lines:
@@ -1024,7 +1024,7 @@ def new_game(character=None, world=None):
             process_movement(x, y)
 
         else:
-            print('accessing menu probably')
+            print('Command not yet implemented')
 
         # for all units -- do action
 
