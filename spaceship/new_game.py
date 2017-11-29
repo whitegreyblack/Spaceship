@@ -66,129 +66,82 @@ def new_game(character=None, world=None):
     # ---------------------------------------------------------------------------------------------------------------------#
     # Keyboard input
 
-    def key_in_world():
-        '''Key processing while player in overworld'''
-        nonlocal proceed
-        keydown = namedtuple("Key_Press", "x y a e")
-        act, x, y, error = None, None, None, None
-        code = term.read()
+    # def key_in_world():
+    #     '''Key processing while player in overworld'''
+    #     nonlocal proceed
+    #     keydown = namedtuple("Key_Press", "x y a e")
+    #     act, x, y, error = None, None, None, None
+    #     code = term.read()
 
-        while code in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
-            code = term.read()
+    #     while code in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
+    #         code = term.read()
 
-        if code in (term.TK_CLOSE, term.TK_ESCAPE, term.TK_Q):
-            proceed = False
-            exit_status = True
+    #     if code in (term.TK_CLOSE, term.TK_ESCAPE, term.TK_Q):
+    #         proceed = False
+    #         exit_status = True
 
-        # map draw types
-        # elif code in (term.TK_P, term.TK_G, term.TK_K):
-        #     if code == term.TK_P and wview != WorldView.Pol:
-        #         wview = WorldView.Pol
-        #     elif code == term.TK_G and wview != WorldView.Geo:
-        #         wview = WorldView.Geo
-        #     else:
-        #         wview = WorldView.King
-        #     act = "Do Nothing"
+    #     # map draw types
+    #     # elif code in (term.TK_P, term.TK_G, term.TK_K):
+    #     #     if code == term.TK_P and wview != WorldView.Pol:
+    #     #         wview = WorldView.Pol
+    #     #     elif code == term.TK_G and wview != WorldView.Geo:
+    #     #         wview = WorldView.Geo
+    #     #     else:
+    #     #         wview = WorldView.King
+    #     #     act = "Do Nothing"
         
-        # elif code in (term.TK_COMMA, term.TK_PERIOD):
-        #     if code == term.TK_COMMA and term.state(term.TK_SHIFT):
-        #         act = "exit"
-        #     elif code == term.TK_PERIOD and term.state(term.TK_SHIFT):
-        #         act = "enter"
-        # ENTER/EXIT COMMAND
+    #     # elif code in (term.TK_COMMA, term.TK_PERIOD):
+    #     #     if code == term.TK_COMMA and term.state(term.TK_SHIFT):
+    #     #         act = "exit"
+    #     #     elif code == term.TK_PERIOD and term.state(term.TK_SHIFT):
+    #     #         act = "enter"
+    #     # ENTER/EXIT COMMAND
 
-        elif code in (term.TK_PERIOD,):
-            if term.state(term.TK_SHIFT):
-                try:
-                    act = world_key_actions[code].key
-                except KeyError:
-                    raise
+    #     elif code in (term.TK_PERIOD,):
+    #         if term.state(term.TK_SHIFT):
+    #             try:
+    #                 act = world_key_actions[code].key
+    #             except KeyError:
+    #                 raise
 
-        # elif code == term.TK_Z:
-        #     act = "Zoom"
+    #     # elif code == term.TK_Z:
+    #     #     act = "Zoom"
         
-        # MOVEMENT using ARROW KEYS
-        elif code in key_movement:
-            x, y = key_movement[code]
-        # MOVEMENT using NUMBERPAD keys
-        elif code in num_movement:
-            x, y = num_movement[code]
+    #     # MOVEMENT using ARROW KEYS
+    #     elif code in key_movement:
+    #         x, y = key_movement[code]
+    #     # MOVEMENT using NUMBERPAD keys
+    #     elif code in num_movement:
+    #         x, y = num_movement[code]
 
-        elif code in (term.TK_S,) and term.state(term.TK_SHIFT):
-            print('pressed shift-s')
-            gamelog.add("Save and exit game? (Y/N)")
-            log_box()
-            term.refresh()
-            code = term.read()
-            if code == term.TK_Y:
-                save_game()
-                proceed = False
-                return keydown(x, y, act, 'QUIT')
+    #     elif code in (term.TK_S,) and term.state(term.TK_SHIFT):
+    #         print('pressed shift-s')
+    #         gamelog.add("Save and exit game? (Y/N)")
+    #         log_box()
+    #         term.refresh()
+    #         code = term.read()
+    #         if code == term.TK_Y:
+    #             save_game()
+    #             proceed = False
+    #             return keydown(x, y, act, 'QUIT')
 
-        # keyboard keys
-        # elif code in key_actions:
-        #     act = key_actions[code].key
-        # any other key F-keys, Up/Down Pg, etc
-        else:
-            gamelog.add("unrecognized command")
+    #     # keyboard keys
+    #     # elif code in key_actions:
+    #     #     act = key_actions[code].key
+    #     # any other key F-keys, Up/Down Pg, etc
+    #     else:
+    #         gamelog.add("unrecognized command")
                 
-        # make sure we clear any inputs before the next action is processed
-        # allows for the program to go slow enough for human playability
-        while term.has_input(): 
-            term.read()
+    #     # make sure we clear any inputs before the next action is processed
+    #     # allows for the program to go slow enough for human playability
+    #     while term.has_input(): 
+    #         term.read()
 
-        return keydown(x, y, act, error)
-
-    def key_in():
-        '''Key Processing while player in local map'''
-        nonlocal proceed
-        keydown = namedtuple("Key_Press", "x y a e")
-        act, x, y, error = None, None, None, None
-        code = term.read()
-
-        while code in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
-            code = term.read()
-        
-        # if any([term.state(tk) for tk in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT)]):
-        
-        if code in (term.TK_ESCAPE, term.TK_CLOSE):
-            if term.state(term.TK_SHIFT):
-                exit("Easy Exit")
-            # gamelog.dumps()
-            # proceed = False
-            pass
-
-        elif code in key_movement:
-            # arrow keys
-            x, y = key_movement[code]
-        elif code in num_movement:
-            # numberpad keys
-            x, y = num_movement[code]
-        elif code in key_actions and not term.state(term.TK_SHIFT):
-            # keyboard keys
-            act = key_actions[code].key
-        elif code in key_shifted_actions and term.state(term.TK_SHIFT):
-            # keyboard shifted keys
-            act = key_shifted_actions[code].key
-        else:
-            # any other key F-keys, Up/Down Pg, etc        
-            gamelog.add("unrecognized command")
-        
-        # make sure we clear any inputs before the next action is processed
-        # allows for the program to go slow enough for human playability
-        while term.has_input(): 
-            term.read()
-
-        return keydown(x, y, act, error)
+    #     return keydown(x, y, act, error)
 
     def key_input():
-        '''Try creating a general purpose key input function that is called by both
-        world and map functions
-        '''
+        '''Handles keyboard input and keypress transformation'''
         nonlocal proceed
-
-        keydown = namedtuple("Key_Down", ("x", "y", "a"))
-        act, x, y = 0, 0, 0
 
         key = term.read()
         while key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
@@ -307,33 +260,6 @@ def new_game(character=None, world=None):
                             gamelog.add("You cannot swim")
                         else:
                             gamelog.add("You walk into {}".format(walkChars[ch]))
-        
-    # def key_process_world(x, y):
-    #     walkBlock = "walked into {}"
-    #     tx = player.wx + x
-    #     ty = player.wy + y
-
-    #     # inbounds = 0 <= tx < calabaston.w and 0 <= ty < calabaston.h
-    #     walkable = calabaston.walkable(tx, ty) # checks bounds and blocked tiles
-
-    #     if walkable:
-    #         player.save_position_global()
-    #         player.travel(x, y)
-    #         # description = calabaston.tilehasdescription(tposx, tposy)
-    #         # if description:
-    #         #     gamelog.add(description)
-    #     else:
-    #         # Individually log the specific reason
-    #         sentence = "You cannot move there"
-    #         gamelog.add(sentence)
-    #         # if blocked:
-    #             # =============  START WALK LOG  =================================
-    #             # gamelog.add("Cannot go there {}, {}".format(tx, ty))
-    #             # ===============  END WALK LOG  =================================
-    #         # elif not inbounds:
-    #         #     gamelog.add(walkBlock.format("the edge of the map"))
-    #         #     print("cannot go there", tx, ty)
-    #         gamelog.add("Not walkable")
 
     def key_process(x, y):
         walkChars = {
@@ -873,6 +799,8 @@ def new_game(character=None, world=None):
             'S': save_game,
         },
         1: {
+            '>': interactStairs,
+            '<': interactStairs,
             'a': attackUnit,
             'o': interactDoor,
             'c': interactDoor,
@@ -882,23 +810,6 @@ def new_game(character=None, world=None):
             'v': open_player_screen,
         },
     }
-    # def processAction(x, y, key):
-    #     if key in ("o", "c"):
-    #         actions[key](x, y, key)
-    #     elif key in ("a"):
-    #         actions[key](x, y, key)
-    #     elif key in ("<", ">"):
-    #         actions[key](x, y, key)
-    #     elif key in (","):
-    #         actions[key](x, y, key)
-    #     elif key in ("t"):
-    #         actions[key](x, y)
-    #     elif key in ("i", "v", "@"):
-    #         actions[key](key)
-    #     elif key in ("f1, f2"):
-    #         actions[key]()
-    #     else:
-    #         gamelog.add('invalid command')
 
     def process_action(player, x, y, action):
         nonlocal turns
@@ -1089,17 +1000,19 @@ def new_game(character=None, world=None):
         else:
             gamelog.maxlines = 4 if term.state(term.TK_HEIGHT) > 25 else 2
             if dungeon == None:
-                player.move_height(-1)
+                # player.move_height(-1)
                 dungeon = calabaston.get_location(*player.position_global())
-                player.move_height(1)
+                # player.move_height(1)
 
                 if player.height() == 0:
                     # iterates down until sublevel is found
-                    for i in range(player.wz):
+                    for i in range(player.height()):
                         dungeon = dungeon.getSublevel()
+                        
             map_box()
             status_box()
             log_box()
+
         term.refresh()
 
         # handle player movements
@@ -1115,70 +1028,9 @@ def new_game(character=None, world=None):
 
         # for all units -- do action
 
-    # while proceed:
-    #     term.clear()
-    #     if player.height() == -1:
-    #         if gamelog.maxlines == 2:
-    #             gamelog.maxlines = 1
-    #         # World View
-    #         world_map_box()
-    #         world_legend_box()
-    #         log_box()
-    #         term.refresh()
-
-    #         x, y, a, e = key_in_world()
-    #         if a is not None:
-    #             processWorldAction(a)
-
-    #         elif all(z is not None for z in [x, y]):
-    #             key_process_world(x, y)
-            
-    #         else:
-    #             print(e)
-    #             print('menu screen actions')
-
-    #     else:
-    #         # player is on local map level
-    #         # world map screen size differs to local map size
-    #         # we change the number of log lines to fit the terminal
-    #         if gamelog.maxlines == 3:
-    #             gamelog.maxlines = 4 if term.state(term.TK_HEIGHT) > 25 else 3
-
-    #         if dungeon == None:
-    #             # previous dungeon was unrefrenced or first time visiting local map
-    #             player.move_height(-1)
-    #             dungeon = calabaston.get_location(*player.position_global())
-    #             player.move_height(1)
-
-    #             if player.wz > 0:
-    #                 # iterates down until sublevel is found
-    #                 for i in range(player.wz):
-    #                     dungeon = dungeon.getSublevel()
-
-    #         # ui boxes
-    #         status_box()
-    #         log_box()
-    #         map_box()
-            
-    #         x, y, a, e = key_in()
-
-    #         if a is not None:
-    #             # non-movement action
-    #             processAction(player.mx, player.my, a)
-    #             turns += 1
-
-    #         elif all(z is not None for z in [x, y]):
-    #             # movement first action
-    #             key_process(x, y)
-    #             turns += 1
-
-    #         else:
-    #             print(e)
-    #             print('access menu screens -- inv, eqp, profile, main menu')
-
     # player.dump()
     # gamelog.dumps()           
-    return True
+    return "Safe Exit"
 # End New Game Menu
 
 if __name__ == "__main__":

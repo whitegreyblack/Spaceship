@@ -51,8 +51,6 @@ def start():
         cc = create_character()
         if "Exit" not in cc.value:
             val =  new_game(cc.value)
-            print(val)
-            print(val)
             return val
         return cc.proceed
 
