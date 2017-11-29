@@ -36,7 +36,7 @@ class Level: Global, World, Local = -1, 0, 1
 # class WorldView: Geo, Pol, King = range(3)
 
 def new_game(character=None, world=None):
-    def save_game():
+    def save_game(x, y, action):
         if not os.path.isdir('saves'):
             print('saved folder does not exist - creating folder: "./saves"')
             os.makedirs('saves')
@@ -68,7 +68,7 @@ def new_game(character=None, world=None):
 
     def key_in_world():
         '''Key processing while player in overworld'''
-        nonlocal proceed, exit_status
+        nonlocal proceed
         keydown = namedtuple("Key_Press", "x y a e")
         act, x, y, error = None, None, None, None
         code = term.read()
@@ -141,7 +141,7 @@ def new_game(character=None, world=None):
 
     def key_in():
         '''Key Processing while player in local map'''
-        nonlocal proceed, exit_status
+        nonlocal proceed
         keydown = namedtuple("Key_Press", "x y a e")
         act, x, y, error = None, None, None, None
         code = term.read()
@@ -198,6 +198,8 @@ def new_game(character=None, world=None):
         if key in (term.TK_ESCAPE, term.TK_CLOSE):
             # exit command -- maybe need a back to menu screen?
             if term.state(term.TK_SHIFT):
+                exit('Early Exit')
+            else:
                 proceed = False
             return tuple(None for _ in range(4))
         elif any(key == press for press, shift in commands.keys()):
@@ -214,17 +216,20 @@ def new_game(character=None, world=None):
             yield space(x + i, y + j)
         # return [space(x+i,y+j) for i, j in list(num_movement.values())]
 
-    def process_movement(character, x, y):
-        if  character.height() == Level.World:
+    def process_movement(x, y):
+        nonlocal player, turns
+        if  player.height() == Level.World:
             if (x, y) == (0, 0):
                 gamelog.add("You wait in the area")
+                turns += 1
             else:
-                tx = character.wx + x
-                ty = character.wy + y
+                tx = player.wx + x
+                ty = player.wy + y
 
                 if calabaston.walkable(tx, ty):
-                    character.save_position_global()
-                    character.travel(x, y)
+                    player.save_position_global()
+                    player.travel(x, y)
+                    turns += 1
                 else:
                     travel_error = "You cannot travel there"
                     gamelog.add(travel_error)
@@ -232,13 +237,14 @@ def new_game(character=None, world=None):
         else:
             if (x, y) == (0, 0):
                 gamelog.add("You rest for a while")
+                turns += 1
             else:
-                tx = character.mx + x
-                ty = character.my + y
+                tx = player.mx + x
+                ty = player.my + y
 
                 if dungeon.walkable(tx, ty):
                     if not dungeon.occupied(tx, ty):
-                        character.move(x, y)
+                        player.move(x, y)
                         if dungeon.square(tx, ty).items and randint(0, 5):
                             pass_item_messages = [
                                 "You pass by an item.",
@@ -246,17 +252,18 @@ def new_game(character=None, world=None):
                                 "Your feet touches an object."
                             ]
                             gamelog.add(pass_item_message[randint(0, len(pass_item_messages)-1)])
+                        turns += 1
                     else:
                         unit = dungeon.get_unit(tx, ty)
                         if unit.friendly():
                             unit.move(-x, -y)
-                            character.move(x, y)
+                            player.move(x, y)
                             gamelog.add("You switch places with the {}".format(unit.job))
                         else:
-                            if character.calculate_attack_chance() == 0:
+                            if player.calculate_attack_chance() == 0:
                                 gamelog.add("You try attacking the {} but miss".format(unit.job))
                             else:
-                                damage = character.calculate_attack_damage() * (2 if chance == 2 else 1)
+                                damage = player.calculate_attack_damage() * (2 if chance == 2 else 1)
                                 unit.health -= damage
                                 log = "You {} attack the {} for {} damage. ".format(
                                     "crit and" if chance == 2 else "", unit.job, damage)
@@ -265,10 +272,10 @@ def new_game(character=None, world=None):
 
                                 if unit.health < 1:
                                     gamelog.add("You have killed the {}! You gain {} exp".format(unit.job, unit.xp))
-                                    character.gain_exp(unit.xp)
+                                    player.gain_exp(unit.xp)
 
-                                    if character.check_exp():
-                                        gamelog.add("You level up. You are now level {}".format(character.level))
+                                    if player.check_exp():
+                                        gamelog.add("You level up. You are now level {}".format(player.level))
                                         gamelog.add("You feel much stronger")
 
                                     item = unit.drops()
@@ -278,42 +285,55 @@ def new_game(character=None, world=None):
                                         gamelog.add("The {} has dropped {}".format(unit.job, item.name))
 
                                     dungeon.remove_unit(unit)
+                        turns += 1
                 else:
                     if dungeon.out_of_bounds(tx, ty):
                         gamelog.add("You reached the edge of the map")
                     else:
-                        ch = dungeon.square(tposx, tposy).char
+                        walkChars = {
+                            "+": "a door",
+                            "/": "a door",
+                            "o": "a lamp",
+                            "#": "a wall",
+                            "x": "a post",
+                            "~": "a river",
+                            "T": "a tree",
+                            "f": "a tree",
+                            "Y": "a tree",
+                            "%": "a wall",
+                        }
+                        ch = dungeon.square(tx, ty).char
                         if ch == "~":
                             gamelog.add("You cannot swim")
                         else:
                             gamelog.add("You walk into {}".format(walkChars[ch]))
         
-    def key_process_world(x, y):
-        walkBlock = "walked into {}"
-        tx = player.wx + x
-        ty = player.wy + y
+    # def key_process_world(x, y):
+    #     walkBlock = "walked into {}"
+    #     tx = player.wx + x
+    #     ty = player.wy + y
 
-        # inbounds = 0 <= tx < calabaston.w and 0 <= ty < calabaston.h
-        walkable = calabaston.walkable(tx, ty) # checks bounds and blocked tiles
+    #     # inbounds = 0 <= tx < calabaston.w and 0 <= ty < calabaston.h
+    #     walkable = calabaston.walkable(tx, ty) # checks bounds and blocked tiles
 
-        if walkable:
-            player.save_position_global()
-            player.travel(x, y)
-            # description = calabaston.tilehasdescription(tposx, tposy)
-            # if description:
-            #     gamelog.add(description)
-        else:
-            # Individually log the specific reason
-            sentence = "You cannot move there"
-            gamelog.add(sentence)
-            # if blocked:
-                # =============  START WALK LOG  =================================
-                # gamelog.add("Cannot go there {}, {}".format(tx, ty))
-                # ===============  END WALK LOG  =================================
-            # elif not inbounds:
-            #     gamelog.add(walkBlock.format("the edge of the map"))
-            #     print("cannot go there", tx, ty)
-            gamelog.add("Not walkable")
+    #     if walkable:
+    #         player.save_position_global()
+    #         player.travel(x, y)
+    #         # description = calabaston.tilehasdescription(tposx, tposy)
+    #         # if description:
+    #         #     gamelog.add(description)
+    #     else:
+    #         # Individually log the specific reason
+    #         sentence = "You cannot move there"
+    #         gamelog.add(sentence)
+    #         # if blocked:
+    #             # =============  START WALK LOG  =================================
+    #             # gamelog.add("Cannot go there {}, {}".format(tx, ty))
+    #             # ===============  END WALK LOG  =================================
+    #         # elif not inbounds:
+    #         #     gamelog.add(walkBlock.format("the edge of the map"))
+    #         #     print("cannot go there", tx, ty)
+    #         gamelog.add("Not walkable")
 
     def key_process(x, y):
         walkChars = {
@@ -452,7 +472,7 @@ def new_game(character=None, world=None):
                                 else:
                                     dungeon.remove_unit(other)
 
-    def open_player_screen(key):
+    def open_player_screen(x, y, key):
         '''Game function to handle player equipment and inventory'''
         def profile():
             '''Handles player profile screen'''
@@ -545,6 +565,7 @@ def new_game(character=None, world=None):
         term.clear()
 
     def attackUnit(x, y, k):
+        nonlocal turns
         def attack(x, y):
             unit = dungeon.get_unit(x, y)
             log = "You attack the {}. ".format(unit.job)
@@ -586,6 +607,8 @@ def new_game(character=None, world=None):
             if (x+cx, y+cy) in attackables:
                 attack(x + cx, y + cy)
 
+        turns += 1
+
     def interactUnit(x, y, action):
         """Allows talking with other units"""
         def talkUnit(x, y):
@@ -626,6 +649,7 @@ def new_game(character=None, world=None):
                 talkUnit(x+cx, y+cy)
 
     def interactItem(x, y, key):
+        nonlocal turns
         def pickItem():
             item = dungeon.square(x, y).items.pop()
             player.inventory.append(item)
@@ -648,9 +672,11 @@ def new_game(character=None, world=None):
                 #     pick_menu(items)
             else:
                 gamelog.add("Nothing to pick up")
+        turns += 1
 
     def interactDoor(x, y, key):
         """Allows interaction with doors"""
+        nonlocal turns
         def openDoor(i, j):
             gamelog.add("Opened door")
             dungeon.open_door(i, j)
@@ -697,7 +723,8 @@ def new_game(character=None, world=None):
             if (x+cx, y+cy) in reachables:
                 openDoor(x+cx, y+cy) if key is 'o' else closeDoor(x+cx, y+cy)
 
-        map_box()
+        turns += 1
+        # map_box()
 
     def interactStairs(x, y, k):
         nonlocal dungeon
@@ -836,13 +863,14 @@ def new_game(character=None, world=None):
                 player.reset_position_local(*get_wilderness_enterance(x, y))
                 
         player.move_height(1)
-
+    
     actions={
         0: {
             '>': enter_map,
             '@': open_player_screen,
             'i': open_player_screen,
             'v': open_player_screen,
+            'S': save_game,
         },
         1: {
             'a': attackUnit,
@@ -872,12 +900,12 @@ def new_game(character=None, world=None):
     #     else:
     #         gamelog.add('invalid command')
 
-    def process_action(character, x, y, action):
+    def process_action(player, x, y, action):
+        nonlocal turns
         try:
-            actions[max(0, min(character.height(), 1))][action](x, y, action)
+            actions[max(0, min(player.height(), 1))][action](x, y, action)
         except KeyError:
             gamelog.add("Invalid CommanD")
-
     # End Keyboard Functions
     # ---------------------------------------------------------------------------------------------------------------------#
     # Graphic functions
@@ -908,7 +936,6 @@ def new_game(character=None, world=None):
             term.puts(screen_width - 20, j, border_line)
             term.puts(screen_width - 1, j, border_line)
 
-    turn = 0
     def status_box():
         col, row = 1, 2
         term.puts(col, row - 1, player.name)
@@ -931,10 +958,14 @@ def new_game(character=None, world=None):
         term.puts(col, row + 16, "CHA: {:>6}".format(player.cha))
 
         term.puts(col, row + 18, "GOLD:{:>6}".format(player.gold))
-        
+
         # sets the location name at the bottom of the status bar
         if player.position_global() in calabaston.enterable_legend.keys():
             location = calabaston.enterable_legend[player.position_global()]
+            term.bkcolor('grey')
+            term.puts(0, 0, ' ' * screen_width)
+            term.bkcolor('black')
+            term.puts(center(surround(location), screen_width), 0, surround(location))
 
         elif player.position_global() in calabaston.dungeon_legend.keys():
             location = calabaston.dungeon_legend[player.position_global()]
@@ -945,6 +976,7 @@ def new_game(character=None, world=None):
         term.puts(col, row + 20, "{}".format(location))
 
     def log_box():
+        nonlocal turns
         messages = gamelog.write().messages
         if messages:
             for idx in range(len(messages)):
@@ -954,16 +986,16 @@ def new_game(character=None, world=None):
                     screen_height - len(messages) + idx, 
                     messages[idx][1])
 
-        term.puts(1, screen_height-1, 'Turns: {:<4}'.format(turns))
+        term.puts(1, screen_height-3, 'Turns: {:<4}'.format(turns))
 
     def map_box():
         term.composition(False)
         dungeon.fov_calc([(player.mx, player.my, player.sight * 2)])
 
         for x, y, lit, ch in dungeon.output(player.mx, player.my, []):
-            term.puts(x + 13, y, "[color={}]".format(lit) + ch + "[/color]")
+            term.puts(x + 13, y + 1, "[color={}]".format(lit) + ch + "[/color]")
 
-        term.refresh()
+        # term.refresh()refresh()
         
     def world_legend_box():
         length, offset, height = 14, 12, 0
@@ -1018,7 +1050,6 @@ def new_game(character=None, world=None):
         return output(proceed=False, value="No Character Data Input")
     elif not world:
         # unpack character tuple to create a player object
-        print(character.equipment)
         player = Player(character)
 
         # create the world from scratch
@@ -1037,7 +1068,6 @@ def new_game(character=None, world=None):
 
     turns = 0
     proceed = True
-    exit_status = None
     dungeon = None
     
     '''
@@ -1051,7 +1081,6 @@ def new_game(character=None, world=None):
     '''
     while proceed:
         term.clear()
-
         if player.height() == Level.World:
             gamelog.maxlines = 2
             world_map_box()
@@ -1059,7 +1088,6 @@ def new_game(character=None, world=None):
             log_box()
         else:
             gamelog.maxlines = 4 if term.state(term.TK_HEIGHT) > 25 else 2
-
             if dungeon == None:
                 player.move_height(-1)
                 dungeon = calabaston.get_location(*player.position_global())
@@ -1069,7 +1097,7 @@ def new_game(character=None, world=None):
                     # iterates down until sublevel is found
                     for i in range(player.wz):
                         dungeon = dungeon.getSublevel()
-
+            map_box()
             status_box()
             log_box()
         term.refresh()
@@ -1078,14 +1106,15 @@ def new_game(character=None, world=None):
         x, y, k, action = key_input()
         if k is not None:
             process_action(player, x, y, k)
-            turn += 1
 
         elif all(z is not None for z in [x, y]):
-            process_movement(player, x, y)
-            turn += 1
+            process_movement(x, y)
 
         else:
             print('accessing menu probably')
+
+        # for all units -- do action
+
     # while proceed:
     #     term.clear()
     #     if player.height() == -1:

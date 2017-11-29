@@ -54,6 +54,7 @@ commands = {
     (term.TK_I, 0): keypress(None, None, "i", "equipment"),
     (term.TK_V, 0): keypress(None, None, "v", "inventory"),
     (term.TK_2, 1): keypress(None, None, "@", "profile"),
+    (term.TK_S, 1): keypress(None, None, "S", "save")
 }
 
 if __name__ == "__main__":
