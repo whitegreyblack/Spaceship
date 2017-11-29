@@ -35,9 +35,17 @@ import shelve
 class Level: Global, World, Local = -1, 0, 1
 # class WorldView: Geo, Pol, King = range(3)
 
-def new_game(character=None, world=None):
+def new_game(character=None, world=None, turns=0):
     def save_game(x, y, action):
         nonlocal proceed
+
+        gamelog.add("Save and exit game? (Y/N)")
+        log_box()
+        term.refresh()
+        code = term.read()
+        if code != term.TK_Y:
+            return
+
         if not os.path.isdir('saves'):
             print('saved folder does not exist - creating folder: "./saves"')
             os.makedirs('saves')
@@ -48,6 +56,7 @@ def new_game(character=None, world=None):
             save_file['save'] = desc
             save_file['player'] = player
             save_file['world'] = calabaston
+            save_file['turns'] = turns
         proceed = False
 
     def refresh(lines=[]):
@@ -65,79 +74,6 @@ def new_game(character=None, world=None):
     # END SETUP TOOLS
     # ---------------------------------------------------------------------------------------------------------------------#
     # Keyboard input
-
-    # def key_in_world():
-    #     '''Key processing while player in overworld'''
-    #     nonlocal proceed
-    #     keydown = namedtuple("Key_Press", "x y a e")
-    #     act, x, y, error = None, None, None, None
-    #     code = term.read()
-
-    #     while code in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
-    #         code = term.read()
-
-    #     if code in (term.TK_CLOSE, term.TK_ESCAPE, term.TK_Q):
-    #         proceed = False
-    #         exit_status = True
-
-    #     # map draw types
-    #     # elif code in (term.TK_P, term.TK_G, term.TK_K):
-    #     #     if code == term.TK_P and wview != WorldView.Pol:
-    #     #         wview = WorldView.Pol
-    #     #     elif code == term.TK_G and wview != WorldView.Geo:
-    #     #         wview = WorldView.Geo
-    #     #     else:
-    #     #         wview = WorldView.King
-    #     #     act = "Do Nothing"
-        
-    #     # elif code in (term.TK_COMMA, term.TK_PERIOD):
-    #     #     if code == term.TK_COMMA and term.state(term.TK_SHIFT):
-    #     #         act = "exit"
-    #     #     elif code == term.TK_PERIOD and term.state(term.TK_SHIFT):
-    #     #         act = "enter"
-    #     # ENTER/EXIT COMMAND
-
-    #     elif code in (term.TK_PERIOD,):
-    #         if term.state(term.TK_SHIFT):
-    #             try:
-    #                 act = world_key_actions[code].key
-    #             except KeyError:
-    #                 raise
-
-    #     # elif code == term.TK_Z:
-    #     #     act = "Zoom"
-        
-    #     # MOVEMENT using ARROW KEYS
-    #     elif code in key_movement:
-    #         x, y = key_movement[code]
-    #     # MOVEMENT using NUMBERPAD keys
-    #     elif code in num_movement:
-    #         x, y = num_movement[code]
-
-    #     elif code in (term.TK_S,) and term.state(term.TK_SHIFT):
-    #         print('pressed shift-s')
-    #         gamelog.add("Save and exit game? (Y/N)")
-    #         log_box()
-    #         term.refresh()
-    #         code = term.read()
-    #         if code == term.TK_Y:
-    #             save_game()
-    #             proceed = False
-    #             return keydown(x, y, act, 'QUIT')
-
-    #     # keyboard keys
-    #     # elif code in key_actions:
-    #     #     act = key_actions[code].key
-    #     # any other key F-keys, Up/Down Pg, etc
-    #     else:
-    #         gamelog.add("unrecognized command")
-                
-    #     # make sure we clear any inputs before the next action is processed
-    #     # allows for the program to go slow enough for human playability
-    #     while term.has_input(): 
-    #         term.read()
-
-    #     return keydown(x, y, act, error)
 
     def key_input():
         '''Handles keyboard input and keypress transformation'''
@@ -921,10 +857,10 @@ def new_game(character=None, world=None):
             city_name = calabaston.enterable_legend[player.position_global()]
             enterable_name = surround(city_name, length=length)
             selected(center(enterable_name, offset), height, enterable_name)
-            try:
-                gamelog.add(calabaston.city_descriptions[city_name])
-            except:
-                gamelog.add("\n\n")
+            # try:
+            #     gamelog.add(calabaston.city_descriptions[city_name])
+            # except:
+            #     gamelog.add("\n\n")
 
         elif player.position_global() in calabaston.dungeon_legend.keys():
             # check if player position is over a dungeon position
@@ -959,7 +895,8 @@ def new_game(character=None, world=None):
     if not character:
         # improperly accessed new_game --> early exit
         return output(proceed=False, value="No Character Data Input")
-    elif not world:
+
+    if not world:
         # unpack character tuple to create a player object
         player = Player(character)
 
@@ -970,6 +907,7 @@ def new_game(character=None, world=None):
                     "./assets/worldmap.png", 
                     "./assets/worldmap_territories.png",
                     "./assets/worldmap_kingdoms.png")   
+
     else:
         # coming from a save file -- player object already defined
         player = character
@@ -977,7 +915,9 @@ def new_game(character=None, world=None):
         # coming from a save file -- world already definied
         calabaston = world    
 
-    turns = 0
+        # coming from a save file -- turns already defined
+        turns = turns
+
     proceed = True
     dungeon = None
     
