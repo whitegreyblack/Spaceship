@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.action import commands
 from spaceship.setup_game import setup_game
 from spaceship.tools import bresenhams, deltanorm, movement
-from spaceship.maps.base import hextup, hexone, toInt
+from spaceship.maps.utils import hextup, hexone, toInt
 from spaceship.maps.base import Map
 from spaceship.maps.city import City
 from spaceship.maps.wild import *
@@ -100,11 +100,9 @@ def new_game(character=None, world=None, turns=0):
         return len(container) == 1
 
     def eightsquare(x, y):
-        print(x, y)
         squares = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
         space = namedtuple("Space", ("x","y"))
         for i, j in squares:
-            print(i, j)
             yield space(x + i, y + j)
         # return [space(x+i,y+j) for i, j in list(num_movement.values())]
 
@@ -977,7 +975,7 @@ def new_game(character=None, world=None, turns=0):
 
         # for all units -- do action
         if player.height() != Level.World and dungeon:
-            dungeon.process_unit_actions()
+            dungeon.process_unit_actions(player)
 
     # player.dump()
     # gamelog.dumps()           

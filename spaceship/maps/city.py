@@ -1,7 +1,8 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../../')
-from spaceship.maps.base import Map, blender
+from spaceship.maps.base import Map
+from spaceship.maps.utils import blender
 from PIL import Image
 from collections import namedtuple
 from spaceship.maps.charmap import DungeonCharmap as dcm
@@ -158,6 +159,8 @@ class City(Map):
         except:
             # any other error should be raised
             raise
+
+        print(self.units)
 
     def print_map(self):
         if hasattr(self, 'data'):
