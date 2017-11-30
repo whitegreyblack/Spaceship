@@ -5,7 +5,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from spaceship.action import commands
 from spaceship.setup_game import setup_game
 from spaceship.tools import bresenhams, deltanorm, movement
-from spaceship.maps.utils import hextup, hexone, toInt
+from spaceship.maps.utils import hextup, hexone
+from spaceship.tools import toInt
 from spaceship.maps.base import Map
 from spaceship.maps.city import City
 from spaceship.maps.wild import *

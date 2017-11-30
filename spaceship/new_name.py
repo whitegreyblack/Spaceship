@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from bearlibterminal import terminal as term
 from spaceship.screen_functions import *
 from spaceship.setup_game import setup, output, toChr, setup_font
-from spaceship.maps.base import toInt
+from spaceship.tools import toInt
 
 def new_name(character) -> (int, str):
     def text():

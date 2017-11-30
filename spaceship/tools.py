@@ -148,3 +148,10 @@ def scroll(position, screen, worldmap):
         return worldmap - screen
     else:
         return position - halfscreen
+
+def toInt(hexval):
+    try:
+        return int(hexval, 16)
+    except TypeError:
+        print("TOINT ERROR:", hexval)
+        raise
