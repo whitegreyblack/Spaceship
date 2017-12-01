@@ -100,9 +100,9 @@ def picturfy(string, filename="picturfy-img.png", folder="./", debug=False):
         for i in range(len(string_list)):
             drawer.rectangle((i, j, i+1, j+1), picturfy_chars[string_list[i]])
 
-    print("Saving string as {}".format(folder+filename))
-    img_to_save.save(folder+filename)
-    return folder+filename
+    print("Saving string as {}".format(folder + filename))
+    img_to_save.save(folder + filename)
+    return folder + filename
 
 def asciify(string, debug=False):
     """Takes in a file location string and a debug parameter
@@ -175,9 +175,6 @@ def splitter(c):
         c = c[2::]
     return wrap(c,2)
 
-def darken(hexcode):
-    return
-
 def blender(hexes, n=10):
     """blender holds color transformation functions
     TODO: probably should move this to another file
@@ -220,7 +217,6 @@ def hexify(x):
     """Returns a single hex transformed value as a string"""
     return hex(x).split('x')[1] if x > 15 else '0' + hex(x).split('x')[1]
 
-
 def hextup(x, a, b, c):
     """Returns a triple hex valued tuple as ARGB hex string"""
     return "#ff" \
@@ -228,10 +224,8 @@ def hextup(x, a, b, c):
         + hexify(x//b) \
         + hexify(x//c)
 
-
 def hexone(x):
     return "#ff" + hexify(x) * 3
-
 
 def output(data):
     lines = []

@@ -11,6 +11,14 @@ class Desert(Map):
     pass
 
 class Forest(Map):
+    """
+    Args:
+        var chars
+        var chars_block_move
+
+    Functions:
+        build()
+    """
     chars = {
         ".": ("\"", blender([wcm.GRASS.hexcode[0], wcm.TREES.hexcode[0]])),
         "T": (wcm.TREES.chars, blender(wcm.GRASS.hexcode)),
@@ -32,6 +40,7 @@ class Forest(Map):
                 break
 
 class Grassland(Map):
+    '''build()'''
     chars = {
         ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
         "T": (wcm.TREES.chars, blender(wcm.GRASS.hexcode)),

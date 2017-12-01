@@ -67,6 +67,7 @@ class Map:
 
     def __init__(self, width, height, map_type):
         self.map_type = map_type
+        # terminal viewing dimensions
         self.width, self.height = 66, 22
         self.map_display_width = min(self.width, width)
         self.map_display_height = min(self.height, height)
