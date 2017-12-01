@@ -170,6 +170,7 @@ def table(ch, val, x, y):
     return [[(choice(ch), choice(val), i, j) for i in range(x)] for j in range(y)]
 
 def splitter(c):
+    '''Returns a sequence derived from a hexcode'''
     c = c.replace("#", "")
     if len(c) >= 8:
         c = c[2::]
