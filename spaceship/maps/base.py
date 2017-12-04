@@ -237,17 +237,17 @@ class Map:
     ###########################################################################
     # Sight, Light and Color Functions                                        #
     ###########################################################################
-    def lit(self, x, y):
+    def check_light_level(self, x, y):
         return self.square(x, y).light
 
-    def set_lit(self, x, y, v):
+    def set_light_level(self, x, y, v):
         if self.within_bounds(x, y):
             self.square(x, y).light = v
 
     def lit_reset(self):
         for y in range(self.height):
             for x in range(self.width):
-                if self.square(x, y).light:
+                if self.square(x, y).light == 2:
                     self.square(x, y).light = 1 # if self.square(x, y).light > 0 else 0
 
     def fov_calc_blocks(self, x, y, r):
@@ -258,33 +258,38 @@ class Map:
 
             radius_squared = radius * radius
 
-            for j in range(row, radius+1):
-                dx, dy = -j-1, -j
+            for j in range(row, radius + 1):
+                dx, dy = -j - 1, -j
                 blocked = False
+
                 while dx <= 0:
                     dx += 1
                     X, Y = cx + dx * xx + dy * xy, cy + dx * yx + dy * yy
-                    l_slope, r_slope = (dx-0.5)/(dy+0.5), (dx+0.5)/(dy-0.5)
+                    l_slope, r_slope = (dx - 0.5) / (dy + 0.5), (dx + 0.5) / (dy-0.5)
+                    
                     if start < r_slope:
                         continue
+                    
                     elif end > l_slope:
                         break
+                    
                     else:
-                        if dx*dx + dy*dy < radius_squared:
-                            if self.within_bounds(X, Y) and self.square(X, Y).block_lit:
+                        if dx * dx + dy * dy < radius_squared:
+                            if self.within_bounds(X, Y):
                                 vision_tiles.add((X, Y))
-
+                            # self.set_light_level(X, Y, 2)
                         if blocked:
                             if self.blocked(X, Y) and not self.viewable(X, Y):
                                 new_start = r_slope
+                                
                             else:
                                 blocked = False
                                 start = new_start
                         else:
                             if self.blocked(X, Y) and not self.viewable(X, Y) and j < radius:
                                 blocked = True
-                                self.sight(cx, cy, j+1, start, l_slope,
-                                                radius, xx, xy, yx, yy, id+1)
+                                self.sight(cx, cy, j + 1, start, l_slope,
+                                            radius, xx, xy, yx, yy, id + 1)
                                 new_start = r_slope
                 if blocked:
                     break
@@ -316,11 +321,9 @@ class Map:
         return split_blocks()
 
     def fov_calc(self, unit):
-        # self.lamps = lights
         for x, y, radius in unit:
             for o in range(8):
-                self.sight(x, y, 1, 1.0, 0.0, 
-                        radius,
+                self.sight(x, y, 1, 1.0, 0.0, radius,
                         self.mult[0][o], 
                         self.mult[1][o], 
                         self.mult[2][o], 
@@ -332,9 +335,9 @@ class Map:
 
         radius_squared = radius * radius
 
-        for j in range(row, radius+1):
+        for j in range(row, radius + 1):
 
-            dx, dy = -j-1, -j
+            dx, dy = -j - 1, -j
             blocked = False
 
             while dx <= 0:
@@ -351,8 +354,8 @@ class Map:
 
                 else:
                     # Our light beam is touching this square; light it:
-                    if dx*dx + dy*dy < radius_squared:
-                        self.set_lit(X, Y, 2)
+                    if dx * dx + dy * dy < radius_squared:
+                        self.set_light_level(X, Y, 2)
 
                     if blocked:
                         # we're scanning a row of blocked squares:
@@ -373,8 +376,8 @@ class Map:
                         if self.blocked(X, Y) and not self.viewable(X, Y) and j < radius:
                             # This is a blocking square, start a child scan:
                             blocked = True
-                            self.sight(cx, cy, j+1, start, l_slope,
-                                             radius, xx, xy, yx, yy, id+1)
+                            self.sight(cx, cy, j + 1, start, l_slope,
+                                        radius, xx, xy, yx, yy, id + 1)
                             new_start = r_slope
 
             # Row is scanned; do next row unless last square was blocked:
@@ -483,7 +486,7 @@ class Map:
 
                 elif (x, y) in positions.keys():
                     # Current position holds a unit
-                    lit = self.lit(x, y)
+                    lit = self.check_light_level(x, y)
                     if lit == 2:
                         ch = positions[(x, y)].character
                         col = positions[(x, y)].color
@@ -495,7 +498,7 @@ class Map:
 
                 # Current position holds an item
                 elif self.square(x, y).items:
-                    if self.lit(x, y) == 2:
+                    if self.check_light_level(x, y) == 2:
                         item = self.square(x, y).items[0]
                         ch = item.char
                         col = item.color
@@ -524,7 +527,7 @@ class Map:
 
                 else:
                     # all other environment features
-                    lit = self.lit(x, y)
+                    lit = self.check_light_level(x, y)
                     if lit == 2:
                         ch = self.square(x, y).char
                         col = self.square(x, y).color

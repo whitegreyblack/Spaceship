@@ -116,6 +116,7 @@ class World(Map):
     def __init__(self, map_name, map_img_path):
         self.map_name = map_name
         self.tilemap = map_img_path
+        self.__locations = {}
         super().__init__(self.width, self.height, self.__class__.__name__)
 
     def __repr__(self):
@@ -224,6 +225,27 @@ class World(Map):
             for col in colors:
                 yield ch, col, d, i
                 i += 1
+
+    def location_exists(self, x, y):
+        return (x, y) in self.__locations.keys()
+
+    def location_create(self, x, y, location):
+        self.__locations[(x, y)] = location
+
+    def location(self, x, y):
+        return self.__locations[(x, y)]
+    # @property
+    # def location(self, x, y):
+    #     '''Returns map if exists else None'''
+    #     try:
+    #         return self.__locations[(x, y)]
+    #     except KeyError:
+    #         return None
+
+    # @location.setter
+    # def location(self, x, y, l):
+    #     '''Sets location at (x, y)'''
+    #     self.__locations[(x, y)] = l
 
     def landtype(self, x, y):
         return self.square(x, y).tile_type

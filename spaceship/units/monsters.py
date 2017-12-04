@@ -5,13 +5,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../../')
 from spaceship.world import World
 from spaceship.item import Armor, Weapon, Item, items
 from spaceship.units.unit import Unit
-from random import randint
-
+from random import randint, choice
+from spaceship.tools import distance
 class Rat(Unit):
     def __init__(self, x, y):
         self.unit_id = Unit.unit_id
         Unit.unit_id += 1
-
+        self.sight = 5
         self.x, self.y = x, y
         self.xp = 25
         self.health = 5
@@ -22,6 +22,14 @@ class Rat(Unit):
         self.relation = -100
         self.damage_lower = 3
         self.damage_higher = 5
+
+    def acts(self, units):
+        enemies = []
+        for unit in units:
+            if distance(self.x, self.y, unit.x, unit.y) <= self.sight:
+                if unit.__class__.__name__ != self.__class__.__name__:
+                    enemies.append(unit)
+        print(len(enemies))
 
     def drops(self):
         if randint(0, 1):
@@ -49,6 +57,7 @@ class Bat(Unit):
     def __init__(self, x, y):
         self.unit_id = Unit.unit_id
         Unit.unit_id += 1
+        self.sight = 5
 
         self.x, self.y = x, y
         self.xp = 20

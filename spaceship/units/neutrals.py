@@ -30,14 +30,16 @@ class Bishop(Unit):
     def talk(self):
         return "{}: Blessings. Need some healing?".format(self.__class__.__name__)
 
-    def do_ai_stuff(self, units, items):
-        '''Create a decision tree where healing is priority'''
-        for u, x, y in units:
-            print("UNIT: ", u, x, y)
+    def act(self):
+        print('act')
+    # def do_ai_stuff(self, units, items):
+    #     '''Create a decision tree where healing is priority'''
+    #     for u, x, y in units:
+    #         print("UNIT: ", u, x, y)
         
-        for i, x, y in items:
-            for ii in i:
-                print("ITEM: ", ii, x, y)
+    #     for i, x, y in items:
+    #         for ii in i:
+    #             print("ITEM: ", ii, x, y)
 
 class Soldier(Unit):
     def __init__(self, x, y, race, job, char, color):

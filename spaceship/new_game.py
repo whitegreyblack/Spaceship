@@ -589,7 +589,6 @@ def new_game(character=None, world=None, turns=0):
                 openDoor(x+cx, y+cy) if key is 'o' else closeDoor(x+cx, y+cy)
 
         turns += 1
-        # map_box()
 
     def interactStairs(x, y, k):
         nonlocal dungeon
@@ -668,7 +667,7 @@ def new_game(character=None, world=None, turns=0):
             return (max(int(location.width * x - 1), 0), 
                     max(int(location.height * y - 1), 0))
 
-        if not calabaston.mapAt(*player.position_global()):
+        if not calabaston.location_exists(*player.position_global()):
             # map does not exist yet -- create one
             if player.position_global() in calabaston.enterable_legend.keys():
                 # map type should be a city
@@ -707,12 +706,12 @@ def new_game(character=None, world=None, turns=0):
                 player.reset_position_local(*get_wilderness_enterance(x, y))
         
             location.addParent(calabaston)
-            calabaston.add_location(location, *(player.position_global()))
+            calabaston.location_create(*player.position_global(), location)
 
         else:
             # location already been built -- retrieve from world map_data
             # player position is different on map enter depending on map location
-            location = calabaston.get_location(*player.position_global())
+            location = calabaston.location(*player.position_global())
             if player.position_global() in calabaston.enterable_legend.keys():
                 # re-enter a city
                 player.reset_position_local(location.width // 2, location.height // 2)
@@ -844,8 +843,11 @@ def new_game(character=None, world=None, turns=0):
     def map_box():
         term.composition(False)
         dungeon.fov_calc([(player.mx, player.my, player.sight * 2)])
+        
+        for unit in dungeon.units:
+            dungeon.fov_calc_blocks(unit.x, unit.y, unit.sight)
 
-        for x, y, lit, ch in dungeon.output(player.mx, player.my, []):
+        for x, y, lit, ch in dungeon.output(player.mx, player.my):
             term.puts(x + 13, y + 1, "[color={}]".format(lit) + ch + "[/color]")
 
         # term.refresh()refresh()
@@ -887,6 +889,7 @@ def new_game(character=None, world=None, turns=0):
         '''Displays the world map tiles in the terminal'''
         screen_off_x, screen_off_y = 14, 0
         calabaston.fov_calc([(player.wx, player.wy, player.sight * 2)])
+        
         for x, y, col, ch in calabaston.output(*(player.position_global())):
             term.puts(
                 x + screen_off_x, 
@@ -953,7 +956,7 @@ def new_game(character=None, world=None, turns=0):
             gamelog.maxlines = 4 if term.state(term.TK_HEIGHT) > 25 else 2
             if dungeon == None:
                 # player.move_height(-1)
-                dungeon = calabaston.get_location(*player.position_global())
+                dungeon = calabaston.location(*player.position_global())
                 # player.move_height(1)
 
                 if player.height() == 0:
@@ -967,23 +970,34 @@ def new_game(character=None, world=None, turns=0):
 
         term.refresh()
 
-        # handle player movements and action
-        x, y, k, action = key_input()
-        if k is not None:
-            process_action(player, k)
+        unit_list = [player]
 
-        elif all(z is not None for z in [x, y]):
-            process_movement(x, y)
-
-        else:
-            print('Command not yet implemented')
-
-        if not proceed:
-            break
-
-        # for all units -- do action
         if player.height() != Level.World and dungeon:
-            dungeon.process_unit_actions(player)
+            unit_list += dungeon.units
+
+        for unit in unit_list:
+            if unit == player:
+                # handle player movements and action
+                x, y, k, action = key_input()
+                if k is not None:
+                    process_action(player, k)
+
+                elif all(z is not None for z in [x, y]):
+                    process_movement(x, y)
+
+                else:
+                    print('Command not yet implemented')
+
+                if not proceed:
+                    '''check if player pressed exit'''
+                    break
+            else:
+                if hasattr(unit, 'act'):
+                    unit.act()
+
+        # # for all units -- do action
+        # if player.height() != Level.World and dungeon:
+        #     dungeon.process_unit_actions(player)
 
     # player.dump()
     # gamelog.dumps()           

@@ -188,6 +188,7 @@ Accuracy : {acc:>5}
         self.wz = max(self.wz - 1, -1)
 
     def position_global(self) -> Tuple[int, int]:
+        '''Returns tuple of global position: (self.wx, self.wy)'''
         return self.wx, self.wy
 
     def travel(self, dx: int, dy: int) -> None:
@@ -243,7 +244,7 @@ Accuracy : {acc:>5}
             Level    : {}
             Exp      : {}
             ========   Equipment  ========
-            Head     :
+            He       :
             Neck     :
             Torso    : Peasant garb
             Ring(L)  :
