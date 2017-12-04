@@ -9,9 +9,14 @@ from spaceship.maps import stringify, picturfy
 original = "./assets/testmap.png"
 
 
+# def test_map_term():
+#     t.open()
+
+# def test_map_img():
+#     pass
+
 def test_stringify():
     stringify(picturfy(stringify(original), folder="./assets/")) == stringify(original, debug=True)
-
 
 def test_picturfy():
     with Image.open(picturfy(stringify(original), folder="./assets/")) as img:
