@@ -332,20 +332,24 @@ class Map:
 
             dx, dy = -j-1, -j
             blocked = False
+
             while dx <= 0:
                 dx += 1
                 X, Y = cx + dx * xx + dy * xy, cy + dx * yx + dy * yy
                 # l_slope and r_slope store the slopes of the left and right
                 # extremities of the square we're considering:
-                l_slope, r_slope = (dx-0.5)/(dy+0.5), (dx+0.5)/(dy-0.5)
+                l_slope, r_slope = (dx - 0.5) / (dy + 0.5), (dx + 0.5) / (dy - 0.5)
                 if start < r_slope:
                     continue
+
                 elif end > l_slope:
                     break
+
                 else:
                     # Our light beam is touching this square; light it:
                     if dx*dx + dy*dy < radius_squared:
                         self.set_lit(X, Y, 2)
+
                     if blocked:
                         # we're scanning a row of blocked squares:
                         # if self.blocked and self.viewable         - window
@@ -368,6 +372,7 @@ class Map:
                             self.sight(cx, cy, j+1, start, l_slope,
                                              radius, xx, xy, yx, yy, id+1)
                             new_start = r_slope
+
             # Row is scanned; do next row unless last square was blocked:
             if blocked:
                 break
@@ -437,7 +442,7 @@ class Map:
     ###########################################################################
     # Output and Display Functions                                            #
     ###########################################################################
-    def output(self, player_x, player_y, units):
+    def output(self, player_x, player_y):
         shorten_x = self.map_display_width > 66
         shorten_y = self.map_display_height > 44
 
@@ -524,8 +529,8 @@ class Map:
                         col = "darkest grey"
                     else:
                         ch, col = " ", "black"
-
-                yield (x-cam_x, y-cam_y, col, ch)
+                yield (x - cam_x, y - cam_y, col, ch)
+        print(self.tilemap[10][10])
         self.lit_reset()
 
 # TEST: blender function

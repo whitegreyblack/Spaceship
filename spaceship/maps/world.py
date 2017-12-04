@@ -10,8 +10,84 @@ from spaceship.maps.charmap import WildernessCharmap as wcm
 from spaceship.maps.charmap import WorldCharmap as ccm
 from random import shuffle, choice, randint
 from spaceship.maps.utils import splitter
+from typing import Tuple, Union
 
 class World(Map):
+    chars = {
+        "&": (["&"], "#FF8844"),
+    }
+    chars_block_move = ["=", "-"]
+    chars_block_light = ["T", "^", "~", "A", "^"]
+    enterable_legend = {
+        (51, 42): "Aerathalar",
+        (12, 14): "Armagos",
+        (41, 20): "Aurundel",
+        (53, 51): "Dawnvalley",
+        (83, 9): "Dun Badur",
+        (63, 7): "Dun Baras",
+        (55, 14): "Dun Caden",
+        (82, 19): "Dun Kaldergen",
+        (88, 28): "Dun Mogan",
+        (48, 14): "Dun Molbur",
+        (33, 7): "Dun Vargar",
+        (65, 36): "Eastshore",
+        (91, 40): "Elenloth",
+        (78, 34): "Elenos",
+        (31, 18): "Falaeth",
+        (6, 10): "Fragos",
+        (25, 32): "Galaloth",
+        (91, 55): "Gom Bashur",
+        (96, 48): "Gorrathah",
+        (12, 14): "Houndsbeach",
+        (69, 22): "Lantathor",
+        (44, 35): "Lakepost",
+        (72, 51): "Lok Gurrah",
+        (69, 62): "Lok Midgoth",
+        (82, 60): "Lok Toragath",
+        (82, 45): "Lok Zargoth",
+        (16, 46): "Renmar",
+        (58, 26): "Runagathor",
+        (26, 57): "Shadowbarrow",
+        (42, 62): "Tiphmore",
+        (7, 43): "Westwatch",
+        (67, 42): "Whitewater",
+        (21, 18): "Yarrin",
+    }
+    geo_legend = {
+        (200, 191, 231): ("city(elven)", "&", ("#FF8844",)),
+        (153, 217, 234): ("fort(dwarf)", "#", ("#FF00FF",)),
+        (163, 73, 164): ("city(elven)", "&", ("#FFFF00",)),
+        # (237, 28, 36): ("city(human)", "2302", ("#00fF00",)),
+        (237, 28, 36): ("city(human)", "+", ("#00fF00",)),
+        (136, 0, 21): ("fort(orcen)", "o", ("#FF0000",)),
+        # (239, 228, 176): ("shore", "2261", ("#FFFFCC", "#FFFFE0")),
+        (255, 255, 255): ("mnts(high)", "005E", ("#FFFFFF",)),
+        # (195, 195, 195): ("mnts(med)", "2229", ("#C0C0C0",)),
+        (195, 195, 195): ("mnts(med)", "n", ("#C0C0C0",)),
+
+        # (127, 127, 127): ("mnts(low)", "n", ("#808080", "#A9A9A9",)),
+        (127, 127, 127): ("mnts(low)", "n", ("#808080",)),
+
+        # (185, 122, 87): ("hills", "2022", ("#C3B091", "#826644")),
+        (185, 122, 87): ("hills", "2022", ("#826644",)),
+        # (181, 230, 29): ("forest", "0192", ("#228B22", "#74C365")),
+        # (181, 230, 29): ("forest", "0192", ("#568203",)),
+        (181, 230, 29): ("forest", "0192", ("#006400",)),
+
+        # (34, 177, 76): ("dark woods", "00A5", ("#006400","#568203",)),
+        (34, 177, 76): ("dark woods", "00A5", ("#006400",)),
+        # (255, 201, 14):("plains", ".", ("#FFBF00",)),
+        (255, 201, 14):("plains", ".", ("#568203",)),
+
+        (255, 127, 39): ("plains", ".", ("#FFBD22",)),
+        # (255, 242, 0): ("fields", "2261", ("#FFBF00",)),
+        (255, 242, 0): ("fields", "=", ("#FFBF00",)),
+        (255, 174, 201): ("desert", "~", ("#F0AC82",)),
+        (112, 146, 190): ("river", "~", ("#30FFFF",)),
+        (63, 72, 204): ("lake", "2248", ("#3088FF",)),
+        (0, 162, 232): ("deep seas", "2248", ("#3040A0",)),
+        (0, 0, 0): ("dungeon", "*", ("#FF00FF",)),
+    }
     class WorldTile(Map.Tile):
         def __init__(self, char, color, block_mov, block_lit, tile_type, tile_name=None):
             '''Inherits from Map.Tile to create a tile specific for a world map'''
@@ -24,11 +100,17 @@ class World(Map):
             return self.char
 
         def __str__(self):
-            return self.char
+            return "{}, {}, {}, {}, {}".format(
+                self.char,
+                self.color,
+                self.block_mov,
+                self.block_lit,
+                self.light)
 
-    def __init__(self, map_img_path):
+    def __init__(self, map_name, map_img_path):
+        self.map_name = map_name
         self.tilemap = map_img_path
-        # super().__init__(self.width, self.height, self.__class__.__name__)
+        super().__init__(self.width, self.height, self.__class__.__name__)
 
     def __repr__(self):
       return "{}: ({}, {})".format(
@@ -92,7 +174,7 @@ class World(Map):
 
                 hexcode = choice(hexcodes) if len(hexcodes) > 1 else hexcodes,
                 block_mov = tile_char in self.chars_block_move
-                block_lit = tile_char in self.chars_block_light
+                block_lit = tile_char not in self.chars_block_light
                 # tile_name = cities[(i,j)] if tile_char in ("&", "o", "+", "#") else None
                 tile_name = None
 
@@ -100,10 +182,10 @@ class World(Map):
                     char=tile_char,
                     color=hexcode,
                     block_mov=block_mov,
-                    block_lit=block_mov, 
+                    block_lit=block_lit, 
                     tile_type=tile_type,
                     tile_name=tile_name)
-                    
+                print(tile)
                 col.append(tile)
             self.__tile_map.append(col)
 
@@ -129,6 +211,14 @@ class World(Map):
         file_name = "world.txt"
         with open("./assets/maps/world/" + file_name, 'w') as text:
             text.write(str(self))
+
+    def legend(self) -> Tuple[str, str, str, int]:
+        i = 0
+        for d, ch, colors in self.geo_legend.values():
+            ch = ch if len(ch) == 1 else chr(int(ch, 16))
+            for col in colors:
+                yield ch, col, d, i
+                i += 1
 
 if __name__ == "__main__":
     w = World(map_img_path="./assets/worldmap.png")

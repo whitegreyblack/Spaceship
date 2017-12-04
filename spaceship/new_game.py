@@ -11,6 +11,7 @@ from spaceship.maps.base import Map
 from spaceship.maps.city import City
 from spaceship.maps.wild import *
 from spaceship.maps.cave import Cave
+from spaceship.maps.world import World
 from spaceship.item import Item
 from spaceship.units.player import Player
 from spaceship.create_character import create_character as create
@@ -22,7 +23,7 @@ from spaceship.gamelog import GameLogger
 from random import randint, choice
 from collections import namedtuple
 from namedlist import namedlist
-from spaceship.world import World
+# from spaceship.world import World
 from time import clock
 from textwrap import wrap
 import shelve
@@ -851,7 +852,7 @@ def new_game(character=None, world=None, turns=0):
         
     def world_legend_box():
         length, offset, height = 14, 12, 0
-        world_name = surround(calabaston.name, length=length)
+        world_name = surround(calabaston.map_name, length=length)
         selected(center(world_name, offset), height, world_name)   
 
         height += 1        
@@ -885,7 +886,8 @@ def new_game(character=None, world=None, turns=0):
     def world_map_box():
         '''Displays the world map tiles in the terminal'''
         screen_off_x, screen_off_y = 14, 0
-        for x, y, col, ch in calabaston.draw(*(player.position_global())):
+        calabaston.fov_calc([(player.wx, player.wy, player.sight * 2)])
+        for x, y, col, ch in calabaston.output(*(player.position_global())):
             term.puts(
                 x + screen_off_x, 
                 y + screen_off_y, 
@@ -907,11 +909,16 @@ def new_game(character=None, world=None, turns=0):
 
         # create the world from scratch
         # TODO: chain function so World().load() or keep as seperate functions: init() and load()?
-        calabaston = World(screen_width, screen_height)
-        calabaston.load(
-                    "./assets/worldmap.png", 
-                    "./assets/worldmap_territories.png",
-                    "./assets/worldmap_kingdoms.png")   
+        # calabaston = World(screen_width, screen_height)
+        # calabaston.load(
+        #             "./assets/worldmap.png", 
+        #             "./assets/worldmap_territories.png",
+        #             "./assets/worldmap_kingdoms.png")   
+
+        calabaston = World(
+            "Calabaston",
+            "./assets/worldmap.png"
+        )
 
     else:
         # coming from a save file -- player object already defined

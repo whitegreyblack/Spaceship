@@ -206,8 +206,8 @@ Accuracy : {acc:>5}
             raise AttributeError("No last position global variable")
         try:
             return direction(
-                self.last_position_global[0]-self.wx, 
-                self.last_position_global[1]-self.wy)
+                self.last_position_global[0] - self.wx, 
+                self.last_position_global[1] - self.wy)
         
         except KeyError:
             raise KeyError("Error in -directions-")
