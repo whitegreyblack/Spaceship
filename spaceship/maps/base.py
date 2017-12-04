@@ -52,7 +52,6 @@ class Map:
             self.block_lit = block_lit
             self.items = []
             self.light = 0
-            self.current_unit = False
 
     mult = [
                 [1,  0,  0, -1, -1,  0,  0,  1],
@@ -85,6 +84,12 @@ class Map:
 
     def __repr__(self):
         return "{}: ({}, {})".format(self.__class__.__name__, self.width, self.height)
+
+    def debug_set_global_light(self):
+        for y in range(self.height):
+            for x in range(self.width):
+                self.square(x, y).light = 2
+                
     ###########################################################################
     # Level Initialization, Setup, Terraform and Evaluation                   #
     ###########################################################################
@@ -250,7 +255,7 @@ class Map:
                 if self.square(x, y).light == 2:
                     self.square(x, y).light = 1 # if self.square(x, y).light > 0 else 0
 
-    def fov_calc_blocks(self, x, y, r):
+    def fov_calc_blocks(self, x, y, r, player):
         def fov_block(cx, cy, row, start, end, radius, xx, xy, yx, yy, id):
             nonlocal vision_tiles
             if start < end:
@@ -300,15 +305,11 @@ class Map:
             '''
             nonlocal vision_tiles
             # get units
-            units = []
+            units = {}
             items = []
             for x, y in vision_tiles:
-               unit = self.get_unit(x, y)
-               if unit:
-                   units += [unit, x, y]
-               item = self.get_item(x, y)
-               if item:
-                   items += [item, x, y]
+                if (x, y) == player.position_local():
+                    units[(x, y)] = player
             return units, items
 
         vision_tiles = set()
@@ -318,7 +319,8 @@ class Map:
                         self.mult[1][o], 
                         self.mult[2][o], 
                         self.mult[3][o], 0)
-        return split_blocks()
+        # return split_blocks()
+        return vision_tiles
 
     def fov_calc(self, unit):
         for x, y, radius in unit:
@@ -395,6 +397,9 @@ class Map:
     ###########################################################################
     # Unit object Functions                                                   #
     ###########################################################################
+    def unit_at(self, x, y):
+        return self.square(x, y).unit
+
     def get_unit(self, x, y):
         '''Returns units by positional values'''
         if hasattr(self, 'units'):
@@ -425,17 +430,36 @@ class Map:
                 units, items = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
                 unit.do_ai_stuff(units, items)
 
+    def handle_units(self, player):
+        # print(hasattr(self, 'units'))
+        for unit in self.units:
+            print(unit)
+            if hasattr(unit, 'acts'):
+                units, items = [], []
+                tiles = self.fov_calc_blocks(unit.x, unit.y, unit.sight, player)
+                for x, y in tiles:
+                    if (x, y) == player.position_local():
+                        units.append(player)
+                    # elif self.square(x, y).unit:
+                    #     units.append(self.square(x, y).unit)
+                    if self.square(x, y).items:
+                        items.append(self.square(x, y).items)
+                unit.acts(player, units, items)
+                    # elif self.square(x, y).unit:
+
     def generate_units(self):
         if self.height <= 25:
-            max_units = 15
+            max_units = 1
         else:
-            max_units = 20
+            max_units = 2
 
         if hasattr(self, 'spaces'):
             shuffle(self.spaces)
             for i in range(max_units):
                 i, j = self.spaces[randint(0, len(self.spaces)-1)]
-                self.units.append(choice([Rat(x=i, y=j), Bat(x=i, y=i)]))
+                unit = choice([Rat, Rat])(x=i, y=j)
+                self.units.append(unit)
+                self.square(i, j).unit = unit
         else:
             raise AttributeError("Spaces has not yet been initialized")
 
@@ -537,7 +561,8 @@ class Map:
                     else:
                         ch, col = " ", "black"
                 yield (x - cam_x, y - cam_y, col, ch)
-        print(self.tilemap[10][10])
+
+        # print(self.tilemap[10][10])
         self.lit_reset()
 
 # TEST: blender function

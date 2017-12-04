@@ -272,7 +272,6 @@ class World(Map):
             for y in range(cam_y, ext_y):
 
                 if x == player_x and y == player_y:
-                    print('self')
                     ch = "@"
                     col = "white"
                     

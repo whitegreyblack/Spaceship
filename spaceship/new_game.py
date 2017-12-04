@@ -131,8 +131,8 @@ def new_game(character=None, world=None, turns=0):
                 gamelog.add("You rest for a while")
                 turns += 1
             else:
-                tx = player.mx + x
-                ty = player.my + y
+                tx = player.x + x
+                ty = player.y + y
 
                 if dungeon.walkable(tx, ty):
                     if not dungeon.occupied(tx, ty):
@@ -215,8 +215,8 @@ def new_game(character=None, world=None, turns=0):
         }
 
         walkBlock = "walked into {}"
-        tposx = player.mx + x
-        tposy = player.my + y
+        tposx = player.x + x
+        tposy = player.y + y
 
         # 3 variables involved in walking
         # OUT-OF-BOUNDS -- is player within the map?
@@ -755,7 +755,7 @@ def new_game(character=None, world=None, turns=0):
             if player.height() == Level.World:
                 actions[max(0, min(player.height(), 1))][action](player.wx, player.wy, action)
             else:
-                actions[max(0, min(player.height(), 1))][action](player.mx, player.my, action)
+                actions[max(0, min(player.height(), 1))][action](player.x, player.y, action)
         except KeyError:
             gamelog.add("Invalid CommanD")
     # End Keyboard Functions
@@ -842,12 +842,12 @@ def new_game(character=None, world=None, turns=0):
 
     def map_box():
         term.composition(False)
-        dungeon.fov_calc([(player.mx, player.my, player.sight * 2)])
+        dungeon.fov_calc([(player.x, player.y, player.sight * 2)])
         
-        for unit in dungeon.units:
-            dungeon.fov_calc_blocks(unit.x, unit.y, unit.sight)
+        # for unit in dungeon.units:
+        #     dungeon.fov_calc_blocks(unit.x, unit.y, unit.sight)
 
-        for x, y, lit, ch in dungeon.output(player.mx, player.my):
+        for x, y, lit, ch in dungeon.output(player.x, player.y):
             term.puts(x + 13, y + 1, "[color={}]".format(lit) + ch + "[/color]")
 
         # term.refresh()refresh()
@@ -935,7 +935,7 @@ def new_game(character=None, world=None, turns=0):
 
     proceed = True
     dungeon = None
-    
+    current_map = None
     '''
     while True:
         clear()
@@ -947,6 +947,9 @@ def new_game(character=None, world=None, turns=0):
     '''
     while proceed:
         term.clear()
+        '''
+        Maybe make ui the same for overworld and dungeons to make the loop easier?
+        '''
         if player.height() == Level.World:
             gamelog.maxlines = 2
             world_map_box()
@@ -969,31 +972,23 @@ def new_game(character=None, world=None, turns=0):
             log_box()
 
         term.refresh()
+        # handle player movements and action
+        x, y, k, action = key_input()
+        if k is not None:
+            process_action(player, k)
 
-        unit_list = [player]
+        elif all(z is not None for z in [x, y]):
+            process_movement(x, y)
+
+        else:
+            print('Command not yet implemented')
+
+        if not proceed:
+            '''check if player pressed exit'''
+            break
 
         if player.height() != Level.World and dungeon:
-            unit_list += dungeon.units
-
-        for unit in unit_list:
-            if unit == player:
-                # handle player movements and action
-                x, y, k, action = key_input()
-                if k is not None:
-                    process_action(player, k)
-
-                elif all(z is not None for z in [x, y]):
-                    process_movement(x, y)
-
-                else:
-                    print('Command not yet implemented')
-
-                if not proceed:
-                    '''check if player pressed exit'''
-                    break
-            else:
-                if hasattr(unit, 'act'):
-                    unit.act()
+            dungeon.handle_units(player)
 
         # # for all units -- do action
         # if player.height() != Level.World and dungeon:

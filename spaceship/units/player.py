@@ -215,20 +215,20 @@ Accuracy : {acc:>5}
 
     def position_local(self) -> Tuple[int, int]:
 
-        return self.mx, self.my
+        return self.x, self.y
 
     def move(self, dx: int, dy: int) -> None:
 
-        self.mx += dx
-        self.my += dy
+        self.x += dx
+        self.y += dy
 
     def save_position_local(self) -> None:
 
-        self.last_position_local = self.mx, self.my
+        self.last_position_local = self.x, self.y
 
     def reset_position_local(self, x: int, y: int) -> None:
 
-        self.mx, self.my = x, y
+        self.x, self.y = x, y
 
     def dump(self) -> str:
         '''Prints out player information to terminal'''
