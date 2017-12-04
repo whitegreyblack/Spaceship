@@ -68,9 +68,13 @@ class Map:
     def __init__(self, width, height, map_type):
         self.map_type = map_type
         # terminal viewing dimensions
-        self.width, self.height = 66, 22
-        self.map_display_width = min(self.width, width)
-        self.map_display_height = min(self.height, height)
+        if not hasattr(self, 'width'):
+            self.width = 66
+        if not hasattr(self, 'height'):
+            self.height = 22
+        # self.width, self.height = 66, 22
+        self.map_display_width = min(66, width)
+        self.map_display_height = min(22, height)
         self.units = []
 
     def build(self):

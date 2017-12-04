@@ -11,7 +11,7 @@ from spaceship.maps.charmap import WorldCharmap as ccm
 from random import shuffle, choice, randint
 from spaceship.maps.utils import splitter
 from typing import Tuple, Union
-from spaceship.tools import toInt
+from spaceship.tools import toInt, scroll
 
 class World(Map):
     chars = {
@@ -88,6 +88,11 @@ class World(Map):
         (63, 72, 204): ("lake", "2248", ("#3088FF",)),
         (0, 162, 232): ("deep seas", "2248", ("#3040A0",)),
         (0, 0, 0): ("dungeon", "*", ("#FF00FF",)),
+    }
+    dungeon_legend = {
+        (12, 52): "Pig Beach",
+        (20, 57): "Beach Cave",
+        (22, 50): "Small Dungeon",
     }
     class WorldTile(Map.Tile):
         def __init__(self, char, color, block_mov, block_lit, tile_type, tile_name=None):
@@ -186,7 +191,7 @@ class World(Map):
                     block_lit=block_lit, 
                     tile_type=tile_type,
                     tile_name=tile_name)
-                print(tile)
+                # print(tile)
                 col.append(tile)
             self.__tile_map.append(col)
 
@@ -219,6 +224,55 @@ class World(Map):
             for col in colors:
                 yield ch, col, d, i
                 i += 1
+
+    def landtype(self, x, y):
+        return self.square(x, y).tile_type
+
+    def output(self, player_x, player_y):
+        shorten_x = self.map_display_width >= 66
+        shorten_y = self.map_display_height >= 44
+
+        # get camera location for x coordinate
+        cam_x = scroll(
+            player_x, 
+            self.map_display_width + (-15 if shorten_x else 0), 
+            self.width)
+        ext_x = cam_x + self.map_display_width + (-15 if shorten_x else 0)
+
+        # get camera location for y coordinate
+        cam_y = scroll(
+            player_y, 
+            self.map_display_height + (-2 if shorten_y else -2), 
+            self.height)
+        ext_y = cam_y + self.map_display_height + (-2 if shorten_y else -2)
+        
+        for x in range(cam_x, ext_x):
+            for y in range(cam_y, ext_y):
+
+                if x == player_x and y == player_y:
+                    print('self')
+                    ch = "@"
+                    col = "white"
+                    
+                else:
+                    try:
+                        # char, color, _, terr, tcol, king, kcol, _ = self.data[j][i]
+                        tile = self.square(x, y)
+                    except IndexError:
+                        raise IndexError("{}, {}".format(x, y))
+                    
+                    ch = tile.char
+                    
+                    if len(ch) > 1:
+                        try:
+                            ch = toInt(ch)
+                        except ValueError:
+                            raise ValueError(ch)
+
+                    col = tile.color
+
+                # print(ch, col)
+                yield (x - cam_x, y - cam_y, col, ch)
 
 if __name__ == "__main__":
     w = World(map_img_path="./assets/worldmap.png")

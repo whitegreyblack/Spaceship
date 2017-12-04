@@ -875,7 +875,7 @@ def new_game(character=None, world=None, turns=0):
 
         else:
             # Add land types to the overworld ui
-            landtype = surround(calabaston.get_landtype(*player.position_global()), length=length)
+            landtype = surround(calabaston.landtype(*player.position_global()), length=length)
             selected(center(landtype, offset), height, landtype)
             
 
