@@ -11,6 +11,7 @@ from spaceship.maps.charmap import WorldCharmap as ccm
 from random import shuffle, choice, randint
 from spaceship.maps.utils import splitter
 from typing import Tuple, Union
+from spaceship.tools import toInt
 
 class World(Map):
     chars = {
@@ -144,7 +145,7 @@ class World(Map):
             (255, 242, 0): ("fields", "X", ("#FFBF00",)),
             (255, 174, 201): ("desert", "~", ("#F0AC82",)),
             (112, 146, 190): ("river", "~", ("#30FFFF",)),
-            (63, 72, 204): ("lake", "-", ("#3088FF")),
+            (63, 72, 204): ("lake", "-", ("#3088FF",)),
             (0, 162, 232): ("deep seas", "=", ("#3040A0",)),
             (0, 0, 0): ("dungeon", "*", ("#FF00FF",)),
         }  
@@ -172,7 +173,7 @@ class World(Map):
                 except KeyError:
                     raise KeyError("Create Tile Map: '{}' not in keys".format(char))
 
-                hexcode = choice(hexcodes) if len(hexcodes) > 1 else hexcodes,
+                hexcode = choice(hexcodes) if len(hexcodes) > 1 else hexcodes[0]
                 block_mov = tile_char in self.chars_block_move
                 block_lit = tile_char not in self.chars_block_light
                 # tile_name = cities[(i,j)] if tile_char in ("&", "o", "+", "#") else None
@@ -202,8 +203,7 @@ class World(Map):
         draw = ImageDraw.Draw(img)
         for j, row in enumerate(self.tilemap):
             for i, tile in enumerate(row):
-                print(tile.color)
-                img.load()[i, j] = splitter(tile.color)
+                img.load()[i, j] = tuple(toInt(color) for color in splitter(tile.color))
         img.save("./assets/maps/world/" + file_name)
                 
     def save_map(self):
