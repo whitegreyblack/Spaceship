@@ -47,7 +47,8 @@ class Item:
         self.char = char
         self.color = color
 
-    def mark(self, value):
+    def mark(self, value: int) -> str:
+        '''returns a signed integer for an attribute'''
         if isinstance(value, int):
             if value >= 0:
                 return "+" + str(value)
@@ -57,6 +58,15 @@ class Item:
 
     def __str__(self):
         return self.name
+
+    def eat(self):
+        ...
+    def throw(self):
+        ...
+    def kick(self):
+        ...
+    def light(self):
+        ...
 
 class Armor(Item):
     def __init__(self, name, char, color, placement, me_h, mi_h, dv, pv):

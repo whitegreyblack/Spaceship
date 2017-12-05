@@ -49,12 +49,12 @@ commands = {
     # term.TK_F1: keypress("f1", "func_key"),
     # term.TK_F2: keypress("f2", "func_key"),
     (term.TK_COMMA, 0): keypress(None, None, ",", "pickup"),
-    (term.TK_COMMA, 1): keypress(None, None, "<", "exit"),
-    (term.TK_PERIOD, 1): keypress(None, None, ">", "enter"),
     (term.TK_I, 0): keypress(None, None, "i", "equipment"),
     (term.TK_V, 0): keypress(None, None, "v", "inventory"),
     (term.TK_2, 1): keypress(None, None, "@", "profile"),
-    (term.TK_S, 1): keypress(None, None, "S", "save")
+    (term.TK_S, 1): keypress(None, None, "S", "save"),
+    (term.TK_COMMA, 1): keypress(None, None, "<", "exit"),
+    (term.TK_PERIOD, 1): keypress(None, None, ">", "enter"),
 }
 
 if __name__ == "__main__":

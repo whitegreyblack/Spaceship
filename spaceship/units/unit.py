@@ -20,7 +20,7 @@ class Unit:
         self.race = race
         self.color = color
         self.health = 10
-        self.sight = 5
+        self.sight = 15
         self.movable = True
 
         self.damage_lower = 1

@@ -160,8 +160,6 @@ class City(Map):
             # any other error should be raised
             raise
 
-        # print(self.units)
-
     def print_map(self):
         if hasattr(self, 'data'):
             return "\n".join(self.data)

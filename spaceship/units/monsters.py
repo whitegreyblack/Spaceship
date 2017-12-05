@@ -8,12 +8,13 @@ from spaceship.units.unit import Unit
 from random import randint, choice
 from spaceship.tools import distance
 from spaceship.units.player import Player
+from collections import namedtuple
 
 class Rat(Unit):
     def __init__(self, x, y):
         self.unit_id = Unit.unit_id
         Unit.unit_id += 1
-        self.sight = 5
+        self.sight = 7
         self.x, self.y = x, y
         self.xp = 25
         self.health = 5
@@ -26,6 +27,10 @@ class Rat(Unit):
         self.damage_higher = 5
     
     '''
+    AI Behaviours:
+        wander -> goto random point using a* search from current position to point
+        follow -> goto specific point using a* search from current position to point/unit
+        attack -> fight unit in a specific manner depending on range or melee distance
     RAT AI:
         Between rat and bat these creatures will probably have the lowest
         ai logic involved excluding slimes.
@@ -36,23 +41,97 @@ class Rat(Unit):
         will it become hostile and start its attack phase
 
     '''
-    def acts(self, player, units, items):
+    def path(self, p1, p2, tiles):
+        '''A star implementation'''
+        print(p1, p2)
+        node = namedtuple("Node", "df dg dh parent node")
+        openlist = set()
+        closelist = []
+        openlist.add(node(0, 0, 0, None, p1))
+        while openlist:
+            nodeq = min(sorted(openlist))
+            openlist.remove(nodeq)
+            for i in range(-1, 2):
+                for j in range(-1, 2):
+                    if (i, j) != (0, 0):
+                        neighbor = nodeq.node[0]+i, nodeq.node[1]+j
+                        print(neighbor)
+
+                        if neighbor == p2:
+                            print("found?")
+                            closelist.append(nodeq)
+                            # closelist.append(neighbor)
+                            return closelist
+
+                        if neighbor in tiles.keys() and tiles[neighbor].char not in ("#", "+"):
+
+                            sg = nodeq.dg + int(distance(*nodeq.node, *neighbor) * 10)
+                            sh = int(distance(*neighbor, *p2) * 10)
+                            sf = sg + sh
+
+                            if any(n.node == neighbor and n.df < sf for n in openlist):
+                                pass
+                            elif any(n.node == neighbor and n.df < sf for n in closelist):
+                                pass
+                            else:
+                                openlist.add(node(sf, sg, sh, nodeq.node, neighbor))
+
+            closelist.append(nodeq)
+        # the final closelist will be all nodes connecting p1 to p2
+        return closelist        
+
+    def acts(self, player, tiles, units):
         # need a function that returns all units/items/whatever in the 
-        # rat line of sight
-        for unit in units:
-            if unit == player:
-                print('player spotted -- going to attack')
-                if distance(*self.position(), *unit.position_local()) <= 2:
-                    print('player within range of attack -- attacking player')
-                    self.attack(unit)
+        # rat line of sight -- basically a mini dungeon output based on sight
+        def build_sight_map():
+            def map_out():
+                return "\n".join("".join(row) for row in sight_map)
+            sight_map[self.sight][self.sight] = self.character
+            for (x, y) in tiles:
+                if player.position_local() == (x, y):
+                    # check if player position is on the tile
+                    char = "@"
+                    paths.append((100, player, self.path(self.position(), player.position_local(), tiles)))
+                elif (x, y) in units.keys():
+                    # check if unit is on the square
+                    char = units[(x, y)].char
+                elif tiles[(x, y)].items:
+                    # check for items on the square
+                    char = tiles[(x, y)].items[0].char
                 else:
-                    print('player not in range of attack -- moving torward player')
-                    self.moving_torwards(unit)
+                    # empty square
+                    char = tiles[(x, y)].char
+                # offset the location based on unit position and sight range
+                dx, dy = self.x-x+self.sight, self.y-y+self.sight
+                sight_map[dy][dx] = char
+            # print(map_out())
+        # start with an empty sight map
+        sight_range = self.sight * 2 + 1
+        sight_map = [[" " for x in range(sight_range)] for y in range(sight_range)]
+        paths = []
+        build_sight_map()
+        if not paths:
+            # nothing of interest to the rat
+            self.wander(tiles)
+        else:
+            _, interest, path = max(paths)
+            print(self.position(), interest, path)
+            if len(path) > 2:
+                # take the second point since first is the position of the unit
+                self.moving_torwards(path[1].node)
             else:
-                print('spotted a non player unit')
+                if isinstance(interest, Unit):
+                    self.attack(interest)
+                else:
+                    self.attack(interest)
+        # print(paths)
+
+    def wander(self, tiles):
+        print('wandering about')
+        self.moving_torwards(choice(list(tiles.keys())))
 
     def drops(self):
-        if randint(0, 1):
+        if randint(0, 5):
             return Item("rat corpse", "%", "red")
         else:
             return None
@@ -64,9 +143,17 @@ class Rat(Unit):
         print('ATTACKING')
 
     def moving_torwards(self, unit):
-        dx = unit.x - self.x
-        dy = unit.y - self.y
-        dt = distance(*self.position(), *unit.position_local())
+        try:
+            dx = unit.x - self.x
+            dy = unit.y - self.y
+            try:
+                dt = distance(*self.position(), *unit.position_local())
+            except:
+                dt = distance(*self.position(), *unit.position())
+        except:
+            dx = unit[0] - self.x
+            dy = unit[1] - self.y
+            dt = distance(*self.position(), *unit)
         x = int(round(dx / dt))
         y = int(round(dy / dt))
         print(x, y)

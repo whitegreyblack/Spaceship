@@ -143,7 +143,7 @@ def new_game(character=None, world=None, turns=0):
                                 "There is something here."
                                 "Your feet touches an object."
                             ]
-                            gamelog.add(pass_item_message[randint(0, len(pass_item_messages)-1)])
+                            gamelog.add(pass_item_messages[randint(0, len(pass_item_messages)-1)])
                         turns += 1
                     else:
                         unit = dungeon.get_unit(tx, ty)
@@ -152,7 +152,8 @@ def new_game(character=None, world=None, turns=0):
                             player.move(x, y)
                             gamelog.add("You switch places with the {}".format(unit.job))
                         else:
-                            if player.calculate_attack_chance() == 0:
+                            chance = player.calculate_attack_chance()
+                            if chance == 0:
                                 gamelog.add("You try attacking the {} but miss".format(unit.job))
                             else:
                                 damage = player.calculate_attack_damage() * (2 if chance == 2 else 1)
@@ -576,17 +577,14 @@ def new_game(character=None, world=None, turns=0):
             gamelog.add("There is more than one door near you. Which direction?")
             log_box()
             term.refresh()
+
             code = term.read()
-
-            if code in key_movement:
-                cx, cy = key_movement[code]
-            elif code in num_movement:
-                cx, cy = num_movement[code]
-            else:
+            try:
+                cx, cy, a, act = commands[code]
+                if act != "move" and (x+cx, y+cy) in reachables:
+                    openDoor(x+cx, y+cy) if key is 'o' else closeDoor(x+cx, y+cy)            
+            except:
                 return
-
-            if (x+cx, y+cy) in reachables:
-                openDoor(x+cx, y+cy) if key is 'o' else closeDoor(x+cx, y+cy)
 
         turns += 1
 

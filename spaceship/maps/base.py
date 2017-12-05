@@ -14,7 +14,7 @@ from namedlist import namedlist
 from collections import namedtuple
 from spaceship.maps.charmap import DungeonCharmap as dcm
 from spaceship.maps.charmap import WildernessCharmap as wcm
-from spaceship.tools import scroll
+from spaceship.tools import scroll, distance
 from spaceship.units.monsters import Rat, Bat
 
 '''
@@ -252,10 +252,51 @@ class Map:
     def lit_reset(self):
         for y in range(self.height):
             for x in range(self.width):
+                if self.square(x, y).char == "." and self.square(x, y).color == "blue":
+                    self.square(x, y).color ="white"
                 if self.square(x, y).light == 2:
                     self.square(x, y).light = 1 # if self.square(x, y).light > 0 else 0
 
-    def fov_calc_blocks(self, x, y, r, player):
+    def path(self, p1, p2):
+        '''A star implementation'''
+        node = namedtuple("Node", "df dg dh parent node")
+        openlist = set()
+        closelist = []
+        openlist.add(node(0, 0, 0, None, p1))
+
+        if debug:
+            print("PATH: DISTANCE - {}".format(int(distance(p1, p2)*10)))
+
+        while openlist:
+            nodeq = min(sorted(openlist))
+            openlist.remove(nodeq)
+            for i in range(-1, 2):
+                for j in range(-1, 2):
+                    if (i, j) != (0, 0):
+                        neighbor = nodeq.node[0]+i, nodeq.node[1]+j
+
+                        if neighbor == p2:
+                            closelist.append(nodeq)
+                            return closelist
+
+                        if not self.square(i, j).block_mov: 
+
+                            sg = nodeq.dg + int(distance(nodeq.node, neighbor) * 10)
+                            sh = int(distance(neighbor, p2) * 10)
+                            sf = sg + sh
+
+                            if any(n.node == neighbor and n.df < sf for n in openlist):
+                                pass
+                            elif any(n.node == neighbor and n.df < sf for n in closelist):
+                                pass
+                            else:
+                                openlist.add(node(sf, sg, sh, nodeq.node, neighbor))
+
+            closelist.append(nodeq)
+
+        return closelist        
+
+    def fov_calc_blocks(self, x, y, r):
         def fov_block(cx, cy, row, start, end, radius, xx, xy, yx, yy, id):
             nonlocal vision_tiles
             if start < end:
@@ -264,13 +305,14 @@ class Map:
             radius_squared = radius * radius
 
             for j in range(row, radius + 1):
+
                 dx, dy = -j - 1, -j
                 blocked = False
 
                 while dx <= 0:
                     dx += 1
                     X, Y = cx + dx * xx + dy * xy, cy + dx * yx + dy * yy
-                    l_slope, r_slope = (dx - 0.5) / (dy + 0.5), (dx + 0.5) / (dy-0.5)
+                    l_slope, r_slope = (dx - 0.5) / (dy + 0.5), (dx + 0.5) / (dy - 0.5)
                     
                     if start < r_slope:
                         continue
@@ -293,24 +335,11 @@ class Map:
                         else:
                             if self.blocked(X, Y) and not self.viewable(X, Y) and j < radius:
                                 blocked = True
-                                self.sight(cx, cy, j + 1, start, l_slope,
+                                fov_block(cx, cy, j + 1, start, l_slope,
                                             radius, xx, xy, yx, yy, id + 1)
                                 new_start = r_slope
                 if blocked:
                     break
-
-        def split_blocks():
-            '''Returns "interesting details from the map positions in
-            the line of sight of unit
-            '''
-            nonlocal vision_tiles
-            # get units
-            units = {}
-            items = []
-            for x, y in vision_tiles:
-                if (x, y) == player.position_local():
-                    units[(x, y)] = player
-            return units, items
 
         vision_tiles = set()
         for o in range(8):
@@ -348,6 +377,7 @@ class Map:
                 # l_slope and r_slope store the slopes of the left and right
                 # extremities of the square we're considering:
                 l_slope, r_slope = (dx - 0.5) / (dy + 0.5), (dx + 0.5) / (dy - 0.5)
+                
                 if start < r_slope:
                     continue
 
@@ -408,6 +438,13 @@ class Map:
                     return u
         return []
 
+    def add_units(self, units):
+        if hasattr(self, 'units'):
+            self.units += units
+        else:
+            print('no unit list')
+            self.units = units
+
     def get_units(self):
         '''Returns all units within the list'''
         if hasattr(self, 'units'):
@@ -433,19 +470,11 @@ class Map:
     def handle_units(self, player):
         # print(hasattr(self, 'units'))
         for unit in self.units:
-            print(unit)
             if hasattr(unit, 'acts'):
-                units, items = [], []
-                tiles = self.fov_calc_blocks(unit.x, unit.y, unit.sight, player)
-                for x, y in tiles:
-                    if (x, y) == player.position_local():
-                        units.append(player)
-                    # elif self.square(x, y).unit:
-                    #     units.append(self.square(x, y).unit)
-                    if self.square(x, y).items:
-                        items.append(self.square(x, y).items)
-                unit.acts(player, units, items)
-                    # elif self.square(x, y).unit:
+                positions = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
+                tiles = {position: self.square(*position) for position in positions}
+                units = {u.position(): u for u in self.units if u != unit}
+                unit.acts(player, tiles, units)
 
     def generate_units(self):
         if self.height <= 25:

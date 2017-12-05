@@ -17,6 +17,7 @@ class Player:
     parts=("eq_head", "eq_neck", "eq_body", "eq_arms", "eq_hands", 
            "eq_hand_left", "eq_hand_right", "eq_ring_left", 
            "eq_ring_right", "eq_waist", "eq_legs", "eq_feet")
+
     def __init__(self, character):
         '''Unpacks the character tuple and calculates stats
 
@@ -27,7 +28,7 @@ class Player:
         self.unit_id = -1
         self.exp = 0
         self.level = 1
-        self.sight = 5
+        self.sight = 15
         self.advexp = self.level * 150
         self.job = character.job
         self.race = character.race
