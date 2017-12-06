@@ -28,7 +28,7 @@ class Player:
         self.unit_id = -1
         self.exp = 0
         self.level = 1
-        self.sight = 15
+        self.sight = 5
         self.advexp = self.level * 150
         self.job = character.job
         self.race = character.race
@@ -56,6 +56,9 @@ class Player:
         self.home, self.hpointer = home, World.capitals(home)
         self.wx, self.wy = self.hpointer
         self.wz = 0
+
+    def __str__(self):
+        return self.name
 
     def convert_equipment(self):
         '''Transforms equipment tuples into actual item objects'''
@@ -214,8 +217,8 @@ Accuracy : {acc:>5}
         except KeyError:
             raise KeyError("Error in -directions-")
 
-    def position_local(self) -> Tuple[int, int]:
-
+    def position(self) -> Tuple[int, int]:
+        '''returns local position within a dungeon'''
         return self.x, self.y
 
     def move(self, dx: int, dy: int) -> None:

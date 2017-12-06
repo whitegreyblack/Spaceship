@@ -157,13 +157,13 @@ def new_game(character=None, world=None, turns=0):
                                 gamelog.add("You try attacking the {} but miss".format(unit.job))
                             else:
                                 damage = player.calculate_attack_damage() * (2 if chance == 2 else 1)
-                                unit.health -= damage
+                                unit.cur_health -= damage
                                 log = "You {} attack the {} for {} damage. ".format(
                                     "crit and" if chance == 2 else "", unit.job, damage)
-                                log += "The {} has {} health left".format(unit.job, max(unit.health, 0))
+                                log += "The {} has {} health left".format(unit.job, max(unit.cur_health, 0))
                                 gamelog.add(log)
 
-                                if unit.health < 1:
+                                if unit.cur_health < 1:
                                     gamelog.add("You have killed the {}! You gain {} exp".format(unit.job, unit.xp))
                                     player.gain_exp(unit.xp)
 
@@ -249,13 +249,13 @@ def new_game(character=None, world=None, turns=0):
 
                     else:
                         damage = player.calculate_attack_damage() * (2 if chance == 2 else 1)
-                        unit.health -= damage
+                        unit.cur_health -= damage
                         log = "You {} attack the {} for {} damage. ".format(
                             "crit and" if chance == 2 else "", unit.job, damage)
-                        log += "The {} has {} health left".format(unit.job, max(unit.health, 0))
+                        log += "The {} has {} health left".format(unit.job, max(unit.cur_health, 0))
                         gamelog.add(log)
 
-                        if unit.health < 1:
+                        if unit.cur_health < 1:
                             gamelog.add("You have killed the {}! You gain {} exp".format(unit.job, unit.xp))
                             player.gain_exp(unit.xp)
 
@@ -317,7 +317,7 @@ def new_game(character=None, world=None, turns=0):
                             unit.displace(other, x, y)
 
                         else:
-                            other.health -= 1
+                            other.cur_health -= 1
                             
                             log = "The {}({}) attacks {}({}). ".format(
                                 unit.job, unit.unit_id,
@@ -325,10 +325,10 @@ def new_game(character=None, world=None, turns=0):
                                 other.unit_id)
                             log += "{} {} health left".format(
                                 "You have " if other == player else "the " + other.job + " has",
-                                player.health if other == player else other.health)
+                                player.cur_health if other == player else other.cur_health)
                             gamelog.add(log)
 
-                            if other.health < 1:
+                            if other.cur_health < 1:
                                 gamelog.add("The {} has killed {}".format(
                                     unit.job,
                                     "you" if other == player else "the " + other.job))
@@ -435,8 +435,8 @@ def new_game(character=None, world=None, turns=0):
         def attack(x, y):
             unit = dungeon.get_unit(x, y)
             log = "You attack the {}. ".format(unit.job)
-            unit.health -= 1           
-            log += "The {} has {} health left. ".format(unit.job, unit.health)
+            unit.cur_health -= 1           
+            log += "The {} has {} health left. ".format(unit.job, unit.cur_health)
             if dungeon.maptype == "city":
                 dungeon.reduce_unit_relationships(100)
                 # dungeon.reduce_relationship(100)
@@ -446,7 +446,7 @@ def new_game(character=None, world=None, turns=0):
                 gamelog.add(l)
 
             # if unit.r is not "human": # condition should be more complex
-            if unit.health < 1:
+            if unit.cur_health < 1:
                 gamelog.add("You have killed the {}! You gain 15 exp".format(unit.job))
                 dungeon.remove_unit(unit)
 

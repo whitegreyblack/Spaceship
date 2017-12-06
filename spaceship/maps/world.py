@@ -296,7 +296,9 @@ class World(Map):
                 yield (x - cam_x, y - cam_y, col, ch)
 
 if __name__ == "__main__":
-    w = World(map_img_path="./assets/worldmap.png")
+    w = World(
+        map_name="Calabaston",
+        map_img_path="./assets/worldmap.png")
     print(w.__repr__())
     # w.create_tile_map()
     print(w)

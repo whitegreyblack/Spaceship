@@ -17,7 +17,8 @@ class Rat(Unit):
         self.sight = 7
         self.x, self.y = x, y
         self.xp = 25
-        self.health = 5
+        self.cur_health = 5
+        self.max_health = 5
         self.character = "r"
         self.job = "rat"
         self.race = "monster"
@@ -25,7 +26,8 @@ class Rat(Unit):
         self.relation = -100
         self.damage_lower = 3
         self.damage_higher = 5
-    
+        self.last_action = None
+        self.current_action = None
     '''
     AI Behaviours:
         wander -> goto random point using a* search from current position to point
@@ -43,7 +45,6 @@ class Rat(Unit):
     '''
     def path(self, p1, p2, tiles):
         '''A star implementation'''
-        print(p1, p2)
         node = namedtuple("Node", "df dg dh parent node")
         openlist = set()
         closelist = []
@@ -55,7 +56,6 @@ class Rat(Unit):
                 for j in range(-1, 2):
                     if (i, j) != (0, 0):
                         neighbor = nodeq.node[0]+i, nodeq.node[1]+j
-                        print(neighbor)
 
                         if neighbor == p2:
                             print("found?")
@@ -78,6 +78,10 @@ class Rat(Unit):
 
             closelist.append(nodeq)
         # the final closelist will be all nodes connecting p1 to p2
+        if not openlist:
+            # return False or closelist?
+            return closelist
+
         return closelist        
 
     def acts(self, player, tiles, units):
@@ -85,13 +89,13 @@ class Rat(Unit):
         # rat line of sight -- basically a mini dungeon output based on sight
         def build_sight_map():
             def map_out():
-                return "\n".join("".join(row) for row in sight_map)
+                return "\n".join("".join(row[::-1]) for row in sight_map[::-1])
             sight_map[self.sight][self.sight] = self.character
             for (x, y) in tiles:
-                if player.position_local() == (x, y):
+                if player.position() == (x, y):
                     # check if player position is on the tile
                     char = "@"
-                    paths.append((100, player, self.path(self.position(), player.position_local(), tiles)))
+                    paths.append((100, player, self.path(self.position(), player.position(), tiles)))
                 elif (x, y) in units.keys():
                     # check if unit is on the square
                     char = units[(x, y)].char
@@ -104,26 +108,48 @@ class Rat(Unit):
                 # offset the location based on unit position and sight range
                 dx, dy = self.x-x+self.sight, self.y-y+self.sight
                 sight_map[dy][dx] = char
-            # print(map_out())
+            print(map_out())
+            
         # start with an empty sight map
         sight_range = self.sight * 2 + 1
         sight_map = [[" " for x in range(sight_range)] for y in range(sight_range)]
         paths = []
         build_sight_map()
-        if not paths:
-            # nothing of interest to the rat
-            self.wander(tiles)
+        if self.cur_health <= self.max_health * .10:
+            # monster is wounded/damaged -- try preserving its life
+            print('Waiting and resting')
         else:
-            _, interest, path = max(paths)
-            print(self.position(), interest, path)
-            if len(path) > 2:
-                # take the second point since first is the position of the unit
-                self.moving_torwards(path[1].node)
+            # monster is healthy -- do monster stuff
+            if not paths:
+                # nothing of interest to the rat
+                if self.last_action == "following":
+                    print('Following trail of last seen unit')
+                    self.moving_torwards()
+                self.wander(tiles)
             else:
-                if isinstance(interest, Unit):
-                    self.attack(interest)
-                else:
-                    self.attack(interest)
+
+                _, interest, path = max(paths)
+                # print(self.position(), interest, path)
+                if not path:
+                    # path returns false
+                    self.wander(self, tiles)
+                # get distance to determine action
+                elif isinstance(interest, Unit) or isinstance(interest, Player):
+                    dt = distance(*self.position(), *interest.position())
+                    if dt < 2:
+                        self.attack(interest)
+                    else:
+                        print("Saw {}".format(interest))
+                        self.moving_torwards(path[1].node)
+                # elif len(path) > 2:
+                #     # take the second point since first is the position of the unit
+                #     print("Saw {}".format(interest))
+                #     self.moving_torwards(path[1].node)
+                # else:
+                #     if isinstance(interest, Unit):
+                #         self.attack(interest)
+                #     else:
+                #         self.attack(interest)
         # print(paths)
 
     def wander(self, tiles):
