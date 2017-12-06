@@ -1,24 +1,32 @@
-
 from typing import Tuple
 import math
 
 class Object:
     '''Base object class used in the following subclasses:
         
-        Tiles :- WorldTiles, MapTiles
+    Tiles :- WorldTiles, MapTiles
 
-        Units :- NPC's, Monsters, Player
-    
-        Items :- Armor, Weapons, Usables
+    Units :- NPC's, Monsters, Player
+
+    Items :- Armor, Weapons, Usables
+
+    Implements position and object position interactions
+
+    Position :- Changes constantly so getter/setter
+
+    Graphics :- Doesn't usually change -- for now set as only getter
     '''
+    object_id = 0
+
     def __init__(self, x: int, y: int, c: chr, fg: str, bg: str):
+        Object.object_id += 1
         self.x, self.y = x, y
         self.character = c
         self.foreground = fg
         self.background = bg
 
     def __str__(self):
-        return "{}: (x={}, y={}, ch={}, fg={}, bg={}".format(
+        return "{}: (x={}, y={}, ch={}, fg={}, bg={})".format(
             self.__class__.__name__, 
             self.x, 
             self.y, 
@@ -31,11 +39,18 @@ class Object:
     def position(self):
         return self.x, self.y
 
+    @position.setter
+    def position(self, position):
+        self.x, self.y = position
+
     def distance(self, other):
         return math.sqrt(
             math.pow(other.x - self.x, 2) + \
             math.pow(other.y - self.y, 2))
 
+    @property
+    def output(self):
+        return self.x, self.y, self.character, self.foreground, self.background
 
 if __name__ == "__main__":
     # unit tests?
@@ -46,3 +61,5 @@ if __name__ == "__main__":
     a = Object(0, 0, "a", "#000000", "#ffffff")
     b = Object(9, 9, "b", "#000000", "#ffffff")
     print(a.distance(b))
+
+    print(Object.object_id)

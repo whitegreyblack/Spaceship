@@ -197,20 +197,3 @@ class GiantRat(Unit):
 
     def talk(self):
         return "Screeeee!!"
-
-class Bat(Unit):
-    def __init__(self, x, y):
-        self.unit_id = Unit.unit_id
-        Unit.unit_id += 1
-        self.sight = 5
-
-        self.x, self.y = x, y
-        self.xp = 20
-        self.health = 5
-        self.character = "b"
-        self.job = "bat"
-        self.race = "monster"
-        self.color = "brown"
-
-    def talk(self):
-        return "Screech"
