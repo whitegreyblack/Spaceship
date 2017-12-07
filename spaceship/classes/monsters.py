@@ -1,14 +1,10 @@
-import os
-import sys
-from typing import Tuple
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../../')
-from spaceship.world import World
-from spaceship.item import Armor, Weapon, Item, items
-from spaceship.units.unit import Unit
 from random import randint, choice
-from spaceship.tools import distance
-from spaceship.units.player import Player
 from collections import namedtuple
+from typing import Tuple
+
+from ..tools import distance
+from .item import Armor, Weapon, Item, items
+from .unit import Unit
 
 class Rat(Unit):
     def __init__(self, x, y):
@@ -134,7 +130,8 @@ class Rat(Unit):
                     # path returns false
                     self.wander(self, tiles)
                 # get distance to determine action
-                elif isinstance(interest, Unit) or isinstance(interest, Player):
+                # elif isinstance(interest, Unit) or isinstance(interest, Player):
+                elif isinstance(iterest, Unit):
                     dt = distance(*self.position(), *interest.position())
                     if dt < 2:
                         self.attack(interest)
@@ -197,3 +194,6 @@ class GiantRat(Unit):
 
     def talk(self):
         return "Screeeee!!"
+
+if __name__ == "__main__":
+    pass

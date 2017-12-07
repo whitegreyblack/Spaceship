@@ -1,15 +1,12 @@
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../../')
-from spaceship.maps.base import Map
-from spaceship.maps.utils import blender
+from .map import Map
+from .utils import blender
 from PIL import Image
 from collections import namedtuple
-from spaceship.maps.charmap import DungeonCharmap as dcm
-from spaceship.maps.charmap import WildernessCharmap as wcm
+from .charmap import DungeonCharmap as dcm
+from .charmap import WildernessCharmap as wcm
 from random import shuffle, choice, randint
-from spaceship.units.unit import Unit
-from spaceship.units.neutrals import Shopkeeper, Innkeeper, Bishop, Soldier
+from .unit import Unit
+from .neutrals import Shopkeeper, Innkeeper, Bishop, Soldier
 
 class City(Map):
     chars = {

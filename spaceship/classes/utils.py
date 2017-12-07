@@ -12,10 +12,7 @@ from copy import deepcopy
 from textwrap import wrap
 from namedlist import namedlist
 from collections import namedtuple
-from spaceship.maps.charmap import DungeonCharmap as dcm
-from spaceship.maps.charmap import WildernessCharmap as wcm
 from spaceship.tools import scroll
-from spaceship.units.monsters import Rat, Bat
 
 """Maps file holds template functions that return randomized data maps used\
 in creating procedural worlds"""

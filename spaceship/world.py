@@ -1,20 +1,17 @@
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from bearlibterminal import terminal as term
 from collections import namedtuple
 from namedlist import namedlist
-from spaceship.screen_functions import center
-from spaceship.setup_game import setup, setup_font
 from textwrap import wrap
 # from objects import Map
-from spaceship.tools import bresenhams, scroll
 from random import choice
 from PIL import Image
 from typing import Tuple, Union
 import time
 import shelve
 
+from spaceship.screen_functions import center
+# from spaceship.setup_game import setup, setup_font
+from spaceship.tools import bresenhams, scroll
 
 class World:
 

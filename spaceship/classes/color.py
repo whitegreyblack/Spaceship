@@ -1,5 +1,3 @@
-import random
-
 class Color:
     """Color class used as a static method to import hexvalue color codes"""
 

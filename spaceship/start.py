@@ -4,22 +4,22 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 
 from bearlibterminal import terminal as term
 
-from constants import GAME_TITLE as TITLE
-from constants import GAME_TITLE_HEIGHT as TITLE_HEIGHT
-from constants import GAME_TITLE_VERSION as VERSION
-from constants import GAME_TITLE_WIDTH as TITLE_WIDTH
+from .constants import GAME_TITLE as TITLE
+from .constants import GAME_TITLE_HEIGHT as TITLE_HEIGHT
+from .constants import GAME_TITLE_VERSION as VERSION
+from .constants import GAME_TITLE_WIDTH as TITLE_WIDTH
 
 if term.state(term.TK_HEIGHT) <= 24:
-    from constants import GAME_TITLE_SHORT as GTAS
+    from .constants import GAME_TITLE_SHORT as GTAS
 else:
-    from constants import GAME_TITLE as GTAS
+    from .constants import GAME_TITLE as GTAS
 
-from continue_game import continue_game
-from create_character import create_character as create_character
-from new_game import new_game
-from options import options
-from screen_functions import center, colored, longest
-from setup_game import setup, setup_font, setup_menu
+from .continue_game import continue_game
+from .create_character import create_character as create_character
+from .new_game import new_game
+from .options import options
+from .screen_functions import center, colored, longest
+from .setup_game import setup, setup_font, setup_menu
 
 debug = False
 

@@ -1,10 +1,8 @@
-import os
-import sys
 from typing import Tuple
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../../')
-from spaceship.world import World
-from spaceship.item import Armor, Weapon, Item, items
 from random import randint
+
+from .world import World
+from .item import Armor, Weapon, Item, items
 
 # class RelationTable:
 #     def __init__(self, unit):
@@ -304,3 +302,6 @@ class Character(Object):
         self.l=l
         self.inventory = Inventory(b)
         self.backpack = Backpack()
+
+if __name__ == "__main__":
+    pass

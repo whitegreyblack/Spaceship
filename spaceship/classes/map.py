@@ -1,21 +1,21 @@
  # -*- coding=utf-8 -*-
-import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../../')
+import sys
 from bearlibterminal import terminal as term
 from PIL import Image, ImageDraw
 from functools import lru_cache
 from random import randint, choice, shuffle
-from spaceship.tools import bresenhams
 from math import hypot
 from copy import deepcopy
 from textwrap import wrap
 from namedlist import namedlist
 from collections import namedtuple
-from spaceship.maps.charmap import DungeonCharmap as dcm
-from spaceship.maps.charmap import WildernessCharmap as wcm
-from spaceship.tools import scroll, distance
-from spaceship.units.monsters import Rat, Bat
+
+from .charmap import DungeonCharmap as dcm
+from .charmap import WildernessCharmap as wcm
+from .monsters import Rat
+from .bat import Bat
+from ..tools import scroll, distance, bresenhams
 
 '''
 TODO: seperate map and dungeon
@@ -616,3 +616,6 @@ class Map:
 # if __name__ == "__main__":
 #     test = Map(66, 22)
 #     print(test)
+
+if __name__ == "__main__":
+    pass

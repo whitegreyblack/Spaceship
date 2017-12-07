@@ -1,29 +1,27 @@
 # main implementation of core mechanics
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
-from spaceship.action import commands
-from spaceship.setup_game import setup_game
-from spaceship.tools import bresenhams, deltanorm, movement
-from spaceship.maps.utils import hextup, hexone
-from spaceship.tools import toInt
-from spaceship.maps.base import Map
-from spaceship.maps.city import City
-from spaceship.maps.wild import *
-from spaceship.maps.cave import Cave
-from spaceship.maps.world import World
-from spaceship.item import Item
-from spaceship.units.player import Player
-from spaceship.create_character import create_character as create
-from spaceship.screen_functions import center, surround, selected
-from spaceship.dungeon import build_terrain, build_dungeon
-from spaceship.setup_game import setup, output, setup_font
 from bearlibterminal import terminal as term
-from spaceship.gamelog import GameLogger
+from .action import commands
+from .setup_game import setup_game
+from .tools import bresenhams, deltanorm, movement
+from .classes.utils import hextup, hexone
+from .tools import toInt
+from .classes.map import Map
+from .classes.world import World
+from .classes.wild import *
+from .classes.cave import Cave
+from .classes.city import City
+
+from .classes.item import Item
+from .classes.player import Player
+from .create_character import create_character as create
+from .screen_functions import center, surround, selected
+from .dungeon import build_terrain, build_dungeon
+from .setup_game import setup, output, setup_font
+from .gamelog import GameLogger
 from random import randint, choice
 from collections import namedtuple
 from namedlist import namedlist
-# from spaceship.world import World
+# from .world import World
 from time import clock
 from textwrap import wrap
 import shelve

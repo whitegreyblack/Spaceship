@@ -1,17 +1,16 @@
-import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../../')
-from spaceship.maps.base import Map
-from spaceship.maps.utils import blender
+import sys
+from typing import Tuple, Union
+from random import shuffle, choice, randint
 from PIL import Image, ImageDraw
 from collections import namedtuple
-from spaceship.maps.charmap import DungeonCharmap as dcm
-from spaceship.maps.charmap import WildernessCharmap as wcm
-from spaceship.maps.charmap import WorldCharmap as ccm
-from random import shuffle, choice, randint
-from spaceship.maps.utils import splitter
-from typing import Tuple, Union
-from spaceship.tools import toInt, scroll
+
+from .charmap import DungeonCharmap as dcm
+from .charmap import WildernessCharmap as wcm
+from .charmap import WorldCharmap as ccm
+from .utils import splitter, blender
+from .map import Map
+from ..tools import toInt, scroll
 
 class World(Map):
     chars = {
@@ -53,6 +52,9 @@ class World(Map):
         (7, 43): "Westwatch",
         (67, 42): "Whitewater",
         (21, 18): "Yarrin",
+    }
+    capitals = {
+
     }
     geo_legend = {
         (200, 191, 231): ("city(elven)", "&", ("#FF8844",)),
@@ -126,6 +128,18 @@ class World(Map):
 
     def __str__(self):
         return "\n".join("".join(tile.char for tile in row) for row in self.tilemap)
+
+    @staticmethod
+    def capitals(capital: str) -> str:
+        city = {
+            "Tiphmore": (42, 62),
+            "Dun Badur": (83, 9),
+            "Aurundel": (41, 20),
+            "Renmar": (16, 46),
+            "Lok Gurrah": (72, 51),            
+        }
+
+        return city[capital]
 
     @property
     def tilemap(self):
@@ -304,5 +318,3 @@ if __name__ == "__main__":
     print(w)
     w.save_map()
     w.save_img()
-    
-    

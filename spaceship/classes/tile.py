@@ -13,8 +13,14 @@ class WorldTile(Tile):
         self.land = land
         self.enterable = enterable
 
+    def draw(self):
+        return (*super().draw(), self.land, self.enterable)
+    
 class MapTile(Tile):
     def __init__(self, ch, fg, block, light):
         super().__init__(ch, fg, bg)
         self.block = block
         self.light = light
+
+    def draw(self):
+        return (*super().draw(), self.block, self.light)

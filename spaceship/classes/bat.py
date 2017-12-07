@@ -1,5 +1,5 @@
-from unit import Unit
-from color import Color
+from .unit import Unit
+from .color import Color
 
 class Bat(Unit):
     def __init__(self, x, y, ch='b', fg=Color.orange_darkest, bg=Color.black):

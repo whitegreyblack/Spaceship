@@ -1,6 +1,7 @@
-from object import Object
-from color import Color
 from random import choice
+from .object import Object
+from .color import Color
+
 ''' TODO: implement unique attributes
 self.str, self.agi, self.int
 self.armor_type = unarmored, light, medium, heavy, fort/building

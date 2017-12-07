@@ -1,7 +1,8 @@
 from typing import Tuple
 import math
+from .tile import Tile
 
-class Object:
+class Object(Tile):
     '''Base object class used in the following subclasses:
         
     Tiles :- WorldTiles, MapTiles
@@ -17,13 +18,11 @@ class Object:
     Graphics :- Doesn't usually change -- for now set as only getter
     '''
     object_id = 0
-
-    def __init__(self, x: int, y: int, c: chr, fg: str, bg: str):
-        Object.object_id += 1
+    
+    def __init__(self, x: int, y: int, ch: chr, fg: str, bg: str):
+        super().__init__(ch, fg, bg)
         self.x, self.y = x, y
-        self.character = c
-        self.foreground = fg
-        self.background = bg
+        Object.object_id += 1
 
     def __str__(self):
         return "{}: (x={}, y={}, ch={}, fg={}, bg={})".format(
@@ -48,9 +47,8 @@ class Object:
             math.pow(other.x - self.x, 2) + \
             math.pow(other.y - self.y, 2))
 
-    @property
     def output(self):
-        return self.x, self.y, self.character, self.foreground, self.background
+        return (*super().draw(), self.x, self.y)
 
 if __name__ == "__main__":
     # unit tests?
