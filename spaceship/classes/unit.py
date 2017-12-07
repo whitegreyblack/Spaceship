@@ -12,14 +12,6 @@ self.defense_physical
 self.damage_magical
 self.defense_magical
 
-# self.exp = 0
-# self.job = job
-# self.race = race
-# self.color = color
-# self.health = 10
-# self.sight = 15
-# self.movable = True
-
 # self.damage_lower = 1
 # self.damage_higher = 2
 
@@ -45,6 +37,20 @@ class Unit(Object):
         self.race = race
         self.cur_health = self.max_health = 5
         Unit.unit_id += 1
+
+    def __str__(self):
+        return "{}: (x={}, y={}, ch={}, fg={}, bg={}, race={}, sight={}, {}/{})".format(
+            self.__class__.__name__, 
+            self.x, 
+            self.y, 
+            self.character,
+            self.foreground,
+            self.background,
+            self.race,
+            self.sight,
+            self.cur_health,
+            self.max_health
+        )
 
     def move(self, dx, dy):
         self.x += dx

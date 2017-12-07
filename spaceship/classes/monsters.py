@@ -3,27 +3,21 @@ from collections import namedtuple
 from typing import Tuple
 
 from ..tools import distance
+from .color import Color
 from .item import Armor, Weapon, Item, items
 from .unit import Unit
 
 class Rat(Unit):
-    def __init__(self, x, y):
-        self.unit_id = Unit.unit_id
-        Unit.unit_id += 1
-        self.sight = 7
-        self.x, self.y = x, y
+    def __init__(self, x, y, ch="r", fg=Color.orange_darkest, bg=Color.black,
+                 race="rat", job="monster"):
+        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
         self.xp = 25
-        self.cur_health = 5
-        self.max_health = 5
-        self.character = "r"
-        self.job = "rat"
-        self.race = "monster"
-        self.color = "brown"
-        self.relation = -100
+        self.job = "monster"
         self.damage_lower = 3
         self.damage_higher = 5
         self.last_action = None
         self.current_action = None
+        self.friendly = False
     '''
     AI Behaviours:
         wander -> goto random point using a* search from current position to point
@@ -88,10 +82,10 @@ class Rat(Unit):
                 return "\n".join("".join(row[::-1]) for row in sight_map[::-1])
             sight_map[self.sight][self.sight] = self.character
             for (x, y) in tiles:
-                if player.position() == (x, y):
+                if player.position == (x, y):
                     # check if player position is on the tile
                     char = "@"
-                    paths.append((100, player, self.path(self.position(), player.position(), tiles)))
+                    paths.append((100, player, self.path(self.position, player.position, tiles)))
                 elif (x, y) in units.keys():
                     # check if unit is on the square
                     char = units[(x, y)].char
@@ -125,14 +119,14 @@ class Rat(Unit):
             else:
 
                 _, interest, path = max(paths)
-                # print(self.position(), interest, path)
+                # print(self.position, interest, path)
                 if not path:
                     # path returns false
                     self.wander(self, tiles)
                 # get distance to determine action
                 # elif isinstance(interest, Unit) or isinstance(interest, Player):
                 elif isinstance(iterest, Unit):
-                    dt = distance(*self.position(), *interest.position())
+                    dt = distance(*self.position, *interest.position)
                     if dt < 2:
                         self.attack(interest)
                     else:
@@ -170,13 +164,13 @@ class Rat(Unit):
             dx = unit.x - self.x
             dy = unit.y - self.y
             try:
-                dt = distance(*self.position(), *unit.position_local())
+                dt = distance(*self.position, *unit.position_local())
             except:
-                dt = distance(*self.position(), *unit.position())
+                dt = distance(*self.position, *unit.position)
         except:
             dx = unit[0] - self.x
             dy = unit[1] - self.y
-            dt = distance(*self.position(), *unit)
+            dt = distance(*self.position, *unit)
         x = int(round(dx / dt))
         y = int(round(dy / dt))
         print(x, y)

@@ -49,3 +49,28 @@ help:
 	@echo "        Checks formatting style with flake8 and pep8"
 	@echo "     test:"
 	@echo "        Runs pytest in tests folder"
+
+run:
+	python -m spaceship.start
+
+check-classes:
+	python -m spaceship.classes.color
+	python -m spaceship.classes.tile
+	python -m spaceship.classes.object
+	python -m spaceship.classes.unit
+	python -m spaceship.classes.neutrals
+	python -m spaceship.classes.monsters
+	python -m spaceship.classes.bat
+	python -m spaceship.classes.player
+	python -m spaceship.classes.item
+	python -m spaceship.classes.charmap	
+	python -m spaceship.classes.map
+	python -m spaceship.classes.world
+	python -m spaceship.classes.cave
+	python -m spaceship.classes.city
+	python -m spaceship.classes.wild grass
+	python -m spaceship.classes.wild forest
+	python -m spaceship.classes.wild plains
+	python -m spaceship.classes.wild woods
+
+

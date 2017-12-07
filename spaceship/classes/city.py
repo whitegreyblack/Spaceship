@@ -154,7 +154,7 @@ class City(Map):
         except:
             # any other error should be raised
             raise
-
+            
     def print_map(self):
         if hasattr(self, 'data'):
             return "\n".join(self.data)

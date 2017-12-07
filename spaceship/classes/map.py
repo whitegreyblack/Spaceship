@@ -434,7 +434,7 @@ class Map:
         '''Returns units by positional values'''
         if hasattr(self, 'units'):
             for u in self.units:
-                if (x, y) == u.position():
+                if (x, y) == u.position:
                     return u
         return []
 
@@ -454,7 +454,7 @@ class Map:
 
     def get_unit_positions(self):
         if hasattr(self, 'units'):
-            return {u.position() for u in self.units}
+            return {u.position for u in self.units}
         return {}
 
     def remove_unit(self, unit):
@@ -473,7 +473,7 @@ class Map:
             if hasattr(unit, 'acts'):
                 positions = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
                 tiles = {position: self.square(*position) for position in positions}
-                units = {u.position(): u for u in self.units if u != unit}
+                units = {u.position: u for u in self.units if u != unit}
                 unit.acts(player, tiles, units)
 
     def generate_units(self):
@@ -523,7 +523,7 @@ class Map:
         positions = {}
         if hasattr(self, 'units') and self.units:
             for unit in self.units:
-                positions[unit.position()] = unit
+                positions[unit.position] = unit
 
         col = "#ffffff"
         # width should total 80 units
@@ -542,7 +542,7 @@ class Map:
                     lit = self.check_light_level(x, y)
                     if lit == 2:
                         ch = positions[(x, y)].character
-                        col = positions[(x, y)].color
+                        col = positions[(x, y)].foreground
                     elif lit == 1:
                         ch, col = self.square(x, y).char, 'darkest grey'
                     else:

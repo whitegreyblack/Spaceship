@@ -145,7 +145,7 @@ def new_game(character=None, world=None, turns=0):
                         turns += 1
                     else:
                         unit = dungeon.get_unit(tx, ty)
-                        if unit.friendly():
+                        if unit.friendly:
                             unit.move(-x, -y)
                             player.move(x, y)
                             gamelog.add("You switch places with the {}".format(unit.job))
@@ -172,7 +172,7 @@ def new_game(character=None, world=None, turns=0):
                                     item = unit.drops()
 
                                     if item:
-                                        dungeon.square(*unit.position()).items.append(item)
+                                        dungeon.square(*unit.position).items.append(item)
                                         gamelog.add("The {} has dropped {}".format(unit.job, item.name))
 
                                     dungeon.remove_unit(unit)
@@ -234,7 +234,7 @@ def new_game(character=None, world=None, turns=0):
             else:
                 unit = dungeon.get_unit(tposx, tposy)
 
-                if unit.friendly():
+                if unit.friendly:
                     gamelog.add("You displace the {}".format(unit.job))
                     unit.move(-x, -y)
                     player.move(x, y)
@@ -264,7 +264,7 @@ def new_game(character=None, world=None, turns=0):
                             item = unit.drops()
 
                             if item:
-                                dungeon.square(*unit.position()).items.append(item)
+                                dungeon.square(*unit.position).items.append(item)
                                 gamelog.add("The {} has dropped {}".format(unit.job, item.name))
 
                             dungeon.remove_unit(unit)
@@ -309,7 +309,7 @@ def new_game(character=None, world=None, turns=0):
                                 # make sure the unit being compared is not itself
                                 continue
 
-                        if unit.friendly():
+                        if unit.friendly:
                             # other.move(-x, -y)
                             # unit.move(x, y)
                             unit.displace(other, x, y)
