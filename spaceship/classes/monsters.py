@@ -78,17 +78,21 @@ class Rat(Unit):
         # need a function that returns all units/items/whatever in the 
         # rat line of sight -- basically a mini dungeon output based on sight
         def build_sight_map():
+            '''purely visual recording of environment -- no evaluation yet'''
             def map_out():
                 return "\n".join("".join(row[::-1]) for row in sight_map[::-1])
             sight_map[self.sight][self.sight] = self.character
+            spotted = False
             for (x, y) in tiles:
                 if player.position == (x, y):
                     # check if player position is on the tile
                     char = "@"
+                    spotted = True
                     paths.append((100, player, self.path(self.position, player.position, tiles)))
                 elif (x, y) in units.keys():
                     # check if unit is on the square
                     char = units[(x, y)].character
+                    spotted = True
                 elif tiles[(x, y)].items:
                     # check for items on the square
                     char = tiles[(x, y)].items[0].char
@@ -98,13 +102,31 @@ class Rat(Unit):
                 # offset the location based on unit position and sight range
                 dx, dy = self.x-x+self.sight, self.y-y+self.sight
                 sight_map[dy][dx] = char
-            print(map_out())
+            if spotted:
+                print(map_out())
             
         # start with an empty sight map
-        sight_range = self.sight * 2 + 1
+        unit_spotted = []
+        item_spotted = []
+        # maybe traps later
+
+        sight_range = self.sight * 2 + 1 # accounts for radius
         sight_map = [[" " for x in range(sight_range)] for y in range(sight_range)]
         paths = []
         build_sight_map()
+
+        '''So RAT AI starts with evaluating environment first before
+        evaluating itself.
+        It determines the safety of the environment before making decisions
+        if units do not exist -> safe
+        If units exist and does not include enemies -> safe
+        if units exist and does include enemies -> danger
+        Then makes a decision based on dungeon danger
+        if safe and need to heal -> heal
+        if safe and no need to heal -> wander
+        if unsafe and need to heal -> run
+        if unsafe and no need to heal -> fight
+        '''
         if self.cur_health <= self.max_health * .10:
             # monster is wounded/damaged -- try preserving its life
             print('Waiting and resting')
@@ -139,20 +161,15 @@ class Rat(Unit):
 
     def wander(self, tiles):
         print('wandering about')
-        self.moving_torwards(choice(list(filter(lambda t: tiles[t].char != "#", tiles.keys()))))
+        # filter out all tiles that are not empty spaces
+        # do not want to go to tiles containing blockable objects or units
+        # so filter twice: once to get floor tiles, again to get empty ones
 
-    def drops(self):
-        if randint(0, 5):
-            return Item("rat corpse", "%", "red")
-        else:
-            return None
+        # these are all the non wall tiles
+        points = list(filter(lambda t: tiles[t].char != "#", tiles.keys()))
+        point = choice(list(filter(lambda t: tiles[t].char != "#", tiles.keys())))
+        self.moving_torwards(point)
     
-    def talk(self):
-        return "Reeeee!!"
-
-    def attack(self, unit):
-        print('ATTACKING')
-
     def moving_torwards(self, unit):
         try:
             dx = unit.x - self.x
@@ -167,8 +184,20 @@ class Rat(Unit):
             dt = distance(*self.position, *unit)
         x = int(round(dx / dt))
         y = int(round(dy / dt))
-        print(x, y)
+        # print(x, y)
         self.move(x, y)
+
+    def drops(self):
+        if randint(0, 5):
+            return Item("rat corpse", "%", "red")
+        else:
+            return None
+    
+    def talk(self):
+        return "Reeeee!!"
+
+    def attack(self, unit):
+        print('ATTACKING')
 
 class GiantRat(Unit):
     def __init__(self, x, y):
