@@ -137,18 +137,16 @@ class City(Map):
                                             y=j,
                                             race=modifier,
                                             job=job.lower(),
-                                            char=character,
-                                            color=color))
+                                            ch=character,
+                                            fg=color))
                         else:
                             for _ in range(int(number)):
                                 i, j = self.spaces.pop()
                                 self.units.append(Unit(
                                             x=i, 
                                             y=j,
-                                            race=modifier,
-                                            job=job.lower(),
-                                            char=character,
-                                            color=color))
+                                            ch=character,
+                                            fg=color))
         except FileNotFoundError:
             # not explicitely needed
             print("No unit configuration file found")

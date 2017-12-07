@@ -1,3 +1,5 @@
+import os
+import sys
 from .map import Map
 from .utils import blender
 from .charmap import DungeonCharmap as dcm
@@ -145,10 +147,8 @@ terrain = {
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-
         print("Not enough args")
     elif sys.argv[1] in terrain.keys():
         location = terrain[sys.argv[1]](66, 22)
-        print(location)
         print(location.__repr__())
         print(location.__str__())
