@@ -8,7 +8,7 @@ from .item import Armor, Weapon, Item, items
 from .unit import Unit
 
 class Rat(Unit):
-    def __init__(self, x, y, ch="r", fg=Color.orange_darkest, bg=Color.black,
+    def __init__(self, x, y, ch="r", fg=Color.orange_darker, bg=Color.black,
                  race="rat", job="monster"):
         super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
         self.xp = 25
@@ -88,7 +88,7 @@ class Rat(Unit):
                     paths.append((100, player, self.path(self.position, player.position, tiles)))
                 elif (x, y) in units.keys():
                     # check if unit is on the square
-                    char = units[(x, y)].char
+                    char = units[(x, y)].character
                 elif tiles[(x, y)].items:
                     # check for items on the square
                     char = tiles[(x, y)].items[0].char
@@ -125,27 +125,21 @@ class Rat(Unit):
                     self.wander(self, tiles)
                 # get distance to determine action
                 # elif isinstance(interest, Unit) or isinstance(interest, Player):
-                elif isinstance(iterest, Unit):
-                    dt = distance(*self.position, *interest.position)
-                    if dt < 2:
-                        self.attack(interest)
+                elif isinstance(interest, Unit):
+                    if self.race in interest.__class__.__name__:
+                        print('Saw another {}'.format(self.race))
                     else:
-                        print("Saw {}".format(interest))
-                        self.moving_torwards(path[1].node)
-                # elif len(path) > 2:
-                #     # take the second point since first is the position of the unit
-                #     print("Saw {}".format(interest))
-                #     self.moving_torwards(path[1].node)
-                # else:
-                #     if isinstance(interest, Unit):
-                #         self.attack(interest)
-                #     else:
-                #         self.attack(interest)
+                        dt = distance(*self.position, *interest.position)
+                        if dt < 2:
+                            self.attack(interest)
+                        else:
+                            print("Saw {}".format(interest))
+                            self.moving_torwards(path[1].node)
         # print(paths)
 
     def wander(self, tiles):
         print('wandering about')
-        self.moving_torwards(choice(list(tiles.keys())))
+        self.moving_torwards(choice(list(filter(lambda t: tiles[t].char != "#", tiles.keys()))))
 
     def drops(self):
         if randint(0, 5):
