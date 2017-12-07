@@ -35,11 +35,13 @@ class Object(Tile):
         )
 
     @property
-    def position(self):
+    def position(self) -> Tuple[int, int]:
+        '''returns local position within a dungeon'''
         return self.x, self.y
 
     @position.setter
-    def position(self, position):
+    def position(self, position: Tuple[int, int]) -> None:
+        '''sets local position given a tuple(x,y)'''
         self.x, self.y = position
 
     def distance(self, other):

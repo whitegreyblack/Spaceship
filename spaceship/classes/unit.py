@@ -52,10 +52,10 @@ class Unit(Object):
             self.max_health
         )
 
-    def move(self, dx, dy):
+    def move(self, dx: int, dy: int) -> None:
         self.x += dx
         self.y += dy
-
+        
     def reply(self):
         return "Hello there!"
 

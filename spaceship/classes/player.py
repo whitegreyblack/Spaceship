@@ -1,6 +1,8 @@
 from typing import Tuple
 from random import randint
 
+from .color import Color
+from .unit import Unit
 from .world import World
 from .item import Armor, Weapon, Item, items
 
@@ -11,30 +13,28 @@ from .item import Armor, Weapon, Item, items
 #     def calculate_relations(self):
 #         pass
 
-class Player:
+# Player should inherit from unit just so evaluation makes
+# it so that player evaluates to a unit just like every other
+# unit 
+class Player(Unit):
     parts=("eq_head", "eq_neck", "eq_body", "eq_arms", "eq_hands", 
            "eq_hand_left", "eq_hand_right", "eq_ring_left", 
            "eq_ring_right", "eq_waist", "eq_legs", "eq_feet")
-
     def __init__(self, character):
         '''Unpacks the character tuple and calculates stats
 
         Initial position for world and locations are set here
         as well as the bonuses from race, gender and class
         '''
-        # unpack everything here
-        self.unit_id = -1
+        super().__init__(0, 0, race=character.race)
         self.exp = 0
         self.level = 1
-        self.sight = 5
-        self.advexp = self.level * 150
         self.job = character.job
-        self.race = character.race
         self.gold = character.gold
-        # self.color = None
-        # self.character = None
         self.gender = character.gender
         self.skills = character.skills
+        self.advexp = self.level * 150
+
         self.base_stats = character.stats
         self.job_bonus = character.jbonus
         self.race_bonus = character.rbonus
@@ -189,16 +189,21 @@ Accuracy : {acc:>5}
     def descend(self) -> None:
         self.wz = max(self.wz - 1, -1)
 
-    def position_global(self) -> Tuple[int, int]:
-        '''Returns tuple of global position: (self.wx, self.wy)'''
+    @property
+    def location(self) -> Tuple[int, int]:
+        '''returns global position on the world map'''
         return self.wx, self.wy
 
-    def travel(self, dx: int, dy: int) -> None:
-        self.wx += dx
-        self.wy += dy
+    @location.setter
+    def location(self, location: Tuple[int, int]) -> None:
+        '''sets global position given a tuple(x,y)'''
+        self.wx, self.wy = location    
 
-    def save_position_global(self) -> None:
-        self.last_position_global = self.wx, self.wy
+    def travel(self, dx: int, dy: int) -> None:
+        self.location = (self.wx + dx, self.wy + dy)
+
+    def save_location(self) -> None:
+        self.last_position_global = self.location
     
     def get_position_global_on_enter(self) -> Tuple[float, float]:
         def direction(x: float, y: float) -> Tuple[float, float]:
@@ -215,22 +220,8 @@ Accuracy : {acc:>5}
         except KeyError:
             raise KeyError("Error in -directions-")
 
-    def position(self) -> Tuple[int, int]:
-        '''returns local position within a dungeon'''
-        return self.x, self.y
-
-    def move(self, dx: int, dy: int) -> None:
-
-        self.x += dx
-        self.y += dy
-
     def save_position_local(self) -> None:
-
         self.last_position_local = self.x, self.y
-
-    def reset_position_local(self, x: int, y: int) -> None:
-
-        self.x, self.y = x, y
 
     def dump(self) -> str:
         '''Prints out player information to terminal'''
@@ -268,32 +259,7 @@ Accuracy : {acc:>5}
             self.job,
             self.level,
             self.exp)
-
-class Object:
-    def __init__(self, n, x, y, i, c='white', r="human", h=10):
-        """@parameters :- x, y, i, c
-            x: positional argument,
-            y: positional argument,
-            i: char/image for object representation,
-            c: color for object fill
-        """
-        self.name = n
-        self.x = x
-        self.y = y
-        self.i = i
-        self.c = c
-        self.r = r
-        self.h = h
-        self.message = "Im just an object"
-
-    def move(self, dx, dy):
-        self.x += dx
-        self.y += dy
-
-    def talk(self):
-        return self.name + ": " +self.message
-
-
+'''
 class Character(Object):
     def __init__(self, n, x, y, i, c='white', r='human', m=10, s=10, b=6, l=5):
         super().__init__(n, x, y, i, c, r)
@@ -302,6 +268,6 @@ class Character(Object):
         self.l=l
         self.inventory = Inventory(b)
         self.backpack = Backpack()
-
+'''
 if __name__ == "__main__":
     pass
