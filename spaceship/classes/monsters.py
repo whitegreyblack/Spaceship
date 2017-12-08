@@ -209,7 +209,7 @@ class Rat(Unit):
             print('{} has {} health left'.format(unit, unit.cur_health))
             if unit.cur_health <= 0:
                 print('unit has died')
-                del unit
+                
 class GiantRat(Unit):
     def __init__(self, x, y):
         self.x, self.y = x, y

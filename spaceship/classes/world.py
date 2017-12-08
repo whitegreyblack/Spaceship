@@ -118,7 +118,7 @@ class World(Map):
     def __init__(self, map_name, map_img_path):
         self.map_name = map_name
         self.tilemap = map_img_path
-        self.__locations = {}
+        self.locations = {}
         super().__init__(self.width, self.height, self.__class__.__name__)
 
     def __repr__(self):
@@ -241,46 +241,49 @@ class World(Map):
                 i += 1
 
     def location_exists(self, x, y):
-        return (x, y) in self.__locations.keys()
+        return (x, y) in self.locations.keys()
+
+    def location_wilderness(self, x, y):
+        return self.locations[(x, y)].maptype == "wild"
 
     def location_create(self, x, y, location):
-        self.__locations[(x, y)] = location
+        self.locations[(x, y)] = location
 
     def location(self, x, y):
-        return self.__locations[(x, y)]
+        return self.locations[(x, y)]
     # @property
     # def location(self, x, y):
     #     '''Returns map if exists else None'''
     #     try:
-    #         return self.__locations[(x, y)]
+    #         return self.locations[(x, y)]
     #     except KeyError:
     #         return None
 
     # @location.setter
     # def location(self, x, y, l):
     #     '''Sets location at (x, y)'''
-    #     self.__locations[(x, y)] = l
+    #     self.locations[(x, y)] = l
 
     def landtype(self, x, y):
         return self.square(x, y).tile_type
 
     def output(self, player_x, player_y):
-        shorten_x = self.map_display_width >= 66
-        shorten_y = self.map_display_height >= 44
+        shorten_x = self.map_display_width > 66
+        shorten_y = self.map_display_height > 44
 
         # get camera location for x coordinate
         cam_x = scroll(
             player_x, 
-            self.map_display_width + (-15 if shorten_x else 0), 
+            self.map_display_width + (-14 if shorten_x else 0), 
             self.width)
-        ext_x = cam_x + self.map_display_width + (-15 if shorten_x else 0)
+        ext_x = cam_x + self.map_display_width + (-14 if shorten_x else 0)
 
         # get camera location for y coordinate
         cam_y = scroll(
             player_y, 
-            self.map_display_height + (-2 if shorten_y else -2), 
+            self.map_display_height + (-6 if shorten_y else 0), 
             self.height)
-        ext_y = cam_y + self.map_display_height + (-2 if shorten_y else -2)
+        ext_y = cam_y + self.map_display_height + (-6 if shorten_y else 0)
         
         for x in range(cam_x, ext_x):
             for y in range(cam_y, ext_y):

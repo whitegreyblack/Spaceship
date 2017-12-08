@@ -28,7 +28,7 @@ class City(Map):
         "^": (dcm.TRAPS.chars, blender(dcm.TRAPS.hexcode)),
     }
     def __init__(self, map_id, map_img, map_cfg, width, height):
-        super().__init__(width, height, self.__class__.__name__.lower())
+        super().__init__(width, height, self.__class__.__name__)
         self.map_id = map_id
         self.map_img = map_img
         self.map_cfg = map_cfg
@@ -154,7 +154,7 @@ class City(Map):
         except:
             # any other error should be raised
             raise
-            
+
     def print_map(self):
         if hasattr(self, 'data'):
             return "\n".join(self.data)

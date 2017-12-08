@@ -44,6 +44,9 @@ For example
 '''
 
 class Map:
+    '''The "ABSTRACT CLASS" that should hold the functions shared across all map class types'''
+    MapType = {T: V for V, T in enumerate(('Cave', 'City', 'Wild', 'World'))}
+    print(MapType)
     class Tile:
         def __init__(self, char, color, block_mov, block_lit):
             self.char = char
@@ -65,7 +68,7 @@ class Map:
     chars_block_light = {"#", "+", "o", "%", "Y", "T"}
 
     def __init__(self, width, height, map_type):
-        self.map_type = map_type
+        self.map_type = self.MapType[map_type]
         # terminal viewing dimensions
         if not hasattr(self, 'width'):
             self.width = 66
