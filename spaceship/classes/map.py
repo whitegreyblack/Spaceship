@@ -75,6 +75,7 @@ class Map:
         if not hasattr(self, 'height'):
             self.height = 22
         # self.width, self.height = 66, 22
+        self.parent_map, self.child_map = None, None
         self.map_display_width = min(66, width)
         self.map_display_height = min(22, height)
         self.units = []

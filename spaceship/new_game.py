@@ -56,7 +56,7 @@ def new_game(character=None, world=None, turns=0):
             save_file['save'] = desc
             save_file['player'] = player
             save_file['world'] = calabaston
-            save_file['turns'] = turns
+            save_file['turns'] = turns  
         proceed = False
 
     def refresh(lines=[]):
@@ -516,6 +516,7 @@ def new_game(character=None, world=None, turns=0):
                 talkUnit(x+cx, y+cy)
 
     def interactItem(x, y, key):
+        print('interactItem')
         nonlocal turns
         def pickItem():
             item = dungeon.square(x, y).items.pop()
@@ -523,6 +524,7 @@ def new_game(character=None, world=None, turns=0):
             gamelog.add("You pick up a {}".format(item.name))
         
         if key == ",": # pickup
+            print('picking up')
             # if player.backpack.full():
             if len(player.inventory) >= 25:
                 # earlly exit
@@ -531,8 +533,9 @@ def new_game(character=None, world=None, turns=0):
 
             items = dungeon.square(x, y).items
             if items:
-                if len(items) == 1:
-                    pickItem()
+                # if len(items) == 1:
+                #     pickItem()
+                pickItem()
                 # TODO                
                 # else:
                 #     glog.add("opening pick up menu")

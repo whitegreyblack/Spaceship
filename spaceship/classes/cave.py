@@ -32,7 +32,7 @@ class Cave(Map):
     }
     def __init__(self, width, height, rot=0, max_rooms=15, levels=3):
         # builds a raw data map with given inputs
-        super().__init__(width, height, self.__class__.__name__.lower())
+        super().__init__(width, height, self.__class__.__name__)
         self.levels = levels
         self.build(rot, max_rooms)
         self.create_tile_map()        
