@@ -27,6 +27,7 @@ class Forest(Map):
         super().__init__(width, height, "wilderness")
         self.build()
         self.create_tile_map()
+        self.generate_units()
 
     def build(self):
         num_trees = 200
@@ -49,6 +50,7 @@ class Grassland(Map):
         super().__init__(width, height, "wilderness")
         self.build()
         self.create_tile_map()
+        self.generate_units()
 
     def build(self):
         num_trees = 10
@@ -76,11 +78,13 @@ class Hills(Map):
         super().__init__(width, height, "wilderness")
         self.build()
         self.create_tile_map()
+        self.generate_units()
 
     def build(self):
         num_trees = 10
         vege_chars = (".", "~")
         self.data = [[choice(vege_chars) for _ in range(self.width)] for _ in range(self.height)]
+        self.spaces = [(x, y) for y in range(self.height) for x in range(self.width)]
 
 class Plains(Map):
     chars = {
@@ -91,6 +95,7 @@ class Plains(Map):
         super().__init__(width, height, "wilderness")
         self.build()
         self.create_tile_map()
+        self.generate_units()
 
     def build(self):
         num_trees = 10
@@ -115,6 +120,7 @@ class Woods(Map):
         super().__init__(width, height, "wilderness")
         self.build()
         self.create_tile_map()
+        self.generate_units()
 
     def build(self):
         num_trees = 200
@@ -125,7 +131,7 @@ class Woods(Map):
             stop_chance = randint(0, num_trees)
             if stop_chance == 0:
                 break
-
+        
 class Mountains(Map):
     pass
 

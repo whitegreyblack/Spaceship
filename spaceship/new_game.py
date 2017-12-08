@@ -120,7 +120,7 @@ def new_game(character=None, world=None, turns=0):
                 ty = player.wy + y
 
                 if calabaston.walkable(tx, ty):
-                    player.save_location
+                    player.save_location()
                     player.travel(x, y)
                     turns += 1
                 else:
@@ -697,14 +697,14 @@ def new_game(character=None, world=None, turns=0):
 
             else:
                 # map type should be in the wilderness
-                tile = calabaston.location(*player.location)
+                tile = calabaston.square(*player.location)
                 # neighbors = calabaston.access_neighbors(*player.location)
                 
-                location = determine_map(tile.land)(
+                location = determine_map(tile.tile_type)(
                     width=term.state(term.TK_WIDTH),
                     height=term.state(term.TK_HEIGHT))
 
-                x, y = player.get_location_on_enter()
+                x, y = player.get_position_on_enter()
                 player.position = get_wilderness_enterance(x, y)
         
             location.addParent(calabaston)
@@ -724,7 +724,7 @@ def new_game(character=None, world=None, turns=0):
 
             else:
                 # reenter a wilderness
-                x, y = player.get_location_on_enter()
+                x, y = player.get_position_on_enter()
             
                 player.position = get_wilderness_enterance(x, y)
                 
@@ -846,7 +846,7 @@ def new_game(character=None, world=None, turns=0):
 
     def map_box():
         term.composition(False)
-        dungeon.fov_calc([(player.x, player.y, player.sight * 2)])
+        dungeon.fov_calc([(player.x, player.y, player.sight)])
         
         # for unit in dungeon.units:
         #     dungeon.fov_calc_blocks(unit.x, unit.y, unit.sight)

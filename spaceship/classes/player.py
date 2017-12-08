@@ -203,19 +203,20 @@ Accuracy : {acc:>5}
         self.location = (self.wx + dx, self.wy + dy)
 
     def save_location(self) -> None:
-        self.last_position_global = self.location
+        self.last_location = self.location
+        print('saved {}'.format(self.last_location))
     
-    def get_position_global_on_enter(self) -> Tuple[float, float]:
+    def get_position_on_enter(self) -> Tuple[float, float]:
         def direction(x: float, y: float) -> Tuple[float, float]:
             '''Normalizes the position of the coordinates from 0 to 1'''
             return (x + 1) / 2, (y + 1) / 2
 
-        if not hasattr(self, "last_position_global"):
-            raise AttributeError("No last position global variable")
+        if not hasattr(self, "last_location"):
+            raise AttributeError("No last location variable")
         try:
             return direction(
-                self.last_position_global[0] - self.wx, 
-                self.last_position_global[1] - self.wy)
+                self.last_location[0] - self.wx, 
+                self.last_location[1] - self.wy)
         
         except KeyError:
             raise KeyError("Error in -directions-")

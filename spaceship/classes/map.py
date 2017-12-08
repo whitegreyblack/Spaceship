@@ -45,7 +45,7 @@ For example
 
 class Map:
     '''The "ABSTRACT CLASS" that should hold the functions shared across all map class types'''
-    MapType = {T: V for V, T in enumerate(('Cave', 'City', 'Wild', 'World'))}
+    MapType = {T: V for V, T in enumerate(('Cave', 'City', 'wilderness', 'World'))}
     print(MapType)
     class Tile:
         def __init__(self, char, color, block_mov, block_lit):
@@ -484,9 +484,9 @@ class Map:
 
     def generate_units(self):
         if self.height <= 25:
-            max_units = 5
+            max_units = 2
         else:
-            max_units = 5
+            max_units = 2
 
         if hasattr(self, 'spaces'):
             shuffle(self.spaces)
