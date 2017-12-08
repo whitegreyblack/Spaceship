@@ -6,6 +6,7 @@ from ..tools import distance
 from .color import Color
 from .item import Armor, Weapon, Item, items
 from .unit import Unit
+from .charmap import item_chars, unit_chars
 
 class Rat(Unit):
     def __init__(self, x, y, ch="r", fg=Color.orange_darker, bg=Color.black,
@@ -137,14 +138,14 @@ class Rat(Unit):
                 if self.last_action == "following":
                     print('Following trail of last seen unit')
                     self.moving_torwards()
-                self.wander(tiles)
+                self.wander(tiles, sight_map)
             else:
 
                 _, interest, path = max(paths)
                 # print(self.position, interest, path)
                 if not path:
                     # path returns false
-                    self.wander(self, tiles)
+                    self.wander(tiles, sight_map)
                 # get distance to determine action
                 # elif isinstance(interest, Unit) or isinstance(interest, Player):
                 elif isinstance(interest, Unit):
@@ -159,7 +160,7 @@ class Rat(Unit):
                             self.moving_torwards(path[1].node)
         # print(paths)
 
-    def wander(self, tiles):
+    def wander(self, tiles, sight):
         print('wandering about')
         # filter out all tiles that are not empty spaces
         # do not want to go to tiles containing blockable objects or units
@@ -167,8 +168,8 @@ class Rat(Unit):
 
         # these are all the non wall tiles
         points = list(filter(lambda t: tiles[t].char != "#", tiles.keys()))
-        point = choice(list(filter(lambda t: tiles[t].char != "#", tiles.keys())))
-        self.moving_torwards(point)
+        emptys = list(filter(lambda xy: sight[self.y-xy[1]+self.sight][self.x-xy[0]+self.sight] not in unit_chars, points))
+        self.moving_torwards(choice(emptys))
     
     def moving_torwards(self, unit):
         try:
@@ -198,7 +199,17 @@ class Rat(Unit):
 
     def attack(self, unit):
         print('ATTACKING')
-
+        chance = self.calculate_attack_chance()
+        if chance == 1:
+            print('rat rolls to hit -- rolls a hit')
+            damage = self.calculate_attack_damage()
+            print('rat rolls damage -- rolls {}'.format(damage))
+            unit.cur_health -= damage
+            print('rat deals {} damage to {}'.format(damage, unit))
+            print('{} has {} health left'.format(unit, unit.cur_health))
+            if unit.cur_health <= 0:
+                print('unit has died')
+                del unit
 class GiantRat(Unit):
     def __init__(self, x, y):
         self.x, self.y = x, y

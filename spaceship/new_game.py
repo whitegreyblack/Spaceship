@@ -83,15 +83,15 @@ def new_game(character=None, world=None, turns=0):
         while key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
             # skip any non-action keys
             key = term.read()
-        
+        shifted = term.state(term.TK_SHIFT)
         if key in (term.TK_ESCAPE, term.TK_CLOSE):
             # exit command -- maybe need a back to menu screen?
-            if term.state(term.TK_SHIFT):
+            if shifted:
                 exit('Early Exit')
             else:
                 proceed = False
             return tuple(None for _ in range(4))
-        elif any(key == press for press, shift in commands.keys()):
+        elif any((key, shifted) == (press, shift) for press, shift in commands.keys()):
             return commands[(key, term.state(term.TK_SHIFT))]
         else:
             return tuple(None for _ in range(4))
@@ -794,7 +794,7 @@ def new_game(character=None, world=None, turns=0):
         term.puts(col, row + 4, "LVL: {:>6}".format(player.level))
         term.puts(col, row + 5, "EXP: {:>6}".format("{}/{}".format(player.exp, player.advexp)))
 
-        term.puts(col, row + 7, "HP:  {:>6}".format("{}/{}".format(player.hp, player.total_hp)))
+        term.puts(col, row + 7, "HP:  {:>6}".format("{}/{}".format(player.cur_health, player.max_health)))
         term.puts(col, row + 8, "MP:  {:>6}".format("{}/{}".format(player.mp, player.total_mp)))
         term.puts(col, row + 9, "SP:  {:>6}".format(player.sp))
 
@@ -941,7 +941,7 @@ def new_game(character=None, world=None, turns=0):
         for unit in unitlist:
             unit.take_turn
     '''
-    while proceed:
+    while proceed and player.cur_health:
         term.clear()
         '''
         Maybe make ui the same for overworld and dungeons to make the loop easier?
@@ -991,8 +991,15 @@ def new_game(character=None, world=None, turns=0):
         #     dungeon.process_unit_actions(player)
 
     # player.dump()
-    # gamelog.dumps()           
-    return "Safe Exit"
+    # gamelog.dumps()
+    if not proceed:
+        return "Safe Exit"
+    else:
+        term.clear()
+        term.puts(center('You Died', len('you died')), 0, surround('You Died'))
+        term.refresh()
+        term.read()
+        return "Safe Exit"
 # End New Game Menu
 
 if __name__ == "__main__":

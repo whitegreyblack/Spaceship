@@ -475,12 +475,14 @@ class Map:
                 tiles = {position: self.square(*position) for position in positions}
                 units = {u.position: u for u in self.units if u != unit}
                 unit.acts(player, tiles, units)
+                if player.cur_health <= 0:
+                    return
 
     def generate_units(self):
         if self.height <= 25:
-            max_units = 10
+            max_units = 3
         else:
-            max_units = 10
+            max_units = 3
 
         if hasattr(self, 'spaces'):
             shuffle(self.spaces)
