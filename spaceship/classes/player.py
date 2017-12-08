@@ -125,7 +125,7 @@ Accuracy : {acc:>5}
                                    self.job_bonus))
 
         self.str, self.con, self.dex, self.int, self.wis, self.cha = stats
-        self.hp = self.total_hp = self.health = self.str + self.con * 2
+        self.cur_health = self.max_health = self.str + self.con * 2
         self.mp = self.total_mp = self.int * self.wis * 2
         self.sp = self.dex // 5
 

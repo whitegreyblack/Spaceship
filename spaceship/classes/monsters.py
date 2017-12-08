@@ -157,7 +157,7 @@ class Rat(Unit):
                             self.attack(interest)
                         else:
                             print("Saw {}".format(interest))
-                            self.moving_torwards(path[1].node)
+                            self.follow(sight_map, units, path[1].node)
         # print(paths)
 
     def wander(self, tiles, sight):
@@ -169,7 +169,22 @@ class Rat(Unit):
         # these are all the non wall tiles
         points = list(filter(lambda t: tiles[t].char != "#", tiles.keys()))
         emptys = list(filter(lambda xy: sight[self.y-xy[1]+self.sight][self.x-xy[0]+self.sight] not in unit_chars, points))
-        self.moving_torwards(choice(emptys))
+        point = choice(emptys)
+        self.moving_torwards(point)
+
+    def follow(self, sight, units, path):
+        print('following')
+        print(sight[self.y - path[1] + self.sight][self.x - path[0] + self.sight])
+        empty = sight[self.y - path[1]+ self.sight][self.x - path[0] + self.sight] not in unit_chars
+        if not empty:
+            print('tile not empty')
+            print(units[(path)])
+            print('switching placse with {}'.format(units[(path)]))
+            self.displace(units[(path)])
+        else:
+            print('empty tile')
+            self.moving_torwards(path)
+        
     
     def moving_torwards(self, unit):
         try:
@@ -185,7 +200,6 @@ class Rat(Unit):
             dt = distance(*self.position, *unit)
         x = int(round(dx / dt))
         y = int(round(dy / dt))
-        # print(x, y)
         self.move(x, y)
 
     def drops(self):
@@ -209,7 +223,7 @@ class Rat(Unit):
             print('{} has {} health left'.format(unit, unit.cur_health))
             if unit.cur_health <= 0:
                 print('unit has died')
-                
+
 class GiantRat(Unit):
     def __init__(self, x, y):
         self.x, self.y = x, y
