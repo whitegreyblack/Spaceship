@@ -243,8 +243,8 @@ class World(Map):
     def location_exists(self, x, y):
         return (x, y) in self.locations.keys()
 
-    def location_wilderness(self, x, y):
-        return self.locations[(x, y)].maptype == "wild"
+    def location_is(self, x, y, v):
+        return self.locations[(x, y)].map_type == v
 
     def location_create(self, x, y, location):
         self.locations[(x, y)] = location

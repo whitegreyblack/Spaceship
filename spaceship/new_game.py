@@ -617,13 +617,15 @@ def new_game(character=None, world=None, turns=0):
                 gamelog.add('You cannot go downstairs without stairs.')
                 
         else:
+            print(dungeon.map_type)
             # map at the location exists -- determine type of map
             if player.location in calabaston.enterable_legend.keys():
                 # check if you're in a city
                 player.move_height(-1)
                 dungeon = dungeon.getParent()
 
-            elif calabaston.is_wilderness(*player.location):
+            # elif calabaston.is_wilderness(*player.location):
+            elif calabaston.location_is(*player.location, 0):
                 # check for wilderness type map
                 player.move_height(-1)
                 dungeon = dungeon.getParent()
