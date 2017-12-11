@@ -110,20 +110,19 @@ def new_game(character=None, world=None, turns=0):
         # return [space(x+i,y+j) for i, j in list(num_movement.values())]
 
     def process_movement(x, y):
-        nonlocal player, turns
+        nonlocal player, turn_inc
         if  player.height() == Level.World:
             if (x, y) == (0, 0):
                 gamelog.add("You wait in the area")
-                turns += 1
+                turn_inc = True
             else:
                 tx = player.wx + x
                 ty = player.wy + y
 
                 if calabaston.walkable(tx, ty):
-                    print('walking')
                     player.save_location()
                     player.travel(x, y)
-                    turns += 1
+                    turn_inc = True
                 else:
                     travel_error = "You cannot travel there"
                     gamelog.add(travel_error)
@@ -131,7 +130,7 @@ def new_game(character=None, world=None, turns=0):
         else:
             if (x, y) == (0, 0):
                 gamelog.add("You rest for a while")
-                turns += 1
+                turn_inc = True
             else:
                 tx = player.x + x
                 ty = player.y + y
@@ -146,7 +145,7 @@ def new_game(character=None, world=None, turns=0):
                                 "Your feet touches an object."
                             ]
                             gamelog.add(pass_item_messages[randint(0, len(pass_item_messages)-1)])
-                        turns += 1
+                        turn_inc = True
                     else:
                         unit = dungeon.get_unit(tx, ty)
                         if unit.friendly:
@@ -180,7 +179,7 @@ def new_game(character=None, world=None, turns=0):
                                         gamelog.add("The {} has dropped {}".format(unit.job, item.name))
 
                                     dungeon.remove_unit(unit)
-                        turns += 1
+                        turn_inc = True
                 else:
                     if dungeon.out_of_bounds(tx, ty):
                         gamelog.add("You reached the edge of the map")
@@ -202,143 +201,6 @@ def new_game(character=None, world=None, turns=0):
                             gamelog.add("You cannot swim")
                         else:
                             gamelog.add("You walk into {}".format(walkChars[ch]))
-
-    def key_process(x, y):
-        walkChars = {
-            "+": "a door",
-            "/": "a door",
-            "o": "a lamp",
-            "#": "a wall",
-            "x": "a post",
-            "~": "a river",
-            "T": "a tree",
-            "f": "a tree",
-            "Y": "a tree",
-            "%": "a wall",
-        }
-
-        walkBlock = "walked into {}"
-        tposx = player.x + x
-        tposy = player.y + y
-
-        # 3 variables involved in walking
-        # OUT-OF-BOUNDS -- is player within the map?
-        # WALKABLE -- is the tile a walkable tile?
-        # BLOCKEd -- is the tile blocked?
-        walkable = dungeon.walkable(tposx, tposy)
-        if walkable:
-            occupied = dungeon.occupied(tposx, tposy)
-            if not occupied:
-                player.move(x, y)
-
-                if dungeon.square(tposx, tposy).items and randint(0, 1):
-                    # randint condition to give off a chance for message print
-                    gamelog.add("There is something here")
-
-            else:
-                unit = dungeon.get_unit(tposx, tposy)
-
-                if unit.friendly:
-                    gamelog.add("You displace the {}".format(unit.job))
-                    unit.move(-x, -y)
-                    player.move(x, y)
-
-                else:
-                    chance = player.calculate_attack_chance()
-
-                    if chance == 0:
-                        gamelog.add("You try attacking the {} but miss".format(unit.job))
-
-                    else:
-                        damage = player.calculate_attack_damage() * (2 if chance == 2 else 1)
-                        unit.cur_health -= damage
-                        log = "You {} attack the {} for {} damage. ".format(
-                            "crit and" if chance == 2 else "", unit.job, damage)
-                        log += "The {} has {} health left".format(unit.job, max(unit.cur_health, 0))
-                        gamelog.add(log)
-
-                        if unit.cur_health < 1:
-                            gamelog.add("You have killed the {}! You gain {} exp".format(unit.job, unit.xp))
-                            player.gain_exp(unit.xp)
-
-                            if player.check_exp():
-                                gamelog.add("You level up. You are now level {}".format(player.level))
-                                gamelog.add("You feel much stronger")
-
-                            item = unit.drops()
-
-                            if item:
-                                dungeon.square(*unit.position).items.append(item)
-                                gamelog.add("The {} has dropped {}".format(unit.job, item.name))
-
-                            dungeon.remove_unit(unit)
-       
-        else:
-            if dungeon.out_of_bounds(tposx, tposy):
-                # out of bounds error
-                gamelog.add("Reached the edge of the map")
-
-            else:
-                # block error -- differentiate between land and water blocks
-                ch = dungeon.square(tposx, tposy).char
-
-                if ch == "~":
-                    gamelog.add('you cannot swim')
-                else:
-                    gamelog.add(walkBlock.format(walkChars[ch]))
-
-        for unit in list(dungeon.get_units()):
-            x, y = 0, 0
-            if randint(0, 1):
-                # if true then the unit is moving
-                x, y = num_movement[choice(list(num_movement.keys()))]
-                tposx, tposy = unit.x + x, unit.y + y
-                walkable = dungeon.walkable(tposx, tposy)
-
-                if walkable:
-                    occupied = dungeon.occupied(tposx, tposy) or \
-                        (tposx, tposy) == player.position_local()
-
-                    if not occupied:
-                        unit.move(x, y)
-
-                    else:
-                        if (tposx, tposy) == player.position_local():
-                            other = player
-
-                        else:
-                            other = dungeon.get_unit(tposx, tposy)
-
-                            if other.unit_id == unit.unit_id:
-                                # make sure the unit being compared is not itself
-                                continue
-
-                        if unit.friendly:
-                            # other.move(-x, -y)
-                            # unit.move(x, y)
-                            unit.displace(other, x, y)
-
-                        else:
-                            other.cur_health -= 1
-                            
-                            log = "The {}({}) attacks {}({}). ".format(
-                                unit.job, unit.unit_id,
-                                "you" if other == player else ("the " + other.job),
-                                other.unit_id)
-                            log += "{} {} health left".format(
-                                "You have " if other == player else "the " + other.job + " has",
-                                player.cur_health if other == player else other.cur_health)
-                            gamelog.add(log)
-
-                            if other.cur_health < 1:
-                                gamelog.add("The {} has killed {}".format(
-                                    unit.job,
-                                    "you" if other == player else "the " + other.job))
-
-                                if other == player:
-                                    gamelog.add("You Died!")
-                                else:
-                                    dungeon.remove_unit(other)
 
     def open_player_screen(x, y, key):
         '''Game function to handle player equipment and inventory'''
@@ -459,7 +321,7 @@ def new_game(character=None, world=None, turns=0):
                 #     pick_menu(items)
             else:
                 gamelog.add("Nothing to pick up")
-        turns += 1
+        turn_inc = True
 
     def attackUnit(x, y, k):
         nonlocal turns
@@ -504,7 +366,7 @@ def new_game(character=None, world=None, turns=0):
             if (x+cx, y+cy) in attackables:
                 attack(x + cx, y + cy)
 
-        turns += 1
+        turn_inc = True
 
     def interactUnit(x, y, action):
         """Allows talking with other units"""
@@ -588,7 +450,7 @@ def new_game(character=None, world=None, turns=0):
                 raise
                 return
 
-        turns += 1
+        turn_inc = True
 
     def interactStairs(x, y, k):
         nonlocal dungeon
@@ -929,6 +791,7 @@ def new_game(character=None, world=None, turns=0):
         # coming from a save file -- turns already defined
         turns = turns
 
+    turn_inc = False
     proceed = True
     dungeon = None
     current_map = None
@@ -942,6 +805,7 @@ def new_game(character=None, world=None, turns=0):
             unit.take_turn
     '''
     while proceed and player.cur_health:
+        turn_inc = False
         term.clear()
         '''
         Maybe make ui the same for overworld and dungeons to make the loop easier?
@@ -981,12 +845,18 @@ def new_game(character=None, world=None, turns=0):
             print('Command not yet implemented')
 
         if not proceed:
-            '''check if player pressed exit'''
+            '''check if player pressed exit before processing units'''
             break
 
-        if player.height() != Level.World and dungeon:
-            print('unit turn')
-            dungeon.handle_units(player)
+        # checks 3 conditions on whether ai takes turn or not
+        # 1. player took a valid turn in which ai takes turn
+        # 2. player in a level with actual monsters
+        # 3. dungeon player is using exists
+        if turn_inc: 
+            if player.height() != Level.World and dungeon:
+                print('unit turn')
+                dungeon.handle_units(player)
+            turns += 1
 
         # # for all units -- do action
         # if player.height() != Level.World and dungeon:
