@@ -5,8 +5,8 @@ from typing import Tuple
 from ..tools import distance
 from .color import Color
 from .item import Armor, Weapon, Item, items
-from .unit import Unit
 from .charmap import item_chars, unit_chars
+from .unit import Unit
 
 class Rat(Unit):
     def __init__(self, x, y, ch="r", fg=Color.orange_darker, bg=Color.black,

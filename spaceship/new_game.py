@@ -503,14 +503,14 @@ def new_game(character=None, world=None, turns=0):
         # many interactables
         else:
             gamelog.add("Which direction?")   
-            refresh()
+            log_box()
             code = term.read()
-
-            if code in key_movement:
-                cx, cy = key_movement[code]
-            elif code in num_movement:
-                cx, cy = num_movement[code]
-            else:
+            try:
+                cx, cy, a, act = commands[(code, term.state(term.TK_SHIFT))]
+                if act == "move" and (x+cx, y+cy) in interactables:
+                    talkUnit(x+cx, y+cy) 
+            except:
+                raise
                 return
 
             if (x+cx, y+cy) in interactables:
@@ -586,10 +586,10 @@ def new_game(character=None, world=None, turns=0):
             code = term.read()
             try:
                 cx, cy, a, act = commands[(code, term.state(term.TK_SHIFT))]
-                print(cx, cy, a, act)
-                print(act == "move")
-                print(x+cx, y+cy)
-                print((x+cx, y+cy) in reachables)
+                # print(cx, cy, a, act)
+                # print(act == "move")
+                # print(x+cx, y+cy)
+                # print((x+cx, y+cy) in reachables)
                 if act == "move" and (x+cx, y+cy) in reachables:
                     openDoor(x+cx, y+cy) if key is 'o' else closeDoor(x+cx, y+cy)            
             except:
@@ -752,6 +752,7 @@ def new_game(character=None, world=None, turns=0):
             'a': attackUnit,
             'o': interactDoor,
             'c': interactDoor,
+            't': interactUnit,
             ',': interactItem,
             '@': open_player_screen,
             'i': open_player_screen,
@@ -1001,6 +1002,7 @@ def new_game(character=None, world=None, turns=0):
             break
 
         if player.height() != Level.World and dungeon:
+            print('unit turn')
             dungeon.handle_units(player)
 
         # # for all units -- do action

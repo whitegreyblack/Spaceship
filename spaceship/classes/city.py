@@ -6,7 +6,7 @@ from .charmap import DungeonCharmap as dcm
 from .charmap import WildernessCharmap as wcm
 from random import shuffle, choice, randint
 from .unit import Unit
-from .neutrals import Shopkeeper, Innkeeper, Bishop, Soldier
+from .neutrals import Shopkeeper, Innkeeper, Bishop, Soldier, Villager, Blacksmith
 
 class City(Map):
     chars = {
@@ -113,6 +113,8 @@ class City(Map):
             "innkeeper": Innkeeper,
             "shopkeeper": Shopkeeper,
             "soldier": Soldier,
+            "villager": Villager,
+            "blacksmith": Blacksmith,
         }
         self.stats = "{}: Unit List\n".format(self.map_id)
         try:
