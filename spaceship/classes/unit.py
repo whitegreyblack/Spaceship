@@ -31,11 +31,12 @@ class Unit(Object):
     unit_id = 0
     # relation = 100
 
-    def __init__(self, x, y, ch="@", fg=Color.white, bg=Color.black, race="human"):
+    def __init__(self, x, y, ch="@", fg=Color.white, bg=Color.black, race="human", rs=0):
         super().__init__(x, y, ch, fg, bg)
         self.sight = 7
         self.race = race
         self.cur_health = self.max_health = 5
+        self.relationship = rs
         Unit.unit_id += 1
 
     def __str__(self):
@@ -67,6 +68,9 @@ class Unit(Object):
 
     def calculate_attack_chance(self):
         return choice([0, 1, 2])
+
+    def friendly():
+        self.relationship >= 0
 
 if __name__ == "__main__":
     unit = Unit(x=5, y=5)

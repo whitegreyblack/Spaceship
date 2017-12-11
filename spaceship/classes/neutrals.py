@@ -10,8 +10,8 @@ from .unit import Unit
 
 class VillagerChild(Unit):
     def __init__(self, x, y, ch="v", fg=Color.white, bg=Color.black, 
-                 race="human", job="villager"):
-        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
+                 race="human", job="villager", rs=0):
+        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
         self.job = job
         
     def talk(self):
@@ -55,8 +55,8 @@ class VillagerChild(Unit):
 
 class Villager(Unit):
     def __init__(self, x, y, ch="V", fg=Color.white, bg=Color.black, 
-                 race="human", job="villager"):
-        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
+                 race="human", job="villager", rs=0):
+        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
         self.job = job
         
     def talk(self):
@@ -98,8 +98,8 @@ class Villager(Unit):
 
 class Shopkeeper(Unit):
     def __init__(self, x, y, ch="S", fg=Color.white, bg=Color.black, 
-                 race="human", job="shopkeeper"):
-        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
+                 race="human", job="shopkeeper", rs=0):
+        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
         self.job = job
         
     def talk(self):
@@ -107,14 +107,14 @@ class Shopkeeper(Unit):
 
 class Blacksmith(Unit):
     def __init__(self, x, y, ch="B", fg=Color.white, bg=Color.black,
-                race="human", job="blacksmith"):
-        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
+                race="human", job="blacksmith", rs=0):
+        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
         self.job = job
 
 class Innkeeper(Unit):
     def __init__(self, x, y, ch="I", fg=Color.white, bg=Color.black, 
-                 race="human", job="innkeeper"):        
-        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
+                 race="human", job="innkeeper", rs=0):        
+        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
         self.job = job
         self.moveable = False
 
@@ -123,8 +123,8 @@ class Innkeeper(Unit):
 
 class Bishop(Unit):
     def __init__(self, x, y, ch="B", fg=Color.white, bg=Color.black, 
-                 race="human", job="bishop"):        
-        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
+                 race="human", job="bishop", rs=0):        
+        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
         self.job = job
         
     def talk(self):
@@ -141,16 +141,17 @@ class Bishop(Unit):
     #         for ii in i:
     #             print("ITEM: ", ii, x, y)
 
-# soldier class should be on patrol -- moves from position to position
-# IF an enemy is spotted then chase
-# if an enemy dies or runs too far away then patrol again
-# soldier class can also go on standmode which makes them stand still
-# this also makes it so that soldier ar not displaceable by player
-# or other units
 class Soldier(Unit):
+    ''' soldier class should be on patrol -- moves from position to position
+    IF an enemy is spotted then chase
+    if an enemy dies or runs too far away then patrol again
+    soldier class can also go on standmode which makes them stand still
+    this also makes it so that soldier ar not displaceable by player
+    or other units
+    '''
     def __init__(self, x, y, ch="G", fg=Color.white, bg=Color.black, 
-                 race="human", job="soldierr"):        
-        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
+                 race="human", job="soldierr", rs=0):        
+        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
         self.job = job
         
     def talk(self):

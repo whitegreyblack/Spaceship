@@ -32,10 +32,10 @@ class City(Map):
         self.map_id = map_id
         self.map_img = map_img
         self.map_cfg = map_cfg
+        self.relationship = 100
         self.parse_img() # <== creates initial data map
         self.parse_cfg()
         self.create_tile_map()
-        self.relationship = 100
 
     def __repr__(self):
         return "{}:\n{}\n{}".format(
@@ -141,7 +141,8 @@ class City(Map):
                                             race=modifier,
                                             job=job.lower(),
                                             ch=character,
-                                            fg=color))
+                                            fg=color,
+                                            rs=self.relationship))
                         else:
                             for _ in range(int(number)):
                                 i, j = self.spaces.pop()
@@ -149,7 +150,8 @@ class City(Map):
                                             x=i, 
                                             y=j,
                                             ch=character,
-                                            fg=color))
+                                            fg=color,
+                                            rs=self.relationship))
         except FileNotFoundError:
             # not explicitely needed
             print("No unit configuration file found")
