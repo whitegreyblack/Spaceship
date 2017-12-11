@@ -204,7 +204,7 @@ Accuracy : {acc:>5}
 
     def save_location(self) -> None:
         self.last_location = self.location
-        print('saved {}'.format(self.last_location))
+        # print('saved {}'.format(self.last_location))
     
     def get_position_on_enter(self) -> Tuple[float, float]:
         def direction(x: float, y: float) -> Tuple[float, float]:

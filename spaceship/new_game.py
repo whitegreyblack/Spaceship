@@ -49,6 +49,7 @@ def new_game(character=None, world=None, turns=0):
         if not os.path.isdir('saves'):
             print('saved folder does not exist - creating folder: "./saves"')
             os.makedirs('saves')
+
         # prepare strings for file writing -- player_hash used for same name/different character saves
         name = player.name.replace(' ', '_')
         desc = player.job + " " + str(player.level)
@@ -84,7 +85,7 @@ def new_game(character=None, world=None, turns=0):
             # skip any non-action keys
             key = term.read()
         shifted = term.state(term.TK_SHIFT)
-        print('shifted: {}'.format(shifted))
+        # print('shifted: {}'.format(shifted))
         if key in (term.TK_ESCAPE, term.TK_CLOSE):
             # exit command -- maybe need a back to menu screen?
             if shifted:
@@ -93,10 +94,10 @@ def new_game(character=None, world=None, turns=0):
                 proceed = False
             return tuple(None for _ in range(4))
         elif any((key, shifted) == (press, shift) for press, shift in commands.keys()):
-            print('Is key')
+            # print('Is key')
             return commands[(key, shifted)]
         else:
-            print('nope')
+            # print('nope')
             return tuple(None for _ in range(4))
 
     def onlyOne(container):
@@ -834,15 +835,15 @@ def new_game(character=None, world=None, turns=0):
         term.refresh()
         # handle player movements and action
         x, y, k, action = key_input()
-        print(x, y, k, action)
+        # print(x, y, k, action)
         if k is not None:
             process_action(k)
 
         elif all(z is not None for z in [x, y]):
             process_movement(x, y)
 
-        else:
-            print('Command not yet implemented')
+        # else:
+        #     print('Command not yet implemented')
 
         if not proceed:
             '''check if player pressed exit before processing units'''
@@ -854,7 +855,7 @@ def new_game(character=None, world=None, turns=0):
         # 3. dungeon player is using exists
         if turn_inc: 
             if player.height() != Level.World and dungeon:
-                print('unit turn')
+                # print('unit turn')
                 dungeon.handle_units(player)
             turns += 1
 

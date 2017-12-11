@@ -54,9 +54,11 @@ class World(Map):
         (67, 42): "Whitewater",
         (21, 18): "Yarrin",
     }
+
     capitals = {
 
     }
+
     geo_legend = {
         (200, 191, 231): ("city(elven)", "&", ("#FF8844",)),
         (153, 217, 234): ("fort(dwarf)", "#", ("#FF00FF",)),
@@ -245,7 +247,7 @@ class World(Map):
         return (x, y) in self.locations.keys()
 
     def location_is(self, x, y, v):
-        print("MAPTYPE:", self.locations[(x, y)].map_type)
+        # print("MAPTYPE:", self.locations[(x, y)].map_type)
         return self.locations[(x, y)].map_type == v
 
     def location_create(self, x, y, location):
