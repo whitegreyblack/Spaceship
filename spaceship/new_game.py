@@ -1,30 +1,30 @@
 # main implementation of core mechanics
+import shelve
+from random import randint, choice
+from collections import namedtuple
+from namedlist import namedlist
+from time import clock
+from textwrap import wrap
 from bearlibterminal import terminal as term
+
 from .action import commands
-from .setup_game import setup_game
-from .tools import bresenhams, deltanorm, movement
+
 from .classes.utils import hextup, hexone
-from .tools import toInt
 from .classes.map import Map
 from .classes.world import World
 from .classes.wild import *
 from .classes.cave import Cave
 from .classes.city import City
-
 from .classes.item import Item
 from .classes.player import Player
+
+from .setup_game import setup, output, setup_font, setup_game
+from .tools import bresenhams, deltanorm, movement, toInt
 from .create_character import create_character as create
 from .screen_functions import center, surround, selected
 from .dungeon import build_terrain, build_dungeon
-from .setup_game import setup, output, setup_font
 from .gamelog import GameLogger
-from random import randint, choice
-from collections import namedtuple
-from namedlist import namedlist
-# from .world import World
-from time import clock
-from textwrap import wrap
-import shelve
+
 
 # screens:
 #   Main Menu
@@ -120,6 +120,7 @@ def new_game(character=None, world=None, turns=0):
                 ty = player.wy + y
 
                 if calabaston.walkable(tx, ty):
+                    print('walking')
                     player.save_location()
                     player.travel(x, y)
                     turns += 1

@@ -16,8 +16,9 @@ class World(Map):
     chars = {
         "&": (["&"], "#FF8844"),
     }
-    chars_block_move = ["=", "-"]
+    chars_block_move = ["=", "-", 'A', '^']
     chars_block_light = ["T", "^", "~", "A", "^"]
+
     enterable_legend = {
         (51, 42): "Aerathalar",
         (12, 14): "Armagos",
