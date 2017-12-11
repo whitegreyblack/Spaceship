@@ -596,7 +596,7 @@ def new_game(character=None, world=None, turns=0):
 
         if k == ">":  
             #  differentiate going up versus down
-            if player.position_local() == dungeon.getDownStairs():                
+            if player.position() == dungeon.getDownStairs():                
 
                 if not dungeon.hasSublevel():
                     sublevel = Cave(
@@ -761,8 +761,7 @@ def new_game(character=None, world=None, turns=0):
             else:
                 actions[max(0, min(player.height(), 1))][action](player.x, player.y, action)
         except KeyError:
-            raise
-            gamelog.add("Invalid CommanD")
+            gamelog.add("'{}' is not a valid command".format(action))
     # End Keyboard Functions
     # ---------------------------------------------------------------------------------------------------------------------#
     # Graphic functions

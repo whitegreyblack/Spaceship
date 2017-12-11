@@ -1,10 +1,11 @@
+from random import shuffle, choice, randint
+from collections import namedtuple
+from PIL import Image
+
 from .map import Map
 from .utils import blender
-from PIL import Image
-from collections import namedtuple
 from .charmap import DungeonCharmap as dcm
 from .charmap import WildernessCharmap as wcm
-from random import shuffle, choice, randint
 from .unit import Unit
 from .neutrals import Shopkeeper, Innkeeper, Bishop, Soldier, Villager, Blacksmith, VillagerChild
 
