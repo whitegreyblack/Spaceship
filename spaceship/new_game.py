@@ -577,7 +577,7 @@ def new_game(character=None, world=None, turns=0):
 
         else:
             gamelog.add("There is more than one door near you. Which direction?")
-            refresH()
+            refresh()
 
             code = term.read()
             try:

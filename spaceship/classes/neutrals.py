@@ -13,16 +13,13 @@ class VillagerChild(Unit):
                  race="human", job="villager", rs=0):
         super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
         self.job = job
-        
+    
     def talk(self):
         return "{}: Are you from around here?".format(self.__class__.__name__)
 
     def acts(self, player, tiles, units):
         # Villagers just wander around
         def build_sight_map():
-            def map_out():
-                return "\n".join("".join(row[::-1]) for row in sight_map[::-1])
-
             for (x, y) in tiles:
                 if player.position == (x, y):
                     char = "@"
@@ -36,7 +33,6 @@ class VillagerChild(Unit):
                 sight_map[dy][dx] = char
             sight_map[self.sight][self.sight] = self.character
 
-            print(map_out())
         sight_range = self.sight * 2 + 1 # accounts for radius
         sight_map = [[" " for x in range(sight_range)] for y in range(sight_range)]
         build_sight_map()
