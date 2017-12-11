@@ -585,10 +585,15 @@ def new_game(character=None, world=None, turns=0):
 
             code = term.read()
             try:
-                cx, cy, a, act = commands[code]
-                if act != "move" and (x+cx, y+cy) in reachables:
+                cx, cy, a, act = commands[(code, term.state(term.TK_SHIFT))]
+                print(cx, cy, a, act)
+                print(act == "move")
+                print(x+cx, y+cy)
+                print((x+cx, y+cy) in reachables)
+                if act == "move" and (x+cx, y+cy) in reachables:
                     openDoor(x+cx, y+cy) if key is 'o' else closeDoor(x+cx, y+cy)            
             except:
+                raise
                 return
 
         turns += 1
