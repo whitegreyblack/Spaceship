@@ -432,6 +432,35 @@ def new_game(character=None, world=None, turns=0):
 
         term.clear()
 
+    def interactItem(x, y, key):
+        print('interactItem')
+        nonlocal turns
+        def pickItem():
+            item = dungeon.square(x, y).items.pop()
+            player.inventory.append(item)
+            gamelog.add("You pick up a {}".format(item.name))
+        
+        if key == ",": # pickup
+            print('picking up')
+            # if player.backpack.full():
+            if len(player.inventory) >= 25:
+                # earlly exit
+                gamelog.add("Backpack is full")
+                return
+
+            items = dungeon.square(x, y).items
+            if items:
+                # if len(items) == 1:
+                #     pickItem()
+                pickItem()
+                # TODO                
+                # else:
+                #     glog.add("opening pick up menu")
+                #     pick_menu(items)
+            else:
+                gamelog.add("Nothing to pick up")
+        turns += 1
+
     def attackUnit(x, y, k):
         nonlocal turns
         def attack(x, y):
@@ -482,9 +511,9 @@ def new_game(character=None, world=None, turns=0):
         def talkUnit(x, y):
             unit = dungeon.get_unit(x, y)
             gamelog.add(unit.talk())
-            # gamelog.add(um.talkTo(x, y))
             refresh()
 
+        print("talking")
         interactables = []
         for i, j in eightsquare(x, y):
             # dungeon.has_unit(i, j) -> returns true or false if unit is on the square
@@ -503,7 +532,7 @@ def new_game(character=None, world=None, turns=0):
         # many interactables
         else:
             gamelog.add("Which direction?")   
-            log_box()
+            refresh()
             code = term.read()
             try:
                 cx, cy, a, act = commands[(code, term.state(term.TK_SHIFT))]
@@ -512,38 +541,6 @@ def new_game(character=None, world=None, turns=0):
             except:
                 raise
                 return
-
-            if (x+cx, y+cy) in interactables:
-                talkUnit(x+cx, y+cy)
-
-    def interactItem(x, y, key):
-        print('interactItem')
-        nonlocal turns
-        def pickItem():
-            item = dungeon.square(x, y).items.pop()
-            player.inventory.append(item)
-            gamelog.add("You pick up a {}".format(item.name))
-        
-        if key == ",": # pickup
-            print('picking up')
-            # if player.backpack.full():
-            if len(player.inventory) >= 25:
-                # earlly exit
-                gamelog.add("Backpack is full")
-                return
-
-            items = dungeon.square(x, y).items
-            if items:
-                # if len(items) == 1:
-                #     pickItem()
-                pickItem()
-                # TODO                
-                # else:
-                #     glog.add("opening pick up menu")
-                #     pick_menu(items)
-            else:
-                gamelog.add("Nothing to pick up")
-        turns += 1
 
     def interactDoor(x, y, key):
         """Allows interaction with doors"""
@@ -580,16 +577,11 @@ def new_game(character=None, world=None, turns=0):
 
         else:
             gamelog.add("There is more than one door near you. Which direction?")
-            log_box()
-            term.refresh()
+            refresH()
 
             code = term.read()
             try:
                 cx, cy, a, act = commands[(code, term.state(term.TK_SHIFT))]
-                # print(cx, cy, a, act)
-                # print(act == "move")
-                # print(x+cx, y+cy)
-                # print((x+cx, y+cy) in reachables)
                 if act == "move" and (x+cx, y+cy) in reachables:
                     openDoor(x+cx, y+cy) if key is 'o' else closeDoor(x+cx, y+cy)            
             except:
