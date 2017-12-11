@@ -4,10 +4,36 @@ from .map import Map
 from .utils import blender
 from .charmap import DungeonCharmap as dcm
 from .charmap import WildernessCharmap as wcm
-from random import randint, choice
+from random import randint, choice, choices
 
 class Desert(Map):
-    pass
+    chars = {
+            "~": (["~"], blender(["#F0AC82", "#C3B091"])),
+    }
+    # Hills has a modified block_move char set due to hills having the same char as water
+    #   The modified set has removed the hill char while other maps include it
+    chars_block_move =  {"#", "+", "o", "x", "%", "Y", "T"}
+    def __init__(self, width, height):
+        super().__init__(width, height, "wilderness")
+        self.build()
+        self.create_tile_map()
+        self.generate_units()
+
+    def build(self):
+        self.spaces = []
+        self.data = []
+        for y in range(self.height):
+            col = []
+            for x in range(self.width):
+                col.append("~")
+                self.spaces.append((x, y))
+            self.data.append(col)
+
+        def build_oasis():
+            '''Chance that an oasis will pop up in the desert'''
+            # we use a class variable to keep track of the percentage
+            # Desert.chance_for_oasis = 100?
+            ...
 
 class Forest(Map):
     """
@@ -31,13 +57,29 @@ class Forest(Map):
 
     def build(self):
         num_trees = 200
-        self.data = [[choice(".") for _ in range(self.width)] for _ in range(self.height)]
+        self.spaces = []
+        self.data = []
+        for y in range(self.height):
+            col = []
+            for x in range(self.width):
+                if num_trees:
+                    char = choices(population=[".", "T"], weights=[.9, .1], k=1)[0]
+                    if char == "T":
+                        num_trees -= 1
+                else:
+                    char = "."
+                if char == ".":
+                    self.spaces.append((x, y))
+                col.append(char)
+            self.data.append(col)
                 
-        for t in range(num_trees):
-            self.data[randint(0, self.height-1)][randint(0, self.width-1)] = "T"
-            stop_chance = randint(0, num_trees)
-            if stop_chance == 0:
-                break
+        # self.data = [[choice(".") for _ in range(self.width)] for _ in range(self.height)]
+                
+        # for t in range(num_trees):
+        #     self.data[randint(0, self.height-1)][randint(0, self.width-1)] = "T"
+        #     stop_chance = randint(0, num_trees)
+        #     if stop_chance == 0:
+        #         break
 
 class Grassland(Map):
     '''build()'''
@@ -83,8 +125,17 @@ class Hills(Map):
     def build(self):
         num_trees = 10
         vege_chars = (".", "~")
-        self.data = [[choice(vege_chars) for _ in range(self.width)] for _ in range(self.height)]
-        self.spaces = [(x, y) for y in range(self.height) for x in range(self.width)]
+        self.spaces = []
+        self.data = []
+        for y in range(self.height):
+            col = []
+            for x in range(self.width):
+                col.append(choice(vege_chars))
+                self.spaces.append((x, y))
+            self.data.append(col)
+
+        # self.data = [[choice(vege_chars) for _ in range(self.width)] for _ in range(self.height)]
+        # self.spaces = [(x, y) for y in range(self.height) for x in range(self.width)]
 
 class Plains(Map):
     chars = {
@@ -111,6 +162,8 @@ class Plains(Map):
             if stop_chance == 0:
                 break
 
+        self.spaces = [(x, y) for y in range(self.height) for x in range(self.width) if self.data[y][x] == "."]
+
 class Woods(Map):
     chars = {
             ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
@@ -132,6 +185,8 @@ class Woods(Map):
             if stop_chance == 0:
                 break
         
+        self.spaces = [(x, y) for y in range(self.height) for x in range(self.width) if self.data[y][x] == "."]
+
 class Mountains(Map):
     pass
 
@@ -144,11 +199,13 @@ class Swamps(Map):
 class Wastes(Map):
     pass
 
-terrain = {
+wilderness = {
     "grass": Grassland,
     "forest": Forest,
     "plains": Plains,
-    'woods': Woods,
+    'dark woods': Woods,
+    'desert': Desert,
+    'hills': Hills,
 }
 
 if __name__ == "__main__":

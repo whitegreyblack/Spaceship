@@ -12,7 +12,7 @@ from .action import commands
 from .classes.utils import hextup, hexone
 from .classes.map import Map
 from .classes.world import World
-from .classes.wild import *
+from .classes.wild import wilderness
 from .classes.cave import Cave
 from .classes.city import City
 from .classes.item import Item
@@ -596,7 +596,7 @@ def new_game(character=None, world=None, turns=0):
 
         if k == ">":  
             #  differentiate going up versus down
-            if player.position() == dungeon.getDownStairs():                
+            if player.position == dungeon.getDownStairs():                
 
                 if not dungeon.hasSublevel():
                     sublevel = Cave(
@@ -623,12 +623,12 @@ def new_game(character=None, world=None, turns=0):
                 dungeon = dungeon.getParent()
 
             # elif calabaston.is_wilderness(*player.location):
-            elif calabaston.location_is(*player.location, 0):
+            elif calabaston.location_is(*player.location, 2):
                 # check for wilderness type map
                 player.move_height(-1)
                 dungeon = dungeon.getParent()
 
-            elif player.position_local() == dungeon.getUpStairs():
+            elif player.position == dungeon.getUpStairs():
                 # check if you're in a dungeon
                 # dungeon will have parent -- need to differentiate between
                 # world and first level dungeon
@@ -651,17 +651,9 @@ def new_game(character=None, world=None, turns=0):
         '''
         def determine_map(map_type):
             '''Helper function to determine wilderness map'''
-            if map_type == "plains":
-                return Plains
-            elif map_type == "grassland":
-                return Grassland
-            elif map_type == "forest":
-                return Forest
-            elif map_type == "dark woods":
-                return Woods
-            elif map_type == "hills":
-                return Hills
-            else:
+            try:
+                return wilderness[map_type]
+            except KeyError:
                 raise ValueError("Map Type Not Implemented: {}".format(map_type))
 
         def get_wilderness_enterance(x, y):

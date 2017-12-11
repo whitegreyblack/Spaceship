@@ -245,6 +245,7 @@ class World(Map):
         return (x, y) in self.locations.keys()
 
     def location_is(self, x, y, v):
+        print("MAPTYPE:", self.locations[(x, y)].map_type)
         return self.locations[(x, y)].map_type == v
 
     def location_create(self, x, y, location):
