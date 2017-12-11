@@ -8,8 +8,8 @@ from .item import Armor, Weapon, Item, items
 from .charmap import item_chars, unit_chars
 from .unit import Unit
 
-class Villager(Unit):
-    def __init__(self, x, y, ch="@", fg=Color.white, bg=Color.black, 
+class VillagerChild(Unit):
+    def __init__(self, x, y, ch="v", fg=Color.white, bg=Color.black, 
                  race="human", job="villager"):
         super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
         self.job = job
@@ -32,21 +32,58 @@ class Villager(Unit):
             
             dx, dy = self.x - x + self.sight, self.y - y + self.sight
             sight_map[dy][dx] = char
-        print(self.__class__.__name__)
         sight_range = self.sight * 2 + 1 # accounts for radius
         sight_map = [[" " for x in range(sight_range)] for y in range(sight_range)]
         build_sight_map()
         self.wander(tiles, sight_map)
     
     def wander(self, tiles, sight):
-        print('wandering about')
-        # filter out all tiles that are not empty spaces
-        # do not want to go to tiles containing blockable objects or units
-        # so filter twice: once to get floor tiles, again to get empty ones
+        def within(x, y):
+            return 6 <= x <= 60 and 2 <= y <= 20
+        points = list(filter(lambda t: within(*t) and tiles[t].char != "#", tiles.keys()))
+        emptys = list(filter(lambda xy: sight[self.y-xy[1]+self.sight][self.x-xy[0]+self.sight] not in unit_chars, points))
+        point = choice(emptys)
+        self.moving_torwards(point)
 
-        # these are all the non wall tiles
+    def moving_torwards(self, point):
+        dx = point[0] - self.x
+        dy = point[1] - self.y
+        dt = distance(*self.position, *point)
+        x = int(round(dx / dt))
+        y = int(round(dy / dt))
+        self.move(x, y)
+
+class Villager(Unit):
+    def __init__(self, x, y, ch="V", fg=Color.white, bg=Color.black, 
+                 race="human", job="villager"):
+        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
+        self.job = job
+        
+    def talk(self):
+        return "{}: Are you from around here?".format(self.__class__.__name__)
+
+    def acts(self, player, tiles, units):
+        # Villagers just wander around
+        def build_sight_map():
+            sight_map[self.sight][self.sight] = self.character
+            for (x, y) in tiles:
+                if player.position == (x, y):
+                    char = "@"
+                    spotted = True
+                elif (x, y) in units.keys():
+                    char = units[(x, y)].character
+                else:
+                    char = tiles[(x, y)].char
+            
+            dx, dy = self.x - x + self.sight, self.y - y + self.sight
+            sight_map[dy][dx] = char
+        sight_range = self.sight * 2 + 1 # accounts for radius
+        sight_map = [[" " for x in range(sight_range)] for y in range(sight_range)]
+        build_sight_map()
+        self.wander(tiles, sight_map)
+    
+    def wander(self, tiles, sight):
         points = list(filter(lambda t: tiles[t].char != "#", tiles.keys()))
-        # these are all floor tiles without units on them
         emptys = list(filter(lambda xy: sight[self.y-xy[1]+self.sight][self.x-xy[0]+self.sight] not in unit_chars, points))
         point = choice(emptys)
         self.moving_torwards(point)
@@ -60,7 +97,7 @@ class Villager(Unit):
         self.move(x, y)
 
 class Shopkeeper(Unit):
-    def __init__(self, x, y, ch="@", fg=Color.white, bg=Color.black, 
+    def __init__(self, x, y, ch="S", fg=Color.white, bg=Color.black, 
                  race="human", job="shopkeeper"):
         super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
         self.job = job
@@ -69,13 +106,13 @@ class Shopkeeper(Unit):
         return "{}: Looking for something?".format(self.__class__.__name__)
 
 class Blacksmith(Unit):
-    def __init__(self, x, y, ch="@", fg=Color.white, bg=Color.black,
+    def __init__(self, x, y, ch="B", fg=Color.white, bg=Color.black,
                 race="human", job="blacksmith"):
         super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
         self.job = job
 
 class Innkeeper(Unit):
-    def __init__(self, x, y, ch="@", fg=Color.white, bg=Color.black, 
+    def __init__(self, x, y, ch="I", fg=Color.white, bg=Color.black, 
                  race="human", job="innkeeper"):        
         super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
         self.job = job
@@ -85,7 +122,7 @@ class Innkeeper(Unit):
         return "{}: Need a room to stay?".format(self.__class__.__name__)
 
 class Bishop(Unit):
-    def __init__(self, x, y, ch="@", fg=Color.white, bg=Color.black, 
+    def __init__(self, x, y, ch="B", fg=Color.white, bg=Color.black, 
                  race="human", job="bishop"):        
         super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
         self.job = job
@@ -111,7 +148,7 @@ class Bishop(Unit):
 # this also makes it so that soldier ar not displaceable by player
 # or other units
 class Soldier(Unit):
-    def __init__(self, x, y, ch="@", fg=Color.white, bg=Color.black, 
+    def __init__(self, x, y, ch="G", fg=Color.white, bg=Color.black, 
                  race="human", job="soldierr"):        
         super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
         self.job = job
