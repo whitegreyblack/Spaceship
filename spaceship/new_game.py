@@ -838,7 +838,7 @@ def new_game(character=None, world=None, turns=0):
 
     def map_box():
         term.composition(False)
-        dungeon.fov_calc([(player.x, player.y, player.sight)])
+        dungeon.fov_calc([(player.x, player.y, player.sight * 2 if calabaston.location_is(*player.location, 1) else player.sight)])
         
         # for unit in dungeon.units:
         #     dungeon.fov_calc_blocks(unit.x, unit.y, unit.sight)

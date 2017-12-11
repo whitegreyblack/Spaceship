@@ -34,6 +34,12 @@ class Desert(Map):
             # we use a class variable to keep track of the percentage
             # Desert.chance_for_oasis = 100?
             ...
+        def build_monster_nest():
+            '''Chance that a monster nest will be generated during map gen'''
+            # only monsters that will be generated in a desert environment will be
+            # sandworm, orc dune walker, basically desert creatures
+            # if oasis is generated then creature list really grows 
+            ...
 
 class Forest(Map):
     """
