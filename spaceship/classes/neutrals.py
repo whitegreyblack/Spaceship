@@ -20,7 +20,9 @@ class VillagerChild(Unit):
     def acts(self, player, tiles, units):
         # Villagers just wander around
         def build_sight_map():
-            sight_map[self.sight][self.sight] = self.character
+            def map_out():
+                return "\n".join("".join(row[::-1]) for row in sight_map[::-1])
+
             for (x, y) in tiles:
                 if player.position == (x, y):
                     char = "@"
@@ -30,8 +32,11 @@ class VillagerChild(Unit):
                 else:
                     char = tiles[(x, y)].char
             
-            dx, dy = self.x - x + self.sight, self.y - y + self.sight
-            sight_map[dy][dx] = char
+                dx, dy = self.x - x + self.sight, self.y - y + self.sight
+                sight_map[dy][dx] = char
+            sight_map[self.sight][self.sight] = self.character
+
+            print(map_out())
         sight_range = self.sight * 2 + 1 # accounts for radius
         sight_map = [[" " for x in range(sight_range)] for y in range(sight_range)]
         build_sight_map()
@@ -40,9 +45,10 @@ class VillagerChild(Unit):
     def wander(self, tiles, sight):
         def within(x, y):
             return 6 <= x <= 60 and 2 <= y <= 20
-        points = list(filter(lambda t: within(*t) and tiles[t].char != "#", tiles.keys()))
+        points = list(filter(lambda t: within(*t) and not tiles[t].block_mov, tiles.keys()))
         emptys = list(filter(lambda xy: sight[self.y-xy[1]+self.sight][self.x-xy[0]+self.sight] not in unit_chars, points))
         point = choice(emptys)
+        print(tiles[point].char, tiles[point].block_mov)
         self.moving_torwards(point)
 
     def moving_torwards(self, point):

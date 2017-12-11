@@ -84,10 +84,10 @@ class Map:
         raise NotImplementedError("cannot build the base map class -- use a child map object")
 
     def __str__(self):
-        return "\n".join("".join(row) for row in self.data)
+        return "{}: ({}, {})".format(self.__class__.__name__, self.width, self.height)
 
     def __repr__(self):
-        return "{}: ({}, {})".format(self.__class__.__name__, self.width, self.height)
+        return "\n".join("".join(row) for row in self.data)
 
     def debug_set_global_light(self):
         for y in range(self.height):

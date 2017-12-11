@@ -27,6 +27,7 @@ class City(Map):
         ">": (dcm.GTHAN.chars, blender(dcm.GTHAN.hexcode)),
         "^": (dcm.TRAPS.chars, blender(dcm.TRAPS.hexcode)),
     }
+    chars_block_move = {"#", "+", "o", "x", "~", "%", "Y", "T",}
     def __init__(self, map_id, map_img, map_cfg, width, height):
         super().__init__(width, height, self.__class__.__name__)
         self.map_id = map_id
@@ -36,19 +37,19 @@ class City(Map):
         self.parse_img() # <== creates initial data map
         self.parse_cfg()
         self.create_tile_map()
+        print(repr(self))
 
-    def __repr__(self):
+    # def __repr__(self):
+    #     return "{}:\n{}\n{}".format(
+    #         self.map_id,
+    #         self.print_map(),
+    #         self.print_units())
+
+    def __str__(self):
         return "{}:\n{}\n{}".format(
             self.map_id,
             self.print_map(),
             self.print_units())
-
-    def __str__(self):
-        return "{}:{} ({}, {})".format(
-            self.__class__.__name__,
-            self.map_id,
-            self.width,
-            self.height)
 
     # Unique to city map
     def parse_img(self):
