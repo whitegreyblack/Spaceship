@@ -79,26 +79,24 @@ def new_game(character=None, world=None, turns=0):
     def key_input():
         '''Handles keyboard input and keypress transformation'''
         nonlocal proceed
-
+        value = tuple(None for _ in range(4))
         key = term.read()
         while key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
             # skip any non-action keys
             key = term.read()
         shifted = term.state(term.TK_SHIFT)
-        # print('shifted: {}'.format(shifted))
         if key in (term.TK_ESCAPE, term.TK_CLOSE):
             # exit command -- maybe need a back to menu screen?
             if shifted:
                 exit('Early Exit')
             else:
                 proceed = False
-            return tuple(None for _ in range(4))
         elif any((key, shifted) == (press, shift) for press, shift in commands.keys()):
             # print('Is key')
             return commands[(key, shifted)]
-        else:
-            # print('nope')
-            return tuple(None for _ in range(4))
+        while term.has_input():
+            term.read()
+        return value
 
     def onlyOne(container):
         return len(container) == 1
@@ -708,8 +706,6 @@ def new_game(character=None, world=None, turns=0):
 
         for x, y, lit, ch in dungeon.output(player.x, player.y):
             term.puts(x + 13, y + 1, "[color={}]".format(lit) + ch + "[/color]")
-
-        # term.refresh()refresh()
         
     def world_legend_box():
         length, offset, height = 14, 12, 0
@@ -796,6 +792,7 @@ def new_game(character=None, world=None, turns=0):
     proceed = True
     dungeon = None
     current_map = None
+    player_waiting = False
     '''
     while True:
         clear()
@@ -805,6 +802,77 @@ def new_game(character=None, world=None, turns=0):
         for unit in unitlist:
             unit.take_turn
     '''
+    # while proceed and player.cur_health:
+    #     turn_inc = False
+    #     term.clear()
+    #     '''
+    #     Maybe make ui the same for overworld and dungeons to make the loop easier?
+    #     '''
+    #     if player.height() == Level.World:
+    #         gamelog.maxlines = 2
+    #         world_map_box()
+    #         world_legend_box()
+    #         log_box()
+    #     else:
+    #         gamelog.maxlines = 4 if term.state(term.TK_HEIGHT) > 25 else 2
+    #         if dungeon == None:
+    #             # player.move_height(-1)
+    #             dungeon = calabaston.location(*player.location)
+    #             # player.move_height(1)
+
+    #             if player.height() == 0:
+    #                 # iterates down until sublevel is found
+    #                 for i in range(player.height()):
+    #                     dungeon = dungeon.getSublevel()
+                        
+    #         map_box()
+    #         status_box()
+    #         log_box()
+    #     term.refresh()
+
+    #     if player.height() != Level.World:
+    #         if player.energy.ready():
+    #             # handle player movements and action
+    #             x, y, k, action = key_input()
+    #             # print(x, y, k, action)
+    #             if k is not None:
+    #                 process_action(k)
+
+    #             elif all(z is not None for z in [x, y]):
+    #                 process_movement(x, y)
+
+    #             # else:
+    #             #     print('Command not yet implemented')
+
+    #             player.energy.reset()
+    #         else:
+    #             player.energy.gain_energy()
+    #             turn_inc = True
+    #     else:
+    #         # handle player movements and action
+    #         x, y, k, action = key_input()
+    #         # print(x, y, k, action)
+    #         if k is not None:
+    #             process_action(k)
+
+    #         elif all(z is not None for z in [x, y]):
+    #             process_movement(x, y)
+
+    #         # else:
+    #         #     print('Command not yet implemented')
+
+    #     if not proceed:
+    #         '''check if player pressed exit before processing units'''
+    #         break          
+
+    #     # checks 3 conditions on whether ai takes turn or not
+    #     # 1. player took a valid turn in which ai takes turn
+    #     # 2. player in a level with actual monsters
+    #     # 3. dungeon player is using exists
+    #     if turn_inc:
+    #         if player.height() != Level.World and dungeon:
+    #             dungeon.handle_units(player)           
+    #              
     while proceed and player.cur_health:
         turn_inc = False
         term.clear()
@@ -858,7 +926,6 @@ def new_game(character=None, world=None, turns=0):
                 # print('unit turn')
                 dungeon.handle_units(player)
             turns += 1
-
         # # for all units -- do action
         # if player.height() != Level.World and dungeon:
         #     dungeon.process_unit_actions(player)

@@ -33,15 +33,15 @@ class Unit(Object):
     class Energy:
         speeds = {speed: (value + 1) * 5 for value, speed in enumerate(['SLOW', 'NORMAL', 'FAST'])}
         def __init__(self, speed="NORMAL"):
-            self.speed = speeds[speed]
+            self.speed = self.speeds[speed]
             self.cur_energy = 0
             self.max_energy = 30
         
-        def increment(self):
+        def gain_energy(self):
             self.cur_energy += self.speed
         
         def ready(self):
-            self.cur_energy >= self.max_energy
+            return self.cur_energy >= self.max_energy
 
         def reset(self):
             self.cur_energy %= self.max_energy
