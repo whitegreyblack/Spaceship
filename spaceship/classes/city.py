@@ -27,8 +27,14 @@ class City(Map):
         "<": (dcm.LTHAN.chars, blender(dcm.LTHAN.hexcode)),
         ">": (dcm.GTHAN.chars, blender(dcm.GTHAN.hexcode)),
         "^": (dcm.TRAPS.chars, blender(dcm.TRAPS.hexcode)),
+        "S": (["."], blender(dcm.TILES.hexcode)),
+        "B": (["."], blender(dcm.TILES.hexcode)),
+        "I": (["."], blender(dcm.TILES.hexcode)),
+        "G": (["."], blender(dcm.TILES.hexcode)),
     }
+
     chars_block_move = {"#", "+", "o", "x", "~", "%", "Y", "T",}
+
     def __init__(self, map_id, map_img, map_cfg, width, height):
         super().__init__(width, height, self.__class__.__name__)
         self.map_id = map_id
@@ -38,7 +44,7 @@ class City(Map):
         self.parse_img() # <== creates initial data map
         self.parse_cfg()
         self.create_tile_map()
-        print(repr(self))
+        # print(repr(self))
 
     # def __repr__(self):
     #     return "{}:\n{}\n{}".format(
@@ -66,17 +72,32 @@ class City(Map):
             (127, 127, 127): ".",
             (112, 146, 190): "=",   
             (153, 217, 234): "=",
-            (255, 255, 255): ".",
             (195, 195, 195): ":",
             (241, 203, 88): "|",
             (255, 201, 14): "|",
             (0, 162, 232): "~",
             (98, 81, 43): "x",
             (239, 228, 176): ",",
+            (63, 72, 204): "S",
+            (255, 255, 255): "B",
+            (255, 127, 39): "I",
+            (237, 28, 36): "G",
         }
 
         self.data = []
         self.spaces = []
+        self.spaces_bishop = []
+        self.spaces_guards = []
+        self.spaces_villagers = []
+        self.spaces_innkeeper = []
+        self.spaces_shopkeeper = []
+        self.unit_spaces = {
+            "B": self.spaces_bishop,
+            "G": self.spaces_guards,
+            "V": self.spaces_villagers,
+            "I": self.spaces_innkeeper,
+            "S": self.spaces_shopkeeper,
+        }
 
         try:
             with Image.open(self.map_img) as img:
@@ -95,7 +116,11 @@ class City(Map):
                     r, g, b = pixels[i, j]
                 try:
                     char = stringify_chars[(r, g, b)]
-                    if char in (".", ":", ",", "="):
+                    if char in self.unit_spaces.keys():
+                        self.unit_spaces[char].append((i, j))
+                        # revert the char to its original space
+                        char = "."
+                    elif char in (".", ":", ",", "="):
                         self.spaces.append((i, j))
                     line += char
                 except KeyError:
@@ -136,7 +161,14 @@ class City(Map):
                             raise ValueError("Configuration file has no race specifier")
                         if job.lower() in jobs.keys():
                             for _ in range(int(number)):
-                                i, j = self.spaces[randint(0, len(self.spaces)-1)]
+                                try:
+                                    spaces=self.unit_spaces[character] \
+                                        if self.unit_spaces[character] else self.spaces
+
+                                except KeyError:
+                                    spaces = self.spaces
+                                else:
+                                    i, j = choice(spaces)
                                 self.units.append(jobs[job.lower()](
                                             x=i, 
                                             y=j,
@@ -144,7 +176,9 @@ class City(Map):
                                             job=job.lower(),
                                             ch=character,
                                             fg=color,
-                                            rs=self.relationship))
+                                            rs=self.relationship,
+                                            spaces=self.unit_spaces[character] 
+                                                if self.unit_spaces[character] else self.spaces))
                         else:
                             for _ in range(int(number)):
                                 i, j = self.spaces.pop()
@@ -175,4 +209,4 @@ if __name__ == "__main__":
     cfg = "./assets/maps/shadowbarrow.cfg"
     test = City("shadowbarrow", img, cfg, 80, 25)
     print(test)
-    print(repr(test))
+    # print(repr(test))
