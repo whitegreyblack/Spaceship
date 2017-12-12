@@ -30,13 +30,29 @@ class Unit(Object):
     '''
     unit_id = 0
     # relation = 100
+    class Energy:
+        speeds = {speed: (value + 1) * 5 for value, speed in enumerate(['SLOW', 'NORMAL', 'FAST'])}
+        def __init__(self, speed="NORMAL"):
+            self.speed = speeds[speed]
+            self.cur_energy = 0
+            self.max_energy = 30
+        
+        def increment(self):
+            self.cur_energy += self.speed
+        
+        def ready(self):
+            self.cur_energy >= self.max_energy
 
-    def __init__(self, x, y, ch="@", fg=Color.white, bg=Color.black, race="human", rs=0):
+        def reset(self):
+            self.cur_energy %= self.max_energy
+
+    def __init__(self, x, y, ch="@", fg=Color.white, bg=Color.black, race="human", rs=0, speed="NORMAL"):
         super().__init__(x, y, ch, fg, bg)
         self.sight = 7
         self.race = race
         self.cur_health = self.max_health = 5
         self.relationship = rs
+        self.energy = self.Energy(speed)
         Unit.unit_id += 1
 
     def __str__(self):
