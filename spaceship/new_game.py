@@ -802,77 +802,19 @@ def new_game(character=None, world=None, turns=0):
         for unit in unitlist:
             unit.take_turn
     '''
-    # while proceed and player.cur_health:
-    #     turn_inc = False
-    #     term.clear()
-    #     '''
-    #     Maybe make ui the same for overworld and dungeons to make the loop easier?
-    #     '''
-    #     if player.height() == Level.World:
-    #         gamelog.maxlines = 2
-    #         world_map_box()
-    #         world_legend_box()
-    #         log_box()
-    #     else:
-    #         gamelog.maxlines = 4 if term.state(term.TK_HEIGHT) > 25 else 2
-    #         if dungeon == None:
-    #             # player.move_height(-1)
-    #             dungeon = calabaston.location(*player.location)
-    #             # player.move_height(1)
-
-    #             if player.height() == 0:
-    #                 # iterates down until sublevel is found
-    #                 for i in range(player.height()):
-    #                     dungeon = dungeon.getSublevel()
-                        
-    #         map_box()
-    #         status_box()
-    #         log_box()
-    #     term.refresh()
-
     #     if player.height() != Level.World:
     #         if player.energy.ready():
-    #             # handle player movements and action
     #             x, y, k, action = key_input()
-    #             # print(x, y, k, action)
     #             if k is not None:
     #                 process_action(k)
 
     #             elif all(z is not None for z in [x, y]):
     #                 process_movement(x, y)
 
-    #             # else:
-    #             #     print('Command not yet implemented')
-
     #             player.energy.reset()
     #         else:
     #             player.energy.gain_energy()
     #             turn_inc = True
-    #     else:
-    #         # handle player movements and action
-    #         x, y, k, action = key_input()
-    #         # print(x, y, k, action)
-    #         if k is not None:
-    #             process_action(k)
-
-    #         elif all(z is not None for z in [x, y]):
-    #             process_movement(x, y)
-
-    #         # else:
-    #         #     print('Command not yet implemented')
-
-    #     if not proceed:
-    #         '''check if player pressed exit before processing units'''
-    #         break          
-
-    #     # checks 3 conditions on whether ai takes turn or not
-    #     # 1. player took a valid turn in which ai takes turn
-    #     # 2. player in a level with actual monsters
-    #     # 3. dungeon player is using exists
-    #     if turn_inc:
-    #         if player.height() != Level.World and dungeon:
-    #             dungeon.handle_units(player)           
-    #              
     while proceed and player.cur_health:
         turn_inc = False
         term.clear()
