@@ -547,67 +547,101 @@ class Map:
         # width should total 80 units
         for x in range(cam_x, ext_x):
 
-            # height should total 24 units
+            # height should total 24/25 units
             for y in range(cam_y, ext_y):
-                # reset variables every iteration
-                if x == player_x and y == player_y:
-                    # Current position holds your position
-                    ch = "@"
-                    col = "white"
+                light_level = self.check_light_level(x, y)
+                if (x, y) == (player_x, player_y):
+                    char, color =  "@", "white"
+                    yield (x - cam_x, y - cam_y, color, char)
 
-                elif (x, y) in positions.keys():
-                    # Current position holds a unit
-                    lit = self.check_light_level(x, y)
-                    if lit == 2:
-                        ch = positions[(x, y)].character
-                        col = positions[(x, y)].foreground
-                    elif lit == 1:
-                        ch, col = self.square(x, y).char, 'darkest grey'
-                    else:
-                        ch, col = " ", "black"
-
-
-                # Current position holds an item
-                elif self.square(x, y).items:
-                    if self.check_light_level(x, y) == 2:
+                elif light_level == 2:
+                    # print(player_x, player_y)
+                    # if (x, y) == (player_x, player_y):
+                    #     char, color =  "@", "white"
+                    if (x, y) in positions.keys():
+                        unit = positions[(x, y)]
+                        char, color = unit.character, unit.foreground
+                    elif self.square(x, y).items:
                         item = self.square(x, y).items[0]
-                        ch = item.char
-                        col = item.color
+                        char, color = item.char, item.color
                     else:
-                        ch = self.square(x, y).char
-                        col = "darkest grey"
+                        square = self.square(x, y)
+                        char, color = square.char, square.color
+                    yield (x - cam_x, y - cam_y, color, char)
 
-                # Current position holds a Lamp
-                    # elif (x, y, 10) in self.lamps:
-                    #     level = ""
-                    #     ch = self.square(x, y).char
-                    #     col = "white"
-
-                # deal with displaying traps
-                    # elif self.square(x, y).char == '^':
-                    #     lit = self.lit(x, y)
-                    #     if lit:
-                    #         if lit == 2:
-                    #             ch = self.square(x, y).char
-                    #             col = self.square(x, y).color
-                    #         else:
-                    #             ch = self.square(x, y).char
-                    #             col = Color.color('grey darkest')
-                    #     else:
-                    #         ch, col, bkgd = ".", "black", None
+                elif light_level == 1:
+                    square = self.square(x, y)
+                    char, color = square.char, "darkest grey"
+                    yield (x - cam_x, y - cam_y, color, char)
 
                 else:
-                    # all other environment features
-                    lit = self.check_light_level(x, y)
-                    if lit == 2:
-                        ch = self.square(x, y).char
-                        col = self.square(x, y).color
-                    elif lit == 1:
-                        ch = self.square(x, y).char
-                        col = "darkest grey"
-                    else:
-                        ch, col = " ", "black"
-                yield (x - cam_x, y - cam_y, col, ch)
+                    yield (x - cam_x, y - cam_y, "black", " ")
+
+                # # reset variables every iteration
+                # if x == player_x and y == player_y:
+                #     # Current position holds your position
+                #     ch = "@"
+                #     col = "white"
+
+                # elif (x, y) in positions.keys():
+                #     # Current position holds a unit
+                #     lit = self.check_light_level(x, y)
+                #     if lit == 2:
+                #         ch = positions[(x, y)].character
+                #         col = positions[(x, y)].foreground
+                #     elif lit == 1:
+                #         ch, col = self.square(x, y).char, 'darkest grey'
+                #     else:
+                #         ch, col = " ", "black"
+                #         pass
+
+                # # Current position holds an item
+                # elif self.square(x, y).items:
+                #     lit = self.check_light_level(x, y)
+                #     if lit == 2:
+                #         item = self.square(x, y).items[0]
+                #         ch = item.char
+                #         col = item.color
+                #     elif lit == 1:
+                #         ch = self.square(x, y).char
+                #         col = self.square(x, y).color
+                #     else:
+                #         ch = self.square(x, y).char
+                #         col = "darkest grey"
+                #         pass
+
+                # # # Current position holds a Lamp
+                # #     elif (x, y, 10) in self.lamps:
+                # #         level = ""
+                # #         ch = self.square(x, y).char
+                # #         col = "white"
+
+                # # # deal with displaying traps
+                # #     elif self.square(x, y).char == '^':
+                # #         lit = self.lit(x, y)
+                # #         if lit:
+                # #             if lit == 2:
+                # #                 ch = self.square(x, y).char
+                # #                 col = self.square(x, y).color
+                # #             else:
+                # #                 ch = self.square(x, y).char
+                # #                 col = Color.color('grey darkest')
+                # #         else:
+                # #             ch, col, bkgd = ".", "black", None
+
+                # else:
+                #     # all other environment features
+                #     lit = self.check_light_level(x, y)
+                #     if lit == 2:
+                #         ch = self.square(x, y).char
+                #         col = self.square(x, y).color
+                #     elif lit == 1:
+                #         ch = self.square(x, y).char
+                #         col = "darkest grey"
+                #     else:
+                #         ch, col = " ", "black"
+                #         pass
+                # yield (x - cam_x, y - cam_y, col, ch)
 
         # print(self.tilemap[10][10])
         self.lit_reset()
