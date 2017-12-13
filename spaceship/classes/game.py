@@ -1,5 +1,19 @@
 from bearlibterminal import terminal
 
+class Point:
+    def __init__(self):
+        self.x, self.y = x, y
+
+class Tile:
+    pass
+
+class Object:
+    pass
+
+class Unit:
+    def __init__(self):
+        pass
+
 class Game:
     def __init__(self, font="default"):
         self.__font = font
