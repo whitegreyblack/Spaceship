@@ -75,11 +75,18 @@ def new_game(character=None, world=None, turns=0):
     # END SETUP TOOLS
     # ---------------------------------------------------------------------------------------------------------------------#
     # Keyboard input
+    def handle_input():
+        x, y, k, action = key_input()
+        # print(x, y, k, action)
+        if k is not None:
+            process_action(k)
+
+        elif all(z is not None for z in [x, y]):
+            process_movement(x, y)
 
     def key_input():
         '''Handles keyboard input and keypress transformation'''
         nonlocal proceed
-        value = tuple(None for _ in range(4))
         key = term.read()
         while key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
             # skip any non-action keys
@@ -91,12 +98,17 @@ def new_game(character=None, world=None, turns=0):
                 exit('Early Exit')
             else:
                 proceed = False
-        elif any((key, shifted) == (press, shift) for press, shift in commands.keys()):
-            # print('Is key')
+
+        try:
             return commands[(key, shifted)]
-        while term.has_input():
-            term.read()
-        return value
+        except:
+            pass
+        # elif any((key, shifted) == (press, shift) for press, shift in commands.keys()):
+        #     # print('Is key')
+        #     return commands[(key, shifted)]
+        # while term.has_input():
+        #     term.read()
+        return tuple(None for _ in range(4))
 
     def onlyOne(container):
         return len(container) == 1
@@ -698,15 +710,14 @@ def new_game(character=None, world=None, turns=0):
         term.puts(1, screen_height-3, 'Turns: {:<4}'.format(turns))
 
     def map_box():
-        term.composition(False)
-        dungeon.fov_calc([(player.x, player.y, player.sight * 2 if calabaston.location_is(*player.location, 1) else player.sight)])
-        
-        # for unit in dungeon.units:
-        #     dungeon.fov_calc_blocks(unit.x, unit.y, unit.sight)
+        def calc_sight():
+            dungeon.fov_calc([(player.x, player.y, player.sight * 2 if calabaston.location_is(*player.location, 1) else player.sight)])
+        def output_map():
+            for x, y, lit, ch in dungeon.output(player.x, player.y):
+                term.puts(x + 13, y + 1, "[color={}]".format(lit) + ch + "[/color]")
+        calc_sight()
+        output_map()
 
-        for x, y, lit, ch in dungeon.output(player.x, player.y):
-            term.puts(x + 13, y + 1, "[color={}]".format(lit) + ch + "[/color]")
-        
     def world_legend_box():
         length, offset, height = 14, 12, 0
         world_name = surround(calabaston.map_name, length=length)
@@ -802,19 +813,6 @@ def new_game(character=None, world=None, turns=0):
         for unit in unitlist:
             unit.take_turn
     '''
-    #     if player.height() != Level.World:
-    #         if player.energy.ready():
-    #             x, y, k, action = key_input()
-    #             if k is not None:
-    #                 process_action(k)
-
-    #             elif all(z is not None for z in [x, y]):
-    #                 process_movement(x, y)
-
-    #             player.energy.reset()
-    #         else:
-    #             player.energy.gain_energy()
-    #             turn_inc = True
     while proceed and player.cur_health:
         turn_inc = False
         term.clear()
@@ -841,37 +839,32 @@ def new_game(character=None, world=None, turns=0):
             map_box()
             status_box()
             log_box()
-
         term.refresh()
-        # handle player movements and action
-        x, y, k, action = key_input()
-        # print(x, y, k, action)
-        if k is not None:
-            process_action(k)
 
-        elif all(z is not None for z in [x, y]):
-            process_movement(x, y)
-
-        # else:
-        #     print('Command not yet implemented')
-
+        if player.height() != Level.World:
+            if dungeon.map_type == 1:
+                handle_input()
+            elif dungeon.map_type == 0:
+                print('cave')
+                if player.energy.ready():
+                    handle_input()
+                else:
+                    player.energy.gain_energy()
+                    turn_inc = True
+        else:
+            handle_input()
         if not proceed:
             '''check if player pressed exit before processing units'''
-            break
+            break          
 
         # checks 3 conditions on whether ai takes turn or not
         # 1. player took a valid turn in which ai takes turn
         # 2. player in a level with actual monsters
         # 3. dungeon player is using exists
-        if turn_inc: 
+        if turn_inc:
             if player.height() != Level.World and dungeon:
-                # print('unit turn')
-                dungeon.handle_units(player)
-            turns += 1
-        # # for all units -- do action
-        # if player.height() != Level.World and dungeon:
-        #     dungeon.process_unit_actions(player)
-
+                dungeon.handle_units(player)           
+                 
     # player.dump()
     # gamelog.dumps()
     if not proceed:

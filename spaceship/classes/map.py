@@ -474,24 +474,24 @@ class Map:
     def handle_units(self, player):
         # print(hasattr(self, 'units'))
         for unit in self.units:
-            if hasattr(unit, 'acts'):
-                positions = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
-                tiles = {position: self.square(*position) for position in positions}
-                units = {u.position: u for u in self.units if u != unit}
-                unit.acts(player, tiles, units)
-                if player.cur_health <= 0:
-                    return
-            # if unit.energy.ready():
-            #     if hasattr(unit, 'acts'):
-            #         positions = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
-            #         tiles = {position: self.square(*position) for position in positions}
-            #         units = {u.position: u for u in self.units if u != unit}
-            #         unit.acts(player, tiles, units)
-            #         if player.cur_health <= 0:
-            #             return
-            #     unit.energy.reset()
-            # else:
-            #     unit.energy.gain_energy()
+            # if hasattr(unit, 'acts'):
+            #     positions = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
+            #     tiles = {position: self.square(*position) for position in positions}
+            #     units = {u.position: u for u in self.units if u != unit}
+            #     unit.acts(player, tiles, units)
+            #     if player.cur_health <= 0:
+            #         return
+            if unit.energy.ready():
+                if hasattr(unit, 'acts'):
+                    positions = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
+                    tiles = {position: self.square(*position) for position in positions}
+                    units = {u.position: u for u in self.units if u != unit}
+                    unit.acts(player, tiles, units)
+                    if player.cur_health <= 0:
+                        return
+                unit.energy.reset()
+            else:
+                unit.energy.gain_energy()
 
     def generate_units(self):
         if self.height <= 25:
