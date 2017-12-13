@@ -575,7 +575,8 @@ class Map:
                     yield (x - cam_x, y - cam_y, color, char)
 
                 else:
-                    yield (x - cam_x, y - cam_y, "black", " ")
+                    # yield (x - cam_x, y - cam_y, "black", " ")
+                    continue
 
                 # # reset variables every iteration
                 # if x == player_x and y == player_y:
