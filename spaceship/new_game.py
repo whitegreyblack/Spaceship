@@ -775,7 +775,7 @@ def new_game(character=None, world=None, turns=0):
     if not world:
         # unpack character tuple to create a player object
         player = Player(character)
-
+        print(player.energy.speed)
         # create the world from scratch
         # TODO: chain function so World().load() or keep as seperate functions: init() and load()?
         # calabaston = World(screen_width, screen_height)
@@ -827,12 +827,9 @@ def new_game(character=None, world=None, turns=0):
         else:
             gamelog.maxlines = 4 if term.state(term.TK_HEIGHT) > 25 else 2
             if dungeon == None:
-                # player.move_height(-1)
                 dungeon = calabaston.location(*player.location)
-                # player.move_height(1)
-
+                
                 if player.height() == 0:
-                    # iterates down until sublevel is found
                     for i in range(player.height()):
                         dungeon = dungeon.getSublevel()
                         
@@ -842,15 +839,22 @@ def new_game(character=None, world=None, turns=0):
         term.refresh()
 
         if player.height() != Level.World:
-            if dungeon.map_type == 1:
+            # if dungeon.map_type == 1:
+            #     handle_input()
+            # elif dungeon.map_type == 0:
+            #     print('cave')
+            #     print(player.energy.cur_energy)
+            #     if player.energy.ready():
+            #         handle_input()
+            #     else:
+            #         player.energy.gain_energy()
+            #         turn_inc = True
+            print(player.energy.cur_energy)
+            if player.energy.ready():
                 handle_input()
-            elif dungeon.map_type == 0:
-                print('cave')
-                if player.energy.ready():
-                    handle_input()
-                else:
-                    player.energy.gain_energy()
-                    turn_inc = True
+            else:
+                player.energy.gain_energy()
+                turn_inc = True
         else:
             handle_input()
         if not proceed:

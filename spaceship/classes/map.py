@@ -481,6 +481,7 @@ class Map:
             #     unit.acts(player, tiles, units)
             #     if player.cur_health <= 0:
             #         return
+            print(unit, unit.energy.cur_energy)
             if unit.energy.ready():
                 if hasattr(unit, 'acts'):
                     positions = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
