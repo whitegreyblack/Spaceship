@@ -73,9 +73,14 @@ class Object:
     def background(self):
         return self.tile.background
 
+class Energy:
+    def __init__(self):
+        pass
+
 class Unit(Object):
-    def __init__(self, point, tile):
+    def __init__(self, point, tile, energy):
         super().__init__(point, tile)
+        self.energy = energy
     
     def move(self, point):
         self.point += point
@@ -85,12 +90,24 @@ class Unit(Object):
         self.point, object.point = object.point, self.point
 
 class Monster(Unit):
-    def __init__(self, point, tile):
-        super().__init__(point, tile)
+    def __init__(self, point, tile, energy):
+        super().__init__(point, tile, energy)
+
+    def take_action(self):
+        if self.has_energy:
+            self.use_energy()
+        else:
+            self.gain_energy()
 
 class Player(Unit):
-    def __init__(self, point, tile):
-        super().__init__(point, tile)
+    def __init__(self, point, tile, energy):
+        super().__init__(point, tile, energy)
+
+    def take_action(self):
+        if self.has_energy:
+            self.use_energy()
+        else:
+            self.gain_energy()
 
 class Game:
     def __init__(self, font="default"):
