@@ -18,6 +18,10 @@ def test_point_addition():
 
     assert p.position == (0, 0)
 
+def test_points_addition():
+    import functools, random
+    pass
+    
 def test_object_position():
     obj = Object(Point(5, 6), Tile('@', Color('#888888'), Color('#040404')))
     assert obj.position == (5, 6)
