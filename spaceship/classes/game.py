@@ -1,5 +1,6 @@
 from bearlibterminal import terminal
 from re import search
+
 class Color:
     def __init__(self, color):
         if search(r'^#(?:[0-9a-fA-F]{3}){1,2}$', color):
@@ -36,8 +37,8 @@ class Point:
 class Tile:
     def __init__(self, ch, fg, bg):
         self.character = ch
-        self.foreground = fg
-        self.background = bg
+        self.foreground = fg.color
+        self.background = bg.color
 
     def freeze():
         self.background = "blue"
@@ -78,6 +79,10 @@ class Unit(Object):
     
     def move(self, point):
         self.point += point
+
+    # used to be displace
+    def swap(self, object):
+        self.point, object.point = object.point, self.point
 
 class Monster(Unit):
     def __init__(self, point, tile):
