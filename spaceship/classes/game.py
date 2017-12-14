@@ -1,14 +1,24 @@
 from bearlibterminal import terminal
 
 class Point:
-    def __init__(self):
+    def __init__(self, x, y):
         self.x, self.y = x, y
+
+    @property
+    def position(self):
+        return self.x, self.y
 
     def __iadd__(self, other):
         return Point(self.x + other.x, self.y + other.y)
 
     def __isub__(self, other):
         return Point(self.x - other.x, self.y - other.y)
+
+    def __eq__(self, other):
+        try:        
+            return self.x == other.x and self.y == other.y
+        except:
+            return self.x == other[0] and self.y == other[1]
 
 class Tile:
     def __init__(self, ch, fg, bg):
@@ -21,15 +31,19 @@ class Object:
         self.point = point
         self.tile = tile
 
+    @property
     def position(self):
-        return x, y
+        return self.point.position
 
+    @property
     def character(self):
         return self.tile.character
-
+    
+    @property
     def foreground(self):
         return self.tile.foreground
-
+    
+    @property
     def background(self):
         return self.tile.background
 
