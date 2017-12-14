@@ -1,4 +1,11 @@
 from bearlibterminal import terminal
+from re import search
+class Color:
+    def __init__(self, color):
+        if search(r'^#(?:[0-9a-fA-F]{3}){1,2}$', color):
+            self.color = color
+        else:
+            raise ValueError("Hexcode is an invalid color")
 
 class Point:
     def __init__(self, x, y):
@@ -9,10 +16,16 @@ class Point:
         return self.x, self.y
 
     def __iadd__(self, other):
-        return Point(self.x + other.x, self.y + other.y)
+        try:
+            return Point(self.x + other.x, self.y + other.y)
+        except:
+            return Point(self.x + other[0], self.y + other[1])
 
     def __isub__(self, other):
-        return Point(self.x - other.x, self.y - other.y)
+        try:
+            return Point(self.x - other.x, self.y - other.y)
+        except:
+            return Point(self.x - other[0], self.y - other[1])
 
     def __eq__(self, other):
         try:        
@@ -25,6 +38,18 @@ class Tile:
         self.character = ch
         self.foreground = fg
         self.background = bg
+
+    def freeze():
+        self.background = "blue"
+    
+    def burn():
+        self.background = "red"
+
+    def electrify():
+        self.background = "yellow"
+
+    def poison():
+        self.background = "green"
 
 class Object:
     def __init__(self, point, tile):
@@ -49,14 +74,18 @@ class Object:
 
 class Unit(Object):
     def __init__(self, point, tile):
-        super().__init__()
+        super().__init__(point, tile)
     
     def move(self, point):
         self.point += point
 
 class Monster(Unit):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, point, tile):
+        super().__init__(point, tile)
+
+class Player(Unit):
+    def __init__(self, point, tile):
+        super().__init__(point, tile)
 
 class Game:
     def __init__(self, font="default"):
