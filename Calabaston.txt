@@ -77,6 +77,11 @@ Game: {
             Eastshore,
             Whitewater,
           }
+        },
+        Dungeons: {
+          Pigs Beach,
+          Small Dungeon,
+          Beach Cave,
         }
       },
       Merma: Unknown,
