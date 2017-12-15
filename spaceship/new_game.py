@@ -87,6 +87,8 @@ def new_game(character=None, world=None, turns=0):
     def key_input():
         '''Handles keyboard input and keypress transformation'''
         nonlocal proceed
+        while term.has_input():
+            term.read()
         key = term.read()
         while key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
             # skip any non-action keys
@@ -137,7 +139,6 @@ def new_game(character=None, world=None, turns=0):
                 else:
                     travel_error = "You cannot travel there"
                     gamelog.add(travel_error)
-
         else:
             if (x, y) == (0, 0):
                 gamelog.add("You rest for a while")
@@ -162,21 +163,21 @@ def new_game(character=None, world=None, turns=0):
                         if unit.friendly:
                             unit.move(-x, -y)
                             player.move(x, y)
-                            gamelog.add("You switch places with the {}".format(unit.job))
+                            gamelog.add("You switch places with the {}".format(unit.race))
                         else:
                             chance = player.calculate_attack_chance()
                             if chance == 0:
-                                gamelog.add("You try attacking the {} but miss".format(unit.job))
+                                gamelog.add("You try attacking the {} but miss".format(unit.race))
                             else:
                                 damage = player.calculate_attack_damage() * (2 if chance == 2 else 1)
                                 unit.cur_health -= damage
                                 log = "You{}attack the {} for {} damage. ".format(
-                                    " crit and " if chance == 2 else " ", unit.job, damage)
-                                log += "The {} has {} health left. ".format(unit.job, max(unit.cur_health, 0))
+                                    " crit and " if chance == 2 else " ", unit.race, damage)
+                                log += "The {} has {} health left. ".format(unit.race, max(unit.cur_health, 0))
                                 gamelog.add(log)
 
                                 if unit.cur_health < 1:
-                                    log += "You have killed the {}! You gain {} exp".format(unit.job, unit.xp)
+                                    log += "You have killed the {}! You gain {} exp".format(unit.race, unit.xp)
                                     gamelog.add(log)
                                     player.gain_exp(unit.xp)
 
@@ -188,11 +189,11 @@ def new_game(character=None, world=None, turns=0):
 
                                     if item:
                                         dungeon.square(*unit.position).items.append(item)
-                                        gamelog.add("The {} has dropped {}".format(unit.job, item.name))
+                                        gamelog.add("The {} has dropped {}".format(unit.race, item.name))
 
                                     dungeon.remove_unit(unit)
                                 else:
-                                    log += "The {} has {} health left".format(unit.job, max(unit.cur_health, 0))
+                                    log += "The {} has {} health left".format(unit.race, max(unit.cur_health, 0))
                                     gamelog.add(log)
                                     term.puts(tx + 13, ty + 1, '[c=red]*[/c]')
                                     term.refresh()
@@ -346,9 +347,9 @@ def new_game(character=None, world=None, turns=0):
         nonlocal turns
         def attack(x, y):
             unit = dungeon.get_unit(x, y)
-            log = "You attack the {}. ".format(unit.job)
+            log = "You attack the {}. ".format(unit.race)
             unit.cur_health -= 1           
-            log += "The {} has {} health left. ".format(unit.job, unit.cur_health)
+            log += "The {} has {} health left. ".format(unit.race, unit.cur_health)
             if dungeon.maptype == "city":
                 dungeon.reduce_unit_relationships(100)
                 # dungeon.reduce_relationship(100)
@@ -359,7 +360,7 @@ def new_game(character=None, world=None, turns=0):
 
             # if unit.r is not "human": # condition should be more complex
             if unit.cur_health < 1:
-                gamelog.add("You have killed the {}! You gain 15 exp".format(unit.job))
+                gamelog.add("You have killed the {}! You gain 15 exp".format(unit.race))
                 dungeon.remove_unit(unit)
 
         attackables = []
