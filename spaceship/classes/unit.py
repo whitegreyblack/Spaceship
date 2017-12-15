@@ -18,7 +18,6 @@ self.defense_magical
 '''
 class Energy:
     def __init__(self, speed=10):
-        print(speed)
         self.speed = speed
         self.cur_energy = 0
         self.max_energy = 30
@@ -56,7 +55,7 @@ class Unit(Object):
         Unit.unit_id += 1
 
     def __str__(self):
-        return "{}: (x={}, y={}, ch={}, fg={}, bg={}, race={}, sight={}, {}/{})".format(
+        return "{}: (x={}, y={}, ch={}, fg={}, bg={}, race={}, sight={}, speed={}, {}/{})".format(
             self.__class__.__name__, 
             self.x, 
             self.y, 
@@ -66,6 +65,7 @@ class Unit(Object):
             self.race,
             self.sight,
             self.cur_health,
+            self.energy.speed,
             self.max_health
         )
 
@@ -78,6 +78,7 @@ class Unit(Object):
 
     def displace(self, other):
         self.position, other.position = other.position, self.position
+        # other.energy.reset()
 
     def calculate_attack_damage(self):
         return 1

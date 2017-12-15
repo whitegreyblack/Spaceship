@@ -162,7 +162,7 @@ Accuracy : {acc:>5}
             return 1
 
     def calculate_attack_damage(self):
-        return randint(self.damage_lower, self.damage_higher) + max(self.str, self.dex)
+        return randint(self.damage_lower, self.damage_higher) # + max(self.str, self.dex)
 
     def gain_exp(self, exp):
         self.exp += exp

@@ -104,8 +104,8 @@ class Rat(Unit):
                 dx, dy = self.x-x+self.sight, self.y-y+self.sight
                 sight_map[dy][dx] = char
             if spotted:
-                print(self.energy.speed)
-            #     print(map_out())
+                # print(self.energy.speed)
+                print(map_out())
             
         # start with an empty sight map
         unit_spotted = []

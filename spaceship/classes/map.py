@@ -496,7 +496,7 @@ class Map:
 
     def generate_units(self):
         if self.height <= 25:
-            max_units = 5
+            max_units = 15
         else:
             max_units = 5
 

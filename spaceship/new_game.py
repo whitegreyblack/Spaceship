@@ -3,7 +3,7 @@ import shelve
 from random import randint, choice
 from collections import namedtuple
 from namedlist import namedlist
-from time import clock
+from time import clock, sleep
 from textwrap import wrap
 from bearlibterminal import terminal as term
 
@@ -106,8 +106,8 @@ def new_game(character=None, world=None, turns=0):
         # elif any((key, shifted) == (press, shift) for press, shift in commands.keys()):
         #     # print('Is key')
         #     return commands[(key, shifted)]
-        # while term.has_input():
-        #     term.read()
+        while term.has_input():
+            term.read()
         return tuple(None for _ in range(4))
 
     def onlyOne(container):
@@ -170,13 +170,14 @@ def new_game(character=None, world=None, turns=0):
                             else:
                                 damage = player.calculate_attack_damage() * (2 if chance == 2 else 1)
                                 unit.cur_health -= damage
-                                log = "You {} attack the {} for {} damage. ".format(
-                                    "crit and" if chance == 2 else "", unit.job, damage)
-                                log += "The {} has {} health left".format(unit.job, max(unit.cur_health, 0))
+                                log = "You{}attack the {} for {} damage. ".format(
+                                    " crit and " if chance == 2 else " ", unit.job, damage)
+                                log += "The {} has {} health left. ".format(unit.job, max(unit.cur_health, 0))
                                 gamelog.add(log)
 
                                 if unit.cur_health < 1:
-                                    gamelog.add("You have killed the {}! You gain {} exp".format(unit.job, unit.xp))
+                                    log += "You have killed the {}! You gain {} exp".format(unit.job, unit.xp)
+                                    gamelog.add(log)
                                     player.gain_exp(unit.xp)
 
                                     if player.check_exp():
@@ -190,6 +191,11 @@ def new_game(character=None, world=None, turns=0):
                                         gamelog.add("The {} has dropped {}".format(unit.job, item.name))
 
                                     dungeon.remove_unit(unit)
+                                else:
+                                    log += "The {} has {} health left".format(unit.job, max(unit.cur_health, 0))
+                                    gamelog.add(log)
+                                    term.puts(tx + 13, ty + 1, '[c=red]*[/c]')
+                                    term.refresh()
                         turn_inc = True
                 else:
                     if dungeon.out_of_bounds(tx, ty):
@@ -212,6 +218,8 @@ def new_game(character=None, world=None, turns=0):
                             gamelog.add("You cannot swim")
                         else:
                             gamelog.add("You walk into {}".format(walkChars[ch]))
+                            term.puts(tx + 13, ty + 1, '[c=red]X[/c]')
+                            term.refresh()
 
     def open_player_screen(x, y, key):
         '''Game function to handle player equipment and inventory'''
@@ -839,23 +847,15 @@ def new_game(character=None, world=None, turns=0):
         term.refresh()
 
         if player.height() != Level.World: # not in overworld
-            # if dungeon.map_type == 1:
-            #     handle_input()
-            # elif dungeon.map_type == 0:
-            #     print('cave')
-            #     print(player.energy.cur_energy)
-            #     if player.energy.ready():
-            #         handle_input()
-            #     else:
-            #         player.energy.gain_energy()
-            #         turn_inc = True
-            # print(player.energy.cur_energy)
-            if player.energy.ready():
+            if dungeon.map_type == 1:
                 handle_input()
-                player.energy.reset()
-            else:
-                player.energy.gain_energy()
-                turn_inc = True
+            elif dungeon.map_type == 0:
+                if player.energy.ready():
+                    handle_input()
+                    player.energy.reset()
+                else:
+                    player.energy.gain_energy()
+                    turn_inc = True
         else:
             handle_input()
         if not proceed:

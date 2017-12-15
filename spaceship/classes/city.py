@@ -196,6 +196,16 @@ class City(Map):
             # any other error should be raised
             raise
 
+    def handle_units(self, player):
+        for unit in self.units:
+            if hasattr(unit, 'acts'):
+                positions = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
+                tiles = {position: self.square(*position) for position in positions}
+                units = {u.position: u for u in self.units if u != unit}
+                unit.acts(player, tiles, units)
+                if player.cur_health <= 0:
+                    return            
+
     def print_map(self):
         if hasattr(self, 'data'):
             return "\n".join(self.data)
