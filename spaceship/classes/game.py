@@ -116,7 +116,8 @@ class KeyHandler:
 class Game:
     def __init__(self, font="default"):
         self.__font = font
-        
+        self.root_map = None
+
     def setup(self):
         terminal.open()
         terminal.set("window: size={}x{}, title='{}'".format(
@@ -124,9 +125,10 @@ class Game:
         ))
         terminal.refresh()
 
-    def run(self):
-        self.setup()
-        
+    def main_menu(self):
+        pass
+
+    def main_game(self):
         try:
             while True:
                 key = terminal.read()
@@ -137,6 +139,23 @@ class Game:
 
         finally:
             terminal.close()
+    
+    def continue_menu(self):
+        pass
+
+    def creation_menu(self):
+        pass
+    
+    def options_menu(self):
+        pass
+
+    def exit_menu(self):
+        pass
+
+    def run(self):
+        self.setup()
+        
+        self.main_menu()
 
 if __name__ == "__main__":
     g = Game()

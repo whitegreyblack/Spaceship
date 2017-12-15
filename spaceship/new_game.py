@@ -35,6 +35,58 @@ from .gamelog import GameLogger
 class Level: Global, World, Local = -1, 0, 1
 # class WorldView: Geo, Pol, King = range(3)
 
+def key_input():
+    '''Handles keyboard input and keypress transformation
+    Cases:
+        Skips any pre-inputs and non-read keys
+        if key read is a close command -- close early or set proceed to false
+        Elif key is valid command return the command from command list with continue
+        Else return invalid action tuple with continue value
+    '''
+    action, proceed =  tuple(None for _ in range(4)), True
+    while term.has_input():
+        term.read()
+
+    key = term.read()
+    while key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
+        # skip any non-action keys
+        key = term.read()
+        
+    shifted = term.state(term.TK_SHIFT)
+    if key in (term.TK_ESCAPE, term.TK_CLOSE):
+        # exit command -- maybe need a back to menu screen?
+        if shifted:
+            exit('Early Exit')
+        else:
+            proceed = False
+
+    try:
+        # discover the command and set as current action
+        action = commands[(key, shifted)]
+    except KeyError:
+        pass
+
+    return action, proceed
+
+def process_action(x, y, k, key):
+    '''Checks actions linearly by case:
+    (1) processes non-movement action
+        Actions not in movement groupings
+    (2) processes movement action
+        Keyboard shortcut action grouping
+    (3) If action teplate is empty:
+        Return skip-action command
+    '''
+    if k is not None:
+        process_action(k)
+    elif all(z is not None for z in [x, y[):
+        process_movement(x, y)
+    else:
+        return 'skipped-turn'
+
+def save_game(x, y, action, gamelog):
+    pass
+    
 def new_game(character=None, world=None, turns=0):
     def save_game(x, y, action):
         nonlocal proceed
@@ -69,49 +121,12 @@ def new_game(character=None, world=None, turns=0):
         else:
             map_box()
         status_box()
-        log_box()
+        log_box()   
         term.refresh()
 
     # END SETUP TOOLS
     # ---------------------------------------------------------------------------------------------------------------------#
     # Keyboard input
-    def handle_input():
-        x, y, k, action = key_input()
-        # print(x, y, k, action)
-        if k is not None:
-            process_action(k)
-
-        elif all(z is not None for z in [x, y]):
-            process_movement(x, y)
-
-    def key_input():
-        '''Handles keyboard input and keypress transformation'''
-        nonlocal proceed
-        while term.has_input():
-            term.read()
-        key = term.read()
-        while key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
-            # skip any non-action keys
-            key = term.read()
-        shifted = term.state(term.TK_SHIFT)
-        if key in (term.TK_ESCAPE, term.TK_CLOSE):
-            # exit command -- maybe need a back to menu screen?
-            if shifted:
-                exit('Early Exit')
-            else:
-                proceed = False
-
-        try:
-            return commands[(key, shifted)]
-        except:
-            pass
-        # elif any((key, shifted) == (press, shift) for press, shift in commands.keys()):
-        #     # print('Is key')
-        #     return commands[(key, shifted)]
-        while term.has_input():
-            term.read()
-        return tuple(None for _ in range(4))
-
     def onlyOne(container):
         return len(container) == 1
 
@@ -869,8 +884,19 @@ def new_game(character=None, world=None, turns=0):
         # 3. dungeon player is using exists
         if turn_inc:
             if player.height() != Level.World and dungeon:
-                dungeon.handle_units(player)           
-                 
+                for unit in dungeon.units:
+                    if unit.energy.ready():
+                        positions = dungeon.fov_calc_blocks(unit.x, unit.y, unit.sight)
+                        tiles = {position: dungeon.square(*position) for position in positions}
+                        units = {u.position: u for u in dungeon.units if u != unit}
+                        unit.acts(player, tiles, units)
+                        if player.cur_health <= 0:
+                            return
+                        unit.energy.reset()
+                    else:
+                        unit.energy.gain_energy()         
+                # dungeon.handle_units(player)           
+                    
     # player.dump()
     # gamelog.dumps()
     if not proceed:
