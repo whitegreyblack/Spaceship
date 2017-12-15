@@ -838,7 +838,7 @@ def new_game(character=None, world=None, turns=0):
             log_box()
         term.refresh()
 
-        if player.height() != Level.World:
+        if player.height() != Level.World: # not in overworld
             # if dungeon.map_type == 1:
             #     handle_input()
             # elif dungeon.map_type == 0:
@@ -850,7 +850,6 @@ def new_game(character=None, world=None, turns=0):
             #         player.energy.gain_energy()
             #         turn_inc = True
             # print(player.energy.cur_energy)
-            print('READY: ', player.energy.ready())
             if player.energy.ready():
                 handle_input()
                 player.energy.reset()

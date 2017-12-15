@@ -504,7 +504,7 @@ class Map:
             shuffle(self.spaces)
             for i in range(max_units):
                 i, j = self.spaces[randint(0, len(self.spaces)-1)]
-                unit = choice([Rat, Rat])(x=i, y=j, speed=choice([15, 30, 45]))
+                unit = choice([Rat, Rat])(x=i, y=j, speed=choice([15, 30]))
                 self.units.append(unit)
                 self.square(i, j).unit = unit
         else:
