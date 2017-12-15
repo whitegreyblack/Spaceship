@@ -20,6 +20,7 @@ class World(Map):
     chars_block_light = ["T", "^", "~", "A", "^"]
 
     enterable_legend = {
+        (5, 28): "Northshore",
         (51, 42): "Aerathalar",
         (12, 14): "Armagos",
         (41, 20): "Aurundel",

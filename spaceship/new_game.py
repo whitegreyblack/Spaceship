@@ -849,7 +849,7 @@ def new_game(character=None, world=None, turns=0):
             #     else:
             #         player.energy.gain_energy()
             #         turn_inc = True
-            print(player.energy.cur_energy)
+            # print(player.energy.cur_energy)
             if player.energy.ready():
                 handle_input()
             else:

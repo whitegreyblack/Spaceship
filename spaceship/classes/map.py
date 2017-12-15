@@ -46,7 +46,7 @@ For example
 class Map:
     '''The "ABSTRACT CLASS" that should hold the functions shared across all map class types'''
     MapType = {T: V for V, T in enumerate(('Cave', 'City', 'wilderness', 'World'))}
-    print(MapType)
+    # print(MapType)
     class Tile:
         def __init__(self, char, color, block_mov, block_lit):
             self.char = char
@@ -481,7 +481,7 @@ class Map:
             #     unit.acts(player, tiles, units)
             #     if player.cur_health <= 0:
             #         return
-            print(unit, unit.energy.cur_energy)
+            # print(unit, unit.energy.cur_energy)
             if unit.energy.ready():
                 if hasattr(unit, 'acts'):
                     positions = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
