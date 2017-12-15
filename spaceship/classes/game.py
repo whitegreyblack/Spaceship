@@ -113,10 +113,32 @@ class KeyHandler:
     def __init__(self):
         pass
 
+class Menu:
+    def __init__(self, x=80, y=25):
+        self.x, self.y = x, y
+
+    def setup(self):
+        raise NotImplementedError
+
+    def draw(self):
+        raise NotImplementedError
+
+    def run(self):
+        raise NotImplementedError
+
+class Options(Menu):
+    def __init__(self, x=80, y=25):
+        super().__init__(x, y)
+
+class Main(Menu):
+    def __init__(self, x=80, y=25):
+
+
 class Game:
     def __init__(self, font="default"):
         self.__font = font
-        self.root_map = None
+        self.current_view = None
+        self.current_node = None
 
     def setup(self):
         terminal.open()
