@@ -496,15 +496,15 @@ class Map:
 
     def generate_units(self):
         if self.height <= 25:
-            max_units = 2
+            max_units = 5
         else:
-            max_units = 2
+            max_units = 5
 
         if hasattr(self, 'spaces'):
             shuffle(self.spaces)
             for i in range(max_units):
                 i, j = self.spaces[randint(0, len(self.spaces)-1)]
-                unit = choice([Rat, Rat])(x=i, y=j)
+                unit = choice([Rat, Rat])(x=i, y=j, speed=choice([15, 30, 45]))
                 self.units.append(unit)
                 self.square(i, j).unit = unit
         else:

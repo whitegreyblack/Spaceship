@@ -850,8 +850,10 @@ def new_game(character=None, world=None, turns=0):
             #         player.energy.gain_energy()
             #         turn_inc = True
             # print(player.energy.cur_energy)
+            print('READY: ', player.energy.ready())
             if player.energy.ready():
                 handle_input()
+                player.energy.reset()
             else:
                 player.energy.gain_energy()
                 turn_inc = True

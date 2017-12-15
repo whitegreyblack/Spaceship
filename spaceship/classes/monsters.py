@@ -10,8 +10,8 @@ from .unit import Unit
 
 class Rat(Unit):
     def __init__(self, x, y, ch="r", fg=Color.orange_darker, bg=Color.black,
-                 race="rat", job="monster", rs=-100):
-        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=-100)
+                 race="rat", job="monster", rs=-100, speed="NORMAL"):
+        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=-100, speed=speed)
         self.xp = 25
         self.job = "monster"
         self.damage_lower = 3
@@ -93,7 +93,7 @@ class Rat(Unit):
                 elif (x, y) in units.keys():
                     # check if unit is on the square
                     char = units[(x, y)].character
-                    spotted = True
+                    # spotted = True
                 elif tiles[(x, y)].items:
                     # check for items on the square
                     char = tiles[(x, y)].items[0].char
@@ -104,7 +104,8 @@ class Rat(Unit):
                 dx, dy = self.x-x+self.sight, self.y-y+self.sight
                 sight_map[dy][dx] = char
             if spotted:
-                print(map_out())
+                print(self.energy.speed)
+            #     print(map_out())
             
         # start with an empty sight map
         unit_spotted = []
@@ -161,7 +162,7 @@ class Rat(Unit):
         # print(paths)
 
     def wander(self, tiles, sight):
-        print('wandering about')
+        # print('wandering about')
         # filter out all tiles that are not empty spaces
         # do not want to go to tiles containing blockable objects or units
         # so filter twice: once to get floor tiles, again to get empty ones

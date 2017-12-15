@@ -16,11 +16,10 @@ self.defense_magical
 # self.damage_higher = 2
 
 '''
-speeds = {speed: (value + 1) * 5 for value, speed in enumerate(['SLOW', 'NORMAL', 'FAST'])}
-
 class Energy:
-    def __init__(self, speed="NORMAL"):
-        self.speed = speeds[speed]
+    def __init__(self, speed=10):
+        print(speed)
+        self.speed = speed
         self.cur_energy = 0
         self.max_energy = 30
     
@@ -46,7 +45,8 @@ class Unit(Object):
     '''
     unit_id = 0
     # relation = 100
-    def __init__(self, x, y, ch="@", fg=Color.white, bg=Color.black, race="human", rs=0, speed="NORMAL"):
+    def __init__(self, x, y, ch="@", fg=Color.white, bg=Color.black, 
+                 race="human", rs=0, speed=10):
         super().__init__(x, y, ch, fg, bg)
         self.sight = 7
         self.race = race
