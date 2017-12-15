@@ -109,10 +109,14 @@ class Player(Unit):
         else:
             self.gain_energy()
 
+class KeyHandler:
+    def __init__(self):
+        pass
+
 class Game:
     def __init__(self, font="default"):
         self.__font = font
-
+        
     def setup(self):
         terminal.open()
         terminal.set("window: size={}x{}, title='{}'".format(
