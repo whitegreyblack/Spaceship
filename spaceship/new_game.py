@@ -35,6 +35,12 @@ from .gamelog import GameLogger
 class Level: Global, World, Local = -1, 0, 1
 # class WorldView: Geo, Pol, King = range(3)
 
+'''
+x, y, a, act = key_input()
+key_action_handler(x, y, a, act):
+    -> movement_handler()
+    -> action_handler()
+'''
 def key_input():
     '''Handles keyboard input and keypress transformation
     Cases:
@@ -68,7 +74,7 @@ def key_input():
 
     return action, proceed
 
-def process_action(x, y, k, key):
+def process_handler(x, y, k, key, player, world):
     '''Checks actions linearly by case:
     (1) processes non-movement action
         Actions not in movement groupings
@@ -79,13 +85,116 @@ def process_action(x, y, k, key):
     '''
     if k is not None:
         process_action(k)
-    elif all(z is not None for z in [x, y[):
-        process_movement(x, y)
+    elif all(z is not None for z in [x, y]):
+        process_movement(x, y, player, world)
     else:
         return 'skipped-turn'
 
+def process_movement(x, y, player, world):
+    turn_inc = 0
+    if  player.height() == Level.World:
+        if (x, y) == (0, 0):
+            gamelog.add("You wait in the area")
+            turn_inc = True
+        else:
+            tx = player.wx + x
+            ty = player.wy + y
+
+            if world.walkable(tx, ty):
+                player.save_location()
+                player.travel(x, y)
+                turn_inc = True
+            else:
+                travel_error = "You cannot travel there"
+                gamelog.add(travel_error)
+    else:
+        if (x, y) == (0, 0):
+            gamelog.add("You rest for a while")
+            turn_inc = True
+        else:
+            tx = player.x + x
+            ty = player.y + y
+
+            if world.walkable(tx, ty):
+                if not world.occupied(tx, ty):
+                    player.move(x, y)
+                    if world.square(tx, ty).items and randint(0, 5):
+                        pass_item_messages = [
+                            "You pass by an item.",
+                            "There is something here."
+                            "Your feet touches an object."
+                        ]
+                        gamelog.add(pass_item_messages[randint(0, len(pass_item_messages)-1)])
+                    turn_inc = True
+                else:
+                    unit = world.get_unit(tx, ty)
+                    if unit.friendly:
+                        unit.move(-x, -y)
+                        player.move(x, y)
+                        gamelog.add("You switch places with the {}".format(unit.race))
+                    else:
+                        chance = player.calculate_attack_chance()
+                        if chance == 0:
+                            gamelog.add("You try attacking the {} but miss".format(unit.race))
+                        else:
+                            damage = player.calculate_attack_damage() * (2 if chance == 2 else 1)
+                            unit.cur_health -= damage
+                            log = "You{}attack the {} for {} damage. ".format(
+                                " crit and " if chance == 2 else " ", unit.race, damage)
+                            log += "The {} has {} health left. ".format(unit.race, max(unit.cur_health, 0))
+                            gamelog.add(log)
+
+                            if unit.cur_health < 1:
+                                log += "You have killed the {}! You gain {} exp".format(unit.race, unit.xp)
+                                gamelog.add(log)
+                                player.gain_exp(unit.xp)
+
+                                if player.check_exp():
+                                    gamelog.add("You level up. You are now level {}".format(player.level))
+                                    gamelog.add("You feel much stronger")
+
+                                item = unit.drops()
+
+                                if item:
+                                    world.square(*unit.position).items.append(item)
+                                    gamelog.add("The {} has dropped {}".format(unit.race, item.name))
+
+                                world.remove_unit(unit)
+                            else:
+                                log += "The {} has {} health left".format(unit.race, max(unit.cur_health, 0))
+                                gamelog.add(log)
+                                term.puts(tx + 13, ty + 1, '[c=red]*[/c]')
+                                term.refresh()
+                    turn_inc = True
+            else:
+                if world.out_of_bounds(tx, ty):
+                    gamelog.add("You reached the edge of the map")
+                else:
+                    walkChars = {
+                        "+": "a door",
+                        "/": "a door",
+                        "o": "a lamp",
+                        "#": "a wall",
+                        "x": "a post",
+                        "~": "a river",
+                        "T": "a tree",
+                        "f": "a tree",
+                        "Y": "a tree",
+                        "%": "a wall",
+                    }
+                    ch = world.square(tx, ty).char
+                    if ch == "~":
+                        gamelog.add("You cannot swim")
+                    else:
+                        gamelog.add("You walk into {}".format(walkChars[ch]))
+                        term.puts(tx + 13, ty + 1, '[c=red]X[/c]')
+                        term.refresh()
+
+
 def save_game(x, y, action, gamelog):
-    pass
+    gamelog.add("Save and exit game(Y/N)?")
+    # logbox
+
     
 def new_game(character=None, world=None, turns=0):
     def save_game(x, y, action):
@@ -864,16 +973,19 @@ def new_game(character=None, world=None, turns=0):
 
         if player.height() != Level.World: # not in overworld
             if dungeon.map_type == 1:
-                handle_input()
+                action, proceed = key_input()
+                process_handler(*action, player, dungeon)
             elif dungeon.map_type == 0:
                 if player.energy.ready():
-                    handle_input()
+                    action, proceed = key_input()
+                    process_handler(*action, player, dungeon)
                     player.energy.reset()
                 else:
                     player.energy.gain_energy()
                     turn_inc = True
         else:
-            handle_input()
+            action, proceed = key_input()
+            process_handler(*action, player, calabaston)
         if not proceed:
             '''check if player pressed exit before processing units'''
             break          
