@@ -11,18 +11,18 @@ def test_scene_dimensions():
     assert s.height == 50
 
 def test_scene_add_scene_parent():
-    s = Scene(200, 50)
-    t = Scene(200 ,50)
+    s = Scene(200, 50, 's')
+    t = Scene(200 ,50, 't')
 
-    t.add_scene_parent('parent', s)
+    t.add_scene_parent(s)
 
-    assert s in t.get_scene_parents()
-    assert s not in t.get_scene_childs()
-    
+    assert s in t.parents
+    assert s not in t.children
+
 def test_scene_add_scene_child():
-    s = Scene(200, 50)  
-    t = Scene(200 ,50)
+    s = Scene(200, 50, 's')  
+    t = Scene(200 ,50, 't')
 
-    s.add_scene_child('child', t)
-    assert t in s.get_scene_childs()
-    assert t not in s.get_scene_parents()
+    s.add_scene_child(t)
+    assert t in s.children
+    assert t not in s.parents

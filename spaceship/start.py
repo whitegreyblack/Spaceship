@@ -30,10 +30,11 @@ def connect_scenes(scene_a, scene_b):
     scene_a.add_child_scene(scene_b)
     scene_b.add_parent_scene(scene_a)
 '''
-
 class Scene:
-    def __init__(self, width, height):
+    def __init__(self, width, height, title='Scene'):
         self.width, self.height = width, height
+        self.title = title
+        
         self.proceed = False
 
         # scenes is a dictionary holding other scene objects
@@ -66,8 +67,8 @@ class Scene:
     # def add_scene(self, title, priority, scene):
     #     self.scenes[(title, priority)] = scene
 
-    def check_scene(self, title, scene):
-        if title in self.scenes.keys():
+    def check_scene(self, scene):
+        if scene.title in self.scenes.keys():
             raise ValueError('Same title already in scene')
         elif scene.width != self.width:
             raise ValueError('Incoming scene does not have the same width as current scene')
@@ -75,19 +76,23 @@ class Scene:
             raise ValueError('Incoming scene does not have the same height as current scene')
         return True
 
-    def add_scene_child(self, title, scene):
-        self.check_scene(title, scene)
-        self.scenes[(title, 0)] = scene
+    def add_scene_child(self, scene):
+        self.check_scene(scene)
+        self.scenes[(scene.title, 0)] = scene
     
-    def add_scene_parent(self, title, scene):
-        self.check_scene(title, scene)
-        self.scenes[(title, 1)] = scene
+    def add_scene_parent(self, scene):
+        self.check_scene(scene)
+        self.scenes[(scene.title, 1)] = scene
 
-    def get_scene_childs(self):
-        return [self.scenes[(title, scene)] for (title, scene) in self.scenes.keys() if scene == 0]
+    @property
+    def children(self):
+        '''Returns a list of children scene objects'''
+        return [self.scenes[(title, scene)] for title, scene in self.scenes.keys() if scene == 0]
 
-    def get_scene_parents(self):
-        return [self.scenes[(title, scene)] for (title, scene) in self.scenes.keys() if scene == 1]
+    @property
+    def parents(self):
+        '''Returns a list of parent scene objects'''
+        return [self.scenes[(title, scene)] for title, scene in self.scenes.keys() if scene == 1]
 
 def start():
     def calc_option_heights(hoffset, foffset):
