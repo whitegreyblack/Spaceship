@@ -364,16 +364,26 @@ def process_movement(x, y, player, world, gamelog):
                         term.refresh()
 
 class Engine:
+
+    main_menu = None
+    play_game = None
+    new_game = None
+    new_name = None
+    options = None
+
     def __init__(self, player, world, gamelog):
         self.player = player
         self.world = world
         self.gamelog = gamelog
-
+        self.pointer = self.main_menu
     def run(self):
-        pass
+        scene = self.get_current_scene()
 
     def save(self):
         pass
+
+    def get_current_scene(self):
+        return self.pointer
 
 def new_game(character=None, world=None, turns=0):
     # def save_game(x, y, action):

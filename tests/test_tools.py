@@ -17,12 +17,11 @@ aaaaaaaaa"""
 
 
 def test_lamdafunc():
-    value = tools.lambdafunc(min, 0, 1, 1, 0)
-    assert value == (0, 0)
+    value = tools.lambdafunc(min, 0, 1)
+    assert value == 0
 
-    value = tools.lambdafunc(max, 0, 1, 1, 0)
-    assert value == (1, 1)
-
+    value = tools.lambdafunc(max, 0, 1)
+    assert value == 1
 
 def test_deltanorm():
     value = tools.deltanorm(0, 1)

@@ -22,6 +22,72 @@ from .screen_functions import center, colored, longest
 from .setup_game import setup, setup_font, setup_menu
 
 debug = False
+'''
+def connect_scenes(scene_a, scene_b):
+    scene_a.add_scene(scene_b)
+    scene_b.add_scene(scene_a)
+
+    scene_a.add_child_scene(scene_b)
+    scene_b.add_parent_scene(scene_a)
+'''
+
+class Scene:
+    def __init__(self, width, height):
+        self.width, self.height = width, height
+        self.proceed = False
+
+        # scenes is a dictionary holding other scene objects
+        self.scenes = {}
+
+    @property
+    def height(self):
+        return self.__height
+
+    @height.setter
+    def height(self, h):
+        self.__height = h
+
+    @property
+    def width(self):
+        return self.__width
+
+    @width.setter
+    def width(self, w):
+        self.__width = w
+
+    def scene(self, title):
+        try:
+            return self.scenes[title]
+        except KeyError:
+            print('No scene with that title')
+        except:
+            raise
+
+    # def add_scene(self, title, priority, scene):
+    #     self.scenes[(title, priority)] = scene
+
+    def check_scene(self, title, scene):
+        if title in self.scenes.keys():
+            raise ValueError('Same title already in scene')
+        elif scene.width != self.width:
+            raise ValueError('Incoming scene does not have the same width as current scene')
+        elif scene.height != self.height:
+            raise ValueError('Incoming scene does not have the same height as current scene')
+        return True
+
+    def add_scene_child(self, title, scene):
+        self.check_scene(title, scene)
+        self.scenes[(title, 0)] = scene
+    
+    def add_scene_parent(self, title, scene):
+        self.check_scene(title, scene)
+        self.scenes[(title, 1)] = scene
+
+    def get_scene_childs(self):
+        return [self.scenes[(title, scene)] for (title, scene) in self.scenes.keys() if scene == 0]
+
+    def get_scene_parents(self):
+        return [self.scenes[(title, scene)] for (title, scene) in self.scenes.keys() if scene == 1]
 
 def start():
     def calc_option_heights(hoffset, foffset):
