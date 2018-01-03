@@ -50,8 +50,8 @@ def key_input():
         Else return invalid action tuple with continue value
     '''
     action, proceed =  tuple(None for _ in range(4)), True
-    while term.has_input():
-        term.read()
+    # while term.has_input():
+    #     term.read()
 
     key = term.read()
     while key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
@@ -74,7 +74,7 @@ def key_input():
 
     return action, proceed
 
-def process_handler(x, y, k, key, player, world):
+def process_handler(x, y, k, key, player, world, gamelog):
     '''Checks actions linearly by case:
     (1) processes non-movement action
         Actions not in movement groupings
@@ -84,13 +84,186 @@ def process_handler(x, y, k, key, player, world):
         Return skip-action command
     '''
     if k is not None:
-        process_action(k)
+        process_action(k, player, gamelog)
     elif all(z is not None for z in [x, y]):
-        process_movement(x, y, player, world)
+        process_movement(x, y, player, world, gamelog)
     else:
         return 'skipped-turn'
 
-def process_movement(x, y, player, world):
+'''
+class Action:
+    def __init__(self):
+        turn_inc = True
+
+    def action(self):
+        pass
+    
+def Save(Action):
+    def __init__(self):
+        turn_inc = False
+'''
+
+def enter_map(player, a):
+    '''Logic:
+        if at world level, check if there exists a map
+        if exists -> enter
+        else -> build the map and add it to the world
+    '''
+    def determine_map(map_type):
+        '''Helper function to determine wilderness map'''
+        try:
+            return wilderness[map_type]
+        except KeyError:
+            raise ValueError("Map Type Not Implemented: {}".format(map_type))
+
+    def get_wilderness_enterance(x, y):
+        '''Helper function to determine start position when entering wilderness map'''
+        return (max(int(location.width * x - 1), 0), 
+                max(int(location.height * y - 1), 0))
+
+    if not calabaston.location_exists(*player.location):
+        # map does not exist yet -- create one
+        if player.location in calabaston.enterable_legend.keys():
+            # map type should be a city
+            fileloc = calabaston.enterable_legend[player.location].lower().replace(' ','_')
+            img_name = "./assets/maps/" + fileloc + ".png"
+            cfg_name = "./assets/maps/" + fileloc + ".cfg"
+
+            location = City(
+                map_id=fileloc,
+                map_img=img_name,
+                map_cfg=cfg_name,
+                width=term.state(term.TK_WIDTH), 
+                height=term.state(term.TK_HEIGHT))
+
+            player.position = location.width // 2, location.height // 2
+
+        elif player.location in calabaston.dungeon_legend.keys():
+            # map type should be a cave
+            location = Cave(
+                width=term.state(term.TK_WIDTH),
+                height=term.state(term.TK_HEIGHT),
+                max_rooms=randint(15, 20))
+
+            player.position = location.getUpStairs()
+
+        else:
+            # map type should be in the wilderness
+            tile = calabaston.square(*player.location)
+            # neighbors = calabaston.access_neighbors(*player.location)
+            
+            location = determine_map(tile.tile_type)(
+                width=term.state(term.TK_WIDTH),
+                height=term.state(term.TK_HEIGHT))
+
+            x, y = player.get_position_on_enter()
+            player.position = get_wilderness_enterance(x, y)
+    
+        location.addParent(calabaston)
+        calabaston.location_create(*player.location, location)
+
+    else:
+        # location already been built -- retrieve from world map_data
+        # player position is different on map enter depending on map location
+        location = calabaston.location(*player.location)
+        if player.location in calabaston.enterable_legend.keys():
+            # re-enter a city
+            player.position = location.width // 2, location.height // 2
+
+        elif player.location in calabaston.dungeon_legend.keys():
+            # re-enter dungeon
+            player.position = location.getUpStairs()
+
+        else:
+            # reenter a wilderness
+            x, y = player.get_position_on_enter()
+        
+            player.position = get_wilderness_enterance(x, y)
+            
+    player.move_height(1)
+
+'''
+maybe create a class that holds all this together under a single identifier -- Engine
+so when we need to use specific actions inside the world, ie. Save() we call it like so
+Class Engine:
+  def run(...): ...
+  def save(...): ...
+
+e = Engine()
+e.run()
+e.save()
+
+But for now lets do this ...
+'''
+
+def save_game(player, action, gamelog):
+    gamelog.add("Save and exit game(Y/N)?")
+    log_box()
+    term.refresh()
+    code = term.read()
+    if code != TK_Y:
+        return
+    if not os.path.isdir('saves'):
+        print('saved folder does not exist - creating folder: "./saves"')
+        os.makedirs('saves')
+
+    # prepare strings for file writing -- player_hash used for same name/different character saves
+    name = player.name.replace(' ', '_')
+    desc = player.job + " " + str(player.level)
+    with shelve.open('./saves/{}'.format(name + "(" + str(abs(hash(desc)))) + ")", 'n') as save_file:
+        save_file['save'] = desc
+        save_file['player'] = player
+        save_file['world'] = calabaston
+        save_file['turns'] = turns  
+    proceed = False    # logbox
+
+actions={
+    0: {
+        '>': enter_map,
+        # '@': open_player_screen,
+        # 'i': open_player_screen,
+        # 'v': open_player_screen,
+        'S': save_game,
+    },
+    # 1: {
+    #     '>': interactStairs,
+    #     '<': interactStairs,
+    #     'a': attackUnit,
+    #     'o': interactDoor,
+    #     'c': interactDoor,
+    #     't': interactUnit,
+    #     ',': interactItem,
+    #     '@': open_player_screen,
+    #     'i': open_player_screen,
+    #     'v': open_player_screen,
+    # },
+}
+
+def process_action(action, player, gamelog):
+    turn_inc = 0
+    ''' 
+    Player class should return a height method and position method
+    Position method should return position based on height
+    So height would be independent and position would be depenedent on height
+    try:
+        if player.height == Level.World:
+            actions[max(0, min(player.height, 1)][action](*player.position, action)
+    except KeyError
+    '''
+    try:
+        if player.height() == Level.World:
+            actions[max(0, min(player.height(), 1))][action](player.wx, player.wy, action)
+        else:
+            actions[max(0, min(player.height(), 1))][action](player.x, player.y, action)
+    except TypeError:
+        if player.height() == Level.World:
+            actions[max(0, min(player.height(), 1))][action](player, action, gamelog)
+        else:
+            actions[max(0, min(player.height(), 1))][action](player, action, gamelog)
+    except KeyError:
+        gamelog.add("'{}' is not a valid command".format(action))
+
+def process_movement(x, y, player, world, gamelog):
     turn_inc = 0
     if  player.height() == Level.World:
         if (x, y) == (0, 0):
@@ -190,36 +363,42 @@ def process_movement(x, y, player, world):
                         term.puts(tx + 13, ty + 1, '[c=red]X[/c]')
                         term.refresh()
 
+class Engine:
+    def __init__(self, player, world, gamelog):
+        self.player = player
+        self.world = world
+        self.gamelog = gamelog
 
-def save_game(x, y, action, gamelog):
-    gamelog.add("Save and exit game(Y/N)?")
-    # logbox
+    def run(self):
+        pass
 
-    
+    def save(self):
+        pass
+
 def new_game(character=None, world=None, turns=0):
-    def save_game(x, y, action):
-        nonlocal proceed
+    # def save_game(x, y, action):
+    #     nonlocal proceed
 
-        gamelog.add("Save and exit game? (Y/N)")
-        log_box()
-        term.refresh()
-        code = term.read()
-        if code != term.TK_Y:
-            return
+    #     gamelog.add("Save and exit game? (Y/N)")
+    #     log_box()
+    #     term.refresh()
+    #     code = term.read()
+    #     if code != term.TK_Y:
+    #         return
 
-        if not os.path.isdir('saves'):
-            print('saved folder does not exist - creating folder: "./saves"')
-            os.makedirs('saves')
+    #     if not os.path.isdir('saves'):
+    #         print('saved folder does not exist - creating folder: "./saves"')
+    #         os.makedirs('saves')
 
-        # prepare strings for file writing -- player_hash used for same name/different character saves
-        name = player.name.replace(' ', '_')
-        desc = player.job + " " + str(player.level)
-        with shelve.open('./saves/{}'.format(name + "(" + str(abs(hash(desc)))) + ")", 'n') as save_file:
-            save_file['save'] = desc
-            save_file['player'] = player
-            save_file['world'] = calabaston
-            save_file['turns'] = turns  
-        proceed = False
+    #     # prepare strings for file writing -- player_hash used for same name/different character saves
+    #     name = player.name.replace(' ', '_')
+    #     desc = player.job + " " + str(player.level)
+    #     with shelve.open('./saves/{}'.format(name + "(" + str(abs(hash(desc)))) + ")", 'n') as save_file:
+    #         save_file['save'] = desc
+    #         save_file['player'] = player
+    #         save_file['world'] = calabaston
+    #         save_file['turns'] = turns  
+    #     proceed = False
 
     def refresh(lines=[]):
         for line in lines:
@@ -649,117 +828,109 @@ def new_game(character=None, world=None, turns=0):
                 dungeon = None
                 player.position = (0, 0)
 
-    def enter_map(x, y, a):
-        '''Logic:
-            if at world level, check if there exists a map
-            if exists -> enter
-            else -> build the map and add it to the world
-        '''
-        def determine_map(map_type):
-            '''Helper function to determine wilderness map'''
-            try:
-                return wilderness[map_type]
-            except KeyError:
-                raise ValueError("Map Type Not Implemented: {}".format(map_type))
+    # def enter_map(x, y, a):
+    #     '''Logic:
+    #         if at world level, check if there exists a map
+    #         if exists -> enter
+    #         else -> build the map and add it to the world
+    #     '''
+    #     def determine_map(map_type):
+    #         '''Helper function to determine wilderness map'''
+    #         try:
+    #             return wilderness[map_type]
+    #         except KeyError:
+    #             raise ValueError("Map Type Not Implemented: {}".format(map_type))
 
-        def get_wilderness_enterance(x, y):
-            '''Helper function to determine start position when entering wilderness map'''
-            return (max(int(location.width * x - 1), 0), 
-                    max(int(location.height * y - 1), 0))
+    #     def get_wilderness_enterance(x, y):
+    #         '''Helper function to determine start position when entering wilderness map'''
+    #         return (max(int(location.width * x - 1), 0), 
+    #                 max(int(location.height * y - 1), 0))
 
-        if not calabaston.location_exists(*player.location):
-            # map does not exist yet -- create one
-            if player.location in calabaston.enterable_legend.keys():
-                # map type should be a city
-                fileloc = calabaston.enterable_legend[player.location].lower().replace(' ','_')
-                img_name = "./assets/maps/" + fileloc + ".png"
-                cfg_name = "./assets/maps/" + fileloc + ".cfg"
+    #     if not calabaston.location_exists(*player.location):
+    #         # map does not exist yet -- create one
+    #         if player.location in calabaston.enterable_legend.keys():
+    #             # map type should be a city
+    #             fileloc = calabaston.enterable_legend[player.location].lower().replace(' ','_')
+    #             img_name = "./assets/maps/" + fileloc + ".png"
+    #             cfg_name = "./assets/maps/" + fileloc + ".cfg"
 
-                location = City(
-                    map_id=fileloc,
-                    map_img=img_name,
-                    map_cfg=cfg_name,
-                    width=term.state(term.TK_WIDTH), 
-                    height=term.state(term.TK_HEIGHT))
+    #             location = City(
+    #                 map_id=fileloc,
+    #                 map_img=img_name,
+    #                 map_cfg=cfg_name,
+    #                 width=term.state(term.TK_WIDTH), 
+    #                 height=term.state(term.TK_HEIGHT))
 
-                player.position = location.width // 2, location.height // 2
+    #             player.position = location.width // 2, location.height // 2
 
-            elif player.location in calabaston.dungeon_legend.keys():
-                # map type should be a cave
-                location = Cave(
-                    width=term.state(term.TK_WIDTH),
-                    height=term.state(term.TK_HEIGHT),
-                    max_rooms=randint(15, 20))
+    #         elif player.location in calabaston.dungeon_legend.keys():
+    #             # map type should be a cave
+    #             location = Cave(
+    #                 width=term.state(term.TK_WIDTH),
+    #                 height=term.state(term.TK_HEIGHT),
+    #                 max_rooms=randint(15, 20))
 
-                player.position = location.getUpStairs()
+    #             player.position = location.getUpStairs()
 
-            else:
-                # map type should be in the wilderness
-                tile = calabaston.square(*player.location)
-                # neighbors = calabaston.access_neighbors(*player.location)
+    #         else:
+    #             # map type should be in the wilderness
+    #             tile = calabaston.square(*player.location)
+    #             # neighbors = calabaston.access_neighbors(*player.location)
                 
-                location = determine_map(tile.tile_type)(
-                    width=term.state(term.TK_WIDTH),
-                    height=term.state(term.TK_HEIGHT))
+    #             location = determine_map(tile.tile_type)(
+    #                 width=term.state(term.TK_WIDTH),
+    #                 height=term.state(term.TK_HEIGHT))
 
-                x, y = player.get_position_on_enter()
-                player.position = get_wilderness_enterance(x, y)
+    #             x, y = player.get_position_on_enter()
+    #             player.position = get_wilderness_enterance(x, y)
         
-            location.addParent(calabaston)
-            calabaston.location_create(*player.location, location)
+    #         location.addParent(calabaston)
+    #         calabaston.location_create(*player.location, location)
 
-        else:
-            # location already been built -- retrieve from world map_data
-            # player position is different on map enter depending on map location
-            location = calabaston.location(*player.location)
-            if player.location in calabaston.enterable_legend.keys():
-                # re-enter a city
-                player.position = location.width // 2, location.height // 2
+    #     else:
+    #         # location already been built -- retrieve from world map_data
+    #         # player position is different on map enter depending on map location
+    #         location = calabaston.location(*player.location)
+    #         if player.location in calabaston.enterable_legend.keys():
+    #             # re-enter a city
+    #             player.position = location.width // 2, location.height // 2
 
-            elif player.location in calabaston.dungeon_legend.keys():
-                # re-enter dungeon
-                player.position = location.getUpStairs()
+    #         elif player.location in calabaston.dungeon_legend.keys():
+    #             # re-enter dungeon
+    #             player.position = location.getUpStairs()
 
-            else:
-                # reenter a wilderness
-                x, y = player.get_position_on_enter()
+    #         else:
+    #             # reenter a wilderness
+    #             x, y = player.get_position_on_enter()
             
-                player.position = get_wilderness_enterance(x, y)
+    #             player.position = get_wilderness_enterance(x, y)
                 
-        player.move_height(1)
-    
-    actions={
-        0: {
-            '>': enter_map,
-            '@': open_player_screen,
-            'i': open_player_screen,
-            'v': open_player_screen,
-            'S': save_game,
-        },
-        1: {
-            '>': interactStairs,
-            '<': interactStairs,
-            'a': attackUnit,
-            'o': interactDoor,
-            'c': interactDoor,
-            't': interactUnit,
-            ',': interactItem,
-            '@': open_player_screen,
-            'i': open_player_screen,
-            'v': open_player_screen,
-        },
-    }
+    #     player.move_height(1)
 
-    def process_action(action):
-        print('action', action)
-        nonlocal turns
-        try:
-            if player.height() == Level.World:
-                actions[max(0, min(player.height(), 1))][action](player.wx, player.wy, action)
-            else:
-                actions[max(0, min(player.height(), 1))][action](player.x, player.y, action)
-        except KeyError:
-            gamelog.add("'{}' is not a valid command".format(action))
+    # def process_action(action):
+    #     print('action', action)
+    #     nonlocal turns
+    #     ''' 
+    #     Player class should return a height method and position method
+    #     Position method should return position based on height
+    #     So height would be independent and position would be depenedent on height
+    #     try:
+    #         if player.height == Level.World:
+    #             actions[max(0, min(player.height, 1)][action](*player.position, action)
+    #     except KeyError
+    #     '''
+    #     try:
+    #         if player.height() == Level.World:
+    #             actions[max(0, min(player.height(), 1))][action](player.wx, player.wy, action)
+    #         else:
+    #             actions[max(0, min(player.height(), 1))][action](player.x, player.y, action)
+    #     # except TypeError:
+    #     #     if player.height() == Level.World:
+    #     #         actions[max(0, min(player.height(), 1))][action](player.wx, player.wy, action, gamelog)
+    #     #     else:
+    #     #         actions[max(0, min(player.height(), 1))][action](player.x, player.y, action, gamelog)
+    #     except KeyError:
+    #         gamelog.add("'{}' is not a valid command".format(action))
     # End Keyboard Functions
     # ---------------------------------------------------------------------------------------------------------------------#
     # Graphic functions
@@ -947,7 +1118,6 @@ def new_game(character=None, world=None, turns=0):
             unit.take_turn
     '''
     while proceed and player.cur_health:
-        turn_inc = False
         term.clear()
         '''
         Maybe make ui the same for overworld and dungeons to make the loop easier?
@@ -971,24 +1141,39 @@ def new_game(character=None, world=None, turns=0):
             log_box()
         term.refresh()
 
+        # check if turn was used to signal npc actor actions
+        turn_inc = False
+        # action flag if has enough energy
+        do_action = False        
+
         if player.height() != Level.World: # not in overworld
             if dungeon.map_type == 1:
-                action, proceed = key_input()
-                process_handler(*action, player, dungeon)
+                # action, proceed = key_input()
+                # process_handler(*action, player, dungeon, gamelog)
+                do_action = True
+
             elif dungeon.map_type == 0:
                 if player.energy.ready():
-                    action, proceed = key_input()
-                    process_handler(*action, player, dungeon)
+                    # action, proceed = key_input()
+                    # process_handler(*action, player, dungeon. gamelog)
                     player.energy.reset()
+                    do_action = True
+
                 else:
                     player.energy.gain_energy()
                     turn_inc = True
         else:
-            action, proceed = key_input()
-            process_handler(*action, player, calabaston)
+            do_action = True
+            # action, proceed = key_input()
+            # process_handler(*action, player, calabaston)
+
         if not proceed:
             '''check if player pressed exit before processing units'''
             break          
+    
+        if do_action:
+            action, proceed = key_input()
+            process_handler(*action, player, calabaston, gamelog)
 
         # checks 3 conditions on whether ai takes turn or not
         # 1. player took a valid turn in which ai takes turn
