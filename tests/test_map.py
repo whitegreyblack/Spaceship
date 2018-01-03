@@ -1,16 +1,43 @@
 import os
 import sys
+import time
+import timeit
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from bearlibterminal import terminal as t
-from spaceship.maps.city import City
-from spaceship.maps.cave import Cave
-from spaceship.units.monsters import Rat, Bat
+from spaceship.classes.city import City
+from spaceship.classes.cave import Cave
+from spaceship.classes.monsters import Rat
+from spaceship.classes.bat import Bat
 from spaceship.action import commands
 '''Test map with key handling functionality to test player input in controlled layouts'''
 
 test_map_path = "./assets/maps/test_map.png"
 
-def main():
+def test_map_output_speed_with_yield():
+    def run():
+        cave.fov_calc([(bat.x, bat.y, bat.sight)])
+        for _ in cave.output(bat.x, bat.y):
+            pass
+
+    cave = Cave(66, 22)
+    bat = Bat(15, 10)
+    cave.add_units([bat])
+    t = timeit.timeit(run, number=1000)
+    return t
+
+def test_map_output_speed_with_return():
+    def run():
+        cave.fov_calc([(bat.x, bat.y, bat.sight)])
+        for _ in cave.output_return(bat.x, bat.y):
+            pass
+
+    cave = Cave(66, 22)
+    bat = Bat(15, 10)
+    cave.add_units([bat])
+    t = timeit.timeit(run, number=1000)
+    return t
+
+def test_sample_map_with_units():
     bat = Bat(15, 10)
     rat = Rat(33, 11)
     cave = Cave(66, 22)
@@ -35,4 +62,4 @@ def main():
                 break
 
 if __name__ == "__main__":
-    main()
+    test_sample_map_with_units()

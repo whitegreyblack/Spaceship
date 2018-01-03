@@ -74,22 +74,6 @@ def key_input():
 
     return action, proceed
 
-def process_handler(x, y, k, key, player, world, gamelog):
-    '''Checks actions linearly by case:
-    (1) processes non-movement action
-        Actions not in movement groupings
-    (2) processes movement action
-        Keyboard shortcut action grouping
-    (3) If action teplate is empty:
-        Return skip-action command
-    '''
-    if k is not None:
-        process_action(k, player, gamelog)
-    elif all(z is not None for z in [x, y]):
-        process_movement(x, y, player, world, gamelog)
-    else:
-        return 'skipped-turn'
-
 '''
 class Action:
     def __init__(self):
@@ -103,7 +87,7 @@ def Save(Action):
         turn_inc = False
 '''
 
-def enter_map(player, a):
+def enter_map(player, a, world, gamelog):
     '''Logic:
         if at world level, check if there exists a map
         if exists -> enter
@@ -121,11 +105,11 @@ def enter_map(player, a):
         return (max(int(location.width * x - 1), 0), 
                 max(int(location.height * y - 1), 0))
 
-    if not calabaston.location_exists(*player.location):
+    if not world.location_exists(*player.location):
         # map does not exist yet -- create one
-        if player.location in calabaston.enterable_legend.keys():
+        if player.location in world.enterable_legend.keys():
             # map type should be a city
-            fileloc = calabaston.enterable_legend[player.location].lower().replace(' ','_')
+            fileloc = world.enterable_legend[player.location].lower().replace(' ','_')
             img_name = "./assets/maps/" + fileloc + ".png"
             cfg_name = "./assets/maps/" + fileloc + ".cfg"
 
@@ -138,7 +122,7 @@ def enter_map(player, a):
 
             player.position = location.width // 2, location.height // 2
 
-        elif player.location in calabaston.dungeon_legend.keys():
+        elif player.location in world.dungeon_legend.keys():
             # map type should be a cave
             location = Cave(
                 width=term.state(term.TK_WIDTH),
@@ -149,8 +133,8 @@ def enter_map(player, a):
 
         else:
             # map type should be in the wilderness
-            tile = calabaston.square(*player.location)
-            # neighbors = calabaston.access_neighbors(*player.location)
+            tile = world.square(*player.location)
+            # neighbors = world.access_neighbors(*player.location)
             
             location = determine_map(tile.tile_type)(
                 width=term.state(term.TK_WIDTH),
@@ -159,18 +143,18 @@ def enter_map(player, a):
             x, y = player.get_position_on_enter()
             player.position = get_wilderness_enterance(x, y)
     
-        location.addParent(calabaston)
-        calabaston.location_create(*player.location, location)
+        location.addParent(world)
+        world.location_create(*player.location, location)
 
     else:
         # location already been built -- retrieve from world map_data
         # player position is different on map enter depending on map location
-        location = calabaston.location(*player.location)
-        if player.location in calabaston.enterable_legend.keys():
+        location = world.location(*player.location)
+        if player.location in world.enterable_legend.keys():
             # re-enter a city
             player.position = location.width // 2, location.height // 2
 
-        elif player.location in calabaston.dungeon_legend.keys():
+        elif player.location in world.dungeon_legend.keys():
             # re-enter dungeon
             player.position = location.getUpStairs()
 
@@ -196,7 +180,7 @@ e.save()
 But for now lets do this ...
 '''
 
-def save_game(player, action, gamelog):
+def save_game(player, action, world, gamelog):
     gamelog.add("Save and exit game(Y/N)?")
     log_box()
     term.refresh()
@@ -213,7 +197,7 @@ def save_game(player, action, gamelog):
     with shelve.open('./saves/{}'.format(name + "(" + str(abs(hash(desc)))) + ")", 'n') as save_file:
         save_file['save'] = desc
         save_file['player'] = player
-        save_file['world'] = calabaston
+        save_file['world'] = world
         save_file['turns'] = turns  
     proceed = False    # logbox
 
@@ -239,7 +223,7 @@ actions={
     # },
 }
 
-def process_action(action, player, gamelog):
+def process_action(action, player, world, gamelog):
     turn_inc = 0
     ''' 
     Player class should return a height method and position method
@@ -251,21 +235,21 @@ def process_action(action, player, gamelog):
     except KeyError
     '''
     try:
-        if player.height() == Level.World:
-            actions[max(0, min(player.height(), 1))][action](player.wx, player.wy, action)
+    #     if player.height == Level.World:
+    #         actions[max(0, min(player.height, 1))][action](player.wx, player.wy, action)
+    #     else:
+    #         actions[max(0, min(player.height, 1))][action](player.x, player.y, action)
+    # except TypeError:
+        if player.height == Level.World:
+            actions[max(0, min(player.height, 0))][action](player, action, world, gamelog)
         else:
-            actions[max(0, min(player.height(), 1))][action](player.x, player.y, action)
-    except TypeError:
-        if player.height() == Level.World:
-            actions[max(0, min(player.height(), 1))][action](player, action, gamelog)
-        else:
-            actions[max(0, min(player.height(), 1))][action](player, action, gamelog)
+            actions[max(0, min(player.height, 1))][action](player, action, world, gamelog)
     except KeyError:
         gamelog.add("'{}' is not a valid command".format(action))
 
 def process_movement(x, y, player, world, gamelog):
     turn_inc = 0
-    if  player.height() == Level.World:
+    if  player.height == Level.World:
         if (x, y) == (0, 0):
             gamelog.add("You wait in the area")
             turn_inc = True
@@ -363,6 +347,22 @@ def process_movement(x, y, player, world, gamelog):
                         term.puts(tx + 13, ty + 1, '[c=red]X[/c]')
                         term.refresh()
 
+def process_handler(x, y, k, key, player, world, gamelog):
+    '''Checks actions linearly by case:
+    (1) processes non-movement action
+        Actions not in movement groupings
+    (2) processes movement action
+        Keyboard shortcut action grouping
+    (3) If action teplate is empty:
+        Return skip-action command
+    '''
+    if k is not None:
+        process_action(k, player, world, gamelog)
+    elif all(z is not None for z in [x, y]):
+        process_movement(x, y, player, world, gamelog)
+    else:
+        return 'skipped-turn'
+
 class Engine:
 
     main_menu = None
@@ -437,7 +437,7 @@ def new_game(character=None, world=None, turns=0):
 
     def process_movement(x, y):
         nonlocal player, turn_inc
-        if  player.height() == Level.World:
+        if  player.height == Level.World:
             if (x, y) == (0, 0):
                 gamelog.add("You wait in the area")
                 turn_inc = True
@@ -930,15 +930,15 @@ def new_game(character=None, world=None, turns=0):
     #     except KeyError
     #     '''
     #     try:
-    #         if player.height() == Level.World:
-    #             actions[max(0, min(player.height(), 1))][action](player.wx, player.wy, action)
+    #         if player.height == Level.World:
+    #             actions[max(0, min(player.height, 1))][action](player.wx, player.wy, action)
     #         else:
-    #             actions[max(0, min(player.height(), 1))][action](player.x, player.y, action)
+    #             actions[max(0, min(player.height, 1))][action](player.x, player.y, action)
     #     # except TypeError:
-    #     #     if player.height() == Level.World:
-    #     #         actions[max(0, min(player.height(), 1))][action](player.wx, player.wy, action, gamelog)
+    #     #     if player.height == Level.World:
+    #     #         actions[max(0, min(player.height, 1))][action](player.wx, player.wy, action, gamelog)
     #     #     else:
-    #     #         actions[max(0, min(player.height(), 1))][action](player.x, player.y, action, gamelog)
+    #     #         actions[max(0, min(player.height, 1))][action](player.x, player.y, action, gamelog)
     #     except KeyError:
     #         gamelog.add("'{}' is not a valid command".format(action))
     # End Keyboard Functions
@@ -1017,7 +1017,7 @@ def new_game(character=None, world=None, turns=0):
             for idx in range(len(messages)):
                 # offput by 1 for border and then # of lines logger is currently set at
                 term.puts(
-                    14 if player.height() == -1 else 1, 
+                    14 if player.height == -1 else 1, 
                     screen_height - len(messages) + idx, 
                     messages[idx][1])
 
@@ -1026,9 +1026,11 @@ def new_game(character=None, world=None, turns=0):
     def map_box():
         def calc_sight():
             dungeon.fov_calc([(player.x, player.y, player.sight * 2 if calabaston.location_is(*player.location, 1) else player.sight)])
+        
         def output_map():
             for x, y, lit, ch in dungeon.output(player.x, player.y):
                 term.puts(x + 13, y + 1, "[color={}]".format(lit) + ch + "[/color]")
+
         calc_sight()
         output_map()
 
@@ -1132,7 +1134,7 @@ def new_game(character=None, world=None, turns=0):
         '''
         Maybe make ui the same for overworld and dungeons to make the loop easier?
         '''
-        if player.height() == Level.World:
+        if player.height == Level.World:
             gamelog.maxlines = 2
             world_map_box()
             world_legend_box()
@@ -1142,8 +1144,8 @@ def new_game(character=None, world=None, turns=0):
             if dungeon == None:
                 dungeon = calabaston.location(*player.location)
                 
-                if player.height() == 0:
-                    for i in range(player.height()):
+                if player.height == 0:
+                    for i in range(player.height):
                         dungeon = dungeon.getSublevel()
                         
             map_box()
@@ -1156,7 +1158,7 @@ def new_game(character=None, world=None, turns=0):
         # action flag if has enough energy
         do_action = False        
 
-        if player.height() != Level.World: # not in overworld
+        if player.height != Level.World: # not in overworld
             if dungeon.map_type == 1:
                 # action, proceed = key_input()
                 # process_handler(*action, player, dungeon, gamelog)
@@ -1190,7 +1192,7 @@ def new_game(character=None, world=None, turns=0):
         # 2. player in a level with actual monsters
         # 3. dungeon player is using exists
         if turn_inc:
-            if player.height() != Level.World and dungeon:
+            if player.height != Level.World and dungeon:
                 for unit in dungeon.units:
                     if unit.energy.ready():
                         positions = dungeon.fov_calc_blocks(unit.x, unit.y, unit.sight)

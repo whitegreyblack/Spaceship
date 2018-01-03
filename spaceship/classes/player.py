@@ -175,6 +175,7 @@ Accuracy : {acc:>5}
             return True
         return False
 
+    @property
     def height(self) -> int:
         return self.wz
         
