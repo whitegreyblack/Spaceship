@@ -44,9 +44,7 @@ def create_character():
     player=namedtuple("Player",
         "name home gold stats gender gbonus race rbonus job \
         jbonus skills equipment inventory")
-    
-    print("Adding newline" if not shorten else "Not adding delim")
-    
+        
     def subtitle_text(i):
         text = "Choose your {}"
         if i == 0:
@@ -109,7 +107,8 @@ def create_character():
             genders("Female", strings.FEMALE),
         ]
         if not g:
-            for option, i in zip(gender_options, range(len(gender_options))):
+            # for option, i in zip(gender_options, range(len(gender_options))):
+            for i, option in enumerate(gender_options):
                 x, y = 24+22*i, 5 if not shorten else 2
                 gender = pad(option.gender, length=8)
                 if i == gender_index:
