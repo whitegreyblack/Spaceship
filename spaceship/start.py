@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
 
 from bearlibterminal import terminal as term
 
@@ -31,14 +31,22 @@ def connect_scenes(scene_a, scene_b):
     scene_b.add_parent_scene(scene_a)
 '''
 class Scene:
-    def __init__(self, width, height, title='Scene'):
+    def __init__(self, width, height, title):
+        '''Initializes window and screen dimensions and title for the scene'''
         self.width, self.height = width, height
         self.title = title
-        
-        self.proceed = False
-
+        self.proceed = True
         # scenes is a dictionary holding other scene objects
         self.scenes = {}
+
+    def setup(self):
+        pass
+    
+    def draw(self):
+        pass
+
+    def update(self):
+        pass
 
     @property
     def height(self):
@@ -94,12 +102,17 @@ class Scene:
         '''Returns a list of parent scene objects'''
         return [self.scenes[(title, scene)] for title, scene in self.scenes.keys() if scene == 1]
 
+    def center(self, text, width):
+        if isinstance(text, str):
+            text = len(text)
+        return width // 2 - text // 2
+
 def start():
     def calc_option_heights(hoffset, foffset):
         ''' Calculate the remaining space in between the title header and footer
         to come up with the new height and thus the new middle for options start
         '''
-        height =  term.state(term.TK_HEIGHT) - hoffset - foffset
+        height = term.state(term.TK_HEIGHT) - hoffset - foffset
         return [hoffset + height//2-height//4 + i * 2 for i in range(4)]
 
     def splitter(x, y):

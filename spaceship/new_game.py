@@ -87,6 +87,32 @@ def Save(Action):
         turn_inc = False
 '''
 
+def log_box(gamelog, turns):
+    # nonlocal turns
+    messages = gamelog.write().messages
+    if messages:
+        for idx in range(len(messages)):
+            # offput by 1 for border and then # of lines logger is currently set at
+            term.puts(
+                14 if player.height == -1 else 1, 
+                screen_height - len(messages) + idx, 
+                messages[idx][1])
+
+    term.puts(1, screen_height-3, 'Turns: {:<4}'.format(turns))
+
+def refresh(gamelog, turns, lines=[]):
+    for line in lines:
+        gamelog.add(line)
+    term.clear()
+    if player.height == -1:
+        world_map_box()
+    else:
+        map_box()
+    status_box()
+    log_box(gamelog, turns)   
+    term.refresh()
+
+
 def enter_map(player, a, world, gamelog):
     '''Logic:
         if at world level, check if there exists a map
@@ -180,9 +206,9 @@ e.save()
 But for now lets do this ...
 '''
 
-def save_game(player, action, world, gamelog):
+def save_game(player, action, world, gamelog, turns):
     gamelog.add("Save and exit game(Y/N)?")
-    log_box()
+    log_box(gamelog, turns)
     term.refresh()
     code = term.read()
     if code != TK_Y:
@@ -223,7 +249,7 @@ actions={
     # },
 }
 
-def process_action(action, player, world, gamelog):
+def process_action(action, player, world, gamelog, turns):
     turn_inc = 0
     ''' 
     Player class should return a height method and position method
@@ -240,10 +266,12 @@ def process_action(action, player, world, gamelog):
     #     else:
     #         actions[max(0, min(player.height, 1))][action](player.x, player.y, action)
     # except TypeError:
-        if player.height == Level.World:
-            actions[max(0, min(player.height, 0))][action](player, action, world, gamelog)
-        else:
-            actions[max(0, min(player.height, 1))][action](player, action, world, gamelog)
+        # if player.height == Level.World:
+        #     actions[max(0, min(player.height, 0))][action](player, action, world, gamelog)
+        # else:
+        actions[max(0, min(player.height, 1))][action](player, action, world, gamelog)
+    except TypeError:
+        actions[max(0, min(player.height, 1))][action](player, action, world, gamelog, turns)
     except KeyError:
         gamelog.add("'{}' is not a valid command".format(action))
 
@@ -347,7 +375,7 @@ def process_movement(x, y, player, world, gamelog):
                         term.puts(tx + 13, ty + 1, '[c=red]X[/c]')
                         term.refresh()
 
-def process_handler(x, y, k, key, player, world, gamelog):
+def process_handler(x, y, k, key, player, world, gamelog, turns):
     '''Checks actions linearly by case:
     (1) processes non-movement action
         Actions not in movement groupings
@@ -357,7 +385,7 @@ def process_handler(x, y, k, key, player, world, gamelog):
         Return skip-action command
     '''
     if k is not None:
-        process_action(k, player, world, gamelog)
+        process_action(k, player, world, gamelog, turns)
     elif all(z is not None for z in [x, y]):
         process_movement(x, y, player, world, gamelog)
     else:
@@ -410,17 +438,17 @@ def new_game(character=None, world=None, turns=0):
     #         save_file['turns'] = turns  
     #     proceed = False
 
-    def refresh(lines=[]):
-        for line in lines:
-            gamelog.add(line)
-        term.clear()
-        if player.height == -1:
-            world_map_box()
-        else:
-            map_box()
-        status_box()
-        log_box()   
-        term.refresh()
+    # def refresh(gamelog, turns, lines=[]):
+    #     for line in lines:
+    #         gamelog.add(line)
+    #     term.clear()
+    #     if player.height == -1:
+    #         world_map_box()
+    #     else:
+    #         map_box()
+    #     status_box()
+    #     log_box(gamelog, turns)   
+    #     term.refresh()
 
     # END SETUP TOOLS
     # ---------------------------------------------------------------------------------------------------------------------#
@@ -1010,18 +1038,18 @@ def new_game(character=None, world=None, turns=0):
 
         term.puts(col, row + 20, "{}".format(location))
 
-    def log_box():
-        nonlocal turns
-        messages = gamelog.write().messages
-        if messages:
-            for idx in range(len(messages)):
-                # offput by 1 for border and then # of lines logger is currently set at
-                term.puts(
-                    14 if player.height == -1 else 1, 
-                    screen_height - len(messages) + idx, 
-                    messages[idx][1])
+    # def log_box():
+    #     nonlocal turns
+    #     messages = gamelog.write().messages
+    #     if messages:
+    #         for idx in range(len(messages)):
+    #             # offput by 1 for border and then # of lines logger is currently set at
+    #             term.puts(
+    #                 14 if player.height == -1 else 1, 
+    #                 screen_height - len(messages) + idx, 
+    #                 messages[idx][1])
 
-        term.puts(1, screen_height-3, 'Turns: {:<4}'.format(turns))
+    #     term.puts(1, screen_height-3, 'Turns: {:<4}'.format(turns))
 
     def map_box():
         def calc_sight():
@@ -1138,7 +1166,7 @@ def new_game(character=None, world=None, turns=0):
             gamelog.maxlines = 2
             world_map_box()
             world_legend_box()
-            log_box()
+            log_box(gamelog, turns)
         else:
             gamelog.maxlines = 4 if term.state(term.TK_HEIGHT) > 25 else 2  
             if dungeon == None:
@@ -1150,7 +1178,7 @@ def new_game(character=None, world=None, turns=0):
                         
             map_box()
             status_box()
-            log_box()
+            log_box(gamelog, turns)
         term.refresh()
 
         # check if turn was used to signal npc actor actions

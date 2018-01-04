@@ -107,6 +107,7 @@ CHA      : {:>6}
 Damage   : {dmg:>6}
 Accuracy : {acc:>5}
         '''[1:]
+
         return (string_1.format(
             *self.get_attribute_stats(),
             name=self.name,
