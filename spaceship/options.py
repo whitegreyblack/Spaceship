@@ -115,7 +115,7 @@ def options():
                 p['cx'], p['cy'] = (cx, cy)
                 return p, True
         return p, False
-
+    
     def parse_fonts(p, font):
         if option == "Default":
             term.set('font: default, size={}{}'.format(
