@@ -2,7 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
 
-from spaceship.start import Scene
+from spaceship.main_menu import Scene
 
 def test_scene_dimensions():
     s = Scene(200, 50, title='s')
@@ -35,6 +35,25 @@ def test_scene_add_scene_child():
     assert t in s.children
     assert t not in s.parents
 
-def test_scene_add_scene_start():
-    start = Scene(80, 50, title='Start')
-    
+def test_scene_change_scene_child():
+    s = Scene(80, 50, title='start')
+    e = Scene(80, 50, title='end')
+
+    s.add_scene_child(e)
+    e.add_scene_parent(s)
+
+    sub = s.scene_child(e)
+    assert sub == e
+
+def test_scene_change_scene_parent():
+    s = Scene(80, 50, title='start')
+    e = Scene(80, 50, title='end')
+
+    s.add_scene_child(e)
+    e.add_scene_parent(s)
+
+    sub = e.scene_parent(s)
+    assert sub == s
+
+if __name__ == "__main__":
+    test_scene_change_scene_parent()
