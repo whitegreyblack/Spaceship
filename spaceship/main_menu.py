@@ -81,7 +81,7 @@ class Main(Scene):
             self.options_height = calc_option_heights(height+len(GTAS.split('\n')), 3)
 
         elif code == term.TK_Q or (code == term.TK_ENTER and self.index == 3):
-            proceed = False
+            self.proceed = False
 
         # KEYS (UP, DOWN)
         elif code in (term.TK_UP, term.TK_DOWN):
@@ -109,7 +109,7 @@ class Continue(Scene):
 
 if __name__ == "__main__":
     term.open()
-    setup_font('Ibm_cga', cx=8, cy=8)
+    setup_font('Ibm_cga', cx=8, cy=16)
     term.set('window: size=80x25, cellsize=auto, title="Spaceship", fullscreen=false')
 
     m = Main(80, 25)
