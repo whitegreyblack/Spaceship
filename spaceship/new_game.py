@@ -205,7 +205,6 @@ e.save()
 
 But for now lets do this ...
 '''
-
 def save_game(player, action, world, gamelog, turns):
     gamelog.add("Save and exit game(Y/N)?")
     log_box(gamelog, turns)
@@ -217,10 +216,12 @@ def save_game(player, action, world, gamelog, turns):
         print('saved folder does not exist - creating folder: "./saves"')
         os.makedirs('saves')
 
-    # prepare strings for file writing -- player_hash used for same name/different character saves
+    # prepare strings for file writing
+    # player_hash used for same name / different character saves
     name = player.name.replace(' ', '_')
     desc = player.job + " " + str(player.level)
-    with shelve.open('./saves/{}'.format(name + "(" + str(abs(hash(desc)))) + ")", 'n') as save_file:
+    file_path = './saves/{}'.format(name + "(" + str(abs(hash(desc)))) + ")"
+    with shelve.open(file_path, 'n') as save_file:
         save_file['save'] = desc
         save_file['player'] = player
         save_file['world'] = world
@@ -269,9 +270,16 @@ def process_action(action, player, world, gamelog, turns):
         # if player.height == Level.World:
         #     actions[max(0, min(player.height, 0))][action](player, action, world, gamelog)
         # else:
-        actions[max(0, min(player.height, 1))][action](player, action, world, gamelog)
+        actions[max(0, min(player.height, 1))][action](player, 
+                                                       action, 
+                                                       world, 
+                                                       gamelog)
     except TypeError:
-        actions[max(0, min(player.height, 1))][action](player, action, world, gamelog, turns)
+        actions[max(0, min(player.height, 1))][action](player, 
+                                                       action, 
+                                                       world, 
+                                                       gamelog, 
+                                                       turns)
     except KeyError:
         gamelog.add("'{}' is not a valid command".format(action))
 
@@ -309,23 +317,37 @@ def process_movement(x, y, player, world, gamelog):
                             "There is something here."
                             "Your feet touches an object."
                         ]
-                        gamelog.add(pass_item_messages[randint(0, len(pass_item_messages)-1)])
+                        item_message = randint(0, len(pass_item_messages) - 1)
+                        gamelog.add(
+                            pass_item_messages[item_message])
                     turn_inc = True
                 else:
                     unit = world.get_unit(tx, ty)
                     if unit.friendly:
                         unit.move(-x, -y)
                         player.move(x, y)
-                        gamelog.add("You switch places with the {}".format(unit.race))
+                        log = "You switch places with the {}".format(
+                            unit.race)
+                        gamelog.add(log)
                     else:
                         chance = player.calculate_attack_chance()
                         if chance == 0:
-                            gamelog.add("You try attacking the {} but miss".format(unit.race))
+                            log = "You try attacking the {} but miss".format(
+                                unit.race)
+                            gamelog.add(log)
                         else:
-                            damage = player.calculate_attack_damage() * (2 if chance == 2 else 1)
+                            damage = player.calculate_attack_damage()
+                            # if chance returns crit ie. a value of 2 
+                            # then multiply damage by 2
+                            if chance == 2:
+                                damage *= 2
                             unit.cur_health -= damage
+
                             log = "You{}attack the {} for {} damage. ".format(
-                                " crit and " if chance == 2 else " ", unit.race, damage)
+                                " crit and " if chance == 2 else " ", 
+                                unit.race, 
+                                damage)
+                                
                             log += "The {} has {} health left. ".format(unit.race, max(unit.cur_health, 0))
                             gamelog.add(log)
 
@@ -342,14 +364,20 @@ def process_movement(x, y, player, world, gamelog):
 
                                 if item:
                                     world.square(*unit.position).items.append(item)
-                                    gamelog.add("The {} has dropped {}".format(unit.race, item.name))
+                                    gamelog.add("The {} has dropped {}".format(
+                                        unit.race, 
+                                        item.name))
 
                                 world.remove_unit(unit)
                             else:
-                                log += "The {} has {} health left".format(unit.race, max(unit.cur_health, 0))
+                                log += "The {} has {} health left".format(
+                                    unit.race, 
+                                    max(0, unit.cur_health))
                                 gamelog.add(log)
+
                                 term.puts(tx + 13, ty + 1, '[c=red]*[/c]')
                                 term.refresh()
+
                     turn_inc = True
             else:
                 if world.out_of_bounds(tx, ty):
@@ -373,7 +401,8 @@ def process_movement(x, y, player, world, gamelog):
                     else:
                         gamelog.add("You walk into {}".format(walkChars[ch]))
                         term.puts(tx + 13, ty + 1, '[c=red]X[/c]')
-                        term.refresh()
+                        # term.refresh()
+    term.refresh()
 
 def process_handler(x, y, k, key, player, world, gamelog, turns):
     '''Checks actions linearly by case:
@@ -451,7 +480,7 @@ def new_game(character=None, world=None, turns=0):
     #     term.refresh()
 
     # END SETUP TOOLS
-    # ---------------------------------------------------------------------------------------------------------------------#
+    # -----------------------------------------------------------------------------------------------------------------#
     # Keyboard input
     def onlyOne(container):
         return len(container) == 1
@@ -463,105 +492,113 @@ def new_game(character=None, world=None, turns=0):
             yield space(x + i, y + j)
         # return [space(x+i,y+j) for i, j in list(num_movement.values())]
 
-    def process_movement(x, y):
-        nonlocal player, turn_inc
-        if  player.height == Level.World:
-            if (x, y) == (0, 0):
-                gamelog.add("You wait in the area")
-                turn_inc = True
-            else:
-                tx = player.wx + x
-                ty = player.wy + y
+    # def process_movement(x, y):
+    #     nonlocal player, turn_inc
+    #     if  player.height == Level.World:
+    #         if (x, y) == (0, 0):
+    #             gamelog.add("You wait in the area")
+    #             turn_inc = True
+    #         else:
+    #             tx = player.wx + x
+    #             ty = player.wy + y
 
-                if calabaston.walkable(tx, ty):
-                    player.save_location()
-                    player.travel(x, y)
-                    turn_inc = True
-                else:
-                    travel_error = "You cannot travel there"
-                    gamelog.add(travel_error)
-        else:
-            if (x, y) == (0, 0):
-                gamelog.add("You rest for a while")
-                turn_inc = True
-            else:
-                tx = player.x + x
-                ty = player.y + y
+    #             if calabaston.walkable(tx, ty):
+    #                 player.save_location()
+    #                 player.travel(x, y)
+    #                 turn_inc = True
+    #             else:
+    #                 travel_error = "You cannot travel there"
+    #                 gamelog.add(travel_error)
+    #     else:
+    #         if (x, y) == (0, 0):
+    #             gamelog.add("You rest for a while")
+    #             turn_inc = True
+    #         else:
+    #             tx = player.x + x
+    #             ty = player.y + y
 
-                if dungeon.walkable(tx, ty):
-                    if not dungeon.occupied(tx, ty):
-                        player.move(x, y)
-                        if dungeon.square(tx, ty).items and randint(0, 5):
-                            pass_item_messages = [
-                                "You pass by an item.",
-                                "There is something here."
-                                "Your feet touches an object."
-                            ]
-                            gamelog.add(pass_item_messages[randint(0, len(pass_item_messages)-1)])
-                        turn_inc = True
-                    else:
-                        unit = dungeon.get_unit(tx, ty)
-                        if unit.friendly:
-                            unit.move(-x, -y)
-                            player.move(x, y)
-                            gamelog.add("You switch places with the {}".format(unit.race))
-                        else:
-                            chance = player.calculate_attack_chance()
-                            if chance == 0:
-                                gamelog.add("You try attacking the {} but miss".format(unit.race))
-                            else:
-                                damage = player.calculate_attack_damage() * (2 if chance == 2 else 1)
-                                unit.cur_health -= damage
-                                log = "You{}attack the {} for {} damage. ".format(
-                                    " crit and " if chance == 2 else " ", unit.race, damage)
-                                log += "The {} has {} health left. ".format(unit.race, max(unit.cur_health, 0))
-                                gamelog.add(log)
+    #             if dungeon.walkable(tx, ty):
+    #                 if not dungeon.occupied(tx, ty):
+    #                     player.move(x, y)
+    #                     if dungeon.square(tx, ty).items and randint(0, 5):
+    #                         pass_item_messages = [
+    #                             "You pass by an item.",
+    #                             "There is something here."
+    #                             "Your feet touches an object."
+    #                         ]
+    #                         gamelog.add(pass_item_messages[randint(0, len(pass_item_messages)-1)])
+    #                     turn_inc = True
+    #                 else:
+    #                     unit = dungeon.get_unit(tx, ty)
+    #                     if unit.friendly:
+    #                         unit.move(-x, -y)
+    #                         player.move(x, y)
+    #                         gamelog.add("You switch places with the {}".format(unit.race))
+    #                     else:
+    #                         chance = player.calculate_attack_chance()
+    #                         if chance == 0:
+    #                             gamelog.add("You try attacking the {} but miss".format(unit.race))
 
-                                if unit.cur_health < 1:
-                                    log += "You have killed the {}! You gain {} exp".format(unit.race, unit.xp)
-                                    gamelog.add(log)
-                                    player.gain_exp(unit.xp)
+    #                         else:
+    #                             damage = player.calculate_attack_damage() * (2 if chance == 2 else 1)
+    #                             unit.cur_health -= damage
+    #                             log = "You{}attack the {} for {} damage. ".format(
+    #                                 " crit and " if chance == 2 else " ", unit.race, damage)
+    #                             log += "The {} has {} health left. ".format(unit.race, max(unit.cur_health, 0))
+    #                             gamelog.add(log)
 
-                                    if player.check_exp():
-                                        gamelog.add("You level up. You are now level {}".format(player.level))
-                                        gamelog.add("You feel much stronger")
+    #                             if unit.cur_health < 1:
+    #                                 log += "You have killed the {}! You gain {} exp".format(unit.race, unit.xp)
+    #                                 gamelog.add(log)
+    #                                 player.gain_exp(unit.xp)
 
-                                    item = unit.drops()
+    #                                 if player.check_exp():
+    #                                     gamelog.add("You level up. You are now level {}".format(player.level))
+    #                                     gamelog.add("You feel much stronger")
 
-                                    if item:
-                                        dungeon.square(*unit.position).items.append(item)
-                                        gamelog.add("The {} has dropped {}".format(unit.race, item.name))
+    #                                 item = unit.drops()
 
-                                    dungeon.remove_unit(unit)
-                                else:
-                                    log += "The {} has {} health left".format(unit.race, max(unit.cur_health, 0))
-                                    gamelog.add(log)
-                                    term.puts(tx + 13, ty + 1, '[c=red]*[/c]')
-                                    term.refresh()
-                        turn_inc = True
-                else:
-                    if dungeon.out_of_bounds(tx, ty):
-                        gamelog.add("You reached the edge of the map")
-                    else:
-                        walkChars = {
-                            "+": "a door",
-                            "/": "a door",
-                            "o": "a lamp",
-                            "#": "a wall",
-                            "x": "a post",
-                            "~": "a river",
-                            "T": "a tree",
-                            "f": "a tree",
-                            "Y": "a tree",
-                            "%": "a wall",
-                        }
-                        ch = dungeon.square(tx, ty).char
-                        if ch == "~":
-                            gamelog.add("You cannot swim")
-                        else:
-                            gamelog.add("You walk into {}".format(walkChars[ch]))
-                            term.puts(tx + 13, ty + 1, '[c=red]X[/c]')
-                            term.refresh()
+    #                                 if item:
+    #                                     dungeon.square(*unit.position).items.append(item)
+    #                                     gamelog.add("The {} has dropped {}".format(unit.race, item.name))
+
+    #                                 dungeon.remove_unit(unit)
+
+    #                             else:
+    #                                 log += "The {} has {} health left".format(
+    #                                     unit.race, 
+    #                                     max(unit.cur_health, 0))
+    #                                 gamelog.add(log)
+
+    #                                 term.puts(tx + 13, ty + 1, '[c=red]*[/c]')
+    #                                 term.refresh()
+    #                     turn_inc = True
+    #             else:
+    #                 if dungeon.out_of_bounds(tx, ty):
+    #                     gamelog.add("You reached the edge of the map")
+
+    #                 else:
+    #                     walkChars = {
+    #                         "+": "a door",
+    #                         "/": "a door",
+    #                         "o": "a lamp",
+    #                         "#": "a wall",
+    #                         "x": "a post",
+    #                         "~": "a river",
+    #                         "T": "a tree",
+    #                         "f": "a tree",
+    #                         "Y": "a tree",
+    #                         "%": "a wall",
+    #                     }
+    #                     ch = dungeon.square(tx, ty).char
+
+    #                     if ch == "~":
+    #                         gamelog.add("You cannot swim")
+    #                     else:
+    #                         gamelog.add("You walk into {}".format(
+    #                             walkChars[ch]))
+    #                         term.puts(tx + 13, ty + 1, '[c=red]X[/c]')
+    #                         term.refresh()
 
     def open_player_screen(x, y, key):
         '''Game function to handle player equipment and inventory'''

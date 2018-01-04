@@ -63,6 +63,7 @@ def start():
             '[[n]] new game',
             '[[o]] options',
             '[[q]] quit']
+            
     title_height = update_start_screen()
     options_height = calc_option_heights(title_height + len(GTAS.split('\n')), 3)
 

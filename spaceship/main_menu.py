@@ -9,6 +9,16 @@ from .setup_game import setup, setup_font, setup_menu, output
 from .screen_functions import *
 from .options import Option
 
+class Engine:
+    def __init__(self, scene):
+        self.scene = scene
+
+    def run(self):
+        self.scene.run()
+
+    def change_scene(self, title):
+        self.scene = self.scene.scene(title)
+
 '''
 def connect_scenes(scene_a, scene_b):
     scene_a.add_scene(scene_b)
@@ -23,8 +33,13 @@ class Scene:
         self.width, self.height = width, height
         self.title = title
         self.proceed = True
+
         # scenes is a dictionary holding other scene objects
         self.scenes = {}
+        self.setup()
+
+    def __repr__(self):
+        return self.title
 
     def setup(self):
         pass
@@ -51,43 +66,78 @@ class Scene:
     def width(self, w):
         self.__width = w
 
-    def scene(self, title):
-        try:
-            return self.scenes[title]
-        except KeyError:
-            print('No scene with that title')
-        except:
-            raise
-
-    # def add_scene(self, title, priority, scene):
-    #     self.scenes[(title, priority)] = scene
-
     def check_scene(self, scene):
-        if scene.title in self.scenes.keys():
-            raise ValueError('Same title already in scene')
+        # if scene.title in self.scenes.keys():
+        #     raise ValueError('Same title already in scene')
+        # elif scene.width != self.width:
+        if self == scene:
+            raise ValueError('Incoming scene is duplicate of current scene')
         elif scene.width != self.width:
             raise ValueError('Incoming scene does not have the same width as current scene')
         elif scene.height != self.height:
             raise ValueError('Incoming scene does not have the same height as current scene')
+        else:
+            for key in self.scenes.keys():
+                if scene.title in self.scenes[key].keys():
+                    raise ValueError('Same Title already in scene')
         return True
 
-    def add_scene_child(self, scene):
-        self.check_scene(scene)
-        self.scenes[(scene.title, 0)] = scene
-    
-    def add_scene_parent(self, scene):
-        self.check_scene(scene)
-        self.scenes[(scene.title, 1)] = scene
+    def scene_child(self, title):
+        if isinstance(title, Scene):
+            title = title.title
+        try:
+            return self.scenes[1][title]
+        except KeyError:
+            print('No child scene with that title')
+        except:
+            raise
 
     @property
     def children(self):
         '''Returns a list of children scene objects'''
-        return [self.scenes[(title, scene)] for title, scene in self.scenes.keys() if scene == 0]
+        # return [self.scenes[(title, scene for title, scene in self.scenes.keys() if scene == 0]
+        if 1 not in self.scenes.keys():
+            return []
+
+        return [self.scenes[1][title] for title in self.scenes[1].keys()]
+
+    def add_scene_child(self, scene):
+        self.check_scene(scene)
+        # self.scenes[(scene.title, 0)] = scene
+        # self.scenes[0][scene.title] = scene
+        if 0 not in self.scenes.keys():
+            self.scenes[1] = { scene.title: scene }
+        else:
+            self.scenes[1][scene.title] = scene
+    
+    def scene_parent(self, title):
+        if isinstance(title, Scene):
+            title = title.title
+        try:
+            return self.scenes[0][title]
+        except KeyError:
+            print('No parent scene with that title')
+        except:
+            raise
+
+    def add_scene_parent(self, scene):
+        self.check_scene(scene)
+        # self.scenes[(scene.title, 1)] = scene
+        # self.scenes[1][scene.title] = scene
+        if 1 not in self.scenes.keys():
+            self.scenes[0] = { scene.title: scene }
+        else:
+            self.scenes[0][scene.title] = scene 
 
     @property
     def parents(self):
         '''Returns a list of parent scene objects'''
-        return [self.scenes[(title, scene)] for title, scene in self.scenes.keys() if scene == 1]
+        # return [self.scenes[(title, scene)] for title, scene in self.scenes.keys() if scene == 1]
+        if 0 not in self.scenes.keys():
+            return []
+
+        return [self.scenes[0][title] for title in self.scenes[0].keys()]
+
     
 class Main(Scene):
     def __init__(self, width, height, title='main_menu'):
@@ -119,8 +169,12 @@ class Main(Scene):
         return game_title
 
     def calc_options_heights(self, header_offset, footer_offset):
+        def calculate(option):
+            half_height = total_height // 2
+            quarter_height = total_height // 4
+            return header_offset + half_height - quarter_height + option
         total_height = self.height - header_offset - footer_offset
-        return [header_offset + total_height // 2 - total_height // 4 + option * 2 for option in range(4)]
+        return [calculate(option * 2) for option in range(4)]
 
     def run(self):
         while self.proceed:
@@ -139,29 +193,42 @@ class Main(Scene):
         length, option = longest(self.options)
         x = center(length - 2, self.width)
 
-        for option, i in zip(self.options, range(len(self.options))):
-            text = "[color=#00FFFF]{}[/color]".format(option) if i == self.index else option
-            term.puts(x, self.options_height[i], text)
+        for option, index in zip(self.options, range(len(self.options))):
+            if index == self.index:
+                option = "[color=#00FFFF]{}[/color]".format(option)
+            term.puts(x, self.options_height[index], option)
 
         # FOOTER and VERSION
-        term.puts(center(len(self.version), self.width), self.height - 4, self.version)
-        term.puts(center(self.developed_by, self.width), self.width - 2, self.developed_by)
+        term.puts(
+            center(len(self.version), self.width), 
+            self.height - 4, 
+            self.version)
+        term.puts(center(self.developed_by, self.width), 
+            self.width - 2, 
+            self.developed_by)
 
         term.refresh()
         code = term.read()
 
-        # key in (CNOQ, ENTER)
+        # key (CNOQ, ENTER)
         if code == term.TK_C or (code == term.TK_ENTER and self.index == 0):
-            proceed = continue_game()
+            # proceed = continue_game()
+            self.ret = self.scene('continue_menu')
+            self.proceed = False
 
+        # key press on N or enter on NEW GAME
         elif code == term.TK_N or (code == term.TK_ENTER and self.index == 1):
-            proceed = start_new_game()
+            # proceed = start_new_game()
+            self.ret = self.scene('start_menu')
+            self.proceed = False
 
+        # key press on O or enter on OPTIONS
         elif code == term.TK_O or (code == term.TK_ENTER and self.index == 2):
             options()
-            height = update_start_screen()
-            self.options_height = calc_option_heights(height+len(GTAS.split('\n')), 3)
+            height = update_start_screen() + len(self.title.split('\n'))
+            self.options_height = calc_option_heights(height, 3)
 
+        # key press on Q or enter on QUIT
         elif code == term.TK_Q or (code == term.TK_ENTER and self.index == 3):
             self.proceed = False
 
@@ -186,9 +253,9 @@ class Start(Scene):
 
     def setup(self):
         self.shorten = self.height <= 25
-        self.delim, self.row = "\n", 11
+        self.delim, self.row, self.row_bonus = "\n", 11, 11
         if self.shorten:
-            self.delim, self.row = "", 5
+            self.delim, self.row, self.row_bonus= "", 5, 6
         
         self.col1, self.col2, self.col3 = 3, 26, 49
 
@@ -315,9 +382,13 @@ class Start(Scene):
 
         # BONUS
         if self.character_index == 0:
-            total = strings.STATS(*(s + g for s, g in zip(strings.HUMAN, gbonus)))
+            total = strings.STATS(*(s + g for s, g in zip(strings.HUMAN, 
+                                                          gbonus)))
+
         elif self.character_index == 1:
-            total = strings.STATS(*(s + g + r for s, g, r in zip(stats, gbonus, rbonus)))
+            total = strings.STATS(*(s + g + r for s, g, r in zip(stats, 
+                                                                 gbonus, 
+                                                                 rbonus)))
         else:
             total = strings.STATS(*(s + g + r + c for s, g, r, c in zip(stats,
                                                                         gbonus,
@@ -345,6 +416,7 @@ class Start(Scene):
             *(total),
             delim=self.delim))
 
+        
         # STATUS :- GENDER BONUSES
         term.puts(
             self.col2 + 10, 
@@ -357,7 +429,7 @@ class Start(Scene):
         # if self.character_index > 0:
         term.puts(
             self.col2 + 14, 
-            self.row +  (11 if not self.shorten else 6), 
+            self.row + (11 if not self.shorten else 6), 
             strings._bon.format(
                 *(self.transform_values(rbonus) if self.character_index > 0 
                 else (0 for _ in range(6))),
@@ -673,11 +745,15 @@ class Options(Scene):
     def setup(self):
         self.option = Option("Options Screen")
         # 80x25 -> 8x16 | 80x50 -> 8x8 | 160x50 -> 16x16 | FullScreen -> 16x16
-        self.option.add_opt("Screen Size", ["80x25", "80x50", "160x50", "160x100"]) 
-                                        # "Full Screen: {}x{}".format(sysize(0), sysize(1))])
+        self.option.add_opt("Screen Size", 
+            ["80x25", "80x50", "160x50", "160x100"]) 
+        # "Full Screen: {}x{}".format(sysize(0), sysize(1))])
         self.option.add_opt("Cell Size", ["Auto", "8x16", "8x8", "16x16"])
-        self.option.add_opt("Font Choice", ["Default", "Source", "Fira", "Fira-Bold", "IBM_CGA", "Andale", "Courier", "Unscii-8", "Unscii-8-thin", "VeraMono"])
-        self.option.add_opt("Coloring", ["Dynamic", "Dark", "Light", "Colorblind"])
+        self.option.add_opt("Font Choice", 
+            ["Default", "Source", "Fira", "Fira-Bold", "IBM_CGA", "Andale", 
+             "Courier", "Unscii-8", "Unscii-8-thin", "VeraMono"])
+        self.option.add_opt("Coloring", 
+            ["Dynamic", "Dark", "Light", "Colorblind"])
         
         self.prop = {
             'gx': term.state(term.TK_WIDTH),
@@ -833,27 +909,27 @@ if __name__ == "__main__":
     term.open()
     setup_font('Ibm_cga', cx=8, cy=16)
     term.set('window: size=80x25, cellsize=auto, title="Spaceship", fullscreen=false')
-
-    # m = Main(80, 25)
+    m = Main(80, 25)
     # m.setup()
     # m.run()
     s = Start(80, 25)
-    s.setup()
-    s.run()
-    print(s.ret)
-    # o = Options(80, 25)
+    # s.setup()
+    # s.run()
+    # print(s.ret)
+    o = Options(80, 25)
     # o.setup()
     # o.run()
-    # c = Continue(80, 25)
+    c = Continue(80, 25)
 
-    # m.add_scene_child(o)
-    # m.add_scene_child(c)
-    # m.add_scene_child(s)
+    m.add_scene_child(o)
+    m.add_scene_child(c)
+    m.add_scene_child(s)
 
-    # s.add_scene_parent(m)
-    # o.add_scene_parent(m)
-    # c.add_scene_parent(m)
-
+    s.add_scene_parent(m)
+    o.add_scene_parent(m)
+    c.add_scene_parent(m)
+    e = Engine(m)
+    e.run()
     # print([child.title for child in m.children])
 
     # for scene in (s, c, o):

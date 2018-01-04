@@ -442,7 +442,6 @@ def create_character():
                             race.skills,
                             eq,
                             inv))
-            
 
         # ENTER
         elif code == term.TK_ENTER:
@@ -488,7 +487,6 @@ def create_character():
                 character_index -= 1
                 if character_index <= 1:
                     inv_screen = -1
-
 
 if __name__ == "__main__":
     term.open()
