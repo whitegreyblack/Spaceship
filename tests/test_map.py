@@ -22,6 +22,7 @@ def test_map_output_speed_with_yield():
     cave = Cave(66, 22)
     bat = Bat(15, 10)
     cave.add_units([bat])
+
     t = timeit.timeit(run, number=1000)
     return t
 
@@ -34,6 +35,7 @@ def test_map_output_speed_with_return():
     cave = Cave(66, 22)
     bat = Bat(15, 10)
     cave.add_units([bat])
+
     t = timeit.timeit(run, number=1000)
     return t
 
@@ -63,3 +65,5 @@ def test_sample_map_with_units():
 
 if __name__ == "__main__":
     test_sample_map_with_units()
+    # print(sum([test_map_output_speed_with_yield() for i in range(5)]) / 5)
+    # print(sum([test_map_output_speed_with_return() for i in range(5)]) / 5)
