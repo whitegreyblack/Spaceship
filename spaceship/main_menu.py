@@ -6,10 +6,89 @@ from bearlibterminal import terminal as term
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
 import spaceship.cc_strings as strings
 from .setup_game import setup, setup_font, setup_menu, output
-from .start import Scene
 from .screen_functions import *
 from .options import Option
 
+'''
+def connect_scenes(scene_a, scene_b):
+    scene_a.add_scene(scene_b)
+    scene_b.add_scene(scene_a)
+
+    scene_a.add_child_scene(scene_b)
+    scene_b.add_parent_scene(scene_a)
+'''
+class Scene:
+    def __init__(self, width, height, title):
+        '''Initializes window and screen dimensions and title for the scene'''
+        self.width, self.height = width, height
+        self.title = title
+        self.proceed = True
+        # scenes is a dictionary holding other scene objects
+        self.scenes = {}
+
+    def setup(self):
+        pass
+    
+    def draw(self):
+        pass
+
+    def update(self):
+        pass
+
+    @property
+    def height(self):
+        return self.__height
+
+    @height.setter
+    def height(self, h):
+        self.__height = h
+
+    @property
+    def width(self):
+        return self.__width
+
+    @width.setter
+    def width(self, w):
+        self.__width = w
+
+    def scene(self, title):
+        try:
+            return self.scenes[title]
+        except KeyError:
+            print('No scene with that title')
+        except:
+            raise
+
+    # def add_scene(self, title, priority, scene):
+    #     self.scenes[(title, priority)] = scene
+
+    def check_scene(self, scene):
+        if scene.title in self.scenes.keys():
+            raise ValueError('Same title already in scene')
+        elif scene.width != self.width:
+            raise ValueError('Incoming scene does not have the same width as current scene')
+        elif scene.height != self.height:
+            raise ValueError('Incoming scene does not have the same height as current scene')
+        return True
+
+    def add_scene_child(self, scene):
+        self.check_scene(scene)
+        self.scenes[(scene.title, 0)] = scene
+    
+    def add_scene_parent(self, scene):
+        self.check_scene(scene)
+        self.scenes[(scene.title, 1)] = scene
+
+    @property
+    def children(self):
+        '''Returns a list of children scene objects'''
+        return [self.scenes[(title, scene)] for title, scene in self.scenes.keys() if scene == 0]
+
+    @property
+    def parents(self):
+        '''Returns a list of parent scene objects'''
+        return [self.scenes[(title, scene)] for title, scene in self.scenes.keys() if scene == 1]
+    
 class Main(Scene):
     def __init__(self, width, height, title='main_menu'):
         super().__init__(width, height, title)
@@ -219,7 +298,6 @@ class Start(Scene):
             [strings.class_druid, strings.class_cleric, strings.class_wizard,
                 strings.class_archer, strings.class_squire,]]
 
-
     def run(self):
         while self.proceed:
             self.draw()
@@ -241,18 +319,17 @@ class Start(Scene):
         elif self.character_index == 1:
             total = strings.STATS(*(s + g + r for s, g, r in zip(stats, gbonus, rbonus)))
         else:
-            total = strings.STATS(*(s + g + r + c for s, g, r, c in zip(
-                                                        stats,
-                                                        gbonus,
-                                                        rbonus,
-                                                        cbonus)))
+            total = strings.STATS(*(s + g + r + c for s, g, r, c in zip(stats,
+                                                                        gbonus,
+                                                                        rbonus,
+                                                                        cbonus)))
 
-        # STATUS
+        # STATUS :- ATTRIBUTES
         hp = total.str + total.con * 2
         mp = total.int + total.wis * 2
         sp = total.dex // 5
 
-        # BACKGROUND
+        # STATUS :- BACKGROUND
         term.puts(self.col1, self.row + 1, strings._col1.format(
             gender,
             race if self.character_index > 0 else "",
@@ -262,12 +339,13 @@ class Start(Scene):
             1, 80, hp, mp, sp,
             delim=self.delim))
 
-        # STATS
+        # STATUS :- SKILLS
         term.puts(self.col2, self.row + 1, strings._col2.format(
             *("" for _ in range(2)) if self.character_index < 1 else skills,
             *(total),
             delim=self.delim))
 
+        # STATUS :- GENDER BONUSES
         term.puts(
             self.col2 + 10, 
             self.row + (11 if not self.shorten else 6), 
@@ -275,23 +353,28 @@ class Start(Scene):
                 *self.transform_values(gbonus), 
                 delim=self.delim))
 
-        if self.character_index > 0:
-            term.puts(
-                self.col2 + 14, 
-                self.row +  (11 if not self.shorten else 6), 
-                strings._bon.format(
-                    *self.transform_values(rbonus),
-                     delim=self.delim))
+        # STATUS :- RACE BONUSES
+        # if self.character_index > 0:
+        term.puts(
+            self.col2 + 14, 
+            self.row +  (11 if not self.shorten else 6), 
+            strings._bon.format(
+                *(self.transform_values(rbonus) if self.character_index > 0 
+                else (0 for _ in range(6))),
+                    delim=self.delim))
+            
+        # STATUS :- CLASS BONUSES
+        term.puts(
+            self.col2 + 18, 
+            self.row + (11 if not self.shorten else 6), 
+            strings._bon.format(
+                *self.transform_values(cbonus) if self.character_index > 1
+                else (0 for _ in range(6)),
+                delim=self.delim))
 
         # EQUIPMENT and INVENTORY
         eq, inv = None, None
         if self.character_index > 1:
-            term.puts(
-                self.col2 + 18, 
-                self.row +  (11 if not self.shorten else 6), 
-                strings._bon.format(
-                    *self.transform_values(cbonus),
-                     delim=self.delim))
 
             eq, inv = self.form_equipment(req, ceq)
             # if var is -1 then shows eq else shows inv
@@ -437,13 +520,16 @@ class Start(Scene):
     def cc_border(self):
         '''Border for Create Character Screen'''
         term.bkcolor('darkest grey')
-        for i in range(self.width - 2):
-            term.puts(i + 1, 1 if not self.shorten else 0, ' ')
-            term.puts(i + 1, 35 if not self.shorten else 18, ' ')
+
+        # top/bot lines horizontal border
+        for i in range(self.width):
+            term.puts(i, 1 if not self.shorten else 0, ' ')
+            term.puts(i, 35 if not self.shorten else 18, ' ')
         
+        # left/right lines vertical border
         for i in range(35 if not self.shorten else 18):
-            term.puts(1, i + 1, ' ')
-            term.puts(self.width - 2, i + 1, ' ')
+            term.puts(0, i + 1, ' ')
+            term.puts(self.width - 1, i + 1, ' ')
 
     def draw_title(self):
         '''Adds the title to top of screen'''
