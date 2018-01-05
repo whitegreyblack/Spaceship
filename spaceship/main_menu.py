@@ -155,7 +155,7 @@ class Scene:
 
     def scene_child(self, sid):
         if isinstance(sid, Scene):
-            title = title.sid
+            sid = sid.sid
 
         try:
             return self.scenes[1][sid]
@@ -174,7 +174,7 @@ class Scene:
             return []
 
         elif len(self.scenes[1].keys()) == 1:
-            return list(self.scenes[1].values()).pop()
+            return list(self.scenes[1].values())
 
         return [self.scenes[1][title] for title in self.scenes[1].keys()]
 
@@ -219,7 +219,7 @@ class Scene:
             return []
 
         elif len(self.scenes[0].keys()) == 1:
-            return list(self.scenes[0].values()).pop()
+            return list(self.scenes[0].values())
         
         return [self.scenes[0][sid] for sid in self.scenes[0].keys()]
     
