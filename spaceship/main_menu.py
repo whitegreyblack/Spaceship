@@ -9,22 +9,27 @@ import spaceship.cc_strings as strings
 from .setup_game import setup, setup_font, setup_menu, output, toChr
 from .screen_functions import *
 from .options import Option
+from .action import commands
 
 class Engine:
     def __init__(self, scene):
         self.scene = scene
         self.proceed = True
+        self.playing = False
 
     def run(self):
         while self.proceed:
-            # print('Scene: ', self.scene)
             ret = self.scene.run()
-            # print('Return ', ret)
             if isinstance(self.scene.scene(ret), Scene):
                 self.scene = self.scene.scene(ret)
                 self.scene.reset()
+                if isinstance(self.scene, Start):
+                    self.playing = True
+                    self.proceed = False
             else:
                 self.proceed = False
+            
+        self.proceed = False
 
 class GameEngine:
     def __init__(self):
@@ -39,8 +44,8 @@ class GameEngine:
             'name_menu': Name(),
             'start_game': Start(),
         }
+        
         self.scene = self.scenes['main_menu']
-        self.proceed = True
 
     def setup(self):
         '''sets up instance of terminal'''
@@ -49,15 +54,17 @@ class GameEngine:
         term.set('window: size=80x25, cellsize=auto, title="Spaceship", fullscreen=false')
 
     def run(self):
+        self.proceed = True
         while self.proceed:
             ret = self.scene.run()
             try:
                 self.scene = self.scenes[ret]
-                self.scene.reset()
-
             except KeyError:
                 self.proceed = False
+            else:
+                self.scene.reset()
 
+        self.proceed = False
 '''
 def connect_scenes(scene_a, scene_b):
     scene_a.add_scene(scene_b)
@@ -147,11 +154,11 @@ class Scene:
             raise ValueError(m)
         return True
 
-    def scene(self, sid):
-        for key in self.scenes.keys():
-            for subkey in self.scenes[key].keys():
-                if subkey == sid:
-                    return self.scenes[key][subkey]
+    def scene(self, s_id):
+        for _, scenes in self.scenes.items():
+            for sid, scene in scenes.items():
+                if sid == s_id:
+                    return scene
 
     def scene_child(self, sid):
         if isinstance(sid, Scene):
@@ -176,7 +183,9 @@ class Scene:
         elif len(self.scenes[1].keys()) == 1:
             return list(self.scenes[1].values())
 
-        return [self.scenes[1][title] for title in self.scenes[1].keys()]
+        # return [self.scenes[1][title] for title in self.scenes[1].keys()]
+        return [scene for _, scene in self.scenes[1].items()]
+
 
     def add_scene_child(self, scene):
         self.check_scene(scene)
@@ -207,7 +216,7 @@ class Scene:
         # self.scenes[1][scene.title] = scene
         if 0 not in self.scenes.keys():
             self.scenes[0] = { scene.sid: scene }
-
+ 
         else:
             self.scenes[0][scene.sid] = scene 
 
@@ -221,7 +230,9 @@ class Scene:
         elif len(self.scenes[0].keys()) == 1:
             return list(self.scenes[0].values())
         
-        return [self.scenes[0][sid] for sid in self.scenes[0].keys()]
+        # return [self.scenes[0][sid] for sid in self.scenes[0].keys()]
+        return [scene for _, scene in self.scenes[0].items()]
+
     
 class Main(Scene):
     def __init__(self, sid='main_menu'):
@@ -349,7 +360,7 @@ class Name(Scene):
         self.xhalf = self.width // 2
         self.fifth = self.width // 5
         self.yhalf = self.height // 2
-        self.final_name = ''
+        self.final_name = 'Grey'
         self.invalid = False
 
     def draw_text(self):
@@ -377,12 +388,12 @@ class Name(Scene):
         
         # vertical border variables
         ver_lo = self.yhalf - 2
-        ver_hi = self.yhalf + 1
+        ver_hi = self.yhalf
 
         # draw horizontal border
         for i in range(hor_lo, hor_hi):
             term.puts(i, ver_lo, "{}".format(toChr('2550')))
-            term.puts(i, self.yhalf, "{}".format(toChr('2550')))
+            term.puts(i, ver_hi, "{}".format(toChr('2550')))
         
         # draw vertical border
         for j in range(ver_lo, ver_hi):
@@ -392,8 +403,8 @@ class Name(Scene):
         # corner border
         term.puts(hor_lo, ver_lo, "{}".format(toChr('2554')))
         term.puts(hor_hi, ver_lo, "{}".format(toChr('2557')))
-        term.puts(hor_lo, self.yhalf, "{}".format(toChr('255A')))
-        term.puts(hor_hi, self.yhalf, "{}".format(toChr('255D')))
+        term.puts(hor_lo, ver_hi, "{}".format(toChr('255A')))
+        term.puts(hor_hi, ver_hi, "{}".format(toChr('255D')))
 
     def random_name(self):
         return 'Grey'
@@ -456,7 +467,6 @@ class Name(Scene):
 class Create(Scene):
     def __init__(self, sid='create_menu'):
         super().__init__(sid)
-        self.name_scene = Name()
 
     def reset(self):
         pass
@@ -1224,36 +1234,68 @@ class Start(Scene):
     def __init__(self, sid='start_game'):
         super().__init__(scene_id=sid)
 
+    def setup(self):
+        self.turns = 0
+        self.player = None
+        self.dungeon = None
+        self.waiting = False
+        self.turn_inc = False
+        self.do_action = True
+
+    def run(self):
+        # while self.proceed and self.player.is_alive():
+        while self.proceed:
+            self.draw()
+        
+        self.proceed = True
+        if hasattr(self, 'ret'):
+            return self.ret
+
+    def draw(self):
+        term.clear()
+        term.refresh()
+        turn_inc = False
+        # do_action = False
+
+        if self.do_action:
+            action, proceed = self.key_input()
+            print(action, proceed)
+            # self.process_handler()
+
+    def key_input(self):
+        '''Handles keyboard input and keypress transformation
+        Cases:
+            Skips any pre-inputs and non-read keys
+            if key read is a close command -- close early or set proceed to false
+            Elif key is valid command return the command from command list with continue
+            Else return invalid action tuple with continue value
+        '''
+        action, proceed =  tuple(None for _ in range(4)), True
+        # while term.has_input():
+        #     term.read()
+
+        key = term.read()
+        while key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
+            # skip any non-action keys
+            key = term.read()
+            
+        shifted = term.state(term.TK_SHIFT)
+        if key in (term.TK_ESCAPE, term.TK_CLOSE):
+            # exit command -- maybe need a back to menu screen?
+            if shifted:
+                exit('Early Exit')
+            else:
+                proceed = False
+
+        try:
+            # discover the command and set as current action
+            action = commands[(key, shifted)]
+        except KeyError:
+            pass
+
+        return action, proceed
+
+
 if __name__ == "__main__":
-    term.open()
-    setup_font('Ibm_cga', cx=8, cy=16)
-    term.set('window: size=80x25, cellsize=auto, title="Spaceship", fullscreen=false')
-    w, h = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
-    m = Main(w, h)
-    # m.setup()
-    # m.run()
-    s = Start(w, h)
-    # s.setup()
-    # s.run()
-    # print(s.ret)
-    o = Options(w, h)
-    # o.setup()
-    # o.run()
-    c = Continue(w, h)
-
-    m.add_scene_child(o)
-    m.add_scene_child(c)
-    m.add_scene_child(s)
-
-    s.add_scene_parent(m)
-    o.add_scene_parent(m)
-    c.add_scene_parent(m)
-
-    print(m.children)
-    print(o.parents)
-    e = Engine(m)
-    e.run()
-    # print([child.title for child in m.children])
-
-    # for scene in (s, c, o):
-    #     print([p.title for p in scene.parents])
+    g = GameEngine()
+    g.run()

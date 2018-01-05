@@ -420,27 +420,437 @@ def process_handler(x, y, k, key, player, world, gamelog, turns):
     else:
         return 'skipped-turn'
 
-class Engine:
+def onlyOne(container):
+    return len(container) == 1
 
-    main_menu = None
-    play_game = None
-    new_game = None
-    new_name = None
-    options = None
+def eightsquare(x, y):
+    squares = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+    space = namedtuple("Space", ("x","y"))
+    for i, j in squares:
+        yield space(x + i, y + j)
 
-    def __init__(self, player, world, gamelog):
-        self.player = player
-        self.world = world
-        self.gamelog = gamelog
-        self.pointer = self.main_menu
-    def run(self):
-        scene = self.get_current_scene()
+def open_player_screen(x, y, key):
+    '''Game function to handle player equipment and inventory'''
+    def profile():
+        '''Handles player profile screen'''
+        term.clear()
 
-    def save(self):
-        pass
+        for i in range(screen_width):
+            term.puts(i, 1, '#')
+        term.puts(center('profile  ', screen_width), 1, ' Profile ')
 
-    def get_current_scene(self):
-        return self.pointer
+        for colnum, column in enumerate(list(player.get_profile())):
+            term.puts(col + (20 * colnum), row, column)
+
+    def inventory():
+        '''Handles inventory screen'''
+        term.clear()
+
+        # title backpack
+        for i in range(screen_width):
+            term.puts(i, 1, '#')
+        term.puts(center('backpack  ', screen_width), 1, ' Backpack ')
+
+        for index, item in player.get_inventory():
+            letter = chr(ord('a') + index) + ". "
+            item_desc = item.__str__() if item else ""
+
+            term.puts(
+                col,
+                row + index * (2 if screen_height > 25 else 1),
+                letter + item_desc)
+
+    def equipment():
+        '''Handles equipment screen'''
+        term.clear()
+
+        for i in range(screen_width):
+            term.puts(i, 1, '#')
+
+        term.puts(center(' inventory ', screen_width), 1, ' Inventory ')
+        
+        for index, part, item in player.get_equipment():
+            letter = chr(ord('a') + index)
+            body_part = ".  {:<10}: ".format(part)
+            item_desc = item.__str__() if item else ""
+
+            term.puts(
+                col,
+                row + index * (2 if screen_height > 25 else 1),
+                letter + body_part + item_desc)
+
+    col, row = 1, 3
+    playscreen = False
+    current_screen = key
+    current_range = 0
+    while True:
+        term.clear()
+
+        if current_screen == "i":
+            equipment()
+        elif current_screen == "v":
+            inventory()
+        else:
+            profile()
+
+        term.refresh()
+        code = term.read()
+
+        if code in (term.TK_ESCAPE,):
+            if current_screen == 1:
+                current_screen = 0
+            else:
+                break
+
+        elif code == term.TK_I:
+            current_screen = 'i'
+
+        elif code == term.TK_V:
+            # V goes to inventory screen
+            current_screen = 'v'
+        
+        elif code == term.TK_2 and term.state(term.TK_SHIFT):
+            # @ goes to profile
+            current_screen = '@'
+
+        elif code == term.TK_UP:
+            if current_range > 0: current_range -= 1
+
+        elif code == term.TK_DOWN:
+            if current_range < 10: current_range += 1
+
+    term.clear()
+
+def interactItem(x, y, key):
+        print('interactItem')
+        nonlocal turns
+        def pickItem():
+            item = dungeon.square(x, y).items.pop()
+            player.inventory.append(item)
+            gamelog.add("You pick up a {}".format(item.name))
+        
+        if key == ",": # pickup
+            print('picking up')
+            # if player.backpack.full():
+            if len(player.inventory) >= 25:
+                # earlly exit
+                gamelog.add("Backpack is full")
+                return
+
+            items = dungeon.square(x, y).items
+            if items:
+                # if len(items) == 1:
+                #     pickItem()
+                pickItem()
+                # TODO                
+                # else:
+                #     glog.add("opening pick up menu")
+                #     pick_menu(items)
+            else:
+                gamelog.add("Nothing to pick up")
+        turn_inc = True
+
+def attackUnit(x, y, k):
+    nonlocal turns
+    def attack(x, y):
+        unit = dungeon.get_unit(x, y)
+        log = "You attack the {}. ".format(unit.race)
+        unit.cur_health -= 1           
+        log += "The {} has {} health left. ".format(unit.race, unit.cur_health)
+        if dungeon.maptype == "city":
+            dungeon.reduce_unit_relationships(100)
+            # dungeon.reduce_relationship(100)
+            log += "Your relationship with {} has decreased by {} ".format(
+                dungeon.map_name, 100)
+        for l in wrap(log, width=screen_width):
+            gamelog.add(l)
+
+        # if unit.r is not "human": # condition should be more complex
+        if unit.cur_health < 1:
+            gamelog.add("You have killed the {}! You gain 15 exp".format(unit.race))
+            dungeon.remove_unit(unit)
+
+    attackables = []
+    for i, j in eightsquare(x, y):
+        if (i, j) != (x, y) and dungeon.get_unit(i, j):
+            attackables.append((i, j))
+    
+    if not attackables:
+        gamelog.add("Nothing you can attack. You want to punch the floor?")
+    
+    elif onlyOne(attackables):
+        attack(*attackables.pop())
+
+    else:
+        gamelog.add("Who do you want to attack?")
+        code = term.read()
+        if code in key_movement:
+            cx, cy = key_movement[code]
+        elif code in num_movement:
+            cx, cy = num_movement[code]
+        else:
+            return
+        if (x+cx, y+cy) in attackables:
+            attack(x + cx, y + cy)
+
+    turn_inc = True
+
+def interactUnit(x, y, action):
+    """Allows talking with other units"""
+    def talkUnit(x, y):
+        unit = dungeon.get_unit(x, y)
+        gamelog.add(unit.talk())
+        refresh()
+
+    print("talking")
+    interactables = []
+    for i, j in eightsquare(x, y):
+        # dungeon.has_unit(i, j) -> returns true or false if unit is on the square
+        if (i, j) != (x, y) and dungeon.get_unit(i, j):
+            interactables.append((i, j))
+
+    # no interactables
+    if not interactables:
+        gamelog.add("No one to talk with")
+
+    # only one interactable
+    elif onlyOne(interactables):
+        # i, j = interactables.pop()
+        talkUnit(*interactables.pop())
+
+    # many interactables
+    else:
+        gamelog.add("Which direction?")   
+        refresh()
+        code = term.read()
+        try:
+            cx, cy, a, act = commands[(code, term.state(term.TK_SHIFT))]
+            if act == "move" and (x+cx, y+cy) in interactables:
+                talkUnit(x+cx, y+cy) 
+        except:
+            raise
+            return
+
+def interactDoor(x, y, key):
+    """Allows interaction with doors"""
+    nonlocal turns
+    def openDoor(i, j):
+        gamelog.add("Opened door")
+        dungeon.open_door(i, j)
+        dungeon.unblock(i, j)
+
+    def closeDoor(i, j):
+        gamelog.add("Closed door")
+        dungeon.close_door(i, j)
+        dungeon.reblock(i, j)
+
+    char = "+" if key is "o" else "/"
+
+    reachables = []
+    for i, j in eightsquare(x, y):
+        if (i, j) != (x, y):
+            isSquare = 0
+            try:
+                isSquare = dungeon.square(i, j).char is char
+            except IndexError:
+                gamelog.add("out of bounds ({},{})".format(i, j))
+            if isSquare:
+                reachables.append((i, j))
+
+    if not reachables:
+        gamelog.add("No {} near you".format("openables" if key is "o" else "closeables"))
+    
+    elif onlyOne(reachables):
+        i, j = reachables.pop()
+        openDoor(i, j) if key is "o" else closeDoor(i, j)
+
+    else:
+        gamelog.add("There is more than one door near you. Which direction?")
+        refresh()
+
+        code = term.read()
+        try:
+            cx, cy, a, act = commands[(code, term.state(term.TK_SHIFT))]
+            if act == "move" and (x+cx, y+cy) in reachables:
+                openDoor(x+cx, y+cy) if key is 'o' else closeDoor(x+cx, y+cy)            
+        except:
+            raise
+            return
+
+    turn_inc = True
+
+def interactStairs(x, y, k):
+    nonlocal dungeon
+    """Allows interactions with stairs"""
+
+    if k == ">":  
+        #  differentiate going up versus down
+        if player.position == dungeon.getDownStairs():                
+
+            if not dungeon.hasSublevel():
+                sublevel = Cave(
+                    width=term.state(term.TK_WIDTH),
+                    height=term.state(term.TK_HEIGHT),
+                    max_rooms=randint(15, 20))
+
+                sublevel.addParent(dungeon)
+                dungeon.addSublevel(sublevel)
+
+            dungeon = dungeon.getSublevel()
+            player.move_height(1)
+            player.position = dungeon.getUpStairs()
+
+        else:
+            gamelog.add('You cannot go downstairs without stairs.')
+            
+    else:
+        print(dungeon.map_type)
+        # map at the location exists -- determine type of map
+        if player.location in calabaston.enterable_legend.keys():
+            # check if you're in a city
+            player.move_height(-1)
+            dungeon = dungeon.getParent()
+
+        # elif calabaston.is_wilderness(*player.location):
+        elif calabaston.location_is(*player.location, 2):
+            # check for wilderness type map
+            player.move_height(-1)
+            dungeon = dungeon.getParent()
+
+        elif player.position == dungeon.getUpStairs():
+            # check if you're in a dungeon
+            # dungeon will have parent -- need to differentiate between
+            # world and first level dungeon
+            player.move_height(-1)
+            dungeon = dungeon.getParent()
+
+        else:
+            gamelog.add('You cannot go upstairs without stairs.')
+
+        if isinstance(dungeon, World):
+            # we unrefrence the dungeon only if it is at level 0
+            dungeon = None
+            player.position = (0, 0)
+
+def graphics(integer: int) -> None:
+    def toBin(n):
+        return list(bin(n).replace('0b'))
+    if not 0 < integer < 8:
+        raise ValueError("Must be within 0-7")
+
+def border():
+    # status border
+    border_line =  "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]"
+
+    # y axis
+    for i in range(0, 80, 2):
+        if i < 20:
+            term.puts(screen_width - 20 + i, 0, border_line)
+            term.puts(screen_width - 20 + i, 10, border_line)
+        if i < 60:
+            term.puts(i, screen_height - 6, border_line)
+        term.puts(i, screen_height - 1, border_line)
+    
+    # x axis
+    for j in range(35):
+        if j < 6:
+            term.puts(0, screen_height - 6 + j, border_line)
+        term.puts(screen_width - 20, j, border_line)
+        term.puts(screen_width - 1, j, border_line)
+
+def status_box():
+    col, row = 1, 2
+    term.puts(col, row - 1, player.name)
+    term.puts(col, row + 0, player.gender)
+    term.puts(col, row + 1, player.race)
+    term.puts(col, row + 2, player.job)
+
+    term.puts(col, row + 4, "LVL: {:>6}".format(player.level))
+    term.puts(col, row + 5, "EXP: {:>6}".format("{}/{}".format(player.exp, player.advexp)))
+
+    term.puts(col, row + 7, "HP:  {:>6}".format("{}/{}".format(player.cur_health, player.max_health)))
+    term.puts(col, row + 8, "MP:  {:>6}".format("{}/{}".format(player.mp, player.total_mp)))
+    term.puts(col, row + 9, "SP:  {:>6}".format(player.sp))
+
+    term.puts(col, row + 11, "STR: {:>6}".format(player.str)) 
+    term.puts(col, row + 12, "CON: {:>6}".format(player.con))
+    term.puts(col, row + 13, "DEX: {:>6}".format(player.dex))
+    term.puts(col, row + 14, "INT: {:>6}".format(player.int))
+    term.puts(col, row + 15, "WIS: {:>6}".format(player.wis))
+    term.puts(col, row + 16, "CHA: {:>6}".format(player.cha))
+
+    term.puts(col, row + 18, "GOLD:{:>6}".format(player.gold))
+
+    # sets the location name at the bottom of the status bar
+    if player.location in calabaston.enterable_legend.keys():
+        location = calabaston.enterable_legend[player.location]
+        term.bkcolor('grey')
+        term.puts(0, 0, ' ' * screen_width)
+        term.bkcolor('black')
+        term.puts(center(surround(location), screen_width), 0, surround(location))
+
+    elif player.location in calabaston.dungeon_legend.keys():
+        location = calabaston.dungeon_legend[player.location]
+
+    else:
+        location = ""
+
+    term.puts(col, row + 20, "{}".format(location))
+
+def map_box():
+    def calc_sight():
+        dungeon.fov_calc([(player.x, player.y, player.sight * 2 if calabaston.location_is(*player.location, 1) else player.sight)])
+    
+    def output_map():
+        for x, y, lit, ch in dungeon.output(player.x, player.y):
+            term.puts(x + 13, y + 1, "[color={}]".format(lit) + ch + "[/color]")
+
+    calc_sight()
+    output_map()
+
+def world_legend_box():
+    length, offset, height = 14, 12, 0
+    world_name = surround(calabaston.map_name, length=length)
+    selected(center(world_name, offset), height, world_name)   
+
+    height += 1        
+    # this is purely a ui enhancement. Actually entering a city is not that much different
+    # than entering a dungeon/wilderness area
+    if player.location in calabaston.enterable_legend.keys():
+        # check if player position is over a city/enterable area
+        city_name = calabaston.enterable_legend[player.location]
+        enterable_name = surround(city_name, length=length)
+        selected(center(enterable_name, offset), height, enterable_name)
+        # try:
+        #     gamelog.add(calabaston.city_descriptions[city_name])
+        # except:
+        #     gamelog.add("\n\n")
+
+    elif player.location in calabaston.dungeon_legend.keys():
+        # check if player position is over a dungeon position
+        dungeon_name = surround(calabaston.dungeon_legend[player.location], length=length)
+        selected(center(dungeon_name, offset), height, dungeon_name)
+
+    else:
+        # Add land types to the overworld ui
+        landtype = surround(calabaston.landtype(*player.location), length=length)
+        selected(center(landtype, offset), height, landtype)
+        
+
+    for char, color, desc, i in calabaston.legend():
+        # finally print the lengend with character and description
+        term.puts(0, height + i + 2, "[c={}] {}[/c] {}".format(color, char, desc))
+
+def world_map_box():
+    '''Displays the world map tiles in the terminal'''
+    screen_off_x, screen_off_y = 14, 0
+    calabaston.fov_calc([(player.wx, player.wy, player.sight * 2)])
+    
+    for x, y, col, ch in calabaston.output(*(player.location)):
+        term.puts(
+            x + screen_off_x, 
+            y + screen_off_y, 
+            "[c={}]{}[/c]".format(col, ch))
 
 def new_game(character=None, world=None, turns=0):
     # def save_game(x, y, action):
@@ -482,14 +892,14 @@ def new_game(character=None, world=None, turns=0):
     # END SETUP TOOLS
     # -----------------------------------------------------------------------------------------------------------------#
     # Keyboard input
-    def onlyOne(container):
-        return len(container) == 1
+    # def onlyOne(container):
+    #     return len(container) == 1
 
-    def eightsquare(x, y):
-        squares = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
-        space = namedtuple("Space", ("x","y"))
-        for i, j in squares:
-            yield space(x + i, y + j)
+    # def eightsquare(x, y):
+    #     squares = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+    #     space = namedtuple("Space", ("x","y"))
+    #     for i, j in squares:
+    #         yield space(x + i, y + j)
         # return [space(x+i,y+j) for i, j in list(num_movement.values())]
 
     # def process_movement(x, y):
@@ -600,308 +1010,308 @@ def new_game(character=None, world=None, turns=0):
     #                         term.puts(tx + 13, ty + 1, '[c=red]X[/c]')
     #                         term.refresh()
 
-    def open_player_screen(x, y, key):
-        '''Game function to handle player equipment and inventory'''
-        def profile():
-            '''Handles player profile screen'''
-            term.clear()
+    # def open_player_screen(x, y, key):
+    #     '''Game function to handle player equipment and inventory'''
+    #     def profile():
+    #         '''Handles player profile screen'''
+    #         term.clear()
 
-            for i in range(screen_width):
-                term.puts(i, 1, '#')
-            term.puts(center('profile  ', screen_width), 1, ' Profile ')
+    #         for i in range(screen_width):
+    #             term.puts(i, 1, '#')
+    #         term.puts(center('profile  ', screen_width), 1, ' Profile ')
 
-            for colnum, column in enumerate(list(player.get_profile())):
-                term.puts(col + (20 * colnum), row, column)
+    #         for colnum, column in enumerate(list(player.get_profile())):
+    #             term.puts(col + (20 * colnum), row, column)
 
-        def inventory():
-            '''Handles inventory screen'''
-            term.clear()
+    #     def inventory():
+    #         '''Handles inventory screen'''
+    #         term.clear()
 
-            # title backpack
-            for i in range(screen_width):
-                term.puts(i, 1, '#')
-            term.puts(center('backpack  ', screen_width), 1, ' Backpack ')
+    #         # title backpack
+    #         for i in range(screen_width):
+    #             term.puts(i, 1, '#')
+    #         term.puts(center('backpack  ', screen_width), 1, ' Backpack ')
 
-            for index, item in player.get_inventory():
-                letter = chr(ord('a') + index) + ". "
-                item_desc = item.__str__() if item else ""
+    #         for index, item in player.get_inventory():
+    #             letter = chr(ord('a') + index) + ". "
+    #             item_desc = item.__str__() if item else ""
 
-                term.puts(
-                    col,
-                    row + index * (2 if screen_height > 25 else 1),
-                    letter + item_desc)
+    #             term.puts(
+    #                 col,
+    #                 row + index * (2 if screen_height > 25 else 1),
+    #                 letter + item_desc)
 
-        def equipment():
-            '''Handles equipment screen'''
-            term.clear()
+    #     def equipment():
+    #         '''Handles equipment screen'''
+    #         term.clear()
 
-            for i in range(screen_width):
-                term.puts(i, 1, '#')
+    #         for i in range(screen_width):
+    #             term.puts(i, 1, '#')
 
-            term.puts(center(' inventory ', screen_width), 1, ' Inventory ')
+    #         term.puts(center(' inventory ', screen_width), 1, ' Inventory ')
             
-            for index, part, item in player.get_equipment():
-                letter = chr(ord('a') + index)
-                body_part = ".  {:<10}: ".format(part)
-                item_desc = item.__str__() if item else ""
+    #         for index, part, item in player.get_equipment():
+    #             letter = chr(ord('a') + index)
+    #             body_part = ".  {:<10}: ".format(part)
+    #             item_desc = item.__str__() if item else ""
 
-                term.puts(
-                    col,
-                    row + index * (2 if screen_height > 25 else 1),
-                    letter + body_part + item_desc)
+    #             term.puts(
+    #                 col,
+    #                 row + index * (2 if screen_height > 25 else 1),
+    #                 letter + body_part + item_desc)
 
-        col, row = 1, 3
-        playscreen = False
-        current_screen = key
-        current_range = 0
-        while True:
-            term.clear()
+        # col, row = 1, 3
+        # playscreen = False
+        # current_screen = key
+        # current_range = 0
+        # while True:
+        #     term.clear()
 
-            if current_screen == "i":
-                equipment()
-            elif current_screen == "v":
-                inventory()
-            else:
-                profile()
+        #     if current_screen == "i":
+        #         equipment()
+        #     elif current_screen == "v":
+        #         inventory()
+        #     else:
+        #         profile()
 
-            term.refresh()
-            code = term.read()
+        #     term.refresh()
+        #     code = term.read()
 
-            if code in (term.TK_ESCAPE,):
-                if current_screen == 1:
-                    current_screen = 0
-                else:
-                    break
+        #     if code in (term.TK_ESCAPE,):
+        #         if current_screen == 1:
+        #             current_screen = 0
+        #         else:
+        #             break
 
-            elif code == term.TK_I:
-                current_screen = 'i'
+        #     elif code == term.TK_I:
+        #         current_screen = 'i'
 
-            elif code == term.TK_V:
-                # V goes to inventory screen
-                current_screen = 'v'
+        #     elif code == term.TK_V:
+        #         # V goes to inventory screen
+        #         current_screen = 'v'
             
-            elif code == term.TK_2 and term.state(term.TK_SHIFT):
-                # @ goes to profile
-                current_screen = '@'
+        #     elif code == term.TK_2 and term.state(term.TK_SHIFT):
+        #         # @ goes to profile
+        #         current_screen = '@'
 
-            elif code == term.TK_UP:
-                if current_range > 0: current_range -= 1
+        #     elif code == term.TK_UP:
+        #         if current_range > 0: current_range -= 1
 
-            elif code == term.TK_DOWN:
-                if current_range < 10: current_range += 1
+        #     elif code == term.TK_DOWN:
+        #         if current_range < 10: current_range += 1
 
-        term.clear()
+        # term.clear()
 
-    def interactItem(x, y, key):
-        print('interactItem')
-        nonlocal turns
-        def pickItem():
-            item = dungeon.square(x, y).items.pop()
-            player.inventory.append(item)
-            gamelog.add("You pick up a {}".format(item.name))
+    # def interactItem(x, y, key):
+    #     print('interactItem')
+    #     nonlocal turns
+    #     def pickItem():
+    #         item = dungeon.square(x, y).items.pop()
+    #         player.inventory.append(item)
+    #         gamelog.add("You pick up a {}".format(item.name))
         
-        if key == ",": # pickup
-            print('picking up')
-            # if player.backpack.full():
-            if len(player.inventory) >= 25:
-                # earlly exit
-                gamelog.add("Backpack is full")
-                return
+    #     if key == ",": # pickup
+    #         print('picking up')
+    #         # if player.backpack.full():
+    #         if len(player.inventory) >= 25:
+    #             # earlly exit
+    #             gamelog.add("Backpack is full")
+    #             return
 
-            items = dungeon.square(x, y).items
-            if items:
-                # if len(items) == 1:
-                #     pickItem()
-                pickItem()
-                # TODO                
-                # else:
-                #     glog.add("opening pick up menu")
-                #     pick_menu(items)
-            else:
-                gamelog.add("Nothing to pick up")
-        turn_inc = True
+    #         items = dungeon.square(x, y).items
+    #         if items:
+    #             # if len(items) == 1:
+    #             #     pickItem()
+    #             pickItem()
+    #             # TODO                
+    #             # else:
+    #             #     glog.add("opening pick up menu")
+    #             #     pick_menu(items)
+    #         else:
+    #             gamelog.add("Nothing to pick up")
+    #     turn_inc = True
 
-    def attackUnit(x, y, k):
-        nonlocal turns
-        def attack(x, y):
-            unit = dungeon.get_unit(x, y)
-            log = "You attack the {}. ".format(unit.race)
-            unit.cur_health -= 1           
-            log += "The {} has {} health left. ".format(unit.race, unit.cur_health)
-            if dungeon.maptype == "city":
-                dungeon.reduce_unit_relationships(100)
-                # dungeon.reduce_relationship(100)
-                log += "Your relationship with {} has decreased by {} ".format(
-                    dungeon.map_name, 100)
-            for l in wrap(log, width=screen_width):
-                gamelog.add(l)
+    # def attackUnit(x, y, k):
+    #     nonlocal turns
+    #     def attack(x, y):
+    #         unit = dungeon.get_unit(x, y)
+    #         log = "You attack the {}. ".format(unit.race)
+    #         unit.cur_health -= 1           
+    #         log += "The {} has {} health left. ".format(unit.race, unit.cur_health)
+    #         if dungeon.maptype == "city":
+    #             dungeon.reduce_unit_relationships(100)
+    #             # dungeon.reduce_relationship(100)
+    #             log += "Your relationship with {} has decreased by {} ".format(
+    #                 dungeon.map_name, 100)
+    #         for l in wrap(log, width=screen_width):
+    #             gamelog.add(l)
 
-            # if unit.r is not "human": # condition should be more complex
-            if unit.cur_health < 1:
-                gamelog.add("You have killed the {}! You gain 15 exp".format(unit.race))
-                dungeon.remove_unit(unit)
+    #         # if unit.r is not "human": # condition should be more complex
+    #         if unit.cur_health < 1:
+    #             gamelog.add("You have killed the {}! You gain 15 exp".format(unit.race))
+    #             dungeon.remove_unit(unit)
 
-        attackables = []
-        for i, j in eightsquare(x, y):
-            if (i, j) != (x, y) and dungeon.get_unit(i, j):
-                attackables.append((i, j))
+    #     attackables = []
+    #     for i, j in eightsquare(x, y):
+    #         if (i, j) != (x, y) and dungeon.get_unit(i, j):
+    #             attackables.append((i, j))
         
-        if not attackables:
-            gamelog.add("Nothing you can attack. You want to punch the floor?")
+    #     if not attackables:
+    #         gamelog.add("Nothing you can attack. You want to punch the floor?")
         
-        elif onlyOne(attackables):
-            attack(*attackables.pop())
+    #     elif onlyOne(attackables):
+    #         attack(*attackables.pop())
 
-        else:
-            gamelog.add("Who do you want to attack?")
-            code = term.read()
-            if code in key_movement:
-                cx, cy = key_movement[code]
-            elif code in num_movement:
-                cx, cy = num_movement[code]
-            else:
-                return
-            if (x+cx, y+cy) in attackables:
-                attack(x + cx, y + cy)
+    #     else:
+    #         gamelog.add("Who do you want to attack?")
+    #         code = term.read()
+    #         if code in key_movement:
+    #             cx, cy = key_movement[code]
+    #         elif code in num_movement:
+    #             cx, cy = num_movement[code]
+    #         else:
+    #             return
+    #         if (x+cx, y+cy) in attackables:
+    #             attack(x + cx, y + cy)
 
-        turn_inc = True
+    #     turn_inc = True
 
-    def interactUnit(x, y, action):
-        """Allows talking with other units"""
-        def talkUnit(x, y):
-            unit = dungeon.get_unit(x, y)
-            gamelog.add(unit.talk())
-            refresh()
+    # def interactUnit(x, y, action):
+    #     """Allows talking with other units"""
+    #     def talkUnit(x, y):
+    #         unit = dungeon.get_unit(x, y)
+    #         gamelog.add(unit.talk())
+    #         refresh()
 
-        print("talking")
-        interactables = []
-        for i, j in eightsquare(x, y):
-            # dungeon.has_unit(i, j) -> returns true or false if unit is on the square
-            if (i, j) != (x, y) and dungeon.get_unit(i, j):
-                interactables.append((i, j))
+    #     print("talking")
+    #     interactables = []
+    #     for i, j in eightsquare(x, y):
+    #         # dungeon.has_unit(i, j) -> returns true or false if unit is on the square
+    #         if (i, j) != (x, y) and dungeon.get_unit(i, j):
+    #             interactables.append((i, j))
 
-        # no interactables
-        if not interactables:
-            gamelog.add("No one to talk with")
+    #     # no interactables
+    #     if not interactables:
+    #         gamelog.add("No one to talk with")
 
-        # only one interactable
-        elif onlyOne(interactables):
-            # i, j = interactables.pop()
-            talkUnit(*interactables.pop())
+    #     # only one interactable
+    #     elif onlyOne(interactables):
+    #         # i, j = interactables.pop()
+    #         talkUnit(*interactables.pop())
 
-        # many interactables
-        else:
-            gamelog.add("Which direction?")   
-            refresh()
-            code = term.read()
-            try:
-                cx, cy, a, act = commands[(code, term.state(term.TK_SHIFT))]
-                if act == "move" and (x+cx, y+cy) in interactables:
-                    talkUnit(x+cx, y+cy) 
-            except:
-                raise
-                return
+    #     # many interactables
+    #     else:
+    #         gamelog.add("Which direction?")   
+    #         refresh()
+    #         code = term.read()
+    #         try:
+    #             cx, cy, a, act = commands[(code, term.state(term.TK_SHIFT))]
+    #             if act == "move" and (x+cx, y+cy) in interactables:
+    #                 talkUnit(x+cx, y+cy) 
+    #         except:
+    #             raise
+    #             return
 
-    def interactDoor(x, y, key):
-        """Allows interaction with doors"""
-        nonlocal turns
-        def openDoor(i, j):
-            gamelog.add("Opened door")
-            dungeon.open_door(i, j)
-            dungeon.unblock(i, j)
+    # def interactDoor(x, y, key):
+    #     """Allows interaction with doors"""
+    #     nonlocal turns
+    #     def openDoor(i, j):
+    #         gamelog.add("Opened door")
+    #         dungeon.open_door(i, j)
+    #         dungeon.unblock(i, j)
 
-        def closeDoor(i, j):
-            gamelog.add("Closed door")
-            dungeon.close_door(i, j)
-            dungeon.reblock(i, j)
+    #     def closeDoor(i, j):
+    #         gamelog.add("Closed door")
+    #         dungeon.close_door(i, j)
+    #         dungeon.reblock(i, j)
 
-        char = "+" if key is "o" else "/"
+    #     char = "+" if key is "o" else "/"
 
-        reachables = []
-        for i, j in eightsquare(x, y):
-            if (i, j) != (x, y):
-                isSquare = 0
-                try:
-                    isSquare = dungeon.square(i, j).char is char
-                except IndexError:
-                    gamelog.add("out of bounds ({},{})".format(i, j))
-                if isSquare:
-                    reachables.append((i, j))
+    #     reachables = []
+    #     for i, j in eightsquare(x, y):
+    #         if (i, j) != (x, y):
+    #             isSquare = 0
+    #             try:
+    #                 isSquare = dungeon.square(i, j).char is char
+    #             except IndexError:
+    #                 gamelog.add("out of bounds ({},{})".format(i, j))
+    #             if isSquare:
+    #                 reachables.append((i, j))
 
-        if not reachables:
-            gamelog.add("No {} near you".format("openables" if key is "o" else "closeables"))
+    #     if not reachables:
+    #         gamelog.add("No {} near you".format("openables" if key is "o" else "closeables"))
         
-        elif onlyOne(reachables):
-            i, j = reachables.pop()
-            openDoor(i, j) if key is "o" else closeDoor(i, j)
+    #     elif onlyOne(reachables):
+    #         i, j = reachables.pop()
+    #         openDoor(i, j) if key is "o" else closeDoor(i, j)
 
-        else:
-            gamelog.add("There is more than one door near you. Which direction?")
-            refresh()
+    #     else:
+    #         gamelog.add("There is more than one door near you. Which direction?")
+    #         refresh()
 
-            code = term.read()
-            try:
-                cx, cy, a, act = commands[(code, term.state(term.TK_SHIFT))]
-                if act == "move" and (x+cx, y+cy) in reachables:
-                    openDoor(x+cx, y+cy) if key is 'o' else closeDoor(x+cx, y+cy)            
-            except:
-                raise
-                return
+    #         code = term.read()
+    #         try:
+    #             cx, cy, a, act = commands[(code, term.state(term.TK_SHIFT))]
+    #             if act == "move" and (x+cx, y+cy) in reachables:
+    #                 openDoor(x+cx, y+cy) if key is 'o' else closeDoor(x+cx, y+cy)            
+    #         except:
+    #             raise
+    #             return
 
-        turn_inc = True
+    #     turn_inc = True
 
-    def interactStairs(x, y, k):
-        nonlocal dungeon
-        """Allows interactions with stairs"""
+    # def interactStairs(x, y, k):
+    #     nonlocal dungeon
+    #     """Allows interactions with stairs"""
 
-        if k == ">":  
-            #  differentiate going up versus down
-            if player.position == dungeon.getDownStairs():                
+    #     if k == ">":  
+    #         #  differentiate going up versus down
+    #         if player.position == dungeon.getDownStairs():                
 
-                if not dungeon.hasSublevel():
-                    sublevel = Cave(
-                        width=term.state(term.TK_WIDTH),
-                        height=term.state(term.TK_HEIGHT),
-                        max_rooms=randint(15, 20))
+    #             if not dungeon.hasSublevel():
+    #                 sublevel = Cave(
+    #                     width=term.state(term.TK_WIDTH),
+    #                     height=term.state(term.TK_HEIGHT),
+    #                     max_rooms=randint(15, 20))
 
-                    sublevel.addParent(dungeon)
-                    dungeon.addSublevel(sublevel)
+    #                 sublevel.addParent(dungeon)
+    #                 dungeon.addSublevel(sublevel)
 
-                dungeon = dungeon.getSublevel()
-                player.move_height(1)
-                player.position = dungeon.getUpStairs()
+    #             dungeon = dungeon.getSublevel()
+    #             player.move_height(1)
+    #             player.position = dungeon.getUpStairs()
 
-            else:
-                gamelog.add('You cannot go downstairs without stairs.')
+    #         else:
+    #             gamelog.add('You cannot go downstairs without stairs.')
                 
-        else:
-            print(dungeon.map_type)
-            # map at the location exists -- determine type of map
-            if player.location in calabaston.enterable_legend.keys():
-                # check if you're in a city
-                player.move_height(-1)
-                dungeon = dungeon.getParent()
+    #     else:
+    #         print(dungeon.map_type)
+    #         # map at the location exists -- determine type of map
+    #         if player.location in calabaston.enterable_legend.keys():
+    #             # check if you're in a city
+    #             player.move_height(-1)
+    #             dungeon = dungeon.getParent()
 
-            # elif calabaston.is_wilderness(*player.location):
-            elif calabaston.location_is(*player.location, 2):
-                # check for wilderness type map
-                player.move_height(-1)
-                dungeon = dungeon.getParent()
+    #         # elif calabaston.is_wilderness(*player.location):
+    #         elif calabaston.location_is(*player.location, 2):
+    #             # check for wilderness type map
+    #             player.move_height(-1)
+    #             dungeon = dungeon.getParent()
 
-            elif player.position == dungeon.getUpStairs():
-                # check if you're in a dungeon
-                # dungeon will have parent -- need to differentiate between
-                # world and first level dungeon
-                player.move_height(-1)
-                dungeon = dungeon.getParent()
+    #         elif player.position == dungeon.getUpStairs():
+    #             # check if you're in a dungeon
+    #             # dungeon will have parent -- need to differentiate between
+    #             # world and first level dungeon
+    #             player.move_height(-1)
+    #             dungeon = dungeon.getParent()
 
-            else:
-                gamelog.add('You cannot go upstairs without stairs.')
+    #         else:
+    #             gamelog.add('You cannot go upstairs without stairs.')
 
-            if isinstance(dungeon, World):
-                # we unrefrence the dungeon only if it is at level 0
-                dungeon = None
-                player.position = (0, 0)
+    #         if isinstance(dungeon, World):
+    #             # we unrefrence the dungeon only if it is at level 0
+    #             dungeon = None
+    #             player.position = (0, 0)
 
     # def enter_map(x, y, a):
     #     '''Logic:
@@ -1010,70 +1420,70 @@ def new_game(character=None, world=None, turns=0):
     # ---------------------------------------------------------------------------------------------------------------------#
     # Graphic functions
 
-    def graphics(integer: int) -> None:
-        def toBin(n):
-            return list(bin(n).replace('0b'))
-        if not 0 < integer < 8:
-            raise ValueError("Must be within 0-7")
+    # def graphics(integer: int) -> None:
+    #     def toBin(n):
+    #         return list(bin(n).replace('0b'))
+    #     if not 0 < integer < 8:
+    #         raise ValueError("Must be within 0-7")
 
-    def border():
-        # status border
-        border_line =  "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]"
+    # def border():
+    #     # status border
+    #     border_line =  "[color=dark #9a8478]"+chr(toInt("25E6"))+"[/color]"
 
-        # y axis
-        for i in range(0, 80, 2):
-            if i < 20:
-                term.puts(screen_width - 20 + i, 0, border_line)
-                term.puts(screen_width - 20 + i, 10, border_line)
-            if i < 60:
-                term.puts(i, screen_height - 6, border_line)
-            term.puts(i, screen_height - 1, border_line)
+    #     # y axis
+    #     for i in range(0, 80, 2):
+    #         if i < 20:
+    #             term.puts(screen_width - 20 + i, 0, border_line)
+    #             term.puts(screen_width - 20 + i, 10, border_line)
+    #         if i < 60:
+    #             term.puts(i, screen_height - 6, border_line)
+    #         term.puts(i, screen_height - 1, border_line)
         
-        # x axis
-        for j in range(35):
-            if j < 6:
-                term.puts(0, screen_height - 6 + j, border_line)
-            term.puts(screen_width - 20, j, border_line)
-            term.puts(screen_width - 1, j, border_line)
+    #     # x axis
+    #     for j in range(35):
+    #         if j < 6:
+    #             term.puts(0, screen_height - 6 + j, border_line)
+    #         term.puts(screen_width - 20, j, border_line)
+    #         term.puts(screen_width - 1, j, border_line)
 
-    def status_box():
-        col, row = 1, 2
-        term.puts(col, row - 1, player.name)
-        term.puts(col, row + 0, player.gender)
-        term.puts(col, row + 1, player.race)
-        term.puts(col, row + 2, player.job)
+    # def status_box():
+    #     col, row = 1, 2
+    #     term.puts(col, row - 1, player.name)
+    #     term.puts(col, row + 0, player.gender)
+    #     term.puts(col, row + 1, player.race)
+    #     term.puts(col, row + 2, player.job)
 
-        term.puts(col, row + 4, "LVL: {:>6}".format(player.level))
-        term.puts(col, row + 5, "EXP: {:>6}".format("{}/{}".format(player.exp, player.advexp)))
+    #     term.puts(col, row + 4, "LVL: {:>6}".format(player.level))
+    #     term.puts(col, row + 5, "EXP: {:>6}".format("{}/{}".format(player.exp, player.advexp)))
 
-        term.puts(col, row + 7, "HP:  {:>6}".format("{}/{}".format(player.cur_health, player.max_health)))
-        term.puts(col, row + 8, "MP:  {:>6}".format("{}/{}".format(player.mp, player.total_mp)))
-        term.puts(col, row + 9, "SP:  {:>6}".format(player.sp))
+    #     term.puts(col, row + 7, "HP:  {:>6}".format("{}/{}".format(player.cur_health, player.max_health)))
+    #     term.puts(col, row + 8, "MP:  {:>6}".format("{}/{}".format(player.mp, player.total_mp)))
+    #     term.puts(col, row + 9, "SP:  {:>6}".format(player.sp))
 
-        term.puts(col, row + 11, "STR: {:>6}".format(player.str)) 
-        term.puts(col, row + 12, "CON: {:>6}".format(player.con))
-        term.puts(col, row + 13, "DEX: {:>6}".format(player.dex))
-        term.puts(col, row + 14, "INT: {:>6}".format(player.int))
-        term.puts(col, row + 15, "WIS: {:>6}".format(player.wis))
-        term.puts(col, row + 16, "CHA: {:>6}".format(player.cha))
+    #     term.puts(col, row + 11, "STR: {:>6}".format(player.str)) 
+    #     term.puts(col, row + 12, "CON: {:>6}".format(player.con))
+    #     term.puts(col, row + 13, "DEX: {:>6}".format(player.dex))
+    #     term.puts(col, row + 14, "INT: {:>6}".format(player.int))
+    #     term.puts(col, row + 15, "WIS: {:>6}".format(player.wis))
+    #     term.puts(col, row + 16, "CHA: {:>6}".format(player.cha))
 
-        term.puts(col, row + 18, "GOLD:{:>6}".format(player.gold))
+    #     term.puts(col, row + 18, "GOLD:{:>6}".format(player.gold))
 
-        # sets the location name at the bottom of the status bar
-        if player.location in calabaston.enterable_legend.keys():
-            location = calabaston.enterable_legend[player.location]
-            term.bkcolor('grey')
-            term.puts(0, 0, ' ' * screen_width)
-            term.bkcolor('black')
-            term.puts(center(surround(location), screen_width), 0, surround(location))
+    #     # sets the location name at the bottom of the status bar
+    #     if player.location in calabaston.enterable_legend.keys():
+    #         location = calabaston.enterable_legend[player.location]
+    #         term.bkcolor('grey')
+    #         term.puts(0, 0, ' ' * screen_width)
+    #         term.bkcolor('black')
+    #         term.puts(center(surround(location), screen_width), 0, surround(location))
 
-        elif player.location in calabaston.dungeon_legend.keys():
-            location = calabaston.dungeon_legend[player.location]
+    #     elif player.location in calabaston.dungeon_legend.keys():
+    #         location = calabaston.dungeon_legend[player.location]
 
-        else:
-            location = ""
+    #     else:
+    #         location = ""
 
-        term.puts(col, row + 20, "{}".format(location))
+    #     term.puts(col, row + 20, "{}".format(location))
 
     # def log_box():
     #     nonlocal turns
@@ -1088,62 +1498,62 @@ def new_game(character=None, world=None, turns=0):
 
     #     term.puts(1, screen_height-3, 'Turns: {:<4}'.format(turns))
 
-    def map_box():
-        def calc_sight():
-            dungeon.fov_calc([(player.x, player.y, player.sight * 2 if calabaston.location_is(*player.location, 1) else player.sight)])
+    # def map_box():
+    #     def calc_sight():
+    #         dungeon.fov_calc([(player.x, player.y, player.sight * 2 if calabaston.location_is(*player.location, 1) else player.sight)])
         
-        def output_map():
-            for x, y, lit, ch in dungeon.output(player.x, player.y):
-                term.puts(x + 13, y + 1, "[color={}]".format(lit) + ch + "[/color]")
+    #     def output_map():
+    #         for x, y, lit, ch in dungeon.output(player.x, player.y):
+    #             term.puts(x + 13, y + 1, "[color={}]".format(lit) + ch + "[/color]")
 
-        calc_sight()
-        output_map()
+    #     calc_sight()
+    #     output_map()
 
-    def world_legend_box():
-        length, offset, height = 14, 12, 0
-        world_name = surround(calabaston.map_name, length=length)
-        selected(center(world_name, offset), height, world_name)   
+    # def world_legend_box():
+    #     length, offset, height = 14, 12, 0
+    #     world_name = surround(calabaston.map_name, length=length)
+    #     selected(center(world_name, offset), height, world_name)   
 
-        height += 1        
-        # this is purely a ui enhancement. Actually entering a city is not that much different
-        # than entering a dungeon/wilderness area
-        if player.location in calabaston.enterable_legend.keys():
-            # check if player position is over a city/enterable area
-            city_name = calabaston.enterable_legend[player.location]
-            enterable_name = surround(city_name, length=length)
-            selected(center(enterable_name, offset), height, enterable_name)
-            # try:
-            #     gamelog.add(calabaston.city_descriptions[city_name])
-            # except:
-            #     gamelog.add("\n\n")
+    #     height += 1        
+    #     # this is purely a ui enhancement. Actually entering a city is not that much different
+    #     # than entering a dungeon/wilderness area
+    #     if player.location in calabaston.enterable_legend.keys():
+    #         # check if player position is over a city/enterable area
+    #         city_name = calabaston.enterable_legend[player.location]
+    #         enterable_name = surround(city_name, length=length)
+    #         selected(center(enterable_name, offset), height, enterable_name)
+    #         # try:
+    #         #     gamelog.add(calabaston.city_descriptions[city_name])
+    #         # except:
+    #         #     gamelog.add("\n\n")
 
-        elif player.location in calabaston.dungeon_legend.keys():
-            # check if player position is over a dungeon position
-            dungeon_name = surround(calabaston.dungeon_legend[player.location], length=length)
-            selected(center(dungeon_name, offset), height, dungeon_name)
+    #     elif player.location in calabaston.dungeon_legend.keys():
+    #         # check if player position is over a dungeon position
+    #         dungeon_name = surround(calabaston.dungeon_legend[player.location], length=length)
+    #         selected(center(dungeon_name, offset), height, dungeon_name)
 
-        else:
-            # Add land types to the overworld ui
-            landtype = surround(calabaston.landtype(*player.location), length=length)
-            selected(center(landtype, offset), height, landtype)
+    #     else:
+    #         # Add land types to the overworld ui
+    #         landtype = surround(calabaston.landtype(*player.location), length=length)
+    #         selected(center(landtype, offset), height, landtype)
             
 
-        for char, color, desc, i in calabaston.legend():
-            # finally print the lengend with character and description
-            term.puts(0, height + i + 2, "[c={}] {}[/c] {}".format(color, char, desc))
+    #     for char, color, desc, i in calabaston.legend():
+    #         # finally print the lengend with character and description
+    #         term.puts(0, height + i + 2, "[c={}] {}[/c] {}".format(color, char, desc))
 
-    def world_map_box():
-        '''Displays the world map tiles in the terminal'''
-        screen_off_x, screen_off_y = 14, 0
-        calabaston.fov_calc([(player.wx, player.wy, player.sight * 2)])
+    # def world_map_box():
+    #     '''Displays the world map tiles in the terminal'''
+    #     screen_off_x, screen_off_y = 14, 0
+    #     calabaston.fov_calc([(player.wx, player.wy, player.sight * 2)])
         
-        for x, y, col, ch in calabaston.output(*(player.location)):
-            term.puts(
-                x + screen_off_x, 
-                y + screen_off_y, 
-                "[c={}]{}[/c]".format(col, ch))
+    #     for x, y, col, ch in calabaston.output(*(player.location)):
+    #         term.puts(
+    #             x + screen_off_x, 
+    #             y + screen_off_y, 
+    #             "[c={}]{}[/c]".format(col, ch))
 
-    screen_width, screen_height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
+    # screen_width, screen_height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
     
     # very first thing is game logger initialized to output messages on terminal
     gamelog = GameLogger(3 if term.state(term.TK_HEIGHT) <= 25 else 4)

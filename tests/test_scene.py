@@ -63,19 +63,19 @@ def test_scene_change_scene_parent():
     assert sub == s
     term.close()
 
-def test_scene_main():
+def run_scene_main():
     term.open()
     m = Main()
     m.run()
     term.close()
 
-def test_scene_create():
+def run_scene_create():
     term.open()
     c = Create()
     c.run()
     term.close()
 
-def test_scene_name():
+def run_scene_name():
     term.open()
     m = Main()
     c = Create()
@@ -89,13 +89,13 @@ def test_scene_name():
     e = Engine(m)
     e.run()
 
-def test_scene_options():
+def run_scene_options():
     term.open()
     o = Options()
     o.run()
     term.close()
 
-def test_scene_continue():
+def run_scene_continue():
     term.open()
     m = Main()
     c = Continue()
@@ -107,4 +107,5 @@ def test_scene_continue():
 
 if __name__ == "__main__":
     # test_scene_continue()
-    test_scene_name()
+    # test_scene_name()
+    pass
