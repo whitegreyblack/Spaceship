@@ -205,7 +205,7 @@ class Main(Scene):
         if self.height <= 25:
             from .constants import GAME_TITLE_SHORT as game_title
         else:
-            from .constatns import GAME_TITLE as game_title
+            from .constants import GAME_TITLE as game_title
         return game_title
 
     def calc_options_heights(self, header_offset, footer_offset):
@@ -952,17 +952,18 @@ if __name__ == "__main__":
     term.open()
     setup_font('Ibm_cga', cx=8, cy=16)
     term.set('window: size=80x25, cellsize=auto, title="Spaceship", fullscreen=false')
-    m = Main(80, 25)
+    w, h = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
+    m = Main(w, h)
     # m.setup()
     # m.run()
-    s = Start(80, 25)
+    s = Start(w, h)
     # s.setup()
     # s.run()
     # print(s.ret)
-    o = Options(80, 25)
+    o = Options(w, h)
     # o.setup()
     # o.run()
-    c = Continue(80, 25)
+    c = Continue(w, h)
 
     m.add_scene_child(o)
     m.add_scene_child(c)
