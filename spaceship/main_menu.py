@@ -16,11 +16,12 @@ class Engine:
 
     def run(self):
         while self.proceed:
-            print('Scene: ', self.scene)
+            # print('Scene: ', self.scene)
             ret = self.scene.run()
-            print('Return ', ret)
+            # print('Return ', ret)
             if isinstance(ret, Scene):
                 self.scene = ret
+                self.scene.reset()
             else:
                 self.proceed = False
 
@@ -62,6 +63,9 @@ class Scene:
             return self.ret
 
     def draw(self):
+        pass
+
+    def reset(self):
         pass
 
     @property
@@ -183,9 +187,16 @@ class Main(Scene):
                 '[[n]] new game',
                 '[[o]] options',
                 '[[q]] quit']
-        
-        self.title_height = 1 if self.height <= 25 else self.height // 5
+        self.reset()       
+        # self.title_height = 1 if self.height <= 25 else self.height // 5
 
+        # self.title = self.calc_title()
+        # options_header_offset = self.title_height + len(self.title.split('\n'))
+        # self.options_height = self.calc_options_heights(options_header_offset, 3)
+
+    def reset(self):
+        self.width, self.height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
+        self.title_height = 1 if self.height <= 25 else self.height // 5
         self.title = self.calc_title()
         options_header_offset = self.title_height + len(self.title.split('\n'))
         self.options_height = self.calc_options_heights(options_header_offset, 3)
