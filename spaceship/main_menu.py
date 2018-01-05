@@ -20,10 +20,42 @@ class Engine:
             # print('Scene: ', self.scene)
             ret = self.scene.run()
             # print('Return ', ret)
-            if isinstance(ret, Scene):
-                self.scene = ret
+            if isinstance(self.scene.scene(ret), Scene):
+                self.scene = self.scene.scene(ret)
                 self.scene.reset()
             else:
+                self.proceed = False
+
+class GameEngine:
+    def __init__(self):
+        # initialize the terminal first or else windows cannot initialize size
+        self.setup()
+
+        self.scenes = {
+            'main_menu': Main(),
+            'create_menu': Create(),
+            'continue_menu': Continue(),
+            'options_menu': Options(),
+            'name_menu': Name(),
+            'start_game': Start(),
+        }
+        self.scene = self.scenes['main_menu']
+        self.proceed = True
+
+    def setup(self):
+        '''sets up instance of terminal'''
+        term.open()
+        setup_font('Ibm_cga', cx=8, cy=16)
+        term.set('window: size=80x25, cellsize=auto, title="Spaceship", fullscreen=false')
+
+    def run(self):
+        while self.proceed:
+            ret = self.scene.run()
+            try:
+                self.scene = self.scenes[ret]
+                self.scene.reset()
+
+            except KeyError:
                 self.proceed = False
 
 '''
@@ -115,6 +147,12 @@ class Scene:
             raise ValueError(m)
         return True
 
+    def scene(self, sid):
+        for key in self.scenes.keys():
+            for subkey in self.scenes[key].keys():
+                if subkey == sid:
+                    return self.scenes[key][subkey]
+
     def scene_child(self, sid):
         if isinstance(sid, Scene):
             title = title.sid
@@ -186,8 +224,8 @@ class Scene:
         return [self.scenes[0][sid] for sid in self.scenes[0].keys()]
     
 class Main(Scene):
-    def __init__(self, title='main_menu'):
-        super().__init__(title)
+    def __init__(self, sid='main_menu'):
+        super().__init__(sid)
 
     def setup(self):
         self.index = -1
@@ -263,13 +301,15 @@ class Main(Scene):
         # key (CNOQ, ENTER)
         if code == term.TK_C or (code == term.TK_ENTER and self.index == 0):
             # proceed = continue_game()
-            self.ret = self.scene_child('continue_menu')
+            # self.ret = self.scene_child('continue_menu')
+            self.ret = 'continue_menu'
             self.proceed = False
 
         # key press on N or enter on NEW GAME
         elif code == term.TK_N or (code == term.TK_ENTER and self.index == 1):
             # proceed = start_new_game()
-            self.ret = self.scene_child('start_menu')
+            # self.ret = self.scene_child('create_menu')
+            self.ret = 'create_menu'
             self.proceed = False
 
         # key press on O or enter on OPTIONS
@@ -277,7 +317,8 @@ class Main(Scene):
             # options()
             # height = update_start_screen() + len(self.title.split('\n'))
             # self.options_height = calc_option_heights(height, 3)
-            self.ret = self.scene_child('options_menu')
+            # self.ret = self.scene_child('options_menu')
+            self.ret = 'options_menu'
             self.proceed = False
 
         # key press on Q or enter on QUIT
@@ -297,12 +338,128 @@ class Main(Scene):
             self.ret = None
             self.proceed = False
 
-class CreateName(Scene):
-    pass
+class Name(Scene):
+    def __init__(self, sid='name_menu'):
+        super().__init__(scene_id=sid)
 
-class Start(Scene):
-    def __init__(self, title='start_menu'):
-        super().__init__(title)
+    def setup(self):
+        self.direction_name = 'Enter in your name or leave blank for a random name'
+        self.direction_exit = 'Press [[ESC]] if you wish to exit character creation'
+        self.direction_exit_program = 'Press [[Shift]]+[[ESC]] to exit to main menu'
+        self.xhalf = self.width // 2
+        self.fifth = self.width // 5
+        self.yhalf = self.height // 2
+        self.final_name = ''
+        self.invalid = False
+
+    def text(self):
+        term.puts(
+            x=center(self.direction_name, self.xhalf * 2), 
+            y=self.yhalf - 5, 
+            s=self.direction_name)
+        term.puts(
+            x=center(self.direction_exit[2:], self.xhalf * 2), 
+            y=self.yhalf + 4, 
+            s=self.direction_exit)
+        term.puts(
+            x=center(self.direction_exit_program[2:], self.xhalf * 2), 
+            y=self.yhalf + 8, 
+            s=self.direction_exit_program)
+
+    def border(self):
+        # for k in range(SCREEN_WIDTH):
+        #     term.puts(k, 3, toChr("2550"))
+        #     term.puts(k, SCREEN_HEIGHT-3, toChr("2550"))
+
+        # horizontal border variables
+        hor_lo = self.xhalf - self.fifth
+        hor_hi = self.xhalf + self.fifth
+        
+        # vertical border variables
+        ver_lo = self.yhalf - 2
+        ver_hi = self.yhalf + 1
+
+        # draw horizontal border
+        for i in range(hor_lo, hor_hi):
+            term.puts(i, ver_lo, "{}".format(toChr('2550')))
+            term.puts(i, self.yhalf, "{}".format(toChr('2550')))
+        
+        # draw vertical border
+        for j in range(ver_lo, ver_hi):
+            term.puts(hor_lo, j, "{}".format(toChr('2551')))
+            term.puts(hor_hi, j, "{}".format(toChr('2551')))
+
+        # corner border
+        term.puts(hor_lo, ver_lo, "{}".format(toChr('2554')))
+        term.puts(hor_hi, ver_lo, "{}".format(toChr('2557')))
+        term.puts(hor_lo, yhalf, "{}".format(toChr('255A')))
+        term.puts(hor_hi, yhalf, "{}".format(toChr('255D')))
+
+    def random_name(self):
+        return 'Grey'
+
+    def draw(self):
+        term.clear()
+        draw_border()
+        draw_text()
+
+        term.puts(
+            x=self.xhalf - self.fifth + 1, 
+            y=self.yhalf - 1,
+            s=self.final_name)
+        
+        if self.invalid:
+            term.puts(
+                self.xhalf - self.fifth - 5, 
+                self.yhalf + 1, 
+                '[c=red]{} is not a valid character[/c]'.format(
+                    chr(term.state(term.TK_WCHAR))))
+
+        self.invalid = False
+        term.refresh()
+
+        key = term.read()
+        if key == term.TK_ESCAPE:
+            if term.state(term.TK_SHIFT):
+                self.final_name == ''
+                self.ret = 'main_menu'
+
+            elif not string:
+                self.final_name = ''
+                self.ret = 'create_menu'
+
+            else:
+                self.final_name = self.final_name[0:len(self.final_name) - 1]
+                self.ret = 'start_game'
+
+            self.proceed = False
+
+        elif key == term.TK_ENTER:
+            if not self.final_name:
+                self.final_name = self.random_name()
+
+            else:
+                return output(0, self.final_name)
+    
+        elif key == term.TK_BACKSPACE:
+            if self.final_name:
+                self.final_name = self.final_name[0:len(self.final_name) - 1]
+
+        elif term.check(term.TK_WCHAR) and len(self.final_name) < 30:
+            # make sure these characters are not included in names
+            if chr(term.state(term.TK_WCHAR)) not in (
+                '1234567890!@#$%^&&*()-=_+,./<>?";[]{}\|~`'):
+                self.final_name += chr(term.state(term.TK_WCHAR))
+            else:
+                self.final_name = True
+
+class Create(Scene):
+    def __init__(self, sid='create_menu'):
+        super().__init__(sid)
+        self.name_scene = Name()
+
+    def reset(self):
+        pass
 
     def setup(self):
         self.shorten = self.height <= 25
@@ -318,7 +475,6 @@ class Start(Scene):
         self.gender_index = 0
         self.character_index = 0
 
-        self.indices = [0, 0, 0]
         self.grid = [[3, 26, 48], 5]
         self.length = self.width // 2
 
@@ -417,7 +573,7 @@ class Start(Scene):
                 strings.race_human, strings.race_orcen,],
             [strings.class_druid, strings.class_cleric, strings.class_wizard,
                 strings.class_archer, strings.class_squire,]]
-        
+
     def draw(self):
         term.clear()
         self.cc_border()
@@ -573,7 +729,7 @@ class Start(Scene):
                 self.class_index = random.randint(0, 4)
                 job = self.class_row(draw=False)
                 eq, inv = self.form_equipment(race.eq, job.equipment)
-                self.ret = output(
+                self.game_vars = output(
                         proceed=True,
                         value=self.player(
                             name,
@@ -589,6 +745,7 @@ class Start(Scene):
                             race.skills,
                             eq,
                             inv))
+                self.ret = 'start_game'
                 self.proceed = False
 
         # ENTER
@@ -600,7 +757,7 @@ class Start(Scene):
                     gender = self.gender_row(draw=False)
                     race = self.race_row(draw=False)
                     job = self.class_row(draw=False)
-                    self.ret = output(
+                    self.game_vars = output(
                             proceed=True,
                             value=self.player(
                                 name.value,
@@ -616,6 +773,7 @@ class Start(Scene):
                                 race.skills,
                                 eq,
                                 inv))
+                    self.ret = 'start_game'
                     self.proceed = False
             else:
                 self.character_index += 1
@@ -623,13 +781,15 @@ class Start(Scene):
         elif code in (term.TK_ESCAPE,):
             if term.state(term.TK_SHIFT):
                 self.proceed = False
-                self.ret = output(
-                        proceed=False,
-                        value="Exit to Desktop")
+                # self.ret = output(
+                #         proceed=False,
+                #         value="Exit to Desktop")
+                self.ret = 'Exit -> Desktop'
 
             elif self.character_index == 0:
                 self.proceed = False
-                self.ret = self.scene_parent('main_menu')
+                # self.ret = self.scene_parent('main_menu')
+                self.ret = 'main_menu'
 
             else:
                 self.character_index -= 1
@@ -786,8 +946,8 @@ class Start(Scene):
         return eqp, flatten(inv)
 
 class Options(Scene):
-    def __init__(self, title='options_menu'):
-        super().__init__(title)
+    def __init__(self, sid='options_menu'):
+        super().__init__(sid)
 
     def setup(self):
         self.option = Option("Options Screen")
@@ -904,7 +1064,7 @@ class Options(Scene):
 
         if key in (term.TK_CLOSE, term.TK_Q, term.TK_ESCAPE):
             self.option.reset_all()
-            self.ret = self.parents
+            self.ret = 'main_menu'
             self.proceed = False
         
         elif key == term.TK_ENTER:
@@ -952,8 +1112,8 @@ class Options(Scene):
                 self.option.correct_pointer()
 
 class Continue(Scene):
-    def __init__(self, title='continue_menu'):
-        super().__init__(title)
+    def __init__(self, sid='continue_menu'):
+        super().__init__(sid)
 
     def setup(self):
         self.index = 0
@@ -1047,7 +1207,7 @@ class Continue(Scene):
                 # break # --> makes sure we exit loop to return directly to new screen
             if self.save_safe():
                 self.proceed = False
-                self.ret = 'NEW GAME' # self.scene_child('new_game')
+                self.ret = 'start_game' # self.scene_child('new_game')
 
         elif code == term.TK_DOWN:
             self.index = min(self.index + 1, len(self.files)-1)
@@ -1057,7 +1217,11 @@ class Continue(Scene):
 
         elif code == term.TK_ESCAPE:
             self.proceed = False
-            self.ret = self.scene_parent('main_menu')
+            self.ret = 'main_menu'
+
+class Start(Scene):
+    def __init__(self, sid='start_game'):
+        super().__init__(scene_id=sid)
 
 if __name__ == "__main__":
     term.open()
