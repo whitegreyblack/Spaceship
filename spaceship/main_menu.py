@@ -10,6 +10,7 @@ from .setup_game import setup, setup_font, setup_menu, output, toChr
 from .screen_functions import *
 from .options import Option
 from .action import commands
+from .gamelog import GameLogger
 
 class Engine:
     def __init__(self, scene):
@@ -1241,7 +1242,7 @@ class Start(Scene):
         self.waiting = False
         self.turn_inc = False
         self.do_action = True
-        self.gamelog = None
+        self.gamelog = GameLogger()
 
         self.actions = {
             0: {},
