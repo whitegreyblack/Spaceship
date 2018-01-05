@@ -6,7 +6,7 @@ from collections import namedtuple
 from bearlibterminal import terminal as term
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
 import spaceship.cc_strings as strings
-from .setup_game import setup, setup_font, setup_menu, output
+from .setup_game import setup, setup_font, setup_menu, output, toChr
 from .screen_functions import *
 from .options import Option
 
@@ -352,7 +352,7 @@ class Name(Scene):
         self.final_name = ''
         self.invalid = False
 
-    def text(self):
+    def draw_text(self):
         term.puts(
             x=center(self.direction_name, self.xhalf * 2), 
             y=self.yhalf - 5, 
@@ -366,7 +366,7 @@ class Name(Scene):
             y=self.yhalf + 8, 
             s=self.direction_exit_program)
 
-    def border(self):
+    def draw_border(self):
         # for k in range(SCREEN_WIDTH):
         #     term.puts(k, 3, toChr("2550"))
         #     term.puts(k, SCREEN_HEIGHT-3, toChr("2550"))
@@ -392,16 +392,16 @@ class Name(Scene):
         # corner border
         term.puts(hor_lo, ver_lo, "{}".format(toChr('2554')))
         term.puts(hor_hi, ver_lo, "{}".format(toChr('2557')))
-        term.puts(hor_lo, yhalf, "{}".format(toChr('255A')))
-        term.puts(hor_hi, yhalf, "{}".format(toChr('255D')))
+        term.puts(hor_lo, self.yhalf, "{}".format(toChr('255A')))
+        term.puts(hor_hi, self.yhalf, "{}".format(toChr('255D')))
 
     def random_name(self):
         return 'Grey'
 
     def draw(self):
         term.clear()
-        draw_border()
-        draw_text()
+        self.draw_border()
+        self.draw_text()
 
         term.puts(
             x=self.xhalf - self.fifth + 1, 
@@ -421,26 +421,26 @@ class Name(Scene):
         key = term.read()
         if key == term.TK_ESCAPE:
             if term.state(term.TK_SHIFT):
-                self.final_name == ''
-                self.ret = 'main_menu'
+                # shift escape -> to desktop
+                self.ret = 'exit'
 
-            elif not string:
-                self.final_name = ''
+            # elif not self.final_name:
+            else:
                 self.ret = 'create_menu'
 
-            else:
-                self.final_name = self.final_name[0:len(self.final_name) - 1]
-                self.ret = 'start_game'
-
+            # else:
+            #     self.final_name = self.final_name[0:len(self.final_name) - 1]
+            #     self.ret = 'start_game'
+            self.final_name = ''
             self.proceed = False
 
         elif key == term.TK_ENTER:
             if not self.final_name:
                 self.final_name = self.random_name()
 
-            else:
-                return output(0, self.final_name)
-    
+            self.ret = 'start_game'
+            self.proceed = False
+
         elif key == term.TK_BACKSPACE:
             if self.final_name:
                 self.final_name = self.final_name[0:len(self.final_name) - 1]
@@ -487,8 +487,8 @@ class Create(Scene):
 
         # return type
         self.player=namedtuple("Player",
-            "name home gold stats gender gbonus race rbonus job \
-            jbonus skills equipment inventory")
+            "home gold stats gender gbonus race rbonus \
+            job jbonus skills equipment inventory")
 
         # gender objects and options
         genders = namedtuple("Gender", "gender bonus")
@@ -721,7 +721,7 @@ class Create(Scene):
             if term.state(term.TK_SHIFT) and self.character_index <= 1:
                 # lets not randomize if you've already selected a gender
                 # its not much more effort to finish creating your character
-                name = "Random name"
+                # name = "Random name"
                 self.gender_index = random.randint(0, 1)
                 gender = self.gender_row(draw=False)
                 self.race_index = random.randint(0, 4)
@@ -732,7 +732,7 @@ class Create(Scene):
                 self.game_vars = output(
                         proceed=True,
                         value=self.player(
-                            name,
+                            # name,
                             race.location,
                             race.gold,
                             race.stats,
@@ -745,36 +745,37 @@ class Create(Scene):
                             race.skills,
                             eq,
                             inv))
-                self.ret = 'start_game'
+                self.ret = 'name_game'
                 self.proceed = False
 
-        # ENTER
+        # ENTER AFTER CHOOSING ALL 3 BACKGROUND CHOICES
         elif code == term.TK_ENTER:
+            # check to see if we are at the final index
             if self.character_index == 3:
-                name = new_name((race, occu))
+                # name = new_name((race, occu))
                 # print("CHARACTER NAME: {}".format(name.value))
-                if name.proceed == 0:
-                    gender = self.gender_row(draw=False)
-                    race = self.race_row(draw=False)
-                    job = self.class_row(draw=False)
-                    self.game_vars = output(
-                            proceed=True,
-                            value=self.player(
-                                name.value,
-                                race.location,
-                                race.gold,
-                                race.stats,
-                                gender.gender,
-                                gender.bonus,
-                                race.race,
-                                race.bonus,
-                                job.classes,
-                                job.bonuses,
-                                race.skills,
-                                eq,
-                                inv))
-                    self.ret = 'start_game'
-                    self.proceed = False
+                # if name.proceed == 0:
+                gender = self.gender_row(draw=False)
+                race = self.race_row(draw=False)
+                job = self.class_row(draw=False)
+                self.game_vars = output(
+                        proceed=True,
+                        value=self.player(
+                            # name.value,
+                            race.location,
+                            race.gold,
+                            race.stats,
+                            gender.gender,
+                            gender.bonus,
+                            race.race,
+                            race.bonus,
+                            job.classes,
+                            job.bonuses,
+                            race.skills,
+                            eq,
+                            inv))
+                self.ret = 'name_menu'
+                self.proceed = False
             else:
                 self.character_index += 1
 

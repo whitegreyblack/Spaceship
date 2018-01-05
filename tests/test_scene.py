@@ -75,6 +75,9 @@ def test_scene_name():
 
     e = Engine(m)
     e.run()
+    
+    print(n.ret)
+    print(n.final_name)
 
 def test_scene_options():
     pass
