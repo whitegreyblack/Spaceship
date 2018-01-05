@@ -20,6 +20,19 @@ New Game
 def continue_game():
     '''Handles save file opening to continue previously saved games'''
 
+    def get_saves_info():
+        '''Combines get_saves and get_descs functions'''
+        save_files, save_descs = [], []
+
+        for root, dirs, files in os.walk('saves', topdown=True):
+            for f in files:
+                if f.endswith('.dat'):
+                    save_files.append(f.replaces('.dat', ''))
+                    with shelve.open(f, 'r') as save:
+                        save_descs.append(save['save'])
+
+        return save_files, save_descs
+
     def get_saves():
         '''Handles the retrieving of saved data files'''
         save_files = []

@@ -1,5 +1,6 @@
 import os
 import sys
+import shelve
 import random
 from collections import namedtuple
 from bearlibterminal import terminal as term
@@ -25,9 +26,6 @@ class Engine:
             else:
                 self.proceed = False
 
-    def change_scene(self, title):
-        self.scene = self.scene.scene(title)
-
 '''
 def connect_scenes(scene_a, scene_b):
     scene_a.add_scene(scene_b)
@@ -37,9 +35,11 @@ def connect_scenes(scene_a, scene_b):
     scene_b.add_parent_scene(scene_a)
 '''
 class Scene:
-    def __init__(self, width, height, scene_id):
+    def __init__(self, scene_id):
         '''Initializes window and screen dimensions and title for the scene'''
-        self.width, self.height = width, height
+        # self.width, self.height = width, height
+        self.width = term.state(term.TK_WIDTH)
+        self.height = term.state(term.TK_HEIGHT)
         self.sid = scene_id
 
         self.proceed = True
@@ -93,11 +93,20 @@ class Scene:
             m = 'Incoming scene is duplicate of current scene'
 
         elif scene.width != self.width:
-            m = 'Incoming scene does not have the same width as current scene'
+            m = 'Incoming scene does not have the same width as current scene: '
+            m += 'CUR: {}x{} != INC: {}x{}'.format(
+                self.width, 
+                self.height,
+                scene.width,
+                scene.height)
 
         elif scene.height != self.height:
-            m = 'Incoming scene does not have the same height as current scene'
-
+            m = 'Incoming scene does not have the same height as current scene:'
+            m += ' CUR: {}x{} != INC: {}x{}'.format(
+                self.width, 
+                self.height,
+                scene.width,
+                scene.height)
         else:
             for key in self.scenes.keys():
                 if scene.sid in self.scenes[key].keys():
@@ -125,6 +134,9 @@ class Scene:
         # return [self.scenes[(title, scene for title, scene in self.scenes.keys() if scene == 0]
         if 1 not in self.scenes.keys():
             return []
+
+        elif len(self.scenes[1].keys()) == 1:
+            return list(self.scenes[1].values()).pop()
 
         return [self.scenes[1][title] for title in self.scenes[1].keys()]
 
@@ -167,14 +179,15 @@ class Scene:
         # return [self.scenes[(title, scene)] for title, scene in self.scenes.keys() if scene == 1]
         if 0 not in self.scenes.keys():
             return []
-        elif len(self.scenes.keys()) == 1:
-            return [self.scenes[0][sid] for sid in self.scenes[0].keys()].pop()
-        return [self.scenes[0][sid] for sid in self.scenes[0].keys()]
 
+        elif len(self.scenes[0].keys()) == 1:
+            return list(self.scenes[0].values()).pop()
+        
+        return [self.scenes[0][sid] for sid in self.scenes[0].keys()]
     
 class Main(Scene):
-    def __init__(self, width, height, title='main_menu'):
-        super().__init__(width, height, title)
+    def __init__(self, title='main_menu'):
+        super().__init__(title)
 
     def setup(self):
         self.index = -1
@@ -288,8 +301,8 @@ class CreateName(Scene):
     pass
 
 class Start(Scene):
-    def __init__(self, width, height, title='start_menu'):
-        super().__init__(width, height, title)
+    def __init__(self, title='start_menu'):
+        super().__init__(title)
 
     def setup(self):
         self.shorten = self.height <= 25
@@ -773,8 +786,8 @@ class Start(Scene):
         return eqp, flatten(inv)
 
 class Options(Scene):
-    def __init__(self, width, height, title='options_menu'):
-        super().__init__(width, height, title)
+    def __init__(self, title='options_menu'):
+        super().__init__(title)
 
     def setup(self):
         self.option = Option("Options Screen")
@@ -939,14 +952,112 @@ class Options(Scene):
                 self.option.correct_pointer()
 
 class Continue(Scene):
-    def __init__(self, width, height, title='continue_menu'):
-        super().__init__(width, height, title)
+    def __init__(self, title='continue_menu'):
+        super().__init__(title)
 
     def setup(self):
-        pass
+        self.index = 0
+        self.loaded = False
+        self.files, self.descs = self.saves_info()
+
+    def saves_info(self):
+        save_files, save_descs = [], []
+
+        for root, dirs, files in os.walk('saves', topdown=True):
+            for f in files:
+                if f.endswith('.dat'):
+                    file_name = f.replace('.dat', '')
+
+                    if file_name not in save_files:
+                        save_files.append(file_name)
+                        
+                        with shelve.open('./saves/' + file_name, 'r') as save:
+                            save_descs.append(save['save'])
+
+        if len(save_files) != len(save_descs):
+            raise ValueError("Save files number does not match save files descs number")
+
+        return save_files, save_descs
+
+    def saves_exists(self):
+        '''Handles listing the saved files to terminal'''
+        # save screen header border
+        for i in range(self.width):
+            term.puts(i, 0, '#')
+        # save screen header
+        term.puts(
+            x=center('Saved Files  ', self.width), 
+            y=0, 
+            s=' Saved Files ')
+
+        # list the saved files
+        for i, (save, desc) in enumerate(zip(self.files, self.descs)):
+            # split the save file string from plain and hash text
+            save = save.split('(')[0]
+            letter = chr(ord('a') + i) + '. '
+            if i == self.index:
+                save = "[c=#00FFFF]{}[/c]".format(save)
+            term.puts(1, 3 + i, letter + save + " :- " + desc)  
+
+    def save_safe(self):
+        character, world, turns = None, None, None
+        try:
+            with shelve.open("./saves/" + self.files[self.index], 'r') as save:
+                self.character = save['player']
+                self.world = save['world']
+                self.turns = save['turns']
+                
+        except FileNotFoundError:
+            term.puts(0, self.height, 'File Not Found')
+
+        finally:
+            return self.character and self.world and self.turns
 
     def draw(self):
-        pass
+        term.clear()
+
+        if not os.path.isdir('saves') or os.listdir('saves') == []:
+            # make sure either folder does not exist or empty folder
+            term.puts(
+                x=center('No Saved Games', term.state(term.TK_WIDTH)), 
+                y=term.state(term.TK_HEIGHT) // 2, 
+                s='NO SAVED GAMES')
+        else:
+            # any other case triggers branch
+            self.saves_exists()
+
+        term.refresh()
+        code = term.read()
+
+        if code == term.TK_ENTER and self.files:
+            # try:
+                # use context manager to make sure file handling is safe
+                # with shelve.open("./saves/" + self.files[self.index], 'r') as save:
+                    # since shelve serializes objects into data we can unpack directly from the dictionary
+                    # new_game(character=save['player'], world=save['world'])
+                    # print('GOTO: NEW GAME')
+                    # character=save['player']
+                    # world=save['world']
+                    # turns=save['turns']
+
+            # except FileNotFoundError:
+            #     term.puts(0, self.height, 'File Not Found')
+                
+            # finally:    
+                # break # --> makes sure we exit loop to return directly to new screen
+            if self.save_safe():
+                self.proceed = False
+                self.ret = 'NEW GAME' # self.scene_child('new_game')
+
+        elif code == term.TK_DOWN:
+            self.index = min(self.index + 1, len(self.files)-1)
+
+        elif code == term.TK_UP:
+            self.index = max(self.index - 1, 0)
+
+        elif code == term.TK_ESCAPE:
+            self.proceed = False
+            self.ret = self.scene_parent('main_menu')
 
 if __name__ == "__main__":
     term.open()

@@ -1,8 +1,9 @@
 import os
 import sys
+from bearlibterminal import terminal as term
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
 
-from spaceship.main_menu import Scene
+from spaceship.main_menu import Engine, Scene, Main, Continue
 
 def test_scene_dimensions():
     s = Scene(200, 50, title='s')
@@ -55,5 +56,17 @@ def test_scene_change_scene_parent():
     sub = e.scene_parent(s)
     assert sub == s
 
+def test_scene_continue():
+    term.open()
+    m = Main()
+    c = Continue()
+    m.add_scene_child(c)
+    c.add_scene_parent(m)
+
+    print(m.children, c.parents)
+
+    e = Engine(m)
+    e.run()
+
 if __name__ == "__main__":
-    test_scene_change_scene_parent()
+    test_scene_continue()
