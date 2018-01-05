@@ -12,9 +12,17 @@ from .options import Option
 class Engine:
     def __init__(self, scene):
         self.scene = scene
+        self.proceed = True
 
     def run(self):
-        self.scene.run()
+        while self.proceed:
+            print('Scene: ', self.scene)
+            ret = self.scene.run()
+            print('Return ', ret)
+            if isinstance(ret, Scene):
+                self.scene = ret
+            else:
+                self.proceed = False
 
     def change_scene(self, title):
         self.scene = self.scene.scene(title)
@@ -28,10 +36,11 @@ def connect_scenes(scene_a, scene_b):
     scene_b.add_parent_scene(scene_a)
 '''
 class Scene:
-    def __init__(self, width, height, title):
+    def __init__(self, width, height, scene_id):
         '''Initializes window and screen dimensions and title for the scene'''
         self.width, self.height = width, height
-        self.title = title
+        self.sid = scene_id
+
         self.proceed = True
 
         # scenes is a dictionary holding other scene objects
@@ -39,15 +48,20 @@ class Scene:
         self.setup()
 
     def __repr__(self):
-        return self.title
+        return self.sid
 
     def setup(self):
         pass
     
-    def draw(self):
-        pass
+    def run(self):
+        while self.proceed:
+            self.draw()
+        
+        self.proceed = True
+        if hasattr(self, 'ret'):
+            return self.ret
 
-    def update(self):
+    def draw(self):
         pass
 
     @property
@@ -70,25 +84,34 @@ class Scene:
         # if scene.title in self.scenes.keys():
         #     raise ValueError('Same title already in scene')
         # elif scene.width != self.width:
+        m = None
         if self == scene:
-            raise ValueError('Incoming scene is duplicate of current scene')
+            m = 'Incoming scene is duplicate of current scene'
+
         elif scene.width != self.width:
-            raise ValueError('Incoming scene does not have the same width as current scene')
+            m = 'Incoming scene does not have the same width as current scene'
+
         elif scene.height != self.height:
-            raise ValueError('Incoming scene does not have the same height as current scene')
+            m = 'Incoming scene does not have the same height as current scene'
+
         else:
             for key in self.scenes.keys():
-                if scene.title in self.scenes[key].keys():
-                    raise ValueError('Same Title already in scene')
+                if scene.sid in self.scenes[key].keys():
+                    m = 'Same Title already in scene'
+        if m:
+            raise ValueError(m)
         return True
 
-    def scene_child(self, title):
-        if isinstance(title, Scene):
-            title = title.title
+    def scene_child(self, sid):
+        if isinstance(sid, Scene):
+            title = title.sid
+
         try:
-            return self.scenes[1][title]
+            return self.scenes[1][sid]
+
         except KeyError:
-            print('No child scene with that title')
+            raise KeyError('No parent scene with that title')
+
         except:
             raise
 
@@ -105,18 +128,22 @@ class Scene:
         self.check_scene(scene)
         # self.scenes[(scene.title, 0)] = scene
         # self.scenes[0][scene.title] = scene
-        if 0 not in self.scenes.keys():
-            self.scenes[1] = { scene.title: scene }
+        if 1 not in self.scenes.keys():
+            self.scenes[1] = { scene.sid: scene }
+
         else:
-            self.scenes[1][scene.title] = scene
+            self.scenes[1][scene.sid] = scene
     
-    def scene_parent(self, title):
-        if isinstance(title, Scene):
-            title = title.title
+    def scene_parent(self, sid):
+        if isinstance(sid, Scene):
+            sid = sid.sid
+
         try:
-            return self.scenes[0][title]
+            return self.scenes[0][sid]
+
         except KeyError:
-            print('No parent scene with that title')
+            raise KeyError('No parent scene with that title')
+
         except:
             raise
 
@@ -124,10 +151,11 @@ class Scene:
         self.check_scene(scene)
         # self.scenes[(scene.title, 1)] = scene
         # self.scenes[1][scene.title] = scene
-        if 1 not in self.scenes.keys():
-            self.scenes[0] = { scene.title: scene }
+        if 0 not in self.scenes.keys():
+            self.scenes[0] = { scene.sid: scene }
+
         else:
-            self.scenes[0][scene.title] = scene 
+            self.scenes[0][scene.sid] = scene 
 
     @property
     def parents(self):
@@ -135,8 +163,9 @@ class Scene:
         # return [self.scenes[(title, scene)] for title, scene in self.scenes.keys() if scene == 1]
         if 0 not in self.scenes.keys():
             return []
-
-        return [self.scenes[0][title] for title in self.scenes[0].keys()]
+        elif len(self.scenes.keys()) == 1:
+            return [self.scenes[0][sid] for sid in self.scenes[0].keys()].pop()
+        return [self.scenes[0][sid] for sid in self.scenes[0].keys()]
 
     
 class Main(Scene):
@@ -176,10 +205,6 @@ class Main(Scene):
         total_height = self.height - header_offset - footer_offset
         return [calculate(option * 2) for option in range(4)]
 
-    def run(self):
-        while self.proceed:
-            self.draw()
-
     def draw(self):
         term.clear()
 
@@ -203,6 +228,7 @@ class Main(Scene):
             center(len(self.version), self.width), 
             self.height - 4, 
             self.version)
+
         term.puts(center(self.developed_by, self.width), 
             self.width - 2, 
             self.developed_by)
@@ -213,20 +239,22 @@ class Main(Scene):
         # key (CNOQ, ENTER)
         if code == term.TK_C or (code == term.TK_ENTER and self.index == 0):
             # proceed = continue_game()
-            self.ret = self.scene('continue_menu')
+            self.ret = self.scene_child('continue_menu')
             self.proceed = False
 
         # key press on N or enter on NEW GAME
         elif code == term.TK_N or (code == term.TK_ENTER and self.index == 1):
             # proceed = start_new_game()
-            self.ret = self.scene('start_menu')
+            self.ret = self.scene_child('start_menu')
             self.proceed = False
 
         # key press on O or enter on OPTIONS
         elif code == term.TK_O or (code == term.TK_ENTER and self.index == 2):
-            options()
-            height = update_start_screen() + len(self.title.split('\n'))
-            self.options_height = calc_option_heights(height, 3)
+            # options()
+            # height = update_start_screen() + len(self.title.split('\n'))
+            # self.options_height = calc_option_heights(height, 3)
+            self.ret = self.scene_child('options_menu')
+            self.proceed = False
 
         # key press on Q or enter on QUIT
         elif code == term.TK_Q or (code == term.TK_ENTER and self.index == 3):
@@ -242,6 +270,7 @@ class Main(Scene):
                 self.index = max(0, min(self.index, len(self.options) - 1))
 
         elif code in (term.TK_CLOSE, term.TK_ESCAPE):
+            self.ret = None
             self.proceed = False
 
 class CreateName(Scene):
@@ -364,10 +393,6 @@ class Start(Scene):
                 strings.race_human, strings.race_orcen,],
             [strings.class_druid, strings.class_cleric, strings.class_wizard,
                 strings.class_archer, strings.class_squire,]]
-
-    def run(self):
-        while self.proceed:
-            self.draw()
         
     def draw(self):
         term.clear()
@@ -580,9 +605,7 @@ class Start(Scene):
 
             elif self.character_index == 0:
                 self.proceed = False
-                self.ret = output(
-                        proceed=True,
-                        value="Exit to Menu")
+                self.ret = self.scene_parent('main_menu')
 
             else:
                 self.character_index -= 1
@@ -747,11 +770,14 @@ class Options(Scene):
         # 80x25 -> 8x16 | 80x50 -> 8x8 | 160x50 -> 16x16 | FullScreen -> 16x16
         self.option.add_opt("Screen Size", 
             ["80x25", "80x50", "160x50", "160x100"]) 
+            
         # "Full Screen: {}x{}".format(sysize(0), sysize(1))])
         self.option.add_opt("Cell Size", ["Auto", "8x16", "8x8", "16x16"])
+
         self.option.add_opt("Font Choice", 
             ["Default", "Source", "Fira", "Fira-Bold", "IBM_CGA", "Andale", 
              "Courier", "Unscii-8", "Unscii-8-thin", "VeraMono"])
+
         self.option.add_opt("Coloring", 
             ["Dynamic", "Dark", "Light", "Colorblind"])
         
@@ -815,10 +841,6 @@ class Options(Scene):
             term.set("window: size={}x{}, cellsize={}x{}".format(*(v for _, v in self.prop.items())))
         term.refresh()        
 
-    def run(self):
-        while self.proceed:
-            self.draw()
-
     def draw(self):
         term.clear()
 
@@ -858,6 +880,7 @@ class Options(Scene):
 
         if key in (term.TK_CLOSE, term.TK_Q, term.TK_ESCAPE):
             self.option.reset_all()
+            self.ret = self.parents
             self.proceed = False
         
         elif key == term.TK_ENTER:
@@ -890,13 +913,16 @@ class Options(Scene):
             if len(self.option.expand):
                 self.option.move_subpointer(1)
                 self.option.correct_subpointer()
+
             else:
                 self.option.move_pointer(1)
                 self.option.correct_pointer()
+
         elif key == term.TK_UP:
             if len(self.option.expand):
                 self.option.move_subpointer(-1)
                 self.option.correct_subpointer()
+
             else:
                 self.option.move_pointer(-1)
                 self.option.correct_pointer()
@@ -904,6 +930,12 @@ class Options(Scene):
 class Continue(Scene):
     def __init__(self, width, height, title='continue_menu'):
         super().__init__(width, height, title)
+
+    def setup(self):
+        pass
+
+    def draw(self):
+        pass
 
 if __name__ == "__main__":
     term.open()
@@ -928,6 +960,9 @@ if __name__ == "__main__":
     s.add_scene_parent(m)
     o.add_scene_parent(m)
     c.add_scene_parent(m)
+
+    print(m.children)
+    print(o.parents)
     e = Engine(m)
     e.run()
     # print([child.title for child in m.children])
