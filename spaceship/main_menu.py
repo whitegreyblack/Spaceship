@@ -1241,6 +1241,12 @@ class Start(Scene):
         self.waiting = False
         self.turn_inc = False
         self.do_action = True
+        self.gamelog = None
+
+        self.actions = {
+            0: {},
+            1: {},
+        }
 
     def run(self):
         # while self.proceed and self.player.is_alive():
@@ -1258,9 +1264,40 @@ class Start(Scene):
         # do_action = False
 
         if self.do_action:
-            action, proceed = self.key_input()
-            print(action, proceed)
-            # self.process_handler()
+            action = self.key_input()
+            if not self.proceed:
+                return
+
+            self.process_handler(action)
+
+    def process_handler(self, x, y, k, key):
+        '''Checks actions linearly by case:
+        (1) processes non-movement action
+            Actions not in movement groupings
+        (2) processes movement action
+            Keyboard shortcut action grouping
+        (3) If action teplate is empty:
+            Return skip-action command
+        '''
+        if k is not None:
+            process_action(k)
+        elif all(z is not None for z in [x, y]):
+            process_movement(x, y)
+        else:
+            return 'skipped-turn'
+
+    def process_action(self, action):
+        ''' 
+        Player class should return a height method and position method
+        Position method should return position based on height
+        So height would be independent and position would be depenedent on height
+        '''
+        try:
+            actions[max(0, min(player.height, 1))][action](action)
+        except TypeError:
+            actions[max(0, min(player.height, 1))][action](action, gamelog)
+        except KeyError:
+            gamelog.add("'{}' is not a valid command".format(action))
 
     def key_input(self):
         '''Handles keyboard input and keypress transformation
@@ -1270,9 +1307,7 @@ class Start(Scene):
             Elif key is valid command return the command from command list with continue
             Else return invalid action tuple with continue value
         '''
-        action, proceed =  tuple(None for _ in range(4)), True
-        # while term.has_input():
-        #     term.read()
+        action = tuple(None for _ in range(4))
 
         key = term.read()
         while key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
@@ -1285,7 +1320,7 @@ class Start(Scene):
             if shifted:
                 exit('Early Exit')
             else:
-                proceed = False
+                self.proceed = False
 
         try:
             # discover the command and set as current action
@@ -1293,7 +1328,7 @@ class Start(Scene):
         except KeyError:
             pass
 
-        return action, proceed
+        return action
 
 
 if __name__ == "__main__":
