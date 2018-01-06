@@ -1230,7 +1230,20 @@ class Continue(Scene):
         elif code == term.TK_ESCAPE:
             self.proceed = False
             self.ret = 'main_menu'
+'''
+Since starting a new game will need a character parameter
+we need to embed CONTiNUE, START, and NAME into the GAME
+screen.
 
+So on main screen:
+    If either continue or new game is selected:
+        Then Start Game runs
+    Elif Options is selected:
+        Then options menu runs
+    Else:
+        Selected quit quits game
+        Everything else does nothing
+'''
 class Start(Scene):
     def __init__(self, sid='start_game'):
         super().__init__(scene_id=sid)
