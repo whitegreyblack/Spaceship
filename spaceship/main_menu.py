@@ -14,6 +14,8 @@ from .gamelog import GameLogger
 from .classes.player import Player
 from .classes.world import World
 
+class Level: Global, World, Local = -1, 0, 1
+
 class Engine:
     def __init__(self, scene):
         self.scene = scene
@@ -53,7 +55,7 @@ class GameEngine:
     def setup(self):
         '''sets up instance of terminal'''
         term.open()
-        setup_font('Ibm_cga', cx=8, cy=16)
+        setup_font('Ibm_cga', cx=8, cy=8)
         term.set('window: size=80x25, cellsize=auto, title="Spaceship", fullscreen=false')
 
     def run(self):
@@ -1303,7 +1305,6 @@ So on main screen:
 class Start(Scene):
     def __init__(self, sid='start_game'):
         super().__init__(scene_id=sid)
-        self.reset_size()
 
     def setup(self):
         self.turns = 0
@@ -1315,11 +1316,20 @@ class Start(Scene):
         self.gamelog = GameLogger(3 if self.height <= 25 else 4)
 
         self.actions = {
-            0: {},
+            0: {
+                '@': self.draw_player_screens,
+                'i': self.draw_player_screens,
+                'v': self.draw_player_screens,
+            },
             1: {},
         }
 
+        # player screen variables
+        self.player_screen_col, self.player_screen_row = 1, 3
+
+
     def run(self):
+        self.reset_size()
         if isinstance(self.ret['kwargs']['player'], Player):
             self.player = self.ret['kwargs']['player']
             self.world = self.ret['kwargs']['world']
@@ -1348,7 +1358,7 @@ class Start(Scene):
         term.clear()
 
         self.draw_overworld()
-
+        self.draw_player_status()
         term.refresh()
         turn_inc = False
         # do_action = False
@@ -1369,6 +1379,148 @@ class Start(Scene):
                 x=x + screen_off_x,
                 y=y + screen_off_y,
                 s="[c={}]{}[/c]".format(col, ch))
+
+    def draw_player_status(self):
+        col, row = 1, 2
+        term.puts(col, row - 1, self.player.name)
+        term.puts(col, row + 0, self.player.gender)
+        term.puts(col, row + 1, self.player.race)
+        term.puts(col, row + 2, self.player.job)
+
+        term.puts(col, row + 4, "LVL: {:>6}".format(self.player.level))
+        term.puts(col, row + 5, "EXP: {:>6}".format("{}/{}".format(
+                                                    self.player.exp, 
+                                                    self.player.advexp)))
+        term.puts(col, row + 7, "HP:  {:>6}".format("{}/{}".format(
+                                                    self.player.cur_health, 
+                                                    self.player.max_health)))
+        term.puts(col, row + 8, "MP:  {:>6}".format("{}/{}".format(
+                                                    self.player.mp, 
+                                                    self.player.total_mp)))
+        term.puts(col, row + 9, "SP:  {:>6}".format(self.player.sp))
+
+        term.puts(col, row + 11, "STR: {:>6}".format(self.player.str)) 
+        term.puts(col, row + 12, "CON: {:>6}".format(self.player.con))
+        term.puts(col, row + 13, "DEX: {:>6}".format(self.player.dex))
+        term.puts(col, row + 14, "INT: {:>6}".format(self.player.int))
+        term.puts(col, row + 15, "WIS: {:>6}".format(self.player.wis))
+        term.puts(col, row + 16, "CHA: {:>6}".format(self.player.cha))
+
+        term.puts(col, row + 18, "GOLD:{:>6}".format(self.player.gold))
+
+        # sets the location name at the bottom of the status bar
+        if self.player.location in self.world.enterable_legend.keys():
+            location = self.world.enterable_legend[self.player.location]
+            term.bkcolor('grey')
+            term.puts(0, 0, ' ' * self.width)
+            term.bkcolor('black')
+            term.puts(
+                x=center(surround(location), self.width), 
+                y=0, 
+                s=surround(location))
+
+        elif self.player.location in self.world.dungeon_legend.keys():
+            location = self.world.dungeon_legend[self.player.location]
+
+        else:
+            location = ""
+
+        term.puts(col, row + 20, "{}".format(location))
+
+    def draw_player_profile(self):
+        '''Handles player profile screen'''
+        term.clear()
+
+        # draws header border
+        for i in range(self.width):
+            term.puts(i, 1, '#')
+        term.puts(center('profile  ', self.width), 1, ' Profile ')
+
+        for colnum, column in enumerate(list(self.player.profile())):
+            term.puts(
+                x=self.player_screen_col + (20 * colnum), 
+                y=self.player_screen_row, 
+                s=column)
+
+    def draw_player_equipment(self):
+        '''Handles equipment screen'''
+        term.clear()
+
+        # draws header border
+        for i in range(self.width):
+            term.puts(i, 1, '#')
+        term.puts(center(' inventory ', self.width), 1, ' Inventory ')
+        
+        for index, (part, item) in enumerate(self.player.equipment()):
+            letter = chr(ord('a') + index)
+            body_part = ".  {:<10}: ".format(part)
+            item_desc = item.__str__() if item else ""
+
+            term.puts(
+                x=self.player_screen_col,
+                y=self.player_screen_row + index * (2 if self.height > 25 else 1),
+                s=letter + body_part + item_desc)
+
+    def draw_player_inventory(self):
+        '''Handles inventory screen'''
+        term.clear()
+
+        # draws header border for the backpack
+        for i in range(self.width):
+            term.puts(i, 1, '#')
+        term.puts(center('backpack  ', self.width), 1, ' Backpack ')
+
+        for index, item in enumerate(self.player.inventory()):
+            letter = chr(ord('a') + index) + ". "
+            item_desc = item.__str__() if item else ""
+
+            term.puts(
+                x=self.player_screen_col,
+                y=self.player_screen_row + index * (2 if self.height > 25 else 1),
+                s=letter + item_desc)
+    
+    def draw_player_screens(self, key):
+        playscreen = False
+        current_screen = key
+        current_range = 0
+
+        while True:
+            term.clear()
+
+            if current_screen == "i":
+                self.draw_player_equipment()
+            elif current_screen == "v":
+                self.draw_player_inventory()
+            else:
+                self.draw_player_profile()
+
+            term.refresh()
+            code = term.read()
+
+            if code in (term.TK_ESCAPE,):
+                if current_screen == 1:
+                    current_screen = 0
+                else:
+                    break
+
+            elif code == term.TK_I:
+                current_screen = 'i'
+
+            elif code == term.TK_V:
+                # V goes to inventory screen
+                current_screen = 'v'
+            
+            elif code == term.TK_2 and term.state(term.TK_SHIFT):
+                # @ goes to profile
+                current_screen = '@'
+
+            elif code == term.TK_UP:
+                if current_range > 0: current_range -= 1
+
+            elif code == term.TK_DOWN:
+                if current_range < 10: current_range += 1
+
+        term.clear()
 
     def process_handler(self, x, y, k, key):
         '''Checks actions linearly by case:
@@ -1393,11 +1545,138 @@ class Start(Scene):
         So height would be independent and position would be depenedent on height
         '''
         try:
-            self.actions[max(0, min(player.height, 1))][action](action)
+            self.actions[max(0, min(self.player.height, 1))][action](action)
         except TypeError:
-            self.actions[max(0, min(player.height, 1))][action](action, gamelog)
+            self.actions[max(0, min(self.player.height, 1))][action](action)
         except KeyError:
-            gamelog.add("'{}' is not a valid command".format(action))
+            invalid_command = "'{}' is not a valid command".format(action)
+            self.gamelog.add(invalid_command)
+
+    def process_movement(self, x, y):
+        turn_inc = 0
+        if  self.player.height == Level.World:
+            if (x, y) == (0, 0):
+                self.gamelog.add("You wait in the area")
+                turn_inc = True
+            else:
+                tx = self.player.wx + x
+                ty = self.player.wy + y
+
+                if self.world.walkable(tx, ty):
+                    self.player.save_location()
+                    self.player.travel(x, y)
+                    turn_inc = True
+                else:
+                    travel_error = "You cannot travel there"
+                    self.gamelog.add(travel_error)
+        else:
+            if (x, y) == (0, 0):
+                self.gamelog.add("You rest for a while")
+                turn_inc = True
+            else:
+                tx = self.player.x + x
+                ty = self.player.y + y
+
+                if self.world.walkable(tx, ty):
+                    if not self.world.occupied(tx, ty):
+                        self.player.move(x, y)
+                        if self.world.square(tx, ty).items and randint(0, 5):
+                            pass_item_messages = [
+                                "You pass by an item.",
+                                "There is something here."
+                                "Your feet touches an object."
+                            ]
+                            item_message = randint(0, len(pass_item_messages) - 1)
+                            self.gamelog.add(
+                                pass_item_messages[item_message])
+                        turn_inc = True
+                    else:
+                        unit = self.world.get_unit(tx, ty)
+                        if unit.friendly:
+                            unit.move(-x, -y)
+                            self.player.move(x, y)
+                            log = "You switch places with the {}".format(
+                                unit.race)
+                            self.gamelog.add(log)
+                        else:
+                            chance = self.player.calculate_attack_chance()
+                            if chance == 0:
+                                log = "You try attacking the {} but miss".format(
+                                    unit.race)
+                                self.gamelog.add(log)
+                            else:
+                                damage = self.player.calculate_attack_damage()
+                                # if chance returns crit ie. a value of 2 
+                                # then multiply damage by 2
+                                if chance == 2:
+                                    damage *= 2
+                                unit.cur_health -= damage
+
+                                log = "You{}attack the {} for {} damage. ".format(
+                                    " crit and " if chance == 2 else " ", 
+                                    unit.race, 
+                                    damage)
+                                    
+                                log += "The {} has {} health left. ".format(
+                                                        unit.race, 
+                                                        max(unit.cur_health, 0))
+                                self.gamelog.add(log)
+
+                                if unit.cur_health < 1:
+                                    log += "You have killed the {}! ".format(
+                                                                    unit.race)
+                                    log += "You gain {} exp.".format(unit.xp)
+                                    self.gamelog.add(log)
+                                    self.player.gain_exp(unit.xp)
+
+                                    if self.player.check_exp():
+                                        self.gamelog.add("You level up. You are now level {}".format(self.player.level))
+                                        self.gamelog.add("You feel much stronger")
+
+                                    item = unit.drops()
+
+                                    if item:
+                                        self.world.square(*unit.position).items.append(item)
+                                        self.gamelog.add("The {} has dropped {}".format(
+                                                                    unit.race, 
+                                                                    item.name))
+
+                                    self.world.remove_unit(unit)
+                                else:
+                                    log += "The {} has {} health left".format(
+                                        unit.race, 
+                                        max(0, unit.cur_health))
+                                    self.gamelog.add(log)
+
+                                    term.puts(tx + 13, ty + 1, '[c=red]*[/c]')
+                                    term.refresh()
+
+                        turn_inc = True
+                else:
+                    if self.world.out_of_bounds(tx, ty):
+                        self.gamelog.add("You reached the edge of the map")
+                    else:
+                        walkChars = {
+                            "+": "a door",
+                            "/": "a door",
+                            "o": "a lamp",
+                            "#": "a wall",
+                            "x": "a post",
+                            "~": "a river",
+                            "T": "a tree",
+                            "f": "a tree",
+                            "Y": "a tree",
+                            "%": "a wall",
+                        }
+                        ch = self.world.square(tx, ty).char
+                        if ch == "~":
+                            self.gamelog.add("You cannot swim")
+                        else:
+                            self.gamelog.add("You walk into {}".format(
+                                                                walkChars[ch]))
+                            term.puts(tx + 13, ty + 1, '[c=red]X[/c]')
+                            # term.refresh()
+        term.refresh()
 
     def key_input(self):
         '''Handles keyboard input and keypress transformation
@@ -1430,6 +1709,14 @@ class Start(Scene):
 
         return action
 
+    def single_element(container):
+        return len(container) == 1
+
+    def spaces(self, x, y):
+        squares = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+        space = namedtuple("Space", ("x","y"))
+        for i, j in squares:
+            yield space(x + i, y + j)
 
 if __name__ == "__main__":
     g = GameEngine()

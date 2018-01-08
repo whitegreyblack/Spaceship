@@ -36,10 +36,11 @@ class Level: Global, World, Local = -1, 0, 1
 # class WorldView: Geo, Pol, King = range(3)
 
 '''
-x, y, a, act = key_input()
-key_action_handler(x, y, a, act):
-    -> movement_handler()
-    -> action_handler()
+Notes:
+    x, y, a, act = key_input()
+    key_action_handler(x, y, a, act):
+        -> movement_handler()
+        -> action_handler()
 '''
 def key_input():
     '''Handles keyboard input and keypress transformation
@@ -75,16 +76,17 @@ def key_input():
     return action, proceed
 
 '''
-class Action:
-    def __init__(self):
-        turn_inc = True
+Notes:
+    class Action:
+        def __init__(self):
+            turn_inc = True
 
-    def action(self):
-        pass
-    
-def Save(Action):
-    def __init__(self):
-        turn_inc = False
+        def action(self):
+            pass
+        
+    def Save(Action):
+        def __init__(self):
+            turn_inc = False
 '''
 
 def log_box(gamelog, turns):
@@ -111,7 +113,6 @@ def refresh(gamelog, turns, lines=[]):
     status_box()
     log_box(gamelog, turns)   
     term.refresh()
-
 
 def enter_map(player, a, world, gamelog):
     '''Logic:
@@ -193,17 +194,18 @@ def enter_map(player, a, world, gamelog):
     player.move_height(1)
 
 '''
-maybe create a class that holds all this together under a single identifier -- Engine
-so when we need to use specific actions inside the world, ie. Save() we call it like so
-Class Engine:
-  def run(...): ...
-  def save(...): ...
+Notes:
+    maybe create a class that holds all this together under a single identifier -- Engine
+    so when we need to use specific actions inside the world, ie. Save() we call it like so
+    Class Engine:
+    def run(...): ...
+    def save(...): ...
 
-e = Engine()
-e.run()
-e.save()
+    e = Engine()
+    e.run()
+    e.save()
 
-But for now lets do this ...
+    But for now lets do this ...
 '''
 def save_game(player, action, world, gamelog, turns):
     gamelog.add("Save and exit game(Y/N)?")

@@ -20,6 +20,7 @@ class Player(Unit):
     parts=("eq_head", "eq_neck", "eq_body", "eq_arms", "eq_hands", 
            "eq_hand_left", "eq_hand_right", "eq_ring_left", 
            "eq_ring_right", "eq_waist", "eq_legs", "eq_feet")
+
     def __init__(self, character, name):
         '''Unpacks the character tuple and calculates stats
 
@@ -38,8 +39,8 @@ class Player(Unit):
         self.base_stats = character.stats
         self.job_bonus = character.jbonus
         self.race_bonus = character.rbonus
-        self.equipment = character.equipment
-        self.inventory = character.inventory
+        self.__equipment = character.equipment
+        self.__inventory = character.inventory
         self.gender_bonus = character.gbonus
         self.name = name[0].upper() + name[1:]
 
@@ -61,34 +62,34 @@ class Player(Unit):
     def convert_equipment(self):
         '''Transforms equipment tuples into actual item objects'''
         for p, part in enumerate(self.parts):
-            if isinstance(self.equipment[p], list):
+            if isinstance(self.__equipment[p], list):
                 # No item is set for the current body part
                 setattr(self, part, None) 
             else:
                 # There exists an item -- see if it is defined in the items table already
                 # if defined: create the item, else just set the part to the tuple
                 try:
-                    setattr(self, part, items[self.equipment[p]])
+                    setattr(self, part, items[self.__equipment[p]])
                 except KeyError:
-                    setattr(self, part, self.equipment[p])
+                    setattr(self, part, self.__equipment[p])
 
     def convert_inventory(self):
         '''Transforms inventory tuples into actual item objects'''
-        for index, item in enumerate(self.inventory):
+        for index, item in enumerate(self.__inventory):
             try:
-                self.inventory[index] = items[item]
+                self.__inventory[index] = items[item]
             except KeyError:
                 pass
 
-    def get_equipment(self):
-        for index, part in enumerate(self.parts):
-            yield index, part.replace("eq_","").replace("_", " "), getattr(self, part)
+    def equipment(self):
+        for part in self.parts:
+            yield part.replace("eq_","").replace("_", " "), getattr(self, part)
 
-    def get_inventory(self):
-        for index, item in enumerate(self.inventory):
-            yield index, item
+    def inventory(self):
+        for item in self.__inventory:
+            yield item
 
-    def get_profile(self):
+    def profile(self):
         string_1='''
 Name     : {name:>6}
 Gender   : {sex:>6}
