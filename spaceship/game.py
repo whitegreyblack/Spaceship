@@ -446,6 +446,8 @@ class Start(Scene):
             # exit command -- maybe need a back to menu screen?
             if shifted:
                 exit('Early Exit')
+            elif player.height >= Level.World:
+                self.gamelog.add('Escape key disabled.')
             else:
                 self.ret['scene'] = 'main_menu'
                 self.proceed = False
@@ -606,6 +608,9 @@ class Start(Scene):
             self.location = self.location.getSublevel()
             self.player.move_height(1)
             self.player.position = self.location.getUpStairs()
+
+            term.puts(*self.player.position, s="[c=red]>[/c]")
+            term.refresh()
         else:
             self.gamelog.add('You cannot go downstairs without stairs')
 
