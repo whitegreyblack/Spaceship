@@ -63,7 +63,6 @@ class GameEngine:
             else:
                 try:
                     self.scene = self.scenes[ret['scene']]
-                    print(self.scene.sid)
                     if ret['kwargs']:
                         self.scene.add_args(**ret['kwargs'])
                 except KeyError:

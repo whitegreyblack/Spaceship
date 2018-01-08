@@ -49,7 +49,9 @@ class Start(Scene):
                 '@': self.draw_player_screens,
                 'i': self.draw_player_screens,
                 'v': self.draw_player_screens,
-                
+                '<': self.action_interact_stairs_up,
+                'c': self.action_interact_door_close,
+                'o': self.action_interact_door_open,
             },
         }
 
@@ -114,10 +116,9 @@ class Start(Scene):
     def draw_world(self):
         screen_off_x, screen_off_y = 14, 0
         x, y = self.player.position if self.player.height >= 1 else self.player.location
-        print(x, y)
         self.location.fov_calc([(x, y, self.player.sight * 2)])
 
-        for x, y, col, ch in self.location.output(*self.player.location):
+        for x, y, col, ch in self.location.output(x, y):
             term.puts(
                 x=x + screen_off_x,
                 y=y + screen_off_y,
@@ -291,9 +292,9 @@ class Start(Scene):
         So height would be independent and position would be depenedent on height
         '''
         try:
-            self.actions[max(0, min(self.player.height, 1))][action](action)
-        except TypeError:
             self.actions[max(0, min(self.player.height, 1))][action]()
+        except TypeError:
+            self.actions[max(0, min(self.player.height, 1))][action](action)
         except KeyError:
             invalid_command = "'{}' is not a valid command".format(action)
             self.gamelog.add(invalid_command)
@@ -308,7 +309,7 @@ class Start(Scene):
                 tx = self.player.wx + x
                 ty = self.player.wy + y
 
-                if self.world.walkable(tx, ty):
+                if self.location.walkable(tx, ty):
                     self.player.save_location()
                     self.player.travel(x, y)
                     turn_inc = True
@@ -323,10 +324,10 @@ class Start(Scene):
                 tx = self.player.x + x
                 ty = self.player.y + y
 
-                if self.world.walkable(tx, ty):
-                    if not self.world.occupied(tx, ty):
+                if self.location.walkable(tx, ty):
+                    if not self.location.occupied(tx, ty):
                         self.player.move(x, y)
-                        if self.world.square(tx, ty).items and random.randint(0, 5):
+                        if self.location.square(tx, ty).items and random.randint(0, 5):
                             pass_item_messages = [
                                 "You pass by an item.",
                                 "There is something here."
@@ -337,7 +338,7 @@ class Start(Scene):
                                 pass_item_messages[item_message])
                         turn_inc = True
                     else:
-                        unit = self.world.get_unit(tx, ty)
+                        unit = self.location.get_unit(tx, ty)
                         if unit.friendly:
                             unit.move(-x, -y)
                             self.player.move(x, y)
@@ -382,12 +383,12 @@ class Start(Scene):
                                     item = unit.drops()
 
                                     if item:
-                                        self.world.square(*unit.position).items.append(item)
+                                        self.location.square(*unit.position).items.append(item)
                                         self.gamelog.add("The {} has dropped {}".format(
                                                                     unit.race, 
                                                                     item.name))
 
-                                    self.world.remove_unit(unit)
+                                    self.location.remove_unit(unit)
                                 else:
                                     log += "The {} has {} health left".format(
                                         unit.race, 
@@ -399,10 +400,11 @@ class Start(Scene):
 
                         turn_inc = True
                 else:
-                    if self.world.out_of_bounds(tx, ty):
+                    if self.location.out_of_bounds(tx, ty):
                         self.gamelog.add("You reached the edge of the map")
                     else:
                         walkChars = {
+                            "=": "furniture",
                             "+": "a door",
                             "/": "a door",
                             "o": "a lamp",
@@ -414,13 +416,13 @@ class Start(Scene):
                             "Y": "a tree",
                             "%": "a wall",
                         }
-                        ch = self.world.square(tx, ty).char
+                        ch = self.location.square(tx, ty).char
                         if ch == "~":
                             self.gamelog.add("You cannot swim")
                         else:
                             self.gamelog.add("You walk into {}".format(
                                                                 walkChars[ch]))
-                            term.puts(tx + 13, ty + 1, '[c=red]X[/c]')
+                            term.puts(tx + 14, ty, '[c=red]X[/c]')
                             # term.refresh()
         term.refresh()
 
@@ -456,7 +458,7 @@ class Start(Scene):
 
         return action
 
-    def single_element(container):
+    def single_element(self, container):
         return len(container) == 1
 
     def spaces(self, x, y):
@@ -573,7 +575,7 @@ class Start(Scene):
         else:
             # location already been built -- retrieve from world map_data
             # player position is different on map enter depending on map location
-            location = self.world.location(*player.location)
+            location = self.world.location(*self.player.location)
             if self.player.location in self.world.enterable_legend.keys():
                 # re-enter a city
                 self.player.position = location.width // 2, location.height // 2
@@ -590,33 +592,140 @@ class Start(Scene):
         self.player.move_height(1)
         self.map_change = True
 
-    def action_local_interact_stairs(self):
+    def action_interact_stairs_down(self):
+        if self.player.position == self.location.getDownStairs():
+            if not self.location.hasSublevel():
+                location = Cave(
+                    width=self.width,
+                    height=self.height,
+                    max_rooms=random.randint(15, 20))
+                
+                location.addParent(self.location)
+                self.location.addSublevel(location)
+
+            self.location = self.location.getSublevel()
+            self.player.move_height(1)
+            self.player.position = self.location.getUpStairs()
+        else:
+            self.gamelog.add('You cannot go downstairs without stairs')
+
+    def action_interact_stairs_up(self):
+        if self.player.location in self.world.enterable_legend.keys():
+            self.player.move_height(-1)
+            self.location = self.location.getParent()
+
+        elif self.world.location_is(*self.player.location, 2):
+            self.player.move_height(-1)
+            self.location = self.location.getParent()
+
+        elif self.player.position == self.location.getUpStairs():
+            self.player.move_height(-1)
+            self.location = self.location.getParent()
+        
+        else:
+            self.gamelog.add('You cannot go upstairs without stairs')
+            self.draw_log()
+            term.refresh()
+
+        if isinstance(self.location, World):
+            self.player.position = (0, 0)
+
+    def action_interact_door_close(self):
+        def close_door(i, j):
+            self.gamelog.add('Closing door.')
+            term.puts(i + 14, j, "[c=red]/[/c]")
+            self.location.close_door(i, j)
+            self.location.reblock(i, j)
+
+        doors = []
+        for i, j in self.spaces(*self.player.position):
+            if (i, j) != (self.player.position):
+                valid_space = False
+                try:
+                    if self.location.square(i, j).char == '/':
+                        doors.append((i, j))
+                except IndexError:
+                    self.gamelog.add('Out of bounds ({}, {})'.format(i, j))
+
+        if not doors:
+            self.gamelog.add('No open doors next to you')
+        elif self.single_element(doors):
+            i, j = doors.pop()
+            close_door(i, j)
+        else:
+            self.gamelog.add("There is more than one door near you. Which door?")
+            self.draw_log()
+            term.refresh()
+
+            code = term.read()
+            try:
+                cx, cy, a, act = commands[(code, term.state(term.TK_SHIFT))]
+                if act == "move" and (x + cx, y + cy) in doors:
+                    close_door(x + cx, y + cy)
+                else:
+                    self.gamelog.add("Canceled closing door.")
+
+            except:
+                self.gamelog.add("Canceled closing door.")
+                self.log_box()
+                term.refresh()
+
+    def action_interact_door_open(self):
+        def open_door(i, j):
+            self.gamelog.add('Opening door.')
+            term.puts(i + 14, j, "[c=red]+[/c]")
+            self.location.open_door(i, j)
+            self.location.unblock(i, j)
+        
+        doors = []
+        for i, j in self.spaces(*self.player.position):
+            if (i, j) != (self.player.position):
+                valid_space = False
+                try:
+                    if self.location.square(i, j).char == "+":
+                        doors.append((i, j))
+                        
+                except IndexError:
+                    self.gamelog.add('Out of bounds ({}, {})'.format(i, j))
+        
+        if not doors:
+            self.gamelog.add('No closed doors next to you.')
+        elif self.single_element(doors):
+            i, j = doors.pop()
+            open_door(i, j)
+        else:
+            self.gamelog.add("There is more than one closed door near you. Which door?")
+            self.draw_log()
+            term.refresh()
+
+            code = term.read()
+            try:
+                cx, cy, a, act = commands[(code, term.state(term.TK_SHIFT))]
+                if act == "move" and (x + cx, y + cy) in doors:
+                    open_door(x + cx, y + cy)
+                else:
+                    self.gamelog.add("Canceled opening door.")
+                    
+            except:
+                self.gamelog.add("Canceled opening door.")
+                self.log_box()
+                term.refresh()
+
+    def action_interact_unit_attack_melee(self):
         pass
 
-    def action_local_interact_stairs_up(self):
+    def action_interact_unit_attack_ranged(self):
         pass
 
-    def action_local_interact_door_close(self):
+    def action_interact_unit_displace(self):
         pass
 
-    def action_local_interact_door_open(self):
-        pass
-
-    def action_local_interact_unit_attack_melee(self):
-        pass
-
-    def action_local_interact_unit_attack_ranged(self):
-        pass
-
-    def action_local_interact_unit_displace(self):
-        pass
-
-    def action_local_interact_item_pickup(self, x, y):
+    def action_interact_item_pickup(self, x, y):
         def pickup_item():
             pass
 
-    def action_local_interact_item_drop(self):
+    def action_interact_item_drop(self):
         pass
 
-    def action_local_interact_item_use(self):
+    def action_interact_item_use(self):
         pass
