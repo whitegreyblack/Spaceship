@@ -721,10 +721,28 @@ class Start(Scene):
         pass
 
     def action_interact_item_pickup(self, x, y):
-        def pickup_item():
-            pass
+        def pickup_item(item):
+            if len(self.player.inventory) >= 25:
+                gamelog.add("Backpack is full. Cannot pick up {}".format(item))
+            else:
+                self.location.square(*self.player.position).items.remove(item)
+                self.player.inventory.append(item)
+                self.gamelog.add("You pick up {} and place it in your backpack".format(item.name))
+                self.gamelog.add("Your backpack feels heavier")
+                self.turn_inc = true
+        
+        items = self.location.square(x, y).items
+        if not items:
+            self.gamelog.add('No items on the ground where you stand')
+        elif self.single_element(items):
+            pickup_item(item)
+        else:
+            print('Multiple item pickup screen')
 
     def action_interact_item_drop(self):
+        def drop_item(item):
+            pass
+        # open up inventory
         pass
 
     def action_interact_item_use(self):
