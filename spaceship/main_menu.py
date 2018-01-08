@@ -1244,6 +1244,19 @@ So on main screen:
         Selected quit quits game
         Everything else does nothing
 '''
+class NewGame(Scene):
+    def __init__(self, sid='new_game'):
+        super().__init__(scene_id=sid)
+
+    def setup(self):
+        pass
+
+    def screen_continue(self):
+        pass
+    
+    def screen_new(self):
+        pass
+
 class Start(Scene):
     def __init__(self, sid='start_game'):
         super().__init__(scene_id=sid)
