@@ -20,7 +20,7 @@ class Player(Unit):
     parts=("eq_head", "eq_neck", "eq_body", "eq_arms", "eq_hands", 
            "eq_hand_left", "eq_hand_right", "eq_ring_left", 
            "eq_ring_right", "eq_waist", "eq_legs", "eq_feet")
-    def __init__(self, character):
+    def __init__(self, character, name):
         '''Unpacks the character tuple and calculates stats
 
         Initial position for world and locations are set here
@@ -41,7 +41,7 @@ class Player(Unit):
         self.equipment = character.equipment
         self.inventory = character.inventory
         self.gender_bonus = character.gbonus
-        self.name = character.name[0].upper() + character.name[1:]
+        self.name = name[0].upper() + name[1:]
 
         # functions after unpacking
         self.setup(character.home)

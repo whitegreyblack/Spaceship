@@ -119,9 +119,9 @@ class World(Map):
                 self.block_lit,
                 self.light)
 
-    def __init__(self, map_name, map_img_path):
+    def __init__(self, map_name, map_link):
         self.map_name = map_name
-        self.tilemap = map_img_path
+        self.tilemap = map_link
         self.locations = {}
         super().__init__(self.width, self.height, self.__class__.__name__)
 
@@ -320,7 +320,7 @@ class World(Map):
 if __name__ == "__main__":
     w = World(
         map_name="Calabaston",
-        map_img_path="./assets/worldmap.png")
+        map_link="./assets/worldmap.png")
     print(w.__repr__())
     # w.create_tile_map()
     print(w)

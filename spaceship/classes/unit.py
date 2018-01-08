@@ -69,6 +69,10 @@ class Unit(Object):
             self.max_health
         )
 
+    @property
+    def is_alive(self):
+        return self.cur_health > 0
+
     def move(self, dx: int, dy: int) -> None:
         self.x += dx
         self.y += dy

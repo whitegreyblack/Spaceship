@@ -11,6 +11,8 @@ from .screen_functions import *
 from .options import Option
 from .action import commands
 from .gamelog import GameLogger
+from .classes.player import Player
+from .classes.world import World
 
 class Engine:
     def __init__(self, scene):
@@ -1281,6 +1283,9 @@ class Continue(Scene):
             self.proceed = False
             self.ret['scene'] = 'main_menu'
 
+        elif code == term.TK_D:
+            print('delete save')
+
 '''
 Since starting a new game will need a character parameter
 we need to embed CONTiNUE, START, and NAME into the GAME
@@ -1298,6 +1303,7 @@ So on main screen:
 class Start(Scene):
     def __init__(self, sid='start_game'):
         super().__init__(scene_id=sid)
+        self.reset_size()
 
     def setup(self):
         self.turns = 0
@@ -1306,7 +1312,7 @@ class Start(Scene):
         self.waiting = False
         self.turn_inc = False
         self.do_action = True
-        self.gamelog = GameLogger(2)
+        self.gamelog = GameLogger(3 if self.height <= 25 else 4)
 
         self.actions = {
             0: {},
@@ -1314,6 +1320,22 @@ class Start(Scene):
         }
 
     def run(self):
+        if isinstance(self.ret['kwargs']['player'], Player):
+            self.player = self.ret['kwargs']['player']
+            self.world = self.ret['kwargs']['world']
+            self.turns = self.ret['kwargs']['turns']
+        else:
+            player = self.ret['kwargs']['player']
+            name = self.ret['kwargs']['name']
+            self.player = Player(player, name)
+
+            self.world = World(
+                map_name="Calabston", 
+                map_link="./assets/worldmap.png")
+
+        # print(self.player.name)
+        # print(self.world.map_name)
+
         # while self.proceed and self.player.is_alive():
         while self.proceed:
             self.draw()
@@ -1323,8 +1345,10 @@ class Start(Scene):
             return self.ret
 
     def draw(self):
-        print(self.ret)
         term.clear()
+
+        self.draw_overworld()
+
         term.refresh()
         turn_inc = False
         # do_action = False
@@ -1335,6 +1359,16 @@ class Start(Scene):
                 return
 
             self.process_handler(*action)
+
+    def draw_overworld(self):
+        screen_off_x, screen_off_y = 14, 0
+        self.world.fov_calc([(*self.player.location, self.player.sight * 2)])
+
+        for x, y, col, ch in self.world.output(*self.player.location):
+            term.puts(
+                x=x + screen_off_x,
+                y=y + screen_off_y,
+                s="[c={}]{}[/c]".format(col, ch))
 
     def process_handler(self, x, y, k, key):
         '''Checks actions linearly by case:
