@@ -9,10 +9,12 @@ def test_engine_init():
     e = GameEngine()
 
     assert isinstance(e.scene, Main)
+    term.close()
 
 def test_engine_run():
     e = GameEngine()
     e.run()
+    term.close()
 
 if __name__ == "__main__":
     test_engine_run()

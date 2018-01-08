@@ -41,6 +41,9 @@ class GameEngine:
             'main_menu': Main(),
             'options_menu': Options(),
             'start_game': Start(),
+            'continue_menu': Continue(),
+            'create_menu': Create(),
+            'name_menu': Name(),
         }
         
         self.scene = self.scenes['main_menu']
@@ -55,17 +58,18 @@ class GameEngine:
         self.proceed = True
         while self.proceed:
             ret = self.scene.run()
-            try:
-                self.scene = self.scenes[ret]
-            except KeyError:
-                if self.scene in ('continue_menu', 'create_menu', 'name_menu'):
-                    self.scene = self.scenes['start_game']
-                else:
-                    self.proceed = False
+            if not ret['scene']:
+                self.proceed = False
             else:
-                self.scene.reset()
-
-        self.proceed = False
+                try:
+                    self.scene = self.scenes[ret['scene']]
+                    print(self.scene.sid)
+                    if ret['kwargs']:
+                        self.scene.add_args(**ret['kwargs'])
+                except KeyError:
+                    self.proceed = False
+                else:
+                    self.scene.reset()
 '''
 def connect_scenes(scene_a, scene_b):
     scene_a.add_scene(scene_b)
@@ -78,18 +82,31 @@ class Scene:
     def __init__(self, scene_id):
         '''Initializes window and screen dimensions and title for the scene'''
         # self.width, self.height = width, height
-        self.width = term.state(term.TK_WIDTH)
-        self.height = term.state(term.TK_HEIGHT)
+        self.reset_size()
         self.sid = scene_id
 
         self.proceed = True
 
         # scenes is a dictionary holding other scene objects
         self.scenes = {}
+        self.ret = {
+            'scene': '',
+            'kwargs': None,
+        }
         self.setup()
 
     def __repr__(self):
         return self.sid
+
+    def add_args(self, **kwargs):
+        if self.ret['kwargs'] == None:
+            self.ret['kwargs'] = {k: v for k, v in kwargs.items()}
+        else:
+            self.ret['kwargs'].update({k: v for k, v in kwargs.items()})
+
+    def reset_size(self):
+        self.width = term.state(term.TK_WIDTH)
+        self.height = term.state(term.TK_HEIGHT)
 
     def setup(self):
         pass
@@ -99,8 +116,7 @@ class Scene:
             self.draw()
         
         self.proceed = True
-        if hasattr(self, 'ret'):
-            return self.ret
+        return self.ret
 
     def draw(self):
         pass
@@ -249,6 +265,7 @@ class Main(Scene):
                 '[[n]] new game',
                 '[[o]] options',
                 '[[q]] quit']
+
         self.reset()       
         # self.title_height = 1 if self.height <= 25 else self.height // 5
 
@@ -257,7 +274,7 @@ class Main(Scene):
         # self.options_height = self.calc_options_heights(options_header_offset, 3)
 
     def reset(self):
-        self.width, self.height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
+        self.reset_size()
         self.title_height = 1 if self.height <= 25 else self.height // 5
         self.title = self.calc_title()
         options_header_offset = self.title_height + len(self.title.split('\n'))
@@ -275,7 +292,9 @@ class Main(Scene):
             half_height = total_height // 2
             quarter_height = total_height // 4
             return header_offset + half_height - quarter_height + option
+
         total_height = self.height - header_offset - footer_offset
+
         return [calculate(option * 2) for option in range(4)]
 
     def draw(self):
@@ -313,14 +332,14 @@ class Main(Scene):
         if code == term.TK_C or (code == term.TK_ENTER and self.index == 0):
             # proceed = continue_game()
             # self.ret = self.scene_child('continue_menu')
-            self.ret = 'continue_menu'
+            self.ret['scene'] = 'continue_menu'
             self.proceed = False
 
         # key press on N or enter on NEW GAME
         elif code == term.TK_N or (code == term.TK_ENTER and self.index == 1):
             # proceed = start_new_game()
             # self.ret = self.scene_child('create_menu')
-            self.ret = 'create_menu'
+            self.ret['scene'] = 'create_menu'
             self.proceed = False
 
         # key press on O or enter on OPTIONS
@@ -329,7 +348,7 @@ class Main(Scene):
             # height = update_start_screen() + len(self.title.split('\n'))
             # self.options_height = calc_option_heights(height, 3)
             # self.ret = self.scene_child('options_menu')
-            self.ret = 'options_menu'
+            self.ret['scene'] = 'options_menu'
             self.proceed = False
 
         # key press on Q or enter on QUIT
@@ -346,7 +365,7 @@ class Main(Scene):
                 self.index = max(0, min(self.index, len(self.options) - 1))
 
         elif code in (term.TK_CLOSE, term.TK_ESCAPE):
-            self.ret = None
+            self.ret['scene'] = 'exit_desktop'
             self.proceed = False
 
 class Options(Scene):
@@ -495,7 +514,7 @@ class Options(Scene):
 
         if key in (term.TK_CLOSE, term.TK_Q, term.TK_ESCAPE):
             self.option.reset_all()
-            self.ret = 'main_menu'
+            self.ret['scene'] = 'main_menu'
             self.proceed = False
         
         elif key == term.TK_ENTER:
@@ -508,16 +527,18 @@ class Options(Scene):
                             self.option.subopts[self.option.optindex][self.option.suboptindex[self.option.optindex]]))
 
                     if self.option.option() == "Screen Size":                       
-                        if self.parse_screensize(self.option.suboption())
+                        if self.parse_screensize(self.option.suboption()):
+                            self.reset_screen()
 
                     elif self.option.option() == "Cell Size":
-                        if self.parse_cellsize(self.option.suboption())
+                        if self.parse_cellsize(self.option.suboption()):
+                            self.reset_screen()
 
                     elif self.option.option() == "Font Choice":
                         self.parse_fonts(
                             self.prop, 
                             self.option.suboption())
-                    self.reset_screen()
+                        self.reset_screen()
 
                 else:
                     self.option.collapse(self.option.optindex)
@@ -628,11 +649,11 @@ class Name(Scene):
         if key == term.TK_ESCAPE:
             if term.state(term.TK_SHIFT):
                 # shift escape -> to desktop
-                self.ret = 'exit'
+                self.ret['scene'] = 'exit_desktop'
 
             # elif not self.final_name:
             else:
-                self.ret = 'create_menu'
+                self.ret['scene'] = 'start_game'
 
             # else:
             #     self.final_name = self.final_name[0:len(self.final_name) - 1]
@@ -644,7 +665,8 @@ class Name(Scene):
             if not self.final_name:
                 self.final_name = self.random_name()
 
-            self.ret = 'start_game'
+            self.ret['scene'] = 'start_game'
+            self.ret['kwargs'].update({'name': self.final_name})
             self.proceed = False
 
         elif key == term.TK_BACKSPACE:
@@ -789,18 +811,18 @@ class Create(Scene):
 
         # BONUS
         if self.character_index == 0:
-            total = strings.STATS(*(s + g for s, g in zip(strings.HUMAN, 
-                                                          gbonus)))
+            total = strings.STATS(*(sum(stats) for stats in zip(strings.HUMAN, 
+                                                                gbonus)))
 
         elif self.character_index == 1:
-            total = strings.STATS(*(s + g + r for s, g, r in zip(stats, 
-                                                                 gbonus, 
-                                                                 rbonus)))
+            total = strings.STATS(*(sum(stats) for stats in zip(stats, 
+                                                                gbonus, 
+                                                                rbonus)))
         else:
-            total = strings.STATS(*(s + g + r + c for s, g, r, c in zip(stats,
-                                                                        gbonus,
-                                                                        rbonus,
-                                                                        cbonus)))
+            total = strings.STATS(*(sum(stats) for stats in zip(stats,
+                                                                gbonus,
+                                                                rbonus,
+                                                                cbonus)))
 
         # STATUS :- ATTRIBUTES
         hp = total.str + total.con * 2
@@ -931,9 +953,8 @@ class Create(Scene):
                 self.class_index = random.randint(0, 4)
                 job = self.class_row(draw=False)
                 eq, inv = self.form_equipment(race.eq, job.equipment)
-                self.game_vars = output(
-                        proceed=True,
-                        value=self.player(
+                self.ret['kwargs'] = {
+                    'player': self.player(
                             # name,
                             race.location,
                             race.gold,
@@ -946,8 +967,9 @@ class Create(Scene):
                             job.bonuses,
                             race.skills,
                             eq,
-                            inv))
-                self.ret = 'name_game'
+                            inv)
+                }
+                self.ret['scene'] = 'name_menu'
                 self.proceed = False
 
         # ENTER AFTER CHOOSING ALL 3 BACKGROUND CHOICES
@@ -960,10 +982,9 @@ class Create(Scene):
                 gender = self.gender_row(draw=False)
                 race = self.race_row(draw=False)
                 job = self.class_row(draw=False)
-                self.game_vars = output(
-                        proceed=True,
-                        value=self.player(
-                            # name.value,
+                self.ret['kwargs'] = {
+                    'player': self.player(
+                            # name,
                             race.location,
                             race.gold,
                             race.stats,
@@ -975,8 +996,9 @@ class Create(Scene):
                             job.bonuses,
                             race.skills,
                             eq,
-                            inv))
-                self.ret = 'name_menu'
+                            inv)
+                }
+                self.ret['scene'] = 'name_menu'
                 self.proceed = False
             else:
                 self.character_index += 1
@@ -987,12 +1009,12 @@ class Create(Scene):
                 # self.ret = output(
                 #         proceed=False,
                 #         value="Exit to Desktop")
-                self.ret = 'Exit -> Desktop'
+                self.ret['scene'] = ''
 
             elif self.character_index == 0:
                 self.proceed = False
                 # self.ret = self.scene_parent('main_menu')
-                self.ret = 'main_menu'
+                self.ret['scene'] = 'main_menu'
 
             else:
                 self.character_index -= 1
@@ -1182,6 +1204,7 @@ class Continue(Scene):
         # save screen header border
         for i in range(self.width):
             term.puts(i, 0, '#')
+
         # save screen header
         term.puts(
             x=center('Saved Files  ', self.width), 
@@ -1193,23 +1216,24 @@ class Continue(Scene):
             # split the save file string from plain and hash text
             save = save.split('(')[0]
             letter = chr(ord('a') + i) + '. '
+
             if i == self.index:
                 save = "[c=#00FFFF]{}[/c]".format(save)
+
             term.puts(1, 3 + i, letter + save + " :- " + desc)  
 
     def save_safe(self):
-        character, world, turns = None, None, None
         try:
             with shelve.open("./saves/" + self.files[self.index], 'r') as save:
-                self.character = save['player']
-                self.world = save['world']
-                self.turns = save['turns']
-                
+                self.ret['kwargs'] = {
+                    'player': save['player'],
+                    'world': save['world'],
+                    'turns': save['turns'],
+                }
         except FileNotFoundError:
             term.puts(0, self.height, 'File Not Found')
-
         finally:
-            return self.character and self.world and self.turns
+            return self.ret['kwargs'] != None
 
     def draw(self):
         term.clear()
@@ -1245,7 +1269,7 @@ class Continue(Scene):
                 # break # --> makes sure we exit loop to return directly to new screen
             if self.save_safe():
                 self.proceed = False
-                self.ret = 'start_game' # self.scene_child('new_game')
+                self.ret['scene'] = 'start_game' # self.scene_child('new_game')
 
         elif code == term.TK_DOWN:
             self.index = min(self.index + 1, len(self.files) - 1)
@@ -1255,7 +1279,7 @@ class Continue(Scene):
 
         elif code == term.TK_ESCAPE:
             self.proceed = False
-            self.ret = 'main_menu'
+            self.ret['scene'] = 'main_menu'
 
 '''
 Since starting a new game will need a character parameter
@@ -1274,30 +1298,15 @@ So on main screen:
 class Start(Scene):
     def __init__(self, sid='start_game'):
         super().__init__(scene_id=sid)
-        self.scenes = {
-            'continue_menu': Continue(),
-            'create_menu': Create(),
-            'name_menu': Name(),
-        }
 
     def setup(self):
-        # # setup continue
-        # self.index = 0
-        # self.loaded = False
-        # self.files, self.descs = self.saves_info()
-
-        # # setup character creation
-
-        # # setup new name
-
-        # # setup new game
         self.turns = 0
         self.player = None
         self.dungeon = None
         self.waiting = False
         self.turn_inc = False
         self.do_action = True
-        self.gamelog = GameLogger()
+        self.gamelog = GameLogger(2)
 
         self.actions = {
             0: {},
@@ -1314,6 +1323,7 @@ class Start(Scene):
             return self.ret
 
     def draw(self):
+        print(self.ret)
         term.clear()
         term.refresh()
         turn_inc = False
@@ -1324,7 +1334,7 @@ class Start(Scene):
             if not self.proceed:
                 return
 
-            self.process_handler(action)
+            self.process_handler(*action)
 
     def process_handler(self, x, y, k, key):
         '''Checks actions linearly by case:
@@ -1336,9 +1346,9 @@ class Start(Scene):
             Return skip-action command
         '''
         if k is not None:
-            process_action(k)
+            self.process_action(k)
         elif all(z is not None for z in [x, y]):
-            process_movement(x, y)
+            self.process_movement(x, y)
         else:
             return 'skipped-turn'
 
@@ -1349,9 +1359,9 @@ class Start(Scene):
         So height would be independent and position would be depenedent on height
         '''
         try:
-            actions[max(0, min(player.height, 1))][action](action)
+            self.actions[max(0, min(player.height, 1))][action](action)
         except TypeError:
-            actions[max(0, min(player.height, 1))][action](action, gamelog)
+            self.actions[max(0, min(player.height, 1))][action](action, gamelog)
         except KeyError:
             gamelog.add("'{}' is not a valid command".format(action))
 
