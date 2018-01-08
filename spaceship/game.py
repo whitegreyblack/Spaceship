@@ -50,8 +50,11 @@ class Start(Scene):
                 'i': self.draw_player_screens,
                 'v': self.draw_player_screens,
                 '<': self.action_interact_stairs_up,
+                '>': self.action_interact_stairs_down,
                 'c': self.action_interact_door_close,
                 'o': self.action_interact_door_open,
+                'd': self.action_interact_item_drop,
+                'u': self.action_interact_item_use,
             },
         }
 
@@ -176,8 +179,6 @@ class Start(Scene):
 
     def draw_player_profile(self):
         '''Handles player profile screen'''
-        term.clear()
-
         # draws header border
         for i in range(self.width):
             term.puts(i, 1, '#')
@@ -191,8 +192,6 @@ class Start(Scene):
 
     def draw_player_equipment(self):
         '''Handles equipment screen'''
-        term.clear()
-
         # draws header border
         for i in range(self.width):
             term.puts(i, 1, '#')
@@ -210,8 +209,6 @@ class Start(Scene):
 
     def draw_player_inventory(self):
         '''Handles inventory screen'''
-        term.clear()
-
         # draws header border for the backpack
         for i in range(self.width):
             term.puts(i, 1, '#')
@@ -446,7 +443,7 @@ class Start(Scene):
             # exit command -- maybe need a back to menu screen?
             if shifted:
                 exit('Early Exit')
-            elif player.height >= Level.World:
+            elif self.player.height >= Level.World:
                 self.gamelog.add('Escape key disabled.')
             else:
                 self.ret['scene'] = 'main_menu'
@@ -748,7 +745,13 @@ class Start(Scene):
         def drop_item(item):
             pass
         # open up inventory
-        pass
+        term.clear()
+        self.draw_player_equipment()
+        term.refresh()
+        term.read()
 
     def action_interact_item_use(self):
-        pass
+        term.clear()
+        self.draw_player_equipment()
+        term.refresh()
+        term.read()
