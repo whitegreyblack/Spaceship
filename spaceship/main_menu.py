@@ -39,10 +39,7 @@ class GameEngine:
 
         self.scenes = {
             'main_menu': Main(),
-            'create_menu': Create(),
-            'continue_menu': Continue(),
             'options_menu': Options(),
-            'name_menu': Name(),
             'start_game': Start(),
         }
         
@@ -61,7 +58,10 @@ class GameEngine:
             try:
                 self.scene = self.scenes[ret]
             except KeyError:
-                self.proceed = False
+                if self.scene in ('continue_menu', 'create_menu', 'name_menu'):
+                    self.scene = self.scenes['start_game']
+                else:
+                    self.proceed = False
             else:
                 self.scene.reset()
 
@@ -233,7 +233,6 @@ class Scene:
         
         # return [self.scenes[0][sid] for sid in self.scenes[0].keys()]
         return [scene for _, scene in self.scenes[0].items()]
-
     
 class Main(Scene):
     def __init__(self, sid='main_menu'):
@@ -349,6 +348,201 @@ class Main(Scene):
         elif code in (term.TK_CLOSE, term.TK_ESCAPE):
             self.ret = None
             self.proceed = False
+
+class Options(Scene):
+    def __init__(self, sid='options_menu'):
+        super().__init__(sid)
+
+    def setup(self):
+        self.option = Option("Options Screen")
+        # 80x25 -> 8x16 | 80x50 -> 8x8 | 160x50 -> 16x16 | FullScreen -> 16x16
+        self.option.add_opt("Screen Size", 
+            ["80x25", "80x50", "160x50", "160x100"]) 
+            
+        # "Full Screen: {}x{}".format(sysize(0), sysize(1))])
+        self.option.add_opt("Cell Size", ["Auto", "8x16", "8x8", "16x16"])
+
+        self.option.add_opt("Font Choice", 
+            ["Default", "Source", "Fira", "Fira-Bold", "IBM_CGA", "Andale", 
+             "Courier", "Unscii-8", "Unscii-8-thin", "VeraMono"])
+
+        self.option.add_opt("Coloring", 
+            ["Dynamic", "Dark", "Light", "Colorblind"])
+        
+        self.prop = {
+            'gx': term.state(term.TK_WIDTH),
+            'gy': term.state(term.TK_HEIGHT),
+            'cx': term.state(term.TK_CELL_WIDTH),
+            'cy': term.state(term.TK_CELL_HEIGHT),            
+        }
+    
+    def parse_screensize(self, screensize):
+        if "Full Screen" in screensize:
+            sx = sysize(0) // term.state(term.TK_CELL_WIDTH)
+            sy = sysize(1) // term.state(term.TK_CELL_HEIGHT)
+        else:
+            sx, sy = list(map(lambda x: int(x), screensize.split('x')))
+
+        if (self.p['gx'], self.p['gy']) != (sx, sy):
+            self.p['gx'], self.p['gy'] = sx, sy
+            return True
+        return False
+
+    def parse_cellsize(self, cellsize):
+        if cellsize == "Auto":
+            if self.p['cx'] != 'Auto':
+                self.p['cx'], self.p['cy'] = "auto", None
+                return True
+        else:
+            cx, cy = list(map(lambda x: int(x), cellsize.split('x')))
+            if (self.p['cx'], self.p['cy']) != (cx, cy):
+                self.p['cx'], self.p['cy'] = (cx, cy)
+                return True
+        return False
+
+    def parse_fonts(self, font):
+        if self.option == "Default":
+            term.set('font: default, size={}{}'.format(
+                self.p['cx'], 
+                'x' + str(self.p['cy']) if self.p['cy'] != self.p['cx'] else ''))
+
+        else:
+            if self.p['cx'] == "auto":
+                cy = 8 if font not in ("Andale, Courier, VeraMono") else 16
+                term.set("font: ./fonts/{}.ttf, size={}{}".format(
+                    font, 
+                    8, cy)) 
+            else:
+                term.set("font: ./fonts/{}.ttf, size={}{}".format(
+                    font, 
+                    self.p['cx'], 
+                    'x'+str(self.p['cy']) if self.p['cy'] != self.p['cx'] else ''))
+
+    def reset_screen(self):
+        if self.prop['cx'] == "auto":
+            term.set("window: size={}x{}, cellsize={}".format(
+                self.prop['gx'],
+                self.prop['gy'],
+                self.prop['cx'],
+            ))
+        else:
+            term.set("window: size={}x{}, cellsize={}x{}".format(
+                *(v for _, v in self.prop.items())))
+        term.refresh()        
+
+    def draw(self):
+        term.clear()
+
+        # options title
+        term.puts(
+            x=center(self.option.title, term.state(term.TK_WIDTH)), 
+            y=1, 
+            s=self.option.title)
+
+        # options
+        height = 3
+
+        for index, opt in enumerate(self.option.opts):
+            selected = index == self.option.optindex
+            expanded = index in self.option.expand
+
+            if selected:
+                opt = ("[[-]] " if expanded else "[[+]] ") + \
+                "[c=#00ffff]{}[/c]".format(opt)
+            else:
+                opt = ("[[-]] " if expanded else "[[+]] ") + opt
+
+            term.puts(term.state(term.TK_WIDTH) // 5, height, opt)
+            height += term.state(term.TK_HEIGHT) // 25
+            if expanded:
+                for index, subopt in enumerate(self.option.subopts[index]):
+                    if selected:
+                        if index == self.option.suboptindex[self.option.optindex]:
+                            subopt = "[c=#00ffff]{}[/c]".format(subopt)
+                        else:
+                             subopt = subopt
+
+                    term.puts(
+                        x=term.state(term.TK_WIDTH) // 4 + 3, 
+                        y=height, 
+                        s=subopt)
+                    height += term.state(term.TK_HEIGHT) // 25
+
+            height += term.state(term.TK_HEIGHT)//25
+
+        # Debug: Shows terminal properties -- Can remove later
+        term.puts(
+            x=term.state(term.TK_WIDTH) // 5, 
+            y=height + 1, 
+            s="{}".format(term.state(term.TK_WIDTH)))
+        term.puts(
+            x=term.state(term.TK_WIDTH) // 5, 
+            y=height + 2, 
+            s="{}".format(term.state(term.TK_HEIGHT)))
+        term.puts(
+            x=term.state(term.TK_WIDTH) // 5, 
+            y=height + 3, 
+            s="{}".format(term.state(term.TK_CELL_WIDTH)))
+        term.puts(
+            x=term.state(term.TK_WIDTH) // 5, 
+            y=height + 4, 
+            s="{}".format(term.state(term.TK_CELL_HEIGHT)))
+        
+        term.refresh()
+
+        # User input during options screen
+        key = term.read()
+
+        if key in (term.TK_CLOSE, term.TK_Q, term.TK_ESCAPE):
+            self.option.reset_all()
+            self.ret = 'main_menu'
+            self.proceed = False
+        
+        elif key == term.TK_ENTER:
+            if self.option.optindex in self.option.expand:
+                # action stuff
+                if self.option.suboptindex[self.option.optindex] != -1:
+                    if self.proceed:
+                        print('SELECTED: {}|{}'.format(
+                            self.option.opts[self.option.optindex], 
+                            self.option.subopts[self.option.optindex][self.option.suboptindex[self.option.optindex]]))
+
+                    if self.option.option() == "Screen Size":                       
+                        if self.parse_screensize(self.option.suboption())
+
+                    elif self.option.option() == "Cell Size":
+                        if self.parse_cellsize(self.option.suboption())
+
+                    elif self.option.option() == "Font Choice":
+                        self.parse_fonts(
+                            self.prop, 
+                            self.option.suboption())
+                    self.reset_screen()
+
+                else:
+                    self.option.collapse(self.option.optindex)
+            else:
+                self.option.expansion(self.option.optindex)
+                # option.move_subpointer(1)
+
+        # Arrow keys (UP | DOWN)
+        elif key == term.TK_DOWN:
+            if len(self.option.expand):
+                self.option.move_subpointer(1)
+                self.option.correct_subpointer()
+
+            else:
+                self.option.move_pointer(1)
+                self.option.correct_pointer()
+
+        elif key == term.TK_UP:
+            if len(self.option.expand):
+                self.option.move_subpointer(-1)
+                self.option.correct_subpointer()
+
+            else:
+                self.option.move_pointer(-1)
+                self.option.correct_pointer()
 
 class Name(Scene):
     def __init__(self, sid='name_menu'):
@@ -468,9 +662,6 @@ class Name(Scene):
 class Create(Scene):
     def __init__(self, sid='create_menu'):
         super().__init__(sid)
-
-    def reset(self):
-        pass
 
     def setup(self):
         self.shorten = self.height <= 25
@@ -957,172 +1148,6 @@ class Create(Scene):
 
         return eqp, flatten(inv)
 
-class Options(Scene):
-    def __init__(self, sid='options_menu'):
-        super().__init__(sid)
-
-    def setup(self):
-        self.option = Option("Options Screen")
-        # 80x25 -> 8x16 | 80x50 -> 8x8 | 160x50 -> 16x16 | FullScreen -> 16x16
-        self.option.add_opt("Screen Size", 
-            ["80x25", "80x50", "160x50", "160x100"]) 
-            
-        # "Full Screen: {}x{}".format(sysize(0), sysize(1))])
-        self.option.add_opt("Cell Size", ["Auto", "8x16", "8x8", "16x16"])
-
-        self.option.add_opt("Font Choice", 
-            ["Default", "Source", "Fira", "Fira-Bold", "IBM_CGA", "Andale", 
-             "Courier", "Unscii-8", "Unscii-8-thin", "VeraMono"])
-
-        self.option.add_opt("Coloring", 
-            ["Dynamic", "Dark", "Light", "Colorblind"])
-        
-        self.prop = {
-            'gx': term.state(term.TK_WIDTH),
-            'gy': term.state(term.TK_HEIGHT),
-            'cx': term.state(term.TK_CELL_WIDTH),
-            'cy': term.state(term.TK_CELL_HEIGHT),            
-        }
-    
-    def parse_screensize(self, p, screensize):
-        if "Full Screen" in screensize:
-            sx, sy = sysize(0)//term.state(term.TK_CELL_WIDTH), sysize(1)//term.state(term.TK_CELL_HEIGHT)
-        else:
-            sx, sy = list(map(lambda x: int(x), screensize.split('x')))
-        if (p['gx'], p['gy']) != (sx, sy):
-            p['gx'], p['gy'] = sx, sy
-            return p, True
-        return p, False
-
-    def parse_cellsize(self, p, cellsize):
-        if cellsize == "Auto":
-            if p['cx'] != 'Auto':
-                p['cx'], p['cy'] = "auto", None
-                return p, True
-        else:
-            cx, cy = list(map(lambda x: int(x), cellsize.split('x')))
-            if (p['cx'], p['cy']) != (cx, cy):
-                p['cx'], p['cy'] = (cx, cy)
-                return p, True
-        return p, False
-
-    def parse_fonts(self, p, font):
-        if self.option == "Default":
-            term.set('font: default, size={}{}'.format(
-                p['cx'], 
-                'x'+str(p['cy']) if p['cy'] != p['cx'] else ''))
-
-        else:
-            if p['cx'] == "auto":
-                cy = 8 if font not in ("Andale, Courier, VeraMono") else 16
-                term.set("font: ./fonts/{}.ttf, size={}{}".format(
-                    font, 
-                    8, cy)) 
-            else:
-                term.set("font: ./fonts/{}.ttf, size={}{}".format(
-                    font, 
-                    p['cx'], 
-                    'x'+str(p['cy']) if p['cy'] != p['cx'] else ''))
-            # p['cx'], p['cy'] = "auto", None
-            self.reset_screen()
-
-    def reset_screen(self):
-        if self.prop['cx'] == "auto":
-            term.set("window: size={}x{}, cellsize={}".format(
-                self.prop['gx'],
-                self.prop['gy'],
-                self.prop['cx'],
-            ))
-        else:
-            term.set("window: size={}x{}, cellsize={}x{}".format(*(v for _, v in self.prop.items())))
-        term.refresh()        
-
-    def draw(self):
-        term.clear()
-
-        # options title
-        term.puts(center(self.option.title, term.state(term.TK_WIDTH)), 1, self.option.title)
-
-        # options
-        height = 3
-
-        for index, opt in enumerate(self.option.opts):
-            selected = index == self.option.optindex
-            expanded = index in self.option.expand
-            if selected:
-                opt = ("[[-]] " if expanded else "[[+]] ") + "[c=#00ffff]{}[/c]".format(opt)
-            else:
-                opt = ("[[-]] " if expanded else "[[+]] ") + opt
-
-            term.puts(term.state(term.TK_WIDTH)//5, height, opt)
-            height += term.state(term.TK_HEIGHT)//25
-            if expanded:
-                for index, subopt in enumerate(self.option.subopts[index]):
-                    if selected:
-                        if index == self.option.suboptindex[self.option.optindex]:
-                            subopt = "[c=#00ffff]{}[/c]".format(subopt)
-                        else:
-                             subopt = subopt
-                    term.puts(term.state(term.TK_WIDTH)//4+3, height, subopt)
-                    height += term.state(term.TK_HEIGHT)//25
-            height += term.state(term.TK_HEIGHT)//25
-        term.puts(term.state(term.TK_WIDTH)//5, height+1, "{}".format(term.state(term.TK_WIDTH)))
-        term.puts(term.state(term.TK_WIDTH)//5, height+2, "{}".format(term.state(term.TK_HEIGHT)))
-        term.puts(term.state(term.TK_WIDTH)//5, height+3, "{}".format(term.state(term.TK_CELL_WIDTH)))
-        term.puts(term.state(term.TK_WIDTH)//5, height+4, "{}".format(term.state(term.TK_CELL_HEIGHT)))
-
-        term.refresh()
-        key = term.read()
-
-        if key in (term.TK_CLOSE, term.TK_Q, term.TK_ESCAPE):
-            self.option.reset_all()
-            self.ret = 'main_menu'
-            self.proceed = False
-        
-        elif key == term.TK_ENTER:
-            if self.option.optindex in self.option.expand:
-                # action stuff
-                if self.option.suboptindex[self.option.optindex] != -1:
-                    if self.proceed:
-                        print('SELECTED: {}|{}'.format(
-                            self.option.opts[self.option.optindex], 
-                            self.option.subopts[self.option.optindex][self.option.suboptindex[self.option.optindex]]))
-
-                    if self.option.option() == "Screen Size":                       
-                        self.prop, changed = self.parse_screensize(self.prop, self.option.suboption())
-                        if changed:
-                            self.reset_screen()
-                    elif self.option.option() == "Cell Size":
-                        self.prop, changed = self.parse_cellsize(self.prop, self.option.suboption())
-                        if changed:
-                            self.reset_screen()
-                    elif self.option.option() == "Font Choice":
-                        self.parse_fonts(self.prop, self.option.suboption())
-                else:
-                    self.option.collapse(self.option.optindex)
-            else:
-                self.option.expansion(self.option.optindex)
-                # option.move_subpointer(1)
-
-        # Arrow keys (UP | DOWN)
-        elif key == term.TK_DOWN:
-            if len(self.option.expand):
-                self.option.move_subpointer(1)
-                self.option.correct_subpointer()
-
-            else:
-                self.option.move_pointer(1)
-                self.option.correct_pointer()
-
-        elif key == term.TK_UP:
-            if len(self.option.expand):
-                self.option.move_subpointer(-1)
-                self.option.correct_subpointer()
-
-            else:
-                self.option.move_pointer(-1)
-                self.option.correct_pointer()
-
 class Continue(Scene):
     def __init__(self, sid='continue_menu'):
         super().__init__(sid)
@@ -1147,7 +1172,8 @@ class Continue(Scene):
                             save_descs.append(save['save'])
 
         if len(save_files) != len(save_descs):
-            raise ValueError("Save files number does not match save files descs number")
+            log = "Save files number does not match save files descs number"
+            raise ValueError(log)
 
         return save_files, save_descs
 
@@ -1222,7 +1248,7 @@ class Continue(Scene):
                 self.ret = 'start_game' # self.scene_child('new_game')
 
         elif code == term.TK_DOWN:
-            self.index = min(self.index + 1, len(self.files)-1)
+            self.index = min(self.index + 1, len(self.files) - 1)
 
         elif code == term.TK_UP:
             self.index = max(self.index - 1, 0)
@@ -1230,6 +1256,7 @@ class Continue(Scene):
         elif code == term.TK_ESCAPE:
             self.proceed = False
             self.ret = 'main_menu'
+
 '''
 Since starting a new game will need a character parameter
 we need to embed CONTiNUE, START, and NAME into the GAME
@@ -1244,24 +1271,26 @@ So on main screen:
         Selected quit quits game
         Everything else does nothing
 '''
-class NewGame(Scene):
-    def __init__(self, sid='new_game'):
-        super().__init__(scene_id=sid)
-
-    def setup(self):
-        pass
-
-    def screen_continue(self):
-        pass
-    
-    def screen_new(self):
-        pass
-
 class Start(Scene):
     def __init__(self, sid='start_game'):
         super().__init__(scene_id=sid)
+        self.scenes = {
+            'continue_menu': Continue(),
+            'create_menu': Create(),
+            'name_menu': Name(),
+        }
 
     def setup(self):
+        # # setup continue
+        # self.index = 0
+        # self.loaded = False
+        # self.files, self.descs = self.saves_info()
+
+        # # setup character creation
+
+        # # setup new name
+
+        # # setup new game
         self.turns = 0
         self.player = None
         self.dungeon = None
