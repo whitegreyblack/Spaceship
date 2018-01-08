@@ -212,7 +212,7 @@ def save_game(player, action, world, gamelog, turns):
     log_box(gamelog, turns)
     term.refresh()
     code = term.read()
-    if code != TK_Y:
+    if code != term.TK_Y:
         return
     if not os.path.isdir('saves'):
         print('saved folder does not exist - creating folder: "./saves"')

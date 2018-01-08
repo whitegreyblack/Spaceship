@@ -689,7 +689,7 @@ class Create(Scene):
     def __init__(self, sid='create_menu'):
         super().__init__(sid)
 
-    def setup(self):
+    def reset(self):
         self.shorten = self.height <= 25
         self.delim, self.row, self.row_bonus = "\n", 11, 11
         if self.shorten:
@@ -706,6 +706,8 @@ class Create(Scene):
         self.grid = [[3, 26, 48], 5]
         self.length = self.width // 2
 
+    def setup(self):
+        self.reset()
         self.title = "Character Creation"
         self.help = "Press (?) for info on a selected race, subrace or class"
 
@@ -975,6 +977,7 @@ class Create(Scene):
                 }
                 self.ret['scene'] = 'name_menu'
                 self.proceed = False
+                self.reset()
 
         # ENTER AFTER CHOOSING ALL 3 BACKGROUND CHOICES
         elif code == term.TK_ENTER:
@@ -1004,6 +1007,7 @@ class Create(Scene):
                 }
                 self.ret['scene'] = 'name_menu'
                 self.proceed = False
+                self.reset()
             else:
                 self.character_index += 1
 
@@ -1306,7 +1310,7 @@ class Start(Scene):
     def __init__(self, sid='start_game'):
         super().__init__(scene_id=sid)
 
-    def setup(self):
+    def reset(self):
         self.turns = 0
         self.player = None
         self.dungeon = None
@@ -1315,13 +1319,20 @@ class Start(Scene):
         self.do_action = True
         self.gamelog = GameLogger(3 if self.height <= 25 else 4)
 
+    def setup(self):
+        self.reset()
         self.actions = {
             0: {
                 '@': self.draw_player_screens,
                 'i': self.draw_player_screens,
                 'v': self.draw_player_screens,
+                'S': self.action_save,
             },
-            1: {},
+            1: {
+                '@': self.draw_player_screens,
+                'i': self.draw_player_screens,
+                'v': self.draw_player_screens,
+            },
         }
 
         # player screen variables
@@ -1347,7 +1358,7 @@ class Start(Scene):
         # print(self.world.map_name)
 
         # while self.proceed and self.player.is_alive():
-        while self.proceed:
+        while self.proceed and self.player.is_alive:
             self.draw()
         
         self.proceed = True
@@ -1558,7 +1569,7 @@ class Start(Scene):
         try:
             self.actions[max(0, min(self.player.height, 1))][action](action)
         except TypeError:
-            self.actions[max(0, min(self.player.height, 1))][action](action)
+            self.actions[max(0, min(self.player.height, 1))][action]()
         except KeyError:
             invalid_command = "'{}' is not a valid command".format(action)
             self.gamelog.add(invalid_command)
@@ -1710,6 +1721,7 @@ class Start(Scene):
             if shifted:
                 exit('Early Exit')
             else:
+                self.ret['scene'] = 'main_menu'
                 self.proceed = False
 
         try:
@@ -1731,6 +1743,66 @@ class Start(Scene):
 
     def action_save(self):
         self.gamelog.add("Save and exit game? (Y/N)")
+        self.draw_log()
+        term.refresh()
+        
+        # User input -- confirm selection
+        code = term.read()
+        if code != term.TK_Y:
+            return
+
+        if not os.path.isdir('saves'):
+            log = 'saved folder does not exist - creating folder: "./saves"'
+            self.gamelog.add(log)
+            os.makedirs('saves')
+            self.draw_log()
+            term.refresh()
+    
+        # prepare strings for file writing
+        # player_hash used for same name / different character saves
+        name = self.player.name.replace(' ', '_')
+        desc = self.player.job + " " + str(self.player.level)
+        file_path = './saves/{}'.format(name + "(" + str(abs(hash(desc)))) + ")"
+        
+        with shelve.open(file_path, 'n') as save_file:
+            save_file['save'] = desc
+            save_file['player'] = self.player
+            save_file['world'] = self.world
+            save_file['turns'] = self.turns  
+
+        self.proceed = False  
+        self.ret['scene'] = 'main_menu'
+        self.reset()
+
+    def action_local_interact_stairs(self):
+        pass
+
+    def action_local_interact_stairs_up(self):
+        pass
+
+    def action_local_interact_door_close(self):
+        pass
+
+    def action_local_interact_door_open(self):
+        pass
+
+    def action_local_interact_unit_attack_melee(self):
+        pass
+
+    def action_local_interact_unit_attack_ranged(self):
+        pass
+
+    def action_local_interact_unit_displace(self):
+        pass
+
+    def action_local_interact_item_pickup(self):
+        pass
+
+    def action_local_interact_item_drop(self):
+        pass
+
+    def action_local_interact_item_use(self):
+        pass
 
 if __name__ == "__main__":
     g = GameEngine()
