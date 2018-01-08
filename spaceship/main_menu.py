@@ -1326,9 +1326,9 @@ class Start(Scene):
 
         # player screen variables
         self.player_screen_col, self.player_screen_row = 1, 3
+        self.player_status_col, self.player_status_row = 1, 2
 
-
-    def run(self):
+    def run(self):  
         self.reset_size()
         if isinstance(self.ret['kwargs']['player'], Player):
             self.player = self.ret['kwargs']['player']
@@ -1356,7 +1356,7 @@ class Start(Scene):
 
     def draw(self):
         term.clear()
-
+        self.draw_log()
         self.draw_overworld()
         self.draw_player_status()
         term.refresh()
@@ -1369,6 +1369,14 @@ class Start(Scene):
                 return
 
             self.process_handler(*action)
+
+    def draw_log(self):
+        for index, message in enumerate(self.gamelog.write().messages):
+            term.puts(
+                x=14 if self.player.height == Level.Global else 1,
+                y=self.height - 2 + index,
+                s=message[1]
+            )
 
     def draw_overworld(self):
         screen_off_x, screen_off_y = 14, 0
@@ -1408,24 +1416,27 @@ class Start(Scene):
 
         term.puts(col, row + 18, "GOLD:{:>6}".format(self.player.gold))
 
+        # Turn status
+        term.puts(1, self.height - 4, 'Turns: {:<4}'.format(self.turns))
+
         # sets the location name at the bottom of the status bar
         if self.player.location in self.world.enterable_legend.keys():
             location = self.world.enterable_legend[self.player.location]
             term.bkcolor('grey')
-            term.puts(0, 0, ' ' * self.width)
+            term.puts(14, 0, ' ' * (self.width - 14))
             term.bkcolor('black')
             term.puts(
-                x=center(surround(location), self.width), 
+                x=14 + center(surround(location), self.width - 14), 
                 y=0, 
                 s=surround(location))
 
-        elif self.player.location in self.world.dungeon_legend.keys():
-            location = self.world.dungeon_legend[self.player.location]
+        # elif self.player.location in self.world.dungeon_legend.keys():
+        #     location = self.world.dungeon_legend[self.player.location]
 
-        else:
-            location = ""
+        # else:
+        #     location = ""
 
-        term.puts(col, row + 20, "{}".format(location))
+        # term.puts(col, row + 20, "{}".format(location))
 
     def draw_player_profile(self):
         '''Handles player profile screen'''
@@ -1717,6 +1728,9 @@ class Start(Scene):
         space = namedtuple("Space", ("x","y"))
         for i, j in squares:
             yield space(x + i, y + j)
+
+    def action_save(self):
+        self.gamelog.add("Save and exit game? (Y/N)")
 
 if __name__ == "__main__":
     g = GameEngine()
