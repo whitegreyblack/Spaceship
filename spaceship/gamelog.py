@@ -106,7 +106,7 @@ class GameLogger:
             # Checks if messages are in the queue and if message is the same 
             # as before
             if self.messages and message == self.last_message:
-                print('counter')
+                # print('counter')
                 self.messages.pop(-1)
                 self.counter += 1
 
@@ -115,14 +115,14 @@ class GameLogger:
                 message += "(x{})".format(self.counter)
 
             else:
-                print('reset')
+                # print('reset')
                 self.counter = 0
                 self.last_message = message            
 
             # Dump the messages as long as they are not repeats of the same 
             # message
             if len(self.messages) + 1 > self.maxlines:
-                print('dump')
+                # print('dump')
                 # don't need to repeatedly dump the same message every time
                 if not self.counter:
                     self.dump(self.messages.pop(0))

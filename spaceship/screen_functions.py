@@ -2,48 +2,66 @@ from bearlibterminal import terminal as term
 from textwrap import wrap
 
 def center(text, width):
+    '''Returns x position for string given a width length'''
     if isinstance(text, str):
         return width//2-len(text)//2
     if isinstance(text, int):
         return width//2-text//2
 
-def colored(text):
-    return "[color=blue]{}[/color]".format(text)
+def colorize(text, color):
+    '''Returns a BLT colored encapsulated text'''
+    return "[color={color}]{}[/color]".format(color, text)
 
-def align(text):
-    pass
-    
 def optionize(text):
+    '''return text as an option string surrounded by brackets'''
     return "[{}] {}".format(text[0], text)
 
 def longest(options):
+    '''Lambda function to return longest string in the options array'''
     return max(map(lambda opt: (len(opt), opt), options))
 
 def join(string, length, delim="\n"):
+    '''Joins string using wrap to split string into array, then adds
+    delimiter if specified ontop of a newline delimiter'''
     # use regex to replace [*]
     return ("{}\n".format(delim)).join(wrap(string, length))
 
 def split(string, length):
+    '''splits text using length and wrap function from textwrap library'''
     return wrap(string, length)
 
 def pad(string, center=True, length=0):
+    '''Adds equal spacing to the sides of a string unless center is false,
+    which pads the leftside instead
+    '''
     padding = length - len(string)
     if center:
         return padding//2 * " " + string.upper() + (padding+1)//2 * " " if padding else string.upper()
     return string.upper() + padding * " " if padding else string.upper()
 
-def unselected(x, y, text):
-    term.puts(x, y, text)
+def switch(x, y, text, bg_before, bg_after='black', color='black'):
+    '''Abstract function in place of UNSELECTED, SELECTED, and PASSED'''
+    term.bkcolor(bg_before)
+    term.puts(x, y, colorize(text, color))
+    term.bkcolor(bg_after)
 
-def selected(x, y, text):
-    term.bkcolor("white")
-    term.puts(x, y, "[color=black]{}[/color]".format(text))
-    term.bkcolor("black")
+# def unselected(x, y, text, color='black'):
+#     '''Places text at target location without any background changes'''
+#     term.puts(x, y, text)
 
-def passed(x, y, text):
-    term.bkcolor("grey")
-    term.puts(x, y, text)
-    term.bkcolor("black")      
+# def selected(x, y, text, color='black'):
+#     '''Changes background to white before printing text to terminal and
+#     changes background back to black'''
+#     term.bkcolor("white")
+#     term.puts(x, y, color(text, 'black'))
+#     term.bkcolor("black")
+
+# def passed(x, y, text):
+#     '''Changes background to grey before printing text to terminal and
+#     changes background back to black'''
+#     term.bkcolor("grey")
+#     term.puts(x, y, text)
+#     term.bkcolor("black")      
 
 def surround(text, char=' ', times=1, length=0):
     '''Surrounds the text inputted with a character by a number of times
@@ -59,32 +77,40 @@ def surround(text, char=' ', times=1, length=0):
         return char * times + text + char * times
 
 def modify(increment, index, options):
+    '''Increments an integer parameter index and clamps the value between
+    0 and length of options.
+    '''
     index += increment
     if not 0 <= index < options:
         index = max(0, min(index, options-1))
     return index
 
-def border(width, heights, character):
-    for x in range(width):
-        for height in heights:
-            term.puts(x, height, character)
+def border(x, heights, width, character, color='black'):
+    '''Using a single character, fills the screen starting at row heights
+    and for col width
 
-def arrow(x, y):
-    term.puts(x-2, y, ">")
+    call ex. :- border(w, [h, h], '#')
+    '''
+    for height in heights:
+            term.puts(0, height, colorize(character * width, color))
 
-def point(x, y):
-    term.puts(x-2, y, "*")
+def arrow(x, y, color="black"):
+    '''Adds a greater than sign at the target location on the terminal'''
+    term.puts(x, y, colorize(">", color))
 
-def barrow(x, y):
-    term.puts(x+2, y, "<")
+def point(x, y, color="black"):
+    '''Adds a star sign at the location on the terminal'''
+    term.puts(x, y, colorize("*", color))
 
-def color(text, color):
-    return "[c={}]{}[/c]".format(color, text)
+def barrow(x, y, color="black"):
+    '''Adds a less than sign at the target location on the terminal'''
+    term.puts(x, y, colorize("<", color))
 
 def box(x, y, dx, dy, c):
-    for i in range(x, x+dx+1):
+    '''Prints a box on the terminal with the given coordinates and character'''
+    for i in range(x, x + dx + 1):
         term.puts(i, y, c)
-        term.puts(i, y+dy, c)
-    for j in range(y, y+dy+1):
+        term.puts(i, y + dy, c)
+    for j in range(y, y + dy + 1):
         term.puts(x, j, c)
         term.puts(x+dx, j, c)

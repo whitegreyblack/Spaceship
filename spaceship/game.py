@@ -32,7 +32,7 @@ class Start(Scene):
         self.location = None
         self.waiting = False
         self.turn_inc = False
-        self.do_action = True
+        self.do_action = False
         self.map_change = False
         self.gamelog = None
 
@@ -89,10 +89,6 @@ class Start(Scene):
             screenlinelimit=3 if self.height <= 25 else 4,
             footer="_" + self.player.name + "_" + self.player.job)
 
-        # print(self.player.name)
-        # print(self.world.map_name)
-
-        # while self.proceed and self.player.is_alive():
         while self.proceed and self.player.is_alive:
             self.draw()
         
@@ -147,7 +143,7 @@ class Start(Scene):
                 s="[c={}]{}[/c]".format(col, ch))
 
     def draw_player_status(self):
-        col, row = 1, 2
+        col, row = self.player_status_col, self.player_status_row
         term.puts(col, row - 1, self.player.name)
         term.puts(col, row + 0, self.player.gender)
         term.puts(col, row + 1, self.player.race)
@@ -242,6 +238,9 @@ class Start(Scene):
                 y=self.player_screen_row + index * (2 if self.height > 25 else 1),
                 s=letter + item_desc)
     
+    def draw_player_eq_inv_switch(self):
+        term.puts(center())
+
     def draw_player_screens(self, key):
         playscreen = False
         current_screen = key
@@ -252,8 +251,10 @@ class Start(Scene):
 
             if current_screen == "i":
                 self.draw_player_equipment()
+                self.draw_player_eq_inv_switch()
             elif current_screen == "v":
                 self.draw_player_inventory()
+                self.draw_player_eq_inv_switch()
             else:
                 self.draw_player_profile()
 
@@ -282,7 +283,6 @@ class Start(Scene):
 
             elif code == term.TK_DOWN:
                 if current_range < 10: current_range += 1
-
         term.clear()
 
     def process_handler(self, x, y, k, key):
@@ -309,8 +309,10 @@ class Start(Scene):
         '''
         try:
             self.actions[max(0, min(self.player.height, 1))][action]()
+
         except TypeError:
             self.actions[max(0, min(self.player.height, 1))][action](action)
+
         except KeyError:
             invalid_command = "'{}' is not a valid command".format(action)
             self.draw_log(invalid_command)
@@ -444,13 +446,12 @@ class Start(Scene):
                         else:
                             self.draw_log("You walk into {}".format(
                                 walkChars[ch]),
-                                refresh=True)
+                                refresh=False)
                             term.puts(
                                 x=tx + self.display_offset_x, 
                                 y=ty + self.display_offset_y, 
                                 s='[c=red]X[/c]')
                             term.refresh()
-        # term.refresh()
 
     def key_input(self):
         '''Handles keyboard input and keypress transformation
@@ -497,7 +498,6 @@ class Start(Scene):
 
     def action_save(self):
         self.draw_log("Save and exit game? (Y/N)")
-        term.refresh()
         
         # User input -- confirm selection
         code = term.read()
@@ -508,7 +508,6 @@ class Start(Scene):
             os.makedirs('saves')
             log = 'saved folder does not exist - creating folder: "./saves"'
             self.draw_log(log)
-            term.refresh()
 
         # prepare strings for file writing
         # player_hash used for same name / different character saves
@@ -720,7 +719,6 @@ class Start(Scene):
         else:
             log = "There is more than one closed door near you. Which door?"
             self.draw_log(log)
-            term.refresh()
 
             code = term.read()
             try:
@@ -732,7 +730,6 @@ class Start(Scene):
                     
             except:
                 self.draw_log("Canceled opening door.")
-                term.refresh()
 
     def action_interact_unit_attack_melee(self):
         pass

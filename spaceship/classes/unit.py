@@ -71,6 +71,7 @@ class Unit(Object):
 
     @property
     def is_alive(self):
+        '''Checks if current health is above 0'''
         return self.cur_health > 0
 
     def move(self, dx: int, dy: int) -> None:

@@ -22,7 +22,6 @@ from bearlibterminal import terminal as term
         (I|i)nventory (menu): -> inventory screen
         (Esc|Escape) (menu): -> escape screen/main menu
 """
-    
 keypress = namedtuple("Keypress", "x y char action")
 
 commands = {
@@ -46,6 +45,8 @@ commands = {
     (term.TK_T, 0): keypress(None, None, "t", "talk"),
     (term.TK_I, 0): keypress(None, None, "i", "inventory"),
     (term.TK_V, 0): keypress(None, None, "v", "equipment"),
+    (term.TK_D, 0): keypress(None, None, "d", "drop"),
+    (term.TK_U, 0): keypress(None, None, "u", "use"),
     # term.TK_F1: keypress("f1", "func_key"),
     # term.TK_F2: keypress("f2", "func_key"),
     (term.TK_COMMA, 0): keypress(None, None, ",", "pickup"),
