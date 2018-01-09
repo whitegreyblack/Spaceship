@@ -14,7 +14,7 @@ class Desert(Map):
     #   The modified set has removed the hill char while other maps include it
     chars_block_move =  {"#", "+", "o", "x", "%", "Y", "T"}
     def __init__(self, width, height):
-        super().__init__(width, height, "wilderness")
+        super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
         self.generate_units()
@@ -56,7 +56,7 @@ class Forest(Map):
     }
     chars_block_move =  {"#", "+", "o", "x", "%"}
     def __init__(self, width, height):
-        super().__init__(width, height, "wilderness")
+        super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
         self.generate_units()
@@ -95,7 +95,7 @@ class Grassland(Map):
     }
     chars_block_move = {"#", "+", "o", "x", "~", "%"}
     def __init__(self, width, height):
-        super().__init__(width, height, "wilderness")
+        super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
         self.generate_units()
@@ -123,7 +123,7 @@ class Hills(Map):
     #   The modified set has removed the hill char while other maps include it
     chars_block_move =  {"#", "+", "o", "x", "%", "Y", "T"}
     def __init__(self, width, height):
-        super().__init__(width, height, "wilderness")
+        super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
         self.generate_units()
@@ -149,7 +149,7 @@ class Plains(Map):
             "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
     }
     def __init__(self, width, height):
-        super().__init__(width, height, "wilderness")
+        super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
         self.generate_units()
@@ -176,7 +176,7 @@ class Woods(Map):
             "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),            
     }
     def __init__(self, width, height):
-        super().__init__(width, height, "wilderness")
+        super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
         self.generate_units()

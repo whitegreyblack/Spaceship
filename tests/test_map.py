@@ -9,8 +9,9 @@ from spaceship.classes.cave import Cave
 from spaceship.classes.monsters import Rat
 from spaceship.classes.bat import Bat
 from spaceship.action import commands
-'''Test map with key handling functionality to test player input in controlled layouts'''
-
+'''Test map with key handling functionality to test player input in controlled 
+layouts
+'''
 test_map_path = "./assets/maps/test_map.png"
 
 def test_map_output_speed_with_yield():
@@ -21,7 +22,7 @@ def test_map_output_speed_with_yield():
 
     cave = Cave(66, 22)
     bat = Bat(15, 10)
-    cave.add_units([bat])
+    cave.units_add([bat])
 
     t = timeit.timeit(run, number=1000)
     return t
@@ -34,16 +35,16 @@ def test_map_output_speed_with_return():
 
     cave = Cave(66, 22)
     bat = Bat(15, 10)
-    cave.add_units([bat])
+    cave.units_add([bat])
 
     t = timeit.timeit(run, number=1000)
     return t
 
-def test_sample_map_with_units():
+def run_sample_map_with_units():
     bat = Bat(15, 10)
     rat = Rat(33, 11)
     cave = Cave(66, 22)
-    cave.add_units([bat, rat])
+    cave.units_add([bat, rat])
     t.open()
     proceed=True
     while proceed:
@@ -63,7 +64,27 @@ def test_sample_map_with_units():
                 proceed=False
                 break
 
+def test_map_unit_iteration():
+    cave = Cave(66, 22, generate=False)
+    cave.units_add([Bat(15, 10)])
+    assert len(list(cave.units)) == 1
+    
+def test_map_unit_position_iteration():
+    cave = Cave(66, 22, generate=False)
+    cave.units_add([Bat(15, 10)])
+    assert list(cave.unit_positions) == [(15, 10)]
+
+def test_map_unit_position_at():
+    b = Bat(15, 10)
+    cave = Cave(66, 22, generate=False)
+    cave.units_add([b])
+    assert cave.unit_at_position(15, 10) == b
+
 if __name__ == "__main__":
-    test_sample_map_with_units()
+    # test_sample_map_with_units()
     # print(sum([test_map_output_speed_with_yield() for i in range(5)]) / 5)
     # print(sum([test_map_output_speed_with_return() for i in range(5)]) / 5)
+
+    # test_map_unit_iteration()
+    # test_map_unit_position_iteration()
+    pass

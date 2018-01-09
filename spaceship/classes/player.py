@@ -67,8 +67,8 @@ class Player(Unit):
                 # No item is set for the current body part
                 setattr(self, part, None) 
             else:
-                # There exists an item -- see if it is defined in the items table already
-                # if defined: create the item, else just set the part to the tuple
+                # Check to see if the item is defined in the items table already
+                # if defined create the item, else just set the part to the eq
                 try:
                     setattr(self, part, items[self.__equipment[p]])
                 except KeyError:

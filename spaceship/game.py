@@ -20,7 +20,7 @@ from .scene import Scene
 
 
 class Level: GLOBAL, WORLD, LOCAL = -1, 0, 1
-class Maps: CITY, CAVE, WILD, WORLD = range(3)
+class Maps: CITY, CAVE, WILD, WORLD = range(4)
 
 class Start(Scene):
     def __init__(self, sid='start_game'):
@@ -65,10 +65,19 @@ class Start(Scene):
             },
         }
 
+        self.pass_item_messages = [
+            "You pass by an item.",
+            "There is something here."
+            "Your feet touches an object."
+        ]
+
         # player screen variables
         self.player_screen_col, self.player_screen_row = 1, 3
         self.player_status_col, self.player_status_row = 1, 2
         self.display_offset_x, self.display_offset_y = 14, 0
+        self.log_width, self.log_height = self.width, 2
+        self.display_width = self.width - self.display_offset_x
+        self.display_height = self.height - self.log_height
 
     def run(self):  
         # self.reset_size()
@@ -105,20 +114,27 @@ class Start(Scene):
         if self.map_change:
             self.determine_map_location()
 
+        print(list(u.__class__.__name__ for u in self.location.units))
+        # print(self.location.__class__.__name__)
+        # print(self.player.position)
+
         self.draw_world()
         term.refresh()
-
-        print('Units', self.location.units)
-
-        for unit in self.location.units
-
-        if self.do_action:
-            action = self.key_input()
-            if not self.proceed:
-                return
-
-            self.process_handler(*action)
-
+        self.process_player_turn()
+        # if isinstance(self.location, World):
+        #     self.process_player_turn()
+        # else:
+        #     for unit in sorted(list(self.location.units) + [self.player], 
+        #                     key=lambda x: x.energy.speed):
+        #         if unit.energy.ready():
+        #             unit.energy.reset()
+        #             if isinstance(unit, Player):
+        #                 self.process_player_turn()
+        #             elif hasattr(unit, 'do_something'):
+        #                 unit.do_something()
+        #         else:
+        #             unit.energy.gain_energy()
+        
     def draw_log(self, log=None, refresh=True):
         if log:
             self.gamelog.add(log)
@@ -243,7 +259,16 @@ class Start(Scene):
                 s=letter + item_desc)
     
     def draw_player_eq_inv_switch(self):
-        term.puts(center())
+        term.puts(
+            x=center('press v to switch to inventory', self.width), 
+            y=self.height - 2,
+            t='press v to switch to inventory')
+
+    def draw_player_inv_eq_switch(self):
+        term.puts(
+            x=center('press i to switch to equipment', self.width), 
+            y=self.height - 2,
+            t='press i to switch to equipment')
 
     def draw_player_screens(self, key):
         playscreen = False
@@ -258,7 +283,7 @@ class Start(Scene):
                 self.draw_player_eq_inv_switch()
             elif current_screen == "v":
                 self.draw_player_inventory()
-                self.draw_player_eq_inv_switch()
+                self.draw_player_inv_eq_switch()
             else:
                 self.draw_player_profile()
 
@@ -289,6 +314,12 @@ class Start(Scene):
                 if current_range < 10: current_range += 1
         term.clear()
 
+    def process_player_turn(self):
+        action = self.key_input()
+        if not self.proceed:
+            return
+        self.process_handler(*action)
+
     def process_handler(self, x, y, k, key):
         '''Checks actions linearly by case:
         (1) processes non-movement action
@@ -312,10 +343,17 @@ class Start(Scene):
         So height would be independent and position would be depenedent on height
         '''
         try:
-            self.actions[max(0, min(self.player.height, 1))][action]()
-
-        except TypeError:
-            self.actions[max(0, min(self.player.height, 1))][action](action)
+            divided = self.actions[max(0, min(self.player.height, 1))]
+            try:
+                divided[action]()
+            except TypeError:
+                divided[action](action)
+            except KeyError:
+                invalid_command = "'{}' is not a valid command".format(action)
+                self.draw_log(invalid_command)        
+        # except TypeError:
+        #     print('te')
+        #     self.actions[max(0, min(self.player.height, 1))][action](action)
 
         except KeyError:
             invalid_command = "'{}' is not a valid command".format(action)
@@ -351,15 +389,10 @@ class Start(Scene):
                         self.player.move(x, y)
                         msg_chance = random.randint(0, 5)
                         if self.location.square(tx, ty).items and msg_chance:
-                            pass_item_messages = [
-                                "You pass by an item.",
-                                "There is something here."
-                                "Your feet touches an object."
-                            ]
                             item_message = random.randint(
                                 a=0, 
-                                b=len(pass_item_messages) - 1)
-                            self.draw_log(pass_item_messages[item_message])
+                                b=len(self.pass_item_messages) - 1)
+                            self.draw_log(self.pass_item_messages[item_message])
                         turn_inc = True
                     else:
                         unit = self.location.get_unit(tx, ty)
@@ -414,7 +447,7 @@ class Start(Scene):
                                             unit.race, 
                                             item.name))
 
-                                    self.location.remove_unit(unit)
+                                    self.location.unit_remove(unit)
                                 else:
                                     log += "The {} has {} health left".format(
                                         unit.race, 
@@ -547,10 +580,10 @@ class Start(Scene):
         except KeyError:
             raise ValueError("Map Type Not Implemented: {}".format(map_type))
 
-    def determine_map_enterance(self, x, y):
+    def determine_map_enterance(self, x, y, location):
         '''Helper function to determine start position when entering wild'''
-        return (max(int(self.location.width * x - 1), 0), 
-                max(int(self.location.height * y - 1), 0))
+        return (max(int(location.width * x - 1), 0), 
+                max(int(location.height * y - 1), 0))
 
     def action_enter_map(self):
         if not self.world.location_exists(*self.player.location):
@@ -583,16 +616,16 @@ class Start(Scene):
                 # map type should be in the wilderness
                 tile = self.world.square(*self.player.location)
                 # neighbors = world.access_neighbors(*player.location)
-                
                 location = self.determine_map_on_enter(tile.tile_type)(
-                    width=term.state(term.TK_WIDTH),
-                    height=term.state(term.TK_HEIGHT))
+                    width=self.width,
+                    height=self.height)
 
                 x, y = self.player.get_position_on_enter()
-                self.player.position = self.determine_map_enterance(x, y)
-        
+                self.player.position = self.determine_map_enterance(x, y, location)
+
             location.parent = self.world
             self.world.location_create(*self.player.location, location)
+
         else:
             # location already been built -- retrieve from world map_data
             # player position is different on map enter depending on map location
@@ -608,7 +641,7 @@ class Start(Scene):
             else:
                 # reenter a wilderness
                 x, y = self.player.get_position_on_enter()
-                self.player.position = self.determine_map_enterance(x, y)
+                self.player.position = self.determine_map_enterance(x, y, location)
                 
         self.player.move_height(1)
         self.map_change = True
@@ -775,10 +808,13 @@ class Start(Scene):
         term.read()
 
     def action_interact_item_use(self):
-        term.clear()
-        self.draw_player_equipment()
-        term.refresh()
-        term.read()
+
+        while True:
+            term.clear()
+            self.draw_player_equipment()
+            self.draw_player_eq_drop()
+            term.refresh()
+            term.read()
 
 if __name__ == "__main__":
     s = Start()

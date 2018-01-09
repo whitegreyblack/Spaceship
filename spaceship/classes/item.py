@@ -79,7 +79,7 @@ class Armor(Item):
         self.protection_value = pv
 
     def __repr__(self):
-        return "[{}] {:<15}: HIT=({}, {}), DEF=(DV: {}, PV: {})".format(
+        return "[{} ] {:<15}: HIT=({}, {}), DEF=(DV: {}, PV: {})".format(
             self.__class__.__name__,
             self.name,
             self.mark(self.melee_hit),
@@ -125,6 +125,9 @@ items = {
     # leather cap, hood
 
     "gold necklace": Armor("gold necklace", "'", "yellow", "neck", 0, 0, 0, 0),
+    "holy symbol": Armor("holy_symbol", "'", "white", "neck", 0, 0, 0, 0),
+    "whistle": Armor("whistle", "'", "grey", "neck", 0, 0, 0, 0),
+    "amulet of power": Armor("amulet of power", "'", "red", "neck", 0, 0, 0, 0),
     # holy symbol, whistle, amulet of power
 
     "elven chainmail": Armor("elven chainmail", "[", "blue", "body", 2, 1, 1, 1),

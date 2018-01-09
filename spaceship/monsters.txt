@@ -82,3 +82,43 @@ These five legends are:
     Edochas - The King of Despair (Irish?) -> Elf Forest/Dark Forest (sorrow) |
     Dekay - the Rotten King -> Dwarf (pun) (greed) | 
     Crassus Regulus - the Fat King Gluttony (king of humans) |
+
+# Farm Animals:
+Chicken, Cock
+Cat
+Dog
+Sheep
+Cow
+Horse
+# Wilderness Animals:
+Rat
+Frog
+Deer
+Snake
+Bat
+Bee
+Spider
+Bear
+Wolf
+Lion
+# Racial Factions
+Goblins
+Dwarves
+Ogres -- Cyclops
+Orken
+Centaurs
+Minotaurs
+Mud Golem
+Treant
+Skeleton
+Imp
+Gnome
+Eyeclops
+Succubus
+Fire Elemental
+Earth Elemental
+Storm Elemental
+Water Elemental
+Gorgon
+Sphynx
+Slime

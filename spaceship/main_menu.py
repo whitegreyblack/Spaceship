@@ -282,10 +282,10 @@ class Options(Scene):
         height = 3
 
         for index, opt in enumerate(self.option.opts):
-            selected = index == self.option.optindex
+            switch = index == self.option.optindex
             expanded = index in self.option.expand
 
-            if selected:
+            if switch:
                 opt = ("[[-]] " if expanded else "[[+]] ") + \
                 "[c=#00ffff]{}[/c]".format(opt)
             else:
@@ -295,7 +295,7 @@ class Options(Scene):
             height += term.state(term.TK_HEIGHT) // 25
             if expanded:
                 for index, subopt in enumerate(self.option.subopts[index]):
-                    if selected:
+                    if switch:
                         if index == self.option.suboptindex[self.option.optindex]:
                             subopt = "[c=#00ffff]{}[/c]".format(subopt)
                         else:
@@ -525,7 +525,7 @@ class Create(Scene):
     def setup(self):
         self.reset()
         self.title = "Character Creation"
-        self.help = "Press (?) for info on a selected race, subrace or class"
+        self.help = "Press (?) for info on a switch race, subrace or class"
 
         # some helper objects used in character creation
         self.character = namedtuple("Character", "name gender_opt race_opt class_opt")
@@ -765,7 +765,7 @@ class Create(Scene):
         elif code == term.TK_8:
             # only randomizes if shift-8 is pressed -- else it's just pressing 8
             if term.state(term.TK_SHIFT) and self.character_index <= 1:
-                # lets not randomize if you've already selected a gender
+                # lets not randomize if you've already switch a gender
                 # its not much more effort to finish creating your character
                 # name = "Random name"
                 self.gender_index = random.randint(0, 1)
@@ -892,17 +892,18 @@ class Create(Scene):
     def gender_row(self, draw=True):
         '''Returns a tuple "gender" according to the gender_index'''
         if draw:
-            # for option, index in zip(self.gender_options, range(len(self.gender_options))):
+            # for option, index in zip(self.gender_options, 
+            #                          range(len(self.gender_options))):
             for index, option in enumerate(self.gender_options):
                 x, y = 24 + 22 * index, 5 if not self.shorten else 2
                 gender = pad(option.gender, length=8)
                 if index == self.gender_index:
                     if self.character_index == 0:
-                        selected(x, y, gender)
+                        switch(x, y, gender, bg_before='white', color='black')
                     else:
-                        passed(x, y, gender)
+                        switch(x, y, gender, bg_before='grey')
                 else:
-                    unselected(x, y, gender)
+                    switch(x, y, gender)
 
         return self.gender_options[self.gender_index]
 
@@ -916,13 +917,13 @@ class Create(Scene):
                 race = pad(option.race, length=8)
                 if index == self.race_index:
                     if self.character_index == 1:
-                        selected(x, y, race)
+                        switch(x, y, race, bg_before='white', color='black')
                     elif self.character_index > 1:
-                        passed(x, y, race)
+                        switch(x, y, race, bg_before='grey')
                     else:
-                        unselected(x, y, race)
+                        switch(x, y, race)
                 else:
-                    unselected(x, y, race)
+                    switch(x, y, race)
 
         return self.race_options[self.race_index]
 
@@ -935,13 +936,13 @@ class Create(Scene):
                 option = pad(option.classes, length=8)
                 if index == self.class_index:
                     if self.character_index == 2:
-                        selected(x, y, option)
+                        switch(x, y, option, bg_before='white', color='black')
                     elif self.character_index > 2:
-                        passed(x, y, option)
+                        switch(x, y, option, bg_before='grey')
                     else:
-                        unselected(x, y, option)
+                        switch(x, y, option)
                 else:
-                    unselected(x, y, option)
+                    switch(x, y, option)
 
         return self.class_options[self.class_index]
 
@@ -1115,15 +1116,14 @@ Notes: Propagating Game Variables Through Scenes
     screen.
 
     So on main screen:
-        If either continue or new game is selected:
+        If either continue or new game is switch:
             Then Start Game runs
-        Elif Options is selected:
+        Elif Options is switch:
             Then options menu runs
         Else:
             Selected quit quits game
             Everything else does nothing
 '''
-
 
 if __name__ == "__main__":
     g = GameEngine()

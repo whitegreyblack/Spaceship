@@ -150,6 +150,7 @@ class Map:
             if not hasattr(self, attr):
                 raise AttributeError("No self.{}".format(attr))
         return True
+
     ###########################################################################
     # Connected Map/Dungeon Functions and Properties                          #
     ###########################################################################
@@ -245,7 +246,7 @@ class Map:
 
     def occupied(self, x, y):
         '''Only acts on unit objects in the map'''
-        return self.within_bounds(x, y) and (x, y) in self.get_unit_positions()
+        return self.within_bounds(x, y) and (x, y) in self.unit_positions
 
     def blocked(self, x, y):
         '''Only acts on objects within the bounds of the map'''
@@ -268,6 +269,7 @@ class Map:
 
     def unblock(self, x, y):
         self.square(x, y).block_mov = False
+
     ###########################################################################
     # Sight, Light and Color Functions                                        #
     ###########################################################################
@@ -281,9 +283,12 @@ class Map:
     def lit_reset(self):
         for y in range(self.height):
             for x in range(self.width):
-                if self.square(x, y).char == "." and self.square(x, y).color == "blue":
-                    self.square(x, y).color ="white"
-                if self.square(x, y).light == 2:
+                # floor_square = self.square(x, y).char == "."
+                # blue_square = self.square(x, y).color == "blue"
+                lighted_square = self.square(x, y).light == 2
+                # if floor_square and blue_square:
+                #     self.square(x, y).color ="white"
+                if lighted_square:
                     self.square(x, y).light = 1 # if self.square(x, y).light > 0 else 0
 
     def path(self, p1, p2):
@@ -485,6 +490,7 @@ class Map:
         #     self.__units = units
         self.__units += units
 
+    
     # def get_units(self):
     #     '''Returns all units within the list'''
     #     for unit in self.__units:
@@ -496,6 +502,14 @@ class Map:
     #         return {u.position for u in self.__units}
     #     return {}
 
+    '''
+    def remove(self, object):
+        if object == unit:
+            remove_unit
+        elif object == Tile?
+            ...
+        ...
+    '''
     def remove_unit(self, unit):
         # if hasattr(self, 'units'):
         try:

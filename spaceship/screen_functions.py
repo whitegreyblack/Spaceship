@@ -4,13 +4,12 @@ from textwrap import wrap
 def center(text, width):
     '''Returns x position for string given a width length'''
     if isinstance(text, str):
-        return width//2-len(text)//2
-    if isinstance(text, int):
-        return width//2-text//2
+        text = len(text)
+    return width // 2 - text // 2
 
 def colorize(text, color):
     '''Returns a BLT colored encapsulated text'''
-    return "[color={color}]{}[/color]".format(color, text)
+    return "[c={}]{}[/c]".format(color, text)
 
 def optionize(text):
     '''return text as an option string surrounded by brackets'''
@@ -39,29 +38,14 @@ def pad(string, center=True, length=0):
         return padding//2 * " " + string.upper() + (padding+1)//2 * " " if padding else string.upper()
     return string.upper() + padding * " " if padding else string.upper()
 
-def switch(x, y, text, bg_before, bg_after='black', color='black'):
+def switch(x, y, text, bg_before='black', bg_after='black', color='white'):
     '''Abstract function in place of UNSELECTED, SELECTED, and PASSED'''
-    term.bkcolor(bg_before)
-    term.puts(x, y, colorize(text, color))
-    term.bkcolor(bg_after)
-
-# def unselected(x, y, text, color='black'):
-#     '''Places text at target location without any background changes'''
-#     term.puts(x, y, text)
-
-# def selected(x, y, text, color='black'):
-#     '''Changes background to white before printing text to terminal and
-#     changes background back to black'''
-#     term.bkcolor("white")
-#     term.puts(x, y, color(text, 'black'))
-#     term.bkcolor("black")
-
-# def passed(x, y, text):
-#     '''Changes background to grey before printing text to terminal and
-#     changes background back to black'''
-#     term.bkcolor("grey")
-#     term.puts(x, y, text)
-#     term.bkcolor("black")      
+    if bg_before == bg_after:
+        term.puts(x, y, colorize(text, color))
+    else:
+        term.bkcolor(bg_before)
+        term.puts(x, y, colorize(text, color))
+        term.bkcolor(bg_after)
 
 def surround(text, char=' ', times=1, length=0):
     '''Surrounds the text inputted with a character by a number of times
@@ -85,32 +69,38 @@ def modify(increment, index, options):
         index = max(0, min(index, options-1))
     return index
 
-def border(x, heights, width, character, color='black'):
+def border_vertical(x, heights, width, character):
     '''Using a single character, fills the screen starting at row heights
     and for col width
 
     call ex. :- border(w, [h, h], '#')
     '''
     for height in heights:
-            term.puts(0, height, colorize(character * width, color))
+        switch(x, height, character * width)
+
+def border_vertical(y, widths, height, character):
+    for width in widths:
+        for h in height:
+            switch(x, height, character)
 
 def arrow(x, y, color="black"):
     '''Adds a greater than sign at the target location on the terminal'''
-    term.puts(x, y, colorize(">", color))
+    switch(x, y, '>')
 
 def point(x, y, color="black"):
     '''Adds a star sign at the location on the terminal'''
-    term.puts(x, y, colorize("*", color))
+    switch(x, y, '*')
 
 def barrow(x, y, color="black"):
     '''Adds a less than sign at the target location on the terminal'''
-    term.puts(x, y, colorize("<", color))
+    switch(x, y, '<')
 
 def box(x, y, dx, dy, c):
     '''Prints a box on the terminal with the given coordinates and character'''
     for i in range(x, x + dx + 1):
         term.puts(i, y, c)
         term.puts(i, y + dy, c)
+
     for j in range(y, y + dy + 1):
         term.puts(x, j, c)
         term.puts(x+dx, j, c)

@@ -152,44 +152,48 @@ class City(Map):
                     if line.strip().startswith('#'):
                         pass # these are comments in the file
                     elif line.strip().startswith('['):
-                        modifier = line.replace('[', '').replace(']', '').lower().strip()
+                        modifier = line.replace('[', '').replace(']', '')
+                        modifier = modifier.lower().strip()
                     else:
                         job, color, character, number = line.split()
                         self.stats += "{}: {}\n".format(job, number)
 
                         if modifier == "":
-                            raise ValueError("Configuration file has no race specifier")
+                            e="Configuration file has no race specifier"
+                            raise ValueError(e)
                         if job.lower() in jobs.keys():
                             for _ in range(int(number)):
                                 try:
                                     spaces=self.unit_spaces[character] \
-                                        if self.unit_spaces[character] else self.spaces
+                                        if self.unit_spaces[character] \
+                                        else self.spaces
 
                                 except KeyError:
                                     spaces = self.spaces
                                 else:
                                     i, j = choice(spaces)
-                                self.units.append(jobs[job.lower()](
-                                            x=i, 
-                                            y=j,
-                                            race=modifier,
-                                            job=job.lower(),
-                                            ch=character,
-                                            fg=color,
-                                            rs=self.relationship,
-                                            spaces=self.unit_spaces[character] 
-                                                if self.unit_spaces[character] else self.spaces))
+                                self.units_add([jobs[job.lower()](
+                                    x=i, 
+                                    y=j,
+                                    race=modifier,
+                                    job=job.lower(),
+                                    ch=character,
+                                    fg=color,
+                                    rs=self.relationship,
+                                    spaces=self.unit_spaces[character] 
+                                        if self.unit_spaces[character] 
+                                        else self.spaces)])
                         else:
                             for _ in range(int(number)):
                                 i, j = self.spaces.pop()
                                 self.units.append(Unit(
-                                            x=i, 
-                                            y=j,
-                                            ch=character,
-                                            fg=color,
-                                            rs=self.relationship))
+                                    x=i, 
+                                    y=j,
+                                    ch=character,
+                                    fg=color,
+                                    rs=self.relationship))
         except FileNotFoundError:
-            # not explicitely needed
+            # not explicitely needed -- can just pass instead of printing
             print("No unit configuration file found")
         
         except:
