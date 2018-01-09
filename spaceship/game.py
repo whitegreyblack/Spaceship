@@ -15,7 +15,7 @@ from .screen_functions import *
 from .gamelog import GameLogger
 from .classes.city import City
 from .classes.cave import Cave
-from .action import commands
+from .action import commands_player
 from .scene import Scene
 
 
@@ -114,27 +114,35 @@ class Start(Scene):
         if self.map_change:
             self.determine_map_location()
 
-        print(list(u.__class__.__name__ for u in self.location.units))
+        # print(list(u.__class__.__name__ for u in self.location.units))
         # print(self.location.__class__.__name__)
         # print(self.player.position)
 
         self.draw_world()
         term.refresh()
-        self.process_player_turn()
-        # if isinstance(self.location, World):
-        #     self.process_player_turn()
-        # else:
-        #     for unit in sorted(list(self.location.units) + [self.player], 
-        #                     key=lambda x: x.energy.speed):
-        #         if unit.energy.ready():
-        #             unit.energy.reset()
-        #             if isinstance(unit, Player):
-        #                 self.process_player_turn()
-        #             elif hasattr(unit, 'do_something'):
-        #                 unit.do_something()
-        #         else:
-        #             unit.energy.gain_energy()
-        
+
+
+        # units = list(self.location.units)
+
+        # units.append(self.player)
+
+        # self.process_player_turn()
+        if isinstance(self.location, World):
+            self.process_player_turn()
+        else:
+            for unit in self.location.units:
+                self.unit = unit
+                if self.unit.energy.ready():
+                    self.unit.energy.reset()
+                    self.process_unit_turn()
+                else:
+                    self.unit.energy.gain_energy()
+
+            if self.player.energy.ready():
+                self.process_player_turn()
+            else:
+                self.player.energy.gain_energy()
+
     def draw_log(self, log=None, refresh=True):
         if log:
             self.gamelog.add(log)
@@ -320,7 +328,34 @@ class Start(Scene):
             return
         self.process_handler(*action)
 
-    def process_handler(self, x, y, k, key):
+    def process_unit_turn(self):
+        if hasattr(self.unit, 'acts'):
+            positions = self.location.fov_calc_blocks(
+                                                self.unit.x, 
+                                                self.unit.y, 
+                                                self.unit.sight)
+            tiles = { position: self.location.square(*position) 
+                                                for position in positions }
+            units = { u.position: u for u in self.location.units 
+                                                if u != self.unit }
+            action = self.unit.acts(self.player, tiles, units)
+            print('AI ACTION: ', action)
+            if action:
+                self.process_handler_unit(*action)
+
+            if not self.player.is_alive:
+                self.process = False
+                return
+            
+    def process_handler_unit(self, x, y, k, key):
+        if k is not None:
+            pass
+        elif all(z is not None for z in [x, y]):
+            self.process_movement_unit(x, y)
+        else:
+            return 'skipped-turn'
+
+    def process_handler(self, x, y, k, key,):
         '''Checks actions linearly by case:
         (1) processes non-movement action
             Actions not in movement groupings
@@ -359,6 +394,74 @@ class Start(Scene):
             invalid_command = "'{}' is not a valid command".format(action)
             self.draw_log(invalid_command)
 
+    def process_movement_unit(self, x, y):
+        print('unit processing')
+        if (x, y) != (0, 0):
+            tx = self.unit.x + x
+            ty = self.unit.y + y
+
+            if self.location.walkable(tx, ty):
+                occupied_unit = self.location.occupied(tx, ty)
+                occupied_player = self.player.position == (tx, ty)
+                print(occupied_player, occupied_unit)
+                if not occupied_unit and not occupied_player:
+                    # space is free -> move there
+                    self.unit.move(x, y)
+                else:
+                    if occupied_unit:
+                        unit = self.location.unit_at_position(tx, ty)
+                    else:
+                        unit = self.player
+                    player = isinstance(unit, Player)
+                    if not player and unit.friendly:
+                        unit.move(-x, -y)
+                        self.unit.move(x, y)
+                        log = "The {} switches places with the {}".format(
+                            self.unit.__class__.__name__, unit.race)
+                        self.draw_log(log) 
+                    else:
+                        chance = self.unit.calculate_attack_chance()
+                        if chance == 0:
+                            log = "The {} tries attacking {} but misses".format(
+                                self.unit.race, 
+                                "you" if player else "the " + unit.race)
+                            self.draw_log(log)
+                        else:
+                            damage = self.unit.calculate_attack_damage()
+                            if chance == 2:
+                                damage *= 2
+                            unit.cur_health -= damage
+                            log = "The {} attacks {} for {} damage".format(
+                                self.unit.race,
+                                "you" if player else "the " + unit.race,
+                                damage)
+                            self.draw_log(log)
+                            if not unit.is_alive:
+                                log = "The {} has killed {}!".format(
+                                    self.unit.race,
+                                    "you" if player else "the " + unit.race)
+                                self.draw_log(log)
+                                if player:
+                                    print('YOU DIED -> GOTO EXIT')
+                                    exit('DEAD')
+                                item = unit.drops()
+                                if item:
+                                    self.location.square(*unit.position).items.append(item)
+                                    self.draw_log("The {} has dropped {}".format(
+                                        unit.race, item.name))
+                                self.location.unit_remove(unit)
+                            term.puts(
+                                x=tx + self.display_offset_x, 
+                                y=ty + self.display_offset_y, 
+                                s='[c=red]*[/c]')
+                            term.refresh()
+            else:
+                term.puts(
+                    x=tx + self.display_offset_x, 
+                    y=ty + self.display_offset_y, 
+                    s='[c=red]X[/c]')
+                term.refresh()
+                            
     def process_movement(self, x, y):
         turn_inc = 0
         if  self.player.height == Level.WORLD:
@@ -395,7 +498,7 @@ class Start(Scene):
                             self.draw_log(self.pass_item_messages[item_message])
                         turn_inc = True
                     else:
-                        unit = self.location.get_unit(tx, ty)
+                        unit = self.location.unit_at_position(tx, ty)
                         if unit.friendly:
                             unit.move(-x, -y)
                             self.player.move(x, y)
@@ -420,11 +523,6 @@ class Start(Scene):
                                     " crit and " if chance == 2 else " ", 
                                     unit.race, 
                                     damage)
-                                    
-                                log += "The {} has {} health left. ".format(
-                                    unit.race, 
-                                    max(unit.cur_health, 0))
-                                self.draw_log(log)
 
                                 if unit.cur_health < 1:
                                     log = "You have killed the {}! ".format(
@@ -448,6 +546,7 @@ class Start(Scene):
                                             item.name))
 
                                     self.location.unit_remove(unit)
+
                                 else:
                                     log += "The {} has {} health left".format(
                                         unit.race, 
@@ -518,7 +617,7 @@ class Start(Scene):
 
         try:
             # discover the command and set as current action
-            action = commands[(key, shifted)]
+            action = commands_player[(key, shifted)]
         except KeyError:
             pass
 
@@ -717,7 +816,7 @@ class Start(Scene):
 
             code = term.read()
             try:
-                cx, cy, a, act = commands[(code, term.state(term.TK_SHIFT))]
+                cx, cy, a, act = commands_player[(code, term.state(term.TK_SHIFT))]
                 if act == "move" and (x + cx, y + cy) in doors:
                     close_door(x + cx, y + cy)
                 else:
@@ -728,7 +827,7 @@ class Start(Scene):
 
     def action_interact_door_open(self):
         def open_door(i, j):
-            self.draw_log('Opening door.', refresh=False)
+            self.draw_log('Opening door.')
             term.puts(
                 x=i + self.display_offset_x, 
                 y=j + self.display_offset_y, 
@@ -759,7 +858,7 @@ class Start(Scene):
 
             code = term.read()
             try:
-                cx, cy, a, act = commands[(code, term.state(term.TK_SHIFT))]
+                cx, cy, a, act = commands_player[(code, term.state(term.TK_SHIFT))]
                 if act == "move" and (x + cx, y + cy) in doors:
                     open_door(x + cx, y + cy)
                 else:
@@ -808,7 +907,6 @@ class Start(Scene):
         term.read()
 
     def action_interact_item_use(self):
-
         while True:
             term.clear()
             self.draw_player_equipment()

@@ -91,6 +91,9 @@ class Unit(Object):
     def calculate_attack_chance(self):
         return choice([0, 1, 2])
 
+    def direction(self, unit):
+        return unit.x - self.x, unit.y - self.y
+
     def friendly():
         self.relationship >= 0
 

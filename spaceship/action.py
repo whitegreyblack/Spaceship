@@ -24,7 +24,7 @@ from bearlibterminal import terminal as term
 """
 keypress = namedtuple("Keypress", "x y char action")
 
-commands = {
+commands_player = {
     (term.TK_UP, 0): keypress(0, -1, None, "move"),
     (term.TK_DOWN, 0): keypress(0, 1, None, "move"),
     (term.TK_LEFT, 0): keypress(-1, 0, None, "move"),
@@ -56,6 +56,19 @@ commands = {
     (term.TK_S, 1): keypress(None, None, "S", "save"),
     (term.TK_COMMA, 1): keypress(None, None, "<", "exit"),
     (term.TK_PERIOD, 1): keypress(None, None, ">", "enter"),
+}
+commands_ai = {
+    'wait': keypress(0, 0, None, "move"),
+    'move': {
+        (-1, -1): keypress(-1, -1, None, "move"),
+        ( 0, -1): keypress(0, -1, None, "move"),
+        ( 1, -1): keypress(1, -1, None, "move"),
+        ( 1,  0): keypress(1, 0, None, "move"),
+        ( 1,  1): keypress(1, 1, None, "move"),
+        ( 0,  1): keypress(0, 1, None, "move"),
+        ( -1, 1): keypress(-1, 1, None, "move"),
+        ( -1, 0): keypress(-1, 0, None, "move"),
+    }
 }
 
 if __name__ == "__main__":

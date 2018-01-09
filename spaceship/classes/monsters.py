@@ -6,6 +6,7 @@ from ..tools import distance
 from .color import Color
 from .item import Armor, Weapon, Item, items
 from .charmap import item_chars, unit_chars
+from ..action import commands_ai
 from .unit import Unit
 
 class Rat(Unit):
@@ -103,9 +104,11 @@ class Rat(Unit):
                 # offset the location based on unit position and sight range
                 dx, dy = self.x-x+self.sight, self.y-y+self.sight
                 sight_map[dy][dx] = char
+
             if spotted:
                 # print(self.energy.speed)
-                print(map_out())
+                # print(map_out())
+                pass
             
         # start with an empty sight map
         unit_spotted = []
@@ -132,6 +135,8 @@ class Rat(Unit):
         if self.cur_health <= self.max_health * .10:
             # monster is wounded/damaged -- try preserving its life
             print('Waiting and resting')
+            return commands_ai['wait']
+
         else:
             # monster is healthy -- do monster stuff
             if not paths:
@@ -155,7 +160,10 @@ class Rat(Unit):
                     else:
                         dt = distance(*self.position, *interest.position)
                         if dt < 2:
-                            self.attack(interest)
+                            # x, y = self.x - interest.x, self.y - interest.y
+                            # self.attack(interest)
+                            return commands_ai['move'][self.direction(interest)]
+
                         else:
                             print("Saw {}".format(interest))
                             self.follow(sight_map, units, path[1].node)
@@ -239,4 +247,4 @@ class GiantRat(Unit):
         return "Screeeee!!"
 
 if __name__ == "__main__":
-    pass
+    print('Monsters.py')

@@ -510,7 +510,7 @@ class Map:
             ...
         ...
     '''
-    def remove_unit(self, unit):
+    def unit_remove(self, unit):
         # if hasattr(self, 'units'):
         try:
             self.__units.remove(unit)

@@ -69,6 +69,12 @@ def test_map_unit_iteration():
     cave.units_add([Bat(15, 10)])
     assert len(list(cave.units)) == 1
     
+def test_map_unit_build_dictionary():
+    b = Bat(15, 10)
+    cave = Cave(66, 22, generate=False)
+    cave.units_add([b])
+    assert {u.position: u for u in cave.units} == {b.position: b}
+
 def test_map_unit_position_iteration():
     cave = Cave(66, 22, generate=False)
     cave.units_add([Bat(15, 10)])
@@ -78,7 +84,7 @@ def test_map_unit_position_at():
     b = Bat(15, 10)
     cave = Cave(66, 22, generate=False)
     cave.units_add([b])
-    assert cave.unit_at_position(15, 10) == b
+    assert cave.unit_at_position(15, 10) == b    
 
 if __name__ == "__main__":
     # test_sample_map_with_units()
