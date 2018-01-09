@@ -75,7 +75,7 @@ class Map:
         if not hasattr(self, 'height'):
             self.height = 22
         # self.width, self.height = 66, 22
-        self.parent_map, self.child_map = None, None
+        self.__parent, self.__sublevel = None, None
         self.map_display_width = min(66, width)
         self.map_display_height = min(22, height)
         self.units = []
@@ -153,49 +153,74 @@ class Map:
     ###########################################################################
     # Connected Map/Dungeon Functions and Properties                          #
     ###########################################################################
-    def getUpStairs(self):
-        '''find exit and save on the first time
-        subsequent calls returns the saved point'''
-        if hasattr(self, "exitpoint"):
-            return self.exitpoint
-
-        for j in range(len(self.data)):
-            for i in range(len(self.data[0])):
-                if self.data[j][i] == "<":
-                    self.exitpoint = i, j
-                    return i, j
-
-    def getDownStairs(self):
-        '''same logic as getExit'''
+    @property
+    def stairs_up(self):
+        '''Returns the position of the up stairs character on map.
+        First call to the stairs will find and save the stairs position.
+        Subsequent calls will returns the saved position of the stairs.
+        Stairs_up will always return a position since every level has a
+        parent level.
+        '''
         try:
-            if hasattr(self, self.enterance):
-                return self.enterance
+        # if hasattr(self, "__stairs_up"):
+            return self.__stairs_up
+        except:
+            for j, row in enumerate(self.data):
+                for i, char in enumerate(row):
+                    if char == "<":
+                        self.__stairs_up = i, j
+                        return i, j
+
+        # for j in range(len(self.data)):
+        #     for i in range(len(self.data[0])):
+        #         if self.data[j][i] == "<":
+        #             self.__stairs_up = i, j
+        #             return i, j
+
+    @property
+    def stairs_down(self):
+        '''Returns the position of the down stairs character on map.
+        First call to stairs_down will find and save the stairs_down position.
+        Subsequent calls will returns the saved position of the stairs.
+        Unlike stairs_up, stairs_down has the possiblity of being None, or
+        not found since the possiblity of no sublevel exists.
+        '''        
+        try:
+            return self.__stairs_down
         except AttributeError:
             # manually look through the map to check for '>'
-            for j in range(len(self.data)):
-                for i in range(len(self.data[0])):
-                    if self.data[j][i] == ">":
-                        self.entrance = i, j
+            for j, row in enumerate(self.data):
+                for i, char in enumerate(row):
+                    if char == ">":
+                        self.__stairs_down = i, j
                         return i, j
-            return 'Doesnt have a sublevel?'
+            # for j in range(len(self.data)):
+            #     for i in range(len(self.data[0])):
+            #         if self.data[j][i] == ">":
+            #             self.__stairs_down = i, j
+            #             return i, j
 
-    def hasParent(self, parent):
-        return hasattr(self, 'parent')
+    # def hasParent(self, parent):
+    #     return hasattr(self, 'parent')
 
-    def addParent(self, parent):
-        self.parent = parent
+    @property
+    def parent(self):
+        return self.__parent
 
-    def getParent(self):
-        return self.parent
+    @parent.setter
+    def parent(self, location):
+        self.__parent = location
 
-    def hasSublevel(self):
-        return hasattr(self, 'sublevel')
+    # def hasSublevel(self):
+    #     return hasattr(self, 'sublevel')
 
-    def addSublevel(self, sublevel):
-        self.sublevel = sublevel
+    @property
+    def sublevel(self):
+        return self.__sublevel
 
-    def getSublevel(self):
-        return self.sublevel
+    @sublevel.setter
+    def sublevel(self, sublevel):
+        self.__sublevel = sublevel
 
     ###########################################################################
     #  Singular Map Functions                                                 #

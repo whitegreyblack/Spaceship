@@ -1015,7 +1015,7 @@ class Continue(Scene):
                         save_files.append(file_name)
                         
                         with shelve.open('./saves/' + file_name, 'r') as save:
-                            save_descs.append(save['save'])
+                            save_descs.append(save['desc'])
 
         if len(save_files) != len(save_descs):
             log = "Save files number does not match save files descs number"

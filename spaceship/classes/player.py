@@ -50,7 +50,8 @@ class Player(Unit):
         self.convert_inventory()
         self.calculate_initial_stats()
         self.calculate_attack_variables()
-
+        self.profile_save_path()
+        
     def setup(self, home: str) -> None:
         self.home, self.hpointer = home, World.capitals(home)
         self.wx, self.wy = self.hpointer
@@ -88,6 +89,11 @@ class Player(Unit):
     def inventory(self):
         for item in self.__inventory:
             yield item
+
+    def profile_save_path(self):
+        name = self.name.replace(' ', '_')
+        desc = name + " " + self.job
+        self.desc = name + "(" + str(abs(hash(desc))) + ")"
 
     def profile(self):
         string_1='''

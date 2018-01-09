@@ -1,8 +1,9 @@
-import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
-from collections import namedtuple
+import sys
+import textwrap
 from time import ctime, clock
+from collections import namedtuple
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 """Implements the Game Logger used in displaying messages to the terminal
 Basic Usage:
     After instantiation at global/main file level, calls to GameLogger should
@@ -36,7 +37,7 @@ class GameLogger:
         Methods: {add, update, write, dump, dumps}
     """
 
-    def __init__(self, screenlinelimit, ptt=False):
+    def __init__(self, screenlinelimit, footer, ptt=False):
         """
         @args: 
             screenlinelimit(required) -- specify number of lines to be shown on screen
@@ -48,7 +49,7 @@ class GameLogger:
         self.messages = []
         self.print_to_term = ptt
         self.maxlines = screenlinelimit
-        self.setupFileWriting()
+        self.setupFileWriting(footer)
 
     def print_on(self):
         '''Toggles print to terminal on; shows message if already on'''
@@ -69,49 +70,69 @@ class GameLogger:
         self.add(message)
         self.print_off()
 
-    def setupFileWriting(self):
-        '''Adds the filename attribute to class for use in message log recording'''
+    def setupFileWriting(self, footer):
+        '''Adds the filename attribute to class for use in message log recording
+        '''
         if not os.path.isdir('logs'):
             print('Log folder does not exist -- Creating "./logs"')
             os.makedirs('logs')
 
         self.last_message = ""
-        self.filename = "logs/log_"+"_".join(filter(lambda x: ":" not in x, ctime().split(" ")))+".txt"
+        self.filename = "logs/log_" + self.date() + footer + ".txt"
+        self.filename = self.filename.replace('__', '_')
         print("Setup log file in {}".format(self.filename))
         
         # open it once to see if error is raised
-        with open(self.filename, 'w') as f:
+        with open(self.filename, 'a') as f:
             pass
+
+    def date(self):
+        return "_".join(filter(lambda x: ":" not in x, ctime().split(" ")))
+
+    def time(self):
+        return "-".join(filter(lambda x: ":" in x, ctime().split(" ")))
 
     def getHeader(self):
         '''Returns a time string for use in log pre-messages'''
-        return "["+"-".join(filter(lambda x: ":" in x, ctime().split(" ")))+"] :- "
+        return "[" + self.time() + "] :- "
 
     def add(self, message):
         """Adds a message to queue and handles repeated messages from game"""
-        # checks terminal print flag
-        if self.print_to_term:
-            print(message)
+        def add_message(message):
+            # checks terminal print flag
+            if self.print_to_term:
+                print(message)
 
-        # Checks if messages are in the queue and if message is the same as before
-        if self.messages and message == self.last_message:
-            self.messages.pop(-1)
-            self.counter += 1
+            # Checks if messages are in the queue and if message is the same 
+            # as before
+            if self.messages and message == self.last_message:
+                print('counter')
+                self.messages.pop(-1)
+                self.counter += 1
 
-            # save the unaltered message for comparison
-            self.last_message = message            
-            message += "(x{})".format(self.counter)
-        else:
-            self.counter = 0
-            self.last_message = message            
+                # save the unaltered message for comparison
+                self.last_message = message            
+                message += "(x{})".format(self.counter)
 
-        # Dump the messages as long as they are not repeats of the same message
-        if len(self.messages) + 1 > self.maxlines:
-            if not self.counter: # don't need to repeatedly dump the same message every time
-                self.dump(self.messages.pop(0))
+            else:
+                print('reset')
+                self.counter = 0
+                self.last_message = message            
 
-        self.messages.append([self.getHeader(), message])
-        self.update()
+            # Dump the messages as long as they are not repeats of the same 
+            # message
+            if len(self.messages) + 1 > self.maxlines:
+                print('dump')
+                # don't need to repeatedly dump the same message every time
+                if not self.counter:
+                    self.dump(self.messages.pop(0))
+
+            self.messages.append([self.getHeader(), message])
+            self.update()
+
+        messages = textwrap.wrap(message)
+        for msg in messages:
+            add_message(msg)
 
     def update(self, n=0):
         """Updates the points to the message position to start printing from"""

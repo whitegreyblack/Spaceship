@@ -350,33 +350,43 @@ def process_movement(x, y, player, world, gamelog):
                                 unit.race, 
                                 damage)
                                 
-                            log += "The {} has {} health left. ".format(unit.race, max(unit.cur_health, 0))
+                            log += "The {} has {} health left. ".format(
+                                                        unit.race, 
+                                                        max(unit.cur_health, 0))
                             gamelog.add(log)
+                            term.refresh()
 
                             if unit.cur_health < 1:
-                                log += "You have killed the {}! You gain {} exp".format(unit.race, unit.xp)
-                                gamelog.add(log)
                                 player.gain_exp(unit.xp)
+                                log += "You have killed the {}! ".format(
+                                                                    unit.race)
+                                log += "You gain {} exp".format(unit.xp)
+                                gamelog.add(log)
+                                term.refresh()
 
                                 if player.check_exp():
-                                    gamelog.add("You level up. You are now level {}".format(player.level))
-                                    gamelog.add("You feel much stronger")
-
+                                    log = "You level up. "
+                                    log += "You are now level {}. ".format(
+                                        self.player.level)
+                                    log += "You feel much stronger."
+                                    gamelog.add(log)
+                                    term.refresh()
                                 item = unit.drops()
 
                                 if item:
-                                    world.square(*unit.position).items.append(item)
+                                    world.square(*unit.position).items.append(
+                                                                        item)
                                     gamelog.add("The {} has dropped {}".format(
-                                        unit.race, 
-                                        item.name))
+                                                                    unit.race, 
+                                                                    item.name))
 
                                 world.remove_unit(unit)
+
                             else:
                                 log += "The {} has {} health left".format(
                                     unit.race, 
                                     max(0, unit.cur_health))
                                 gamelog.add(log)
-
                                 term.puts(tx + 13, ty + 1, '[c=red]*[/c]')
                                 term.refresh()
 
@@ -403,8 +413,7 @@ def process_movement(x, y, player, world, gamelog):
                     else:
                         gamelog.add("You walk into {}".format(walkChars[ch]))
                         term.puts(tx + 13, ty + 1, '[c=red]X[/c]')
-                        # term.refresh()
-    term.refresh()
+                term.refresh()
 
 def process_handler(x, y, k, key, player, world, gamelog, turns):
     '''Checks actions linearly by case:
@@ -1559,7 +1568,7 @@ def new_game(character=None, world=None, turns=0):
         # screen_width, screen_height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
     
     # very first thing is game logger initialized to output messages on terminal
-    gamelog = GameLogger(3 if term.state(term.TK_HEIGHT) <= 25 else 4)
+    # gamelog = GameLogger(3 if term.state(term.TK_HEIGHT) <= 25 else 4)
 
     # process character
     if not character:

@@ -2,21 +2,22 @@ import os
 import sys
 import shelve
 import random
+import textwrap
 from collections import namedtuple
 from bearlibterminal import terminal as term
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
-
-import spaceship.cc_strings as strings
 from .setup_game import setup, setup_font, setup_menu, output, toChr
-from .screen_functions import *
-from .scene import Scene
-from .action import commands
-from .gamelog import GameLogger
+import spaceship.cc_strings as strings
+from .classes.wild import wilderness
 from .classes.player import Player
 from .classes.world import World
-from .classes.wild import wilderness
+from .screen_functions import *
+from .gamelog import GameLogger
 from .classes.city import City
 from .classes.cave import Cave
+from .action import commands
+from .scene import Scene
+
 
 class Level: Global, World, Local = -1, 0, 1
 
@@ -33,10 +34,15 @@ class Start(Scene):
         self.turn_inc = False
         self.do_action = True
         self.map_change = False
-        self.gamelog = GameLogger(3 if self.height <= 25 else 4)
+        self.gamelog = None
+
+        self.reset_size()
+
+    def test_run(self):
+        self.ret['kwargs'] = {'player': {}, 'name': 'rando'}
 
     def setup(self):
-        self.reset()
+        # self.reset()
         self.actions = {
             0: {
                 '@': self.draw_player_screens,
@@ -61,22 +67,27 @@ class Start(Scene):
         # player screen variables
         self.player_screen_col, self.player_screen_row = 1, 3
         self.player_status_col, self.player_status_row = 1, 2
+        self.display_offset_x, self.display_offset_y = 14, 0
 
     def run(self):  
-        self.reset_size()
+        # self.reset_size()
+        self.reset()
         if isinstance(self.ret['kwargs']['player'], Player):
             self.player = self.ret['kwargs']['player']
             self.world = self.ret['kwargs']['world']
             self.turns = self.ret['kwargs']['turns']
+
         else:
             player = self.ret['kwargs']['player']
             name = self.ret['kwargs']['name']
             self.player = Player(player, name)
-
-            self.world = World(
+            self.location = self.world = World(
                 map_name="Calabston", 
                 map_link="./assets/worldmap.png")
-            self.location = self.world
+
+        self.gamelog = GameLogger(
+            screenlinelimit=3 if self.height <= 25 else 4,
+            footer="_" + self.player.name + "_" + self.player.job)
 
         # print(self.player.name)
         # print(self.world.map_name)
@@ -91,7 +102,7 @@ class Start(Scene):
 
     def draw(self):
         term.clear()
-        self.draw_log()
+        self.draw_log(refresh=False)
         self.draw_player_status()
 
         if self.map_change:
@@ -108,23 +119,31 @@ class Start(Scene):
 
             self.process_handler(*action)
 
-    def draw_log(self):
+    def draw_log(self, log=None, refresh=True):
+        if log:
+            self.gamelog.add(log)
+
+        term.clear_area(0, self.height - 2, self.width, 2)
         for index, message in enumerate(self.gamelog.write().messages):
             term.puts(
-                x=14 if self.player.height == Level.Global else 1,
+                # x=14 if self.player.height == Level.Global else 1,
+                x=1,
                 y=self.height - 2 + index,
                 s=message[1]
             )
+        
+        if refresh:
+            term.refresh()
 
     def draw_world(self):
-        screen_off_x, screen_off_y = 14, 0
-        x, y = self.player.position if self.player.height >= 1 else self.player.location
+        x, y = self.player.position if self.player.height >= 1 \
+            else self.player.location
         self.location.fov_calc([(x, y, self.player.sight * 2)])
 
         for x, y, col, ch in self.location.output(x, y):
             term.puts(
-                x=x + screen_off_x,
-                y=y + screen_off_y,
+                x=x + self.display_offset_x,
+                y=y + self.display_offset_y,
                 s="[c={}]{}[/c]".format(col, ch))
 
     def draw_player_status(self):
@@ -136,14 +155,14 @@ class Start(Scene):
 
         term.puts(col, row + 4, "LVL: {:>6}".format(self.player.level))
         term.puts(col, row + 5, "EXP: {:>6}".format("{}/{}".format(
-                                                    self.player.exp, 
-                                                    self.player.advexp)))
+            self.player.exp, 
+            self.player.advexp)))
         term.puts(col, row + 7, "HP:  {:>6}".format("{}/{}".format(
-                                                    self.player.cur_health, 
-                                                    self.player.max_health)))
+            self.player.cur_health, 
+            self.player.max_health)))
         term.puts(col, row + 8, "MP:  {:>6}".format("{}/{}".format(
-                                                    self.player.mp, 
-                                                    self.player.total_mp)))
+            self.player.mp, 
+            self.player.total_mp)))
         term.puts(col, row + 9, "SP:  {:>6}".format(self.player.sp))
 
         term.puts(col, row + 11, "STR: {:>6}".format(self.player.str)) 
@@ -294,13 +313,13 @@ class Start(Scene):
             self.actions[max(0, min(self.player.height, 1))][action](action)
         except KeyError:
             invalid_command = "'{}' is not a valid command".format(action)
-            self.gamelog.add(invalid_command)
+            self.draw_log(invalid_command)
 
     def process_movement(self, x, y):
         turn_inc = 0
         if  self.player.height == Level.World:
             if (x, y) == (0, 0):
-                self.gamelog.add("You wait in the area")
+                self.draw_log("You wait in the area")
                 turn_inc = True
             else:
                 tx = self.player.wx + x
@@ -312,10 +331,10 @@ class Start(Scene):
                     turn_inc = True
                 else:
                     travel_error = "You cannot travel there"
-                    self.gamelog.add(travel_error)
+                    self.draw_log(travel_error)
         else:
             if (x, y) == (0, 0):
-                self.gamelog.add("You rest for a while")
+                self.draw_log("You rest for a while")
                 turn_inc = True
             else:
                 tx = self.player.x + x
@@ -324,15 +343,17 @@ class Start(Scene):
                 if self.location.walkable(tx, ty):
                     if not self.location.occupied(tx, ty):
                         self.player.move(x, y)
-                        if self.location.square(tx, ty).items and random.randint(0, 5):
+                        msg_chance = random.randint(0, 5)
+                        if self.location.square(tx, ty).items and msg_chance:
                             pass_item_messages = [
                                 "You pass by an item.",
                                 "There is something here."
                                 "Your feet touches an object."
                             ]
-                            item_message = random.randint(0, len(pass_item_messages) - 1)
-                            self.gamelog.add(
-                                pass_item_messages[item_message])
+                            item_message = random.randint(
+                                a=0, 
+                                b=len(pass_item_messages) - 1)
+                            self.draw_log(pass_item_messages[item_message])
                         turn_inc = True
                     else:
                         unit = self.location.get_unit(tx, ty)
@@ -340,14 +361,14 @@ class Start(Scene):
                             unit.move(-x, -y)
                             self.player.move(x, y)
                             log = "You switch places with the {}".format(
-                                unit.race)
-                            self.gamelog.add(log)
+                                                                    unit.race)
+                            self.draw_log(log)
                         else:
                             chance = self.player.calculate_attack_chance()
                             if chance == 0:
                                 log = "You try attacking the {} but miss".format(
                                     unit.race)
-                                self.gamelog.add(log)
+                                self.draw_log(log)
                             else:
                                 damage = self.player.calculate_attack_damage()
                                 # if chance returns crit ie. a value of 2 
@@ -362,43 +383,47 @@ class Start(Scene):
                                     damage)
                                     
                                 log += "The {} has {} health left. ".format(
-                                                        unit.race, 
-                                                        max(unit.cur_health, 0))
-                                self.gamelog.add(log)
+                                    unit.race, 
+                                    max(unit.cur_health, 0))
+                                self.draw_log(log)
 
                                 if unit.cur_health < 1:
-                                    log += "You have killed the {}! ".format(
-                                                                    unit.race)
+                                    log = "You have killed the {}! ".format(
+                                        unit.race)
                                     log += "You gain {} exp.".format(unit.xp)
-                                    self.gamelog.add(log)
+                                    self.draw_log(log)
                                     self.player.gain_exp(unit.xp)
 
                                     if self.player.check_exp():
-                                        self.gamelog.add("You level up. You are now level {}".format(self.player.level))
-                                        self.gamelog.add("You feel much stronger")
+                                        log = "You level up. You are now level {}.".format(
+                                            self.player.level)
+                                        log += " You feel much stronger now."
+                                        self.draw_log(log)
 
                                     item = unit.drops()
 
                                     if item:
                                         self.location.square(*unit.position).items.append(item)
-                                        self.gamelog.add("The {} has dropped {}".format(
-                                                                    unit.race, 
-                                                                    item.name))
+                                        self.draw_log("The {} has dropped {}".format(
+                                            unit.race, 
+                                            item.name))
 
                                     self.location.remove_unit(unit)
                                 else:
                                     log += "The {} has {} health left".format(
                                         unit.race, 
                                         max(0, unit.cur_health))
-                                    self.gamelog.add(log)
-
-                                    term.puts(tx + 13, ty + 1, '[c=red]*[/c]')
+                                    self.draw_log(log, refresh=False)
+                                    term.puts(
+                                        x=tx + self.display_offset_x, 
+                                        y=ty + self.display_offset_y, 
+                                        s='[c=red]*[/c]')
                                     term.refresh()
 
                         turn_inc = True
                 else:
                     if self.location.out_of_bounds(tx, ty):
-                        self.gamelog.add("You reached the edge of the map")
+                        self.draw_log("You reached the edge of the map")
                     else:
                         walkChars = {
                             "=": "furniture",
@@ -415,13 +440,17 @@ class Start(Scene):
                         }
                         ch = self.location.square(tx, ty).char
                         if ch == "~":
-                            self.gamelog.add("You cannot swim")
+                            self.draw_log("You cannot swim")
                         else:
-                            self.gamelog.add("You walk into {}".format(
-                                                                walkChars[ch]))
-                            term.puts(tx + 14, ty, '[c=red]X[/c]')
-                            # term.refresh()
-        term.refresh()
+                            self.draw_log("You walk into {}".format(
+                                walkChars[ch]),
+                                refresh=True)
+                            term.puts(
+                                x=tx + self.display_offset_x, 
+                                y=ty + self.display_offset_y, 
+                                s='[c=red]X[/c]')
+                            term.refresh()
+        # term.refresh()
 
     def key_input(self):
         '''Handles keyboard input and keypress transformation
@@ -444,7 +473,7 @@ class Start(Scene):
             if shifted:
                 exit('Early Exit')
             elif self.player.height >= Level.World:
-                self.gamelog.add('Escape key disabled.')
+                self.draw_log('Escape key disabled.')
             else:
                 self.ret['scene'] = 'main_menu'
                 self.proceed = False
@@ -467,8 +496,7 @@ class Start(Scene):
             yield space(x + i, y + j)
 
     def action_save(self):
-        self.gamelog.add("Save and exit game? (Y/N)")
-        self.draw_log()
+        self.draw_log("Save and exit game? (Y/N)")
         term.refresh()
         
         # User input -- confirm selection
@@ -477,20 +505,18 @@ class Start(Scene):
             return
 
         if not os.path.isdir('saves'):
-            log = 'saved folder does not exist - creating folder: "./saves"'
-            self.gamelog.add(log)
             os.makedirs('saves')
-            self.draw_log()
+            log = 'saved folder does not exist - creating folder: "./saves"'
+            self.draw_log(log)
             term.refresh()
-    
+
         # prepare strings for file writing
         # player_hash used for same name / different character saves
-        name = self.player.name.replace(' ', '_')
-        desc = self.player.job + " " + str(self.player.level)
-        file_path = './saves/{}'.format(name + "(" + str(abs(hash(desc)))) + ")"
+        desc = self.player.desc
+        file_path = './saves/{}'.format(desc)
         
         with shelve.open(file_path, 'n') as save_file:
-            save_file['save'] = desc
+            save_file['desc'] = desc
             save_file['player'] = self.player
             save_file['world'] = self.world
             save_file['turns'] = self.turns  
@@ -500,21 +526,14 @@ class Start(Scene):
         self.reset()
 
     def determine_map_location(self):
-        print('changing maps')
         if self.player.height == Level.World:
-            print('Global map')
             self.location = self.world
         
         else:
-            print('local map')
             self.location = self.world.location(*self.player.location)
             if self.player.height > 1:
-                print('sub map')
                 for i in range(self.player.height - 1):
-                    print('went down')
-                    self.location = self.location.getSublevel()
-
-        print(self.location)
+                    self.location = self.location.sublevel
 
         self.map_change = False
 
@@ -555,7 +574,7 @@ class Start(Scene):
                     height=self.height,
                     max_rooms=random.randint(15, 20))
 
-                self.player.position = location.getUpStairs()
+                self.player.position = location.stairs_up
 
             else:
                 # map type should be in the wilderness
@@ -569,7 +588,7 @@ class Start(Scene):
                 x, y = self.player.get_position_on_enter()
                 self.player.position = self.determine_map_enterance(x, y)
         
-            location.addParent(self.world)
+            location.parent = self.world
             self.world.location_create(*self.player.location, location)
         else:
             # location already been built -- retrieve from world map_data
@@ -581,7 +600,7 @@ class Start(Scene):
 
             elif self.player.location in self.world.dungeon_legend.keys():
                 # re-enter dungeon
-                self.player.position = location.getUpStairs()
+                self.player.position = location.stairs_up
 
             else:
                 # reenter a wilderness
@@ -592,50 +611,53 @@ class Start(Scene):
         self.map_change = True
 
     def action_interact_stairs_down(self):
-        if self.player.position == self.location.getDownStairs():
-            if not self.location.hasSublevel():
+        if self.player.position == self.location.stairs_down:
+            if not self.location.sublevel:
                 location = Cave(
                     width=self.width,
                     height=self.height,
                     max_rooms=random.randint(15, 20))
                 
-                location.addParent(self.location)
-                self.location.addSublevel(location)
+                self.location.sublevel = location
+                location.parent = self.location
 
-            self.location = self.location.getSublevel()
+            self.location = self.location.sublevel
             self.player.move_height(1)
-            self.player.position = self.location.getUpStairs()
-
-            term.puts(*self.player.position, s="[c=red]>[/c]")
-            term.refresh()
+            self.player.position = self.location.stairs_up
         else:
-            self.gamelog.add('You cannot go downstairs without stairs')
+            self.draw_log('You cannot go downstairs without stairs')
 
     def action_interact_stairs_up(self):
-        if self.player.location in self.world.enterable_legend.keys():
+        def move_upstairs(reset=False):
+            self.location = self.location.parent
             self.player.move_height(-1)
-            self.location = self.location.getParent()
+
+            if reset:
+                self.player.position = self.location.sublevel
+
+        if self.player.location in self.world.enterable_legend.keys():
+            move_upstairs()
 
         elif self.world.location_is(*self.player.location, 2):
-            self.player.move_height(-1)
-            self.location = self.location.getParent()
+            move_upstairs()
 
-        elif self.player.position == self.location.getUpStairs():
-            self.player.move_height(-1)
-            self.location = self.location.getParent()
-        
+        elif self.player.position == self.location.stairs_up:
+            move_upstairs(reset=True)
+
         else:
-            self.gamelog.add('You cannot go upstairs without stairs')
-            self.draw_log()
-            term.refresh()
+            self.draw_log('You cannot go upstairs without stairs')
 
         if isinstance(self.location, World):
             self.player.position = (0, 0)
 
     def action_interact_door_close(self):
         def close_door(i, j):
-            self.gamelog.add('Closing door.')
-            term.puts(i + 14, j, "[c=red]/[/c]")
+            self.draw_log('Closing door.', refresh=False)
+            term.puts(
+                x=i + self.display_offset_x, 
+                y=j + self.display_offset_y, 
+                s="[c=red]/[/c]")
+            term.refresh()
             self.location.close_door(i, j)
             self.location.reblock(i, j)
 
@@ -647,17 +669,15 @@ class Start(Scene):
                     if self.location.square(i, j).char == '/':
                         doors.append((i, j))
                 except IndexError:
-                    self.gamelog.add('Out of bounds ({}, {})'.format(i, j))
+                    self.draw_log('Out of bounds ({}, {})'.format(i, j))
 
         if not doors:
-            self.gamelog.add('No open doors next to you')
+            self.draw_log('No open doors next to you')
         elif self.single_element(doors):
             i, j = doors.pop()
             close_door(i, j)
         else:
-            self.gamelog.add("There is more than one door near you. Which door?")
-            self.draw_log()
-            term.refresh()
+            self.draw_log("There is more than one door near you. Which door?")
 
             code = term.read()
             try:
@@ -665,17 +685,19 @@ class Start(Scene):
                 if act == "move" and (x + cx, y + cy) in doors:
                     close_door(x + cx, y + cy)
                 else:
-                    self.gamelog.add("Canceled closing door.")
+                    self.draw_log("Canceled closing door.")
 
             except:
-                self.gamelog.add("Canceled closing door.")
-                self.log_box()
-                term.refresh()
+                self.draw_log("Canceled closing door.")
 
     def action_interact_door_open(self):
         def open_door(i, j):
-            self.gamelog.add('Opening door.')
-            term.puts(i + 14, j, "[c=red]+[/c]")
+            self.draw_log('Opening door.', refresh=False)
+            term.puts(
+                x=i + self.display_offset_x, 
+                y=j + self.display_offset_y, 
+                s="[c=red]+[/c]")
+            term.refresh()
             self.location.open_door(i, j)
             self.location.unblock(i, j)
         
@@ -688,16 +710,16 @@ class Start(Scene):
                         doors.append((i, j))
                         
                 except IndexError:
-                    self.gamelog.add('Out of bounds ({}, {})'.format(i, j))
+                    self.draw_log('Out of bounds ({}, {})'.format(i, j))
         
         if not doors:
-            self.gamelog.add('No closed doors next to you.')
+            self.draw_log('No closed doors next to you.')
         elif self.single_element(doors):
             i, j = doors.pop()
             open_door(i, j)
         else:
-            self.gamelog.add("There is more than one closed door near you. Which door?")
-            self.draw_log()
+            log = "There is more than one closed door near you. Which door?"
+            self.draw_log(log)
             term.refresh()
 
             code = term.read()
@@ -706,11 +728,10 @@ class Start(Scene):
                 if act == "move" and (x + cx, y + cy) in doors:
                     open_door(x + cx, y + cy)
                 else:
-                    self.gamelog.add("Canceled opening door.")
+                    self.draw_log("Canceled opening door.")
                     
             except:
-                self.gamelog.add("Canceled opening door.")
-                self.log_box()
+                self.draw_log("Canceled opening door.")
                 term.refresh()
 
     def action_interact_unit_attack_melee(self):
@@ -729,13 +750,15 @@ class Start(Scene):
             else:
                 self.location.square(*self.player.position).items.remove(item)
                 self.player.inventory.append(item)
-                self.gamelog.add("You pick up {} and place it in your backpack".format(item.name))
-                self.gamelog.add("Your backpack feels heavier")
+                log = "You pick up {} and place it in your backpack".format(
+                                                                    item.name)
+                self.draw_log(log)
+                self.draw_log("Your backpack feels heavier")
                 self.turn_inc = true
         
         items = self.location.square(x, y).items
         if not items:
-            self.gamelog.add('No items on the ground where you stand')
+            self.draw_log('No items on the ground where you stand')
         elif self.single_element(items):
             pickup_item(item)
         else:
@@ -755,3 +778,8 @@ class Start(Scene):
         self.draw_player_equipment()
         term.refresh()
         term.read()
+
+if __name__ == "__main__":
+    s = Start()
+    s.run()
+
