@@ -43,10 +43,10 @@ For example
         it has a chance to hold a dungeon i guess
 '''
 
+MapType = {T: V for V, T in enumerate(('City', 'Cave', 'Wild', 'World'))}
+
 class Map:
     '''The "ABSTRACT CLASS" that should hold the functions shared across all map class types'''
-    MapType = {T: V for V, T in enumerate(('Cave', 'City', 'wilderness', 'World'))}
-    # print(MapType)
     class Tile:
         def __init__(self, char, color, block_mov, block_lit):
             self.char = char
@@ -68,7 +68,7 @@ class Map:
     chars_block_light = {"#", "+", "o", "%", "Y", "T"}
 
     def __init__(self, width, height, map_type):
-        self.map_type = self.MapType[map_type]
+        self.map_type = MapType[map_type]
         # terminal viewing dimensions
         if not hasattr(self, 'width'):
             self.width = 66
@@ -78,7 +78,7 @@ class Map:
         self.__parent, self.__sublevel = None, None
         self.map_display_width = min(66, width)
         self.map_display_height = min(22, height)
-        self.units = []
+        self.__units = []
 
     def build(self):
         raise NotImplementedError("cannot build the base map class -- use a child map object")
@@ -456,53 +456,66 @@ class Map:
     ###########################################################################
     # Unit object Functions                                                   #
     ###########################################################################
-    def unit_at(self, x, y):
-        return self.square(x, y).unit
+    @property
+    def units(self):
+        '''Returns all units in the unit list'''
+        for unit in self.__units:
+            yield unit
 
-    def get_unit(self, x, y):
-        '''Returns units by positional values'''
-        if hasattr(self, 'units'):
-            for u in self.units:
-                if (x, y) == u.position:
-                    return u
-        return []
+    @property
+    def unit_positions(self):
+        '''Returns all unit positions for units in the unit list'''
+        for unit in self.units:
+            yield unit.position
+    
+    # def unit_at(self, x, y):
+    #     return self.square(x, y).unit
 
-    def add_units(self, units):
-        if hasattr(self, 'units'):
-            self.units += units
-        else:
-            print('no unit list')
-            self.units = units
+    def unit_at_position(self, x, y):
+        '''Returns a unit at the given position. If the unit exists then the
+        unit is returned else an empty value is returned'''
+        for u in self.__units:
+            if (x, y) == u.position:
+                return u
 
-    def get_units(self):
-        '''Returns all units within the list'''
-        if hasattr(self, 'units'):
-            for unit in self.units:
-                yield unit
-        return []
+    def units_add(self, units):
+        # if hasattr(self, 'units'):
+        #     self.__units += units
+        # else:
+        #     self.__units = units
+        self.__units += units
 
-    def get_unit_positions(self):
-        if hasattr(self, 'units'):
-            return {u.position for u in self.units}
-        return {}
+    # def get_units(self):
+    #     '''Returns all units within the list'''
+    #     for unit in self.__units:
+    #         yield unit
+    #     return []
+
+    # def get_unit_positions(self):
+    #     if hasattr(self, 'units'):
+    #         return {u.position for u in self.__units}
+    #     return {}
 
     def remove_unit(self, unit):
-        if hasattr(self, 'units'):
-            self.units.remove(unit)
+        # if hasattr(self, 'units'):
+        try:
+            self.__units.remove(unit)
+        except ValueError:
+            print('No unit with that value')
 
     def process_unit_actions(self, player):
-        for unit in self.units:
+        for unit in self.__units:
             if hasattr(unit, 'do_ai_stuff'):
                 units, items = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
                 unit.do_ai_stuff(units, items)
 
     def handle_units(self, player):
         # print(hasattr(self, 'units'))
-        for unit in self.units:
+        for unit in self.__units:
             # if hasattr(unit, 'acts'):
             #     positions = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
             #     tiles = {position: self.square(*position) for position in positions}
-            #     units = {u.position: u for u in self.units if u != unit}
+            #     units = {u.position: u for u in self.__units if u != unit}
             #     unit.acts(player, tiles, units)
             #     if player.cur_health <= 0:
             #         return
@@ -511,7 +524,7 @@ class Map:
                 if hasattr(unit, 'acts'):
                     positions = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
                     tiles = {position: self.square(*position) for position in positions}
-                    units = {u.position: u for u in self.units if u != unit}
+                    units = {u.position: u for u in self.__units if u != unit}
                     unit.acts(player, tiles, units)
                     if player.cur_health <= 0:
                         return
@@ -530,7 +543,7 @@ class Map:
             for i in range(max_units):
                 i, j = self.spaces[randint(0, len(self.spaces)-1)]
                 unit = choice([Rat, Rat])(x=i, y=j, speed=choice([15, 30]))
-                self.units.append(unit)
+                self.__units.append(unit)
                 self.square(i, j).unit = unit
         else:
             raise AttributeError("Spaces has not yet been initialized")
@@ -564,8 +577,8 @@ class Map:
         ext_y = cam_y + self.map_display_height + (-6 if shorten_y else 0)
 
         positions = {}
-        if hasattr(self, 'units') and self.units:
-            for unit in self.units:
+        if hasattr(self, 'units') and self.__units:
+            for unit in self.__units:
                 positions[unit.position] = unit
 
         col = "#ffffff"
@@ -629,8 +642,8 @@ class Map:
         ext_y = cam_y + self.map_display_height + (-6 if shorten_y else 0)
 
         positions = {}
-        if hasattr(self, 'units') and self.units:
-            for unit in self.units:
+        if hasattr(self, 'units') and self.__units:
+            for unit in self.__units:
                 positions[unit.position] = unit
 
         col = "#ffffff"

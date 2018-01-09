@@ -1638,6 +1638,7 @@ def new_game(character=None, world=None, turns=0):
             map_box()
             status_box()
             log_box(gamelog, turns)
+            
         term.refresh()
 
         # check if turn was used to signal npc actor actions

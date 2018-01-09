@@ -19,7 +19,8 @@ from .action import commands
 from .scene import Scene
 
 
-class Level: Global, World, Local = -1, 0, 1
+class Level: GLOBAL, WORLD, LOCAL = -1, 0, 1
+class Maps: CITY, CAVE, WILD, WORLD = range(3)
 
 class Start(Scene):
     def __init__(self, sid='start_game'):
@@ -106,7 +107,10 @@ class Start(Scene):
 
         self.draw_world()
         term.refresh()
-        turn_inc = False
+
+        print('Units', self.location.units)
+
+        for unit in self.location.units
 
         if self.do_action:
             action = self.key_input()
@@ -122,7 +126,7 @@ class Start(Scene):
         term.clear_area(0, self.height - 2, self.width, 2)
         for index, message in enumerate(self.gamelog.write().messages):
             term.puts(
-                # x=14 if self.player.height == Level.Global else 1,
+                # x=14 if self.player.height == Level.GLOBAL else 1,
                 x=1,
                 y=self.height - 2 + index,
                 s=message[1]
@@ -319,7 +323,7 @@ class Start(Scene):
 
     def process_movement(self, x, y):
         turn_inc = 0
-        if  self.player.height == Level.World:
+        if  self.player.height == Level.WORLD:
             if (x, y) == (0, 0):
                 self.draw_log("You wait in the area")
                 turn_inc = True
@@ -473,7 +477,7 @@ class Start(Scene):
             # exit command -- maybe need a back to menu screen?
             if shifted:
                 exit('Early Exit')
-            elif self.player.height >= Level.World:
+            elif self.player.height >= Level.WORLD:
                 self.draw_log('Escape key disabled.')
             else:
                 self.ret['scene'] = 'main_menu'
@@ -525,7 +529,7 @@ class Start(Scene):
         self.reset()
 
     def determine_map_location(self):
-        if self.player.height == Level.World:
+        if self.player.height == Level.WORLD:
             self.location = self.world
         
         else:

@@ -36,7 +36,7 @@ class Object(Tile):
 
     @property
     def position(self) -> Tuple[int, int]:
-        '''returns local position within a dungeon'''
+        '''returns local position within a non-global map'''
         return self.x, self.y
 
     @position.setter
