@@ -258,13 +258,15 @@ class Start(Scene):
         # draws header border
         for i in range(self.width):
             term.puts(i, 1, '#')
-        term.puts(center(' inventory ', self.width), 1, ' Inventory ')
+        term.puts(center(' Equipment ', self.width), 1, ' Equipment ')
         
-        for index, (part, item) in enumerate(self.player.equipment()):
-            letter = chr(ord('a') + index)
-            body_part = ".  {:<10}: ".format(part)
-            item_desc = item.__str__() if item else ""
+        # for index, (part, item) in enumerate(self.player.equipment()):
+        #     letter = chr(ord('a') + index)
+        #     body_part = ".  {:<10}: ".format(part)
+        #     item_desc = item.__str__() if item else ""
 
+        for index, (body_part, item_desc) in enumerate(list(self.player.equipment)):
+            letter = chr(ord('a') + index)
             term.puts(
                 x=self.player_screen_col,
                 y=self.player_screen_row + index * (2 if self.height > 25 else 1),
@@ -277,7 +279,7 @@ class Start(Scene):
             term.puts(i, 1, '#')
         term.puts(center('backpack  ', self.width), 1, ' Backpack ')
 
-        for index, item in enumerate(self.player.inventory()):
+        for index, item in enumerate(self.player.inventory):
             letter = chr(ord('a') + index) + ". "
             item_desc = item.__str__() if item else ""
 
@@ -952,9 +954,13 @@ class Start(Scene):
         # open up inventory
         while True:
             term.clear()
-            self.draw_player_equipment()
+            self.draw_player_inventory()
             self.draw_player_eq_drop()
             term.refresh()
+
+            items = list(self.player.inventory)
+            print(items)
+
             code = term.read()
             if code in (term.TK_ESCAPE, term.TK_Q):
                 break
@@ -962,12 +968,18 @@ class Start(Scene):
     def action_interact_item_use(self):
         while True:
             term.clear()
-            self.draw_player_equipment()
+            self.draw_player_inventory()
             self.draw_player_eq_use()
             term.refresh()
+            
+            items = list(self.player.inventory)
+            print(items)
+
             code = term.read()
             if code in (term.TK_ESCAPE, term.TK_Q):
                 break
+    
+            
 
 if __name__ == "__main__":
     s = Start()

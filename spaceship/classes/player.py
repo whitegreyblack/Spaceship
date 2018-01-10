@@ -82,10 +82,15 @@ class Player(Unit):
             except KeyError:
                 pass
 
+    @property
     def equipment(self):
         for part in self.parts:
-            yield part.replace("eq_","").replace("_", " "), getattr(self, part)
+            item = getattr(self, part)
+            item_desc = item.__str__() if item else ""
+            body = ". {:<10}: ".format(part.replace("eq_", "").replace("_", " "))
+            yield body, item_desc
 
+    @property
     def inventory(self):
         for item in self.__inventory:
             yield item
