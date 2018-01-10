@@ -17,7 +17,7 @@ from .classes.city import City
 from .classes.cave import Cave
 from .action import commands_player
 from .scene import Scene
-from time import sleep
+from time import sleep, time
 
 def single_element(container):
     return len(container) == 1
@@ -108,7 +108,6 @@ class Start(Scene):
         while self.proceed and self.player.is_alive:
             self.draw()
             self.process_units()
-
             if self.map_change:
                 self.determine_map_location()
 
@@ -376,7 +375,9 @@ class Start(Scene):
             self.process_turn_unit()
 
     def process_turn_player(self):
+        # t0 = time()
         action = self.key_input()
+        # print(time() - t0)
         if not self.proceed:
             return
         self.process_handler(*action)
@@ -456,13 +457,13 @@ class Start(Scene):
     def process_move_unit_to_empty(self, tx, ty):
         occupied_player = self.player.position == (tx, ty)
         occupied_unit = self.location.occupied(tx, ty)
-        print(occupied_player, occupied_unit)
+        # print(occupied_player, occupied_unit)
         if not occupied_player and not occupied_unit:
             self.unit.move(x, y)
         return occupied_player, occupied_unit
 
     def process_movement_unit(self, x, y):
-        print('unit processing')
+        # print('unit processing')
         if (x, y) != (0, 0):
             tx = self.unit.x + x
             ty = self.unit.y + y
@@ -516,17 +517,17 @@ class Start(Scene):
                                     self.draw_log("The {} has dropped {}".format(
                                         unit.race, item.name))
                                 self.location.unit_remove(unit)
-                            term.puts(
-                                x=tx + self.display_offset_x, 
-                                y=ty + self.display_offset_y, 
-                                s='[c=red]*[/c]')
-                            term.refresh()
-            else:
-                term.puts(
-                    x=tx + self.display_offset_x, 
-                    y=ty + self.display_offset_y, 
-                    s='[c=red]X[/c]')
-                term.refresh()
+                            # term.puts(
+                            #     x=tx + self.display_offset_x, 
+                            #     y=ty + self.display_offset_y, 
+                            #     s='[c=red]*[/c]')
+                            # term.refresh()
+            # else:
+            #     term.puts(
+            #         x=tx + self.display_offset_x, 
+            #         y=ty + self.display_offset_y, 
+            #         s='[c=red]X[/c]')
+            #     term.refresh()
                             
     def process_movement(self, x, y):
         turn_inc = 0
@@ -617,12 +618,12 @@ class Start(Scene):
                                     log += "The {} has {} health left".format(
                                         unit.race, 
                                         max(0, unit.cur_health))
-                                    self.draw_log(log, refresh=False)
-                                    term.puts(
-                                        x=tx + self.display_offset_x, 
-                                        y=ty + self.display_offset_y, 
-                                        s='[c=red]*[/c]')
-                                    term.refresh()
+                                    self.draw_log(log)
+                                    # term.puts(
+                                    #     x=tx + self.display_offset_x, 
+                                    #     y=ty + self.display_offset_y, 
+                                    #     s='[c=red]*[/c]')
+                                    # term.refresh()
 
                         turn_inc = True
                 else:
@@ -647,13 +648,21 @@ class Start(Scene):
                             self.draw_log("You cannot swim")
                         else:
                             self.draw_log("You walk into {}".format(
-                                walkChars[ch]),
-                                refresh=False)
-                            term.puts(
-                                x=tx + self.display_offset_x, 
-                                y=ty + self.display_offset_y, 
-                                s='[c=red]X[/c]')
-                            term.refresh()
+                                walkChars[ch]))
+                                # refresh=False)
+                            # term.puts(
+                            #     x=tx + self.display_offset_x, 
+                            #     y=ty + self.display_offset_y, 
+                            #     s='[c=red]X[/c]')
+                            # term.refresh()
+    def get_input(self):     
+        key = term.read()
+        if key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
+            # skip any non-action keys
+            key = term.read()
+          
+        shifted = term.state(term.TK_SHIFT)
+        return key, shifted
 
     def key_input(self):
         '''Handles keyboard input and keypress transformation
@@ -663,14 +672,9 @@ class Start(Scene):
             Elif key is valid command return the command from command list with continue
             Else return invalid action tuple with continue value
         '''
-        action = tuple(None for _ in range(4))
 
-        key = term.read()
-        while key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
-            # skip any non-action keys
-            key = term.read()
-            
-        shifted = term.state(term.TK_SHIFT)
+        action = tuple(None for _ in range(4))
+        key, shifted = self.get_input()
         if key in (term.TK_ESCAPE, term.TK_CLOSE):
             # exit command -- maybe need a back to menu screen?
             if shifted:
@@ -857,12 +861,12 @@ class Start(Scene):
 
     def action_interact_door_close(self):
         def close_door(x, y):
-            self.draw_log('Closing door.', refresh=False)
-            term.puts(
-                x=x + self.display_offset_x, 
-                y=y + self.display_offset_y, 
-                s="[c=red]+[/c]")
-            term.refresh()
+            self.draw_log('Closing door.')
+            # term.puts(
+            #     x=x + self.display_offset_x, 
+            #     y=y + self.display_offset_y, 
+            #     s="[c=red]+[/c]")
+            # term.refresh()
             self.location.close_door(x, y)
 
         doors = []
@@ -905,11 +909,11 @@ class Start(Scene):
     def action_interact_door_open(self):
         def open_door(x, y):
             self.draw_log('Opening door.')
-            term.puts(
-                x=x + self.display_offset_x, 
-                y=y + self.display_offset_y, 
-                s="[c=red]+[/c]")
-            term.refresh()
+            # term.puts(
+            #     x=x + self.display_offset_x, 
+            #     y=y + self.display_offset_y, 
+            #     s="[c=red]+[/c]")
+            # term.refresh()
             self.location.open_door(x, y)
 
         doors = []

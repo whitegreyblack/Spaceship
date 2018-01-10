@@ -50,7 +50,7 @@ class Rat(Unit):
                         neighbor = nodeq.node[0]+i, nodeq.node[1]+j
 
                         if neighbor == p2:
-                            print("found?")
+                            # print("found?")
                             closelist.append(nodeq)
                             # closelist.append(neighbor)
                             return closelist
@@ -134,7 +134,7 @@ class Rat(Unit):
         '''
         if self.cur_health <= self.max_health * .10:
             # monster is wounded/damaged -- try preserving its life
-            print('Waiting and resting')
+            # print('Waiting and resting')
             return commands_ai['wait']
 
         else:
@@ -142,7 +142,7 @@ class Rat(Unit):
             if not paths:
                 # nothing of interest to the rat
                 if self.last_action == "following":
-                    print('Following trail of last seen unit')
+                    # print('Following trail of last seen unit')
                     self.moving_torwards()
                 self.wander(tiles, sight_map)
             else:
@@ -156,7 +156,8 @@ class Rat(Unit):
                 # elif isinstance(interest, Unit) or isinstance(interest, Player):
                 elif isinstance(interest, Unit):
                     if self.race in interest.__class__.__name__:
-                        print('Saw another {}'.format(self.race))
+                        # print('Saw another {}'.format(self.race))
+                        pass
                     else:
                         dt = distance(*self.position, *interest.position)
                         if dt < 2:
@@ -165,7 +166,7 @@ class Rat(Unit):
                             return commands_ai['move'][self.direction(interest)]
 
                         else:
-                            print("Saw {}".format(interest))
+                            # print("Saw {}".format(interest))
                             self.follow(sight_map, units, path[1].node)
         # print(paths)
 
@@ -182,16 +183,16 @@ class Rat(Unit):
         self.moving_torwards(point)
 
     def follow(self, sight, units, path):
-        print('following')
-        print(sight[self.y - path[1] + self.sight][self.x - path[0] + self.sight])
-        empty = sight[self.y - path[1]+ self.sight][self.x - path[0] + self.sight] not in unit_chars
+        # print('following')
+        # print(sight[self.y - path[1] + self.sight][self.x - path[0] + self.sight])
+        empty = sight[self.y - path[1] + self.sight][self.x - path[0] + self.sight] not in unit_chars
         if not empty:
-            print('tile not empty')
-            print(units[(path)])
-            print('switching placse with {}'.format(units[(path)]))
+            # print('tile not empty')
+            # print(units[(path)])
+            # print('switching placse with {}'.format(units[(path)]))
             self.displace(units[(path)])
         else:
-            print('empty tile')
+            # print('empty tile')
             self.moving_torwards(path)
         
     
@@ -221,17 +222,18 @@ class Rat(Unit):
         return "Reeeee!!"
 
     def attack(self, unit):
-        print('ATTACKING')
+        # print('ATTACKING')
         chance = self.calculate_attack_chance()
         if chance == 1:
-            print('rat rolls to hit -- rolls a hit')
+            # print('rat rolls to hit -- rolls a hit')
             damage = self.calculate_attack_damage()
-            print('rat rolls damage -- rolls {}'.format(damage))
+            # print('rat rolls damage -- rolls {}'.format(damage))
             unit.cur_health -= damage
-            print('rat deals {} damage to {}'.format(damage, unit))
-            print('{} has {} health left'.format(unit, unit.cur_health))
+            # print('rat deals {} damage to {}'.format(damage, unit))
+            # print('{} has {} health left'.format(unit, unit.cur_health))
             if unit.cur_health <= 0:
-                print('unit has died')
+                # print('unit has died')
+                pass
 
 class GiantRat(Unit):
     def __init__(self, x, y):
