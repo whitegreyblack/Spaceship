@@ -104,7 +104,10 @@ class City(Map):
                 pixels = img.load()
                 w, h = img.size
         except FileNotFoundError:
-            raise FileNotFoundError("Cannot find file for stringify: {}".format(self.map_img))
+            # raise FileNotFoundError("Cannot find file for stringify: {}".format(self.map_img))
+            with Image.open('./assets/maps/sample.png') as img:
+                pixels = img.load()
+                w, h = img.size
 
         for j in range(h):
             line = ""

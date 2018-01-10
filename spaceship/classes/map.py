@@ -19,28 +19,28 @@ from .bat import Bat
 
 '''
 TODO: seperate map and dungeon
-Map holds:
-    dungeon class
-    list of items
-    list of units
-    list of sight
-    list of maps(dungeons) below it 
-World holds:
-    list of maps basically a connected linked list?'
+    Map holds:
+        dungeon class
+        list of items
+        list of units
+        list of sight
+        list of maps(dungeons) below it 
+    World holds:
+        list of maps basically a connected linked list?'
 
-For example
-    Overworld 8x8 64 tiles
-    Assume half is water so 32 tiles are land 
-    Each land tile will hold an overworld map
-    for each city in city/village list:
-        draw a city tile on the map
-        read in the city map from the string file
-        these tiles will not be considered land tiles anymore
-    there will also be a list of pyramid dungeons throughout the map which will have their own list of 
-        dungeons
-        these tiles will also not be considered land tiles
-    For each land tile that is not a mountain:
-        it has a chance to hold a dungeon i guess
+    For example
+        Overworld 8x8 64 tiles
+        Assume half is water so 32 tiles are land 
+        Each land tile will hold an overworld map
+        for each city in city/village list:
+            draw a city tile on the map
+            read in the city map from the string file
+            these tiles will not be considered land tiles anymore
+        there will also be a list of pyramid dungeons throughout the map which will have their own list of 
+            dungeons
+            these tiles will also not be considered land tiles
+        For each land tile that is not a mountain:
+            it has a chance to hold a dungeon i guess
 '''
 
 MapType = {T: V for V, T in enumerate(('City', 'Cave', 'Wild', 'World'))}
@@ -194,9 +194,6 @@ class Map:
     @parent.setter
     def parent(self, location) -> None:
         self.__parent = location
-
-    # def hasSublevel(self):
-    #     return hasattr(self, 'sublevel')
 
     @property
     def sublevel(self) -> object:
@@ -468,16 +465,26 @@ class Map:
     # Item object Functions                                                   #
     ###########################################################################
     def item_add(self, x, y, i) -> None:
+        '''Adds an item object to the list of items at position (x, y)
+        on the map
+        '''
         self.square(x, y).items.append(i)
 
     def item_remove(self, x, y, i) -> None:
+        '''Removes the item object from the list of items at position (x, y)
+        on the map
+        '''
         try:
             self.square(x ,y).items.remove(i)
         except ValueError:
             print('no item with that value')
 
     def items_at(self, x, y) -> object:
+        '''Returns a list of item objects at position (x, y) on the map.
+        If no items are on the square then the list will return empty
+        '''
         return self.square(x, y).items
+
     ###########################################################################
     # Unit object Functions                                                   #
     ###########################################################################
@@ -493,27 +500,19 @@ class Map:
         for unit in self.units:
             yield unit.position
     
-    def unit_at(self, x, y):
+    def unit_at(self, x, y) -> object:
         '''Returns a unit at the given position. If the unit exists then the
         unit is returned else an empty value is returned'''
         for u in self.__units:
             if (x, y) == u.position:
                 return u
 
-    def units_add(self, units):
+    def units_add(self, units) -> None:
         '''Adds a list of units to the current unit list'''
         self.__units += units
 
-    '''
-    def remove(self, object):
-        if object == unit:
-            remove_unit
-        elif object == Tile?
-            ...
-        ...
-    '''
-    def unit_remove(self, unit):
-        # if hasattr(self, 'units'):
+    def unit_remove(self, unit) -> None:
+        '''Removes the unit from the list of units if the unit is found'''
         try:
             self.__units.remove(unit)
         except ValueError:
@@ -597,11 +596,9 @@ class Map:
             for unit in self.__units:
                 positions[unit.position] = unit
 
-        col = "#ffffff"
-        # width should total 80 units
         ret = []
+        # width should total 80 units
         for x in range(cam_x, ext_x):
-
             # height should total 24/25 units
             for y in range(cam_y, ext_y):
                 light_level = self.check_light_level(x, y)
@@ -640,6 +637,7 @@ class Map:
         return ret
 
     def output(self, player_x, player_y):
+        # detect if map is smaller than usual
         shorten_x = self.map_display_width > 66
         shorten_y = self.map_display_height > 44
 
@@ -656,11 +654,6 @@ class Map:
             self.map_display_height + (-6 if shorten_y else 0), 
             self.height)
         ext_y = cam_y + self.map_display_height + (-6 if shorten_y else 0)
-
-        # positions = {}
-        # if hasattr(self, 'units') and self.__units:
-        #     for unit in self.__units:
-        #         positions[unit.position] = unit
 
         # height should total 24/25 units
         for y in range(cam_y, ext_y):
@@ -696,7 +689,9 @@ class Map:
                 else:
                     # yield (x - cam_x, y - cam_y, "black", " ")
                     continue
+        self.lit_reset()
 
+        # stuff
                 # # reset variables every iteration
                 # if x == player_x and y == player_y:
                 #     # Current position holds your position
@@ -764,30 +759,6 @@ class Map:
                 # yield (x - cam_x, y - cam_y, col, ch)
 
         # print(self.tilemap[10][10])
-        self.lit_reset()
-
-# TEST: blender function
-# if __name__ == "__main__":
-#     if len(sys.argv) < 4:
-#         print(sys.argv)
-#         exit('ERROR :- incorrect num of args')
-        
-#     term.open()
-#     term.set("window: size=80x25")
-#     colors = blender(sys.argv[1], sys.argv[2], int(sys.argv[3]))
-#     print(colors)
-#     step = 80 // len(colors)
-#     for i in range(len(colors)):
-#         for y in range(25):
-#             for x in range(step):
-#                 term.puts(step*i+x, y, "[color={}]%[/color]".format(colors[i]))
-#     term.refresh()
-#     term.read()
-
-# Test: Map class
-# if __name__ == "__main__":
-#     test = Map(66, 22)
-#     print(test)
 
 if __name__ == "__main__":
     pass

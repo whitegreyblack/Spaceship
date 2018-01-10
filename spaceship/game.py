@@ -878,6 +878,7 @@ class Start(Scene):
 
                 else:
                     self.draw_log("Direction has no door. Canceled closing door.")
+                    
     def action_interact_door_open(self):
         def open_door(x, y):
             self.draw_log('Opening door.')
@@ -988,8 +989,6 @@ class Start(Scene):
             code = term.read()
             if code in (term.TK_ESCAPE, term.TK_Q):
                 break
-    
-            
 
 if __name__ == "__main__":
     s = Start()
