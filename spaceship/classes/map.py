@@ -1,21 +1,21 @@
  # -*- coding=utf-8 -*-
 import os
 import sys
-from bearlibterminal import terminal as term
-from PIL import Image, ImageDraw
-from functools import lru_cache
-from random import randint, choice, shuffle
 from math import hypot
 from copy import deepcopy
 from textwrap import wrap
+from typing import Tuple, Union
 from namedlist import namedlist
+from functools import lru_cache
+from PIL import Image, ImageDraw
 from collections import namedtuple
-
-from .charmap import DungeonCharmap as dcm
+from random import randint, choice, shuffle
+from bearlibterminal import terminal as term
+from ..tools import scroll, distance, bresenhams
 from .charmap import WildernessCharmap as wcm
+from .charmap import DungeonCharmap as dcm
 from .monsters import Rat
 from .bat import Bat
-from ..tools import scroll, distance, bresenhams
 
 '''
 TODO: seperate map and dungeon
@@ -80,16 +80,16 @@ class Map:
         self.map_display_height = min(22, height)
         self.__units = []
 
-    def build(self):
+    def build(self) -> None:
         raise NotImplementedError("cannot build the base map class -- use a child map object")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "{}: ({}, {})".format(self.__class__.__name__, self.width, self.height)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "\n".join("".join(row) for row in self.data)
 
-    def debug_set_global_light(self):
+    def debug_set_global_light(self) -> None:
         for y in range(self.height):
             for x in range(self.width):
                 self.square(x, y).light = 2
@@ -97,7 +97,7 @@ class Map:
     ###########################################################################
     # Level Initialization, Setup, Terraform and Evaluation                   #
     ###########################################################################
-    def dimensions(self):
+    def dimensions(self) -> None:
         '''takes in a string map and returns a 2D list map and map dimensions'''
         if hasattr(self, 'data'):
             self.height = len(self.data)
@@ -105,11 +105,12 @@ class Map:
         else:
             raise AttributeError("No self.data")
 
-    def create_tile_map(self):
-        if not hasattr(self, 'data'):
-            raise AttributeError("No self.data")
-        if not hasattr(self, 'chars'):
-            raise AttributeError("No self.chars")
+    def create_tile_map(self) -> None:
+        '''Instantiates the tile map and fills the map with tile objects
+        This function should only be called once during __init__
+        '''
+        self.check_data()
+        self.check_chars()
 
         rows = []   
         for row in self.data:
@@ -133,19 +134,15 @@ class Map:
             rows.append(cols)
         self.tilemap = rows        
 
-    def check_data(self):
-        if hasattr(self, 'data'):
-            return True
-        else:
+    def check_data(self) -> None:
+        if not hasattr(self, 'data'):
             raise AttributeError("No self.data")
     
-    def check_chars(self):
-        if hasattr(self, 'chars'):
-            return True
-        else:
+    def check_chars(self) -> None:
+        if not hasattr(self, 'chars'):
             raise AttributeError("No self.chars")
     
-    def check_exists(self, attrs):
+    def check_exists(self, attrs) -> bool:
         for attr in attrs:
             if not hasattr(self, attr):
                 raise AttributeError("No self.{}".format(attr))
@@ -155,7 +152,7 @@ class Map:
     # Connected Map/Dungeon Functions and Properties                          #
     ###########################################################################
     @property
-    def stairs_up(self):
+    def stairs_up(self) -> Union[Tuple[int, int], None]:
         '''Returns the position of the up stairs character on map.
         First call to the stairs will find and save the stairs position.
         Subsequent calls will returns the saved position of the stairs.
@@ -166,20 +163,14 @@ class Map:
         # if hasattr(self, "__stairs_up"):
             return self.__stairs_up
         except:
-            for j, row in enumerate(self.data):
-                for i, char in enumerate(row):
+            for y, row in enumerate(self.data):
+                for x, char in enumerate(row):
                     if char == "<":
-                        self.__stairs_up = i, j
-                        return i, j
-
-        # for j in range(len(self.data)):
-        #     for i in range(len(self.data[0])):
-        #         if self.data[j][i] == "<":
-        #             self.__stairs_up = i, j
-        #             return i, j
+                        self.__stairs_up = x, y
+                        return x, y
 
     @property
-    def stairs_down(self):
+    def stairs_down(self) -> Union[Tuple[int, int], None]:
         '''Returns the position of the down stairs character on map.
         First call to stairs_down will find and save the stairs_down position.
         Subsequent calls will returns the saved position of the stairs.
@@ -190,109 +181,110 @@ class Map:
             return self.__stairs_down
         except AttributeError:
             # manually look through the map to check for '>'
-            for j, row in enumerate(self.data):
-                for i, char in enumerate(row):
+            for y, row in enumerate(self.data):
+                for x, char in enumerate(row):
                     if char == ">":
-                        self.__stairs_down = i, j
-                        return i, j
-            # for j in range(len(self.data)):
-            #     for i in range(len(self.data[0])):
-            #         if self.data[j][i] == ">":
-            #             self.__stairs_down = i, j
-            #             return i, j
-
-    # def hasParent(self, parent):
-    #     return hasattr(self, 'parent')
+                        self.__stairs_down = x, y
+                        return x, y
 
     @property
-    def parent(self):
+    def parent(self) -> object:
         return self.__parent
 
     @parent.setter
-    def parent(self, location):
+    def parent(self, location) -> None:
         self.__parent = location
 
     # def hasSublevel(self):
     #     return hasattr(self, 'sublevel')
 
     @property
-    def sublevel(self):
+    def sublevel(self) -> object:
         return self.__sublevel
 
     @sublevel.setter
-    def sublevel(self, sublevel):
+    def sublevel(self, sublevel) -> None:
         self.__sublevel = sublevel
 
     ###########################################################################
     #  Singular Map Functions                                                 #
     ###########################################################################
-    def square(self, x, y):
+    def square(self, x, y) -> object:
         # return self.data[y][x]
         return self.tilemap[y][x]
 
-    def within_bounds(self, x, y):
+    def within_bounds(self, x, y) -> bool:
         return 0 <= x < self.width and 0 <= y < self.height
 
-    def out_of_bounds(self, x, y):
+    def out_of_bounds(self, x, y) -> bool:
         return not self.within_bounds(x, y)
 
-    def walkable(self, x, y):
+    def walkable(self, x, y) -> bool:
         '''Checks for bounds of map and blockable tile objects'''
         return self.within_bounds(x, y) and not self.square(x, y).block_mov
 
-    def viewable(self, x, y):
+    def viewable(self, x, y) -> bool:
         '''Only acts on objects within the bounds of the map'''
         return self.within_bounds(x, y) and self.square(x, y).block_lit
 
-    def occupied(self, x, y):
+    def occupied(self, x, y) -> bool:
         '''Only acts on unit objects in the map'''
         return self.within_bounds(x, y) and (x, y) in self.unit_positions
 
-    def blocked(self, x, y):
+    def blocked(self, x, y) -> bool:
         '''Only acts on objects within the bounds of the map'''
         return self.out_of_bounds(x, y) or self.square(x, y).block_mov
 
-    def open_door(self, x, y):
-        def is_closed_door(x, y):
-            return self.square(x,y).char == "+"
-        if is_closed_door(x, y):
-            self.square(x, y).char = "/"
+    def is_opened_door(x, y) -> bool:
+        '''Checks if square character is an open door'''
+        return self.square(x, y).char == "/"
 
-    def close_door(self, x, y):
-        def is_opened_door(x, y):
-            return self.square(x, y).char == "/"
-        if is_opened_door(x, y):
-            self.square(x, y).char = "+"
+    def is_closed_door(x, y) -> bool:
+        '''Checks if square character is a closed door'''
+        return self.square(x,y).char == "+"
 
-    def reblock(self, x, y):
+    def unblock(self, x, y) -> None:
+        '''Sets the square movement block value as not blocked'''
+        self.square(x, y).block_mov = False
+
+    def reblock(self, x, y) -> None:
+        '''Sets the square movement block value as blocked'''
         self.square(x, y).block_mov = True
 
-    def unblock(self, x, y):
-        self.square(x, y).block_mov = False
+    def open_door(self, x, y) -> None:
+        '''Checks if door is closed and opens it if true'''
+        if is_closed_door(x, y):
+            self.square(x, y).char = "/"
+            self.unlock(x, y)
+
+    def close_door(self, x, y) -> None:
+        '''Checks if door is open and closes it if true'''
+        if is_opened_door(x, y):
+            self.square(x, y).char = "+"
+            self.reblock(x, y)
 
     ###########################################################################
     # Sight, Light and Color Functions                                        #
     ###########################################################################
-    def check_light_level(self, x, y):
+    def check_light_level(self, x, y) -> int:
+        '''Gets the value of light at square specified by x and y'''
         return self.square(x, y).light
 
-    def set_light_level(self, x, y, v):
+    def set_light_level(self, x, y, v) -> None:
+        '''Sets the value of light at square specified by x and y'''
         if self.within_bounds(x, y):
             self.square(x, y).light = v
 
-    def lit_reset(self):
+    def lit_reset(self) -> None:
+        '''Sets all squares in the map with visible light as visited'''
         for y in range(self.height):
             for x in range(self.width):
-                # floor_square = self.square(x, y).char == "."
-                # blue_square = self.square(x, y).color == "blue"
                 lighted_square = self.square(x, y).light == 2
-                # if floor_square and blue_square:
-                #     self.square(x, y).color ="white"
                 if lighted_square:
-                    self.square(x, y).light = 1 # if self.square(x, y).light > 0 else 0
+                    self.square(x, y).light = 1
 
-    def path(self, p1, p2):
-        '''A star implementation'''
+    def path(self, p1, p2) -> list:
+        '''A-star implementation that returns all possible moves'''
         node = namedtuple("Node", "df dg dh parent node")
         openlist = set()
         closelist = []
@@ -330,7 +322,10 @@ class Map:
 
         return closelist        
 
-    def fov_calc_blocks(self, x, y, r):
+    def fov_calc_blocks(self, x, y, r) -> set:
+        '''Returns all values in the map that can be seen from the position(x,y)
+        with a sight radius of r
+        '''
         def fov_block(cx, cy, row, start, end, radius, xx, xy, yx, yy, id):
             nonlocal vision_tiles
             if start < end:
@@ -385,7 +380,10 @@ class Map:
         # return split_blocks()
         return vision_tiles
 
-    def fov_calc(self, unit):
+    def fov_calc(self, unit) -> None:
+        '''Calls sight to calculate which tiles on the map are visible from
+        the position (x, y) with a sight radius of r
+        '''
         for x, y, radius in unit:
             for o in range(8):
                 self.sight(x, y, 1, 1.0, 0.0, radius,
@@ -394,7 +392,23 @@ class Map:
                         self.mult[2][o], 
                         self.mult[3][o], 0)
 
+    def unit_fov(self, units) -> None:
+        '''Calls sight to calculate which tiles on the map are visible from
+        the position of the unit passed in as a parameter
+        '''    
+        for unit in units:
+            for o in range(8):
+                self.sight(*unit.position, 1, 1.0, 0.0, unit.sight,
+                        self.mult[0][o], 
+                        self.mult[1][o], 
+                        self.mult[2][o], 
+                        self.mult[3][o], 0)
+
     def sight(self, cx, cy, row, start, end, radius, xx, xy, yx, yy, id):
+        '''Calculates all visible tiles on the map using recursive line of
+        sight. All calculations are based on linear slopes and light blocking
+        values found in every tile square in the map array
+        '''
         if start < end:
             return
 
@@ -453,22 +467,28 @@ class Map:
     ###########################################################################
     # Item object Functions                                                   #
     ###########################################################################
-    def add_item(self, x, y, i):
+    def item_add(self, x, y, i) -> None:
         self.square(x, y).items.append(i)
 
-    def get_item(self, x, y):
+    def item_remove(self, x, y, i) -> None:
+        try:
+            self.square(x ,y).items.remove(i)
+        except ValueError:
+            print('no item with that value')
+
+    def items_at(self, x, y) -> object:
         return self.square(x, y).items
     ###########################################################################
     # Unit object Functions                                                   #
     ###########################################################################
     @property
-    def units(self):
+    def units(self) -> object:
         '''Yields all units in the unit list'''
         for unit in self.__units:
             yield unit
 
     @property
-    def unit_positions(self):
+    def unit_positions(self) -> Tuple[int, int]:
         '''Yields all unit positions for units in the unit list'''
         for unit in self.units:
             yield unit.position

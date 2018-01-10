@@ -1,16 +1,15 @@
 import os
 import sys
 from typing import Tuple, Union
-from random import shuffle, choice, randint
 from PIL import Image, ImageDraw
 from collections import namedtuple
-
-from .charmap import DungeonCharmap as dcm
+from random import shuffle, choice, randint
 from .charmap import WildernessCharmap as wcm
+from .charmap import DungeonCharmap as dcm
 from .charmap import WorldCharmap as ccm
 from .utils import splitter, blender
-from .map import Map
 from ..tools import toInt, scroll
+from .map import Map
 
 class World(Map):
     chars = {

@@ -72,6 +72,8 @@ class Start(Scene):
             "There is something here."
             "Your feet touches an object."
         ]
+        self.string_drop = 'Which item to drop?'
+        self.string_use = 'Which item to use?'
 
         # player screen variables
         self.player_screen_col, self.player_screen_row = 1, 3
@@ -159,8 +161,7 @@ class Start(Scene):
             term.puts(
                 x=1,
                 y=self.height + index - self.log_height - 1,
-                s=message[1]
-            )
+                s=message[1])
         
         if refresh:
             term.refresh()
@@ -187,10 +188,16 @@ class Start(Scene):
         if g0 and self.player.location in self.world.enterable_legend.keys():
             location = self.world.enterable_legend[self.player.location]
             term.bkcolor('grey')
-            term.puts(14, 0, ' ' * (self.width - 14))
-            term.bkcolor('black')
             term.puts(
-                x=14 + center(surround(location), self.width - 14), 
+                x=self.display_offset_x, 
+                y=0, 
+                s=' ' * (self.width - self.display_offset_x))
+                
+            term.bkcolor('black')
+            location_offset = center(text=surround(location), 
+                                     width=self.width - self.display_offset_x)
+            term.puts(
+                x=self.display_offset_x + location_offset,
                 y=0, 
                 s=surround(location))
 
@@ -283,13 +290,25 @@ class Start(Scene):
         term.puts(
             x=center('press v to switch to inventory', self.width), 
             y=self.height - 2,
-            t='press v to switch to inventory')
+            s='press v to switch to inventory')
 
     def draw_player_inv_eq_switch(self):
         term.puts(
             x=center('press i to switch to equipment', self.width), 
             y=self.height - 2,
-            t='press i to switch to equipment')
+            s='press i to switch to equipment')
+
+    def draw_player_eq_drop(self):
+        term.puts(
+            x=center(self.string_drop, self.width),
+            y=self.height - 2,
+            s=self.string_drop)
+        
+    def draw_player_eq_use(self):
+        term.puts(
+            x=center(self.string_use, self.width),
+            y=self.height - 2,
+            s=self.string_use)
 
     def draw_player_screens(self, key):
         playscreen = False
@@ -466,7 +485,7 @@ class Start(Scene):
                                     exit('DEAD')
                                 item = unit.drops()
                                 if item:
-                                    self.location.square(*unit.position).items.append(item)
+                                    self.location.item_add(item)
                                     self.draw_log("The {} has dropped {}".format(
                                         unit.race, item.name))
                                 self.location.unit_remove(unit)
@@ -814,7 +833,6 @@ class Start(Scene):
                 s="[c=red]/[/c]")
             term.refresh()
             self.location.close_door(i, j)
-            self.location.reblock(i, j)
 
         doors = []
         for x, y in self.spaces(*self.player.position):
@@ -857,7 +875,6 @@ class Start(Scene):
                 s="[c=red]+[/c]")
             term.refresh()
             self.location.open_door(i, j)
-            self.location.unblock(i, j)
 
         doors = []
         for i, j in self.spaces(*self.player.position):
@@ -909,9 +926,10 @@ class Start(Scene):
         def pickup_item(item):
             if len(self.player.inventory) >= 25:
                 gamelog.add("Backpack is full. Cannot pick up {}".format(item))
+
             else:
-                self.location.square(*self.player.position).items.remove(item)
-                self.player.inventory.append(item)
+                self.location.item_remove(item)
+                self.player.inventory_item_add(item)
                 log = "You pick up {} and place it in your backpack".format(
                                                                     item.name)
                 self.draw_log(log)
@@ -932,18 +950,24 @@ class Start(Scene):
         def drop_item(item):
             pass
         # open up inventory
-        term.clear()
-        self.draw_player_equipment()
-        term.refresh()
-        term.read()
-
-    def action_interact_item_use(self):
         while True:
             term.clear()
             self.draw_player_equipment()
             self.draw_player_eq_drop()
             term.refresh()
-            term.read()
+            code = term.read()
+            if code in (term.TK_ESCAPE, term.TK_Q):
+                break
+
+    def action_interact_item_use(self):
+        while True:
+            term.clear()
+            self.draw_player_equipment()
+            self.draw_player_eq_use()
+            term.refresh()
+            code = term.read()
+            if code in (term.TK_ESCAPE, term.TK_Q):
+                break
 
 if __name__ == "__main__":
     s = Start()

@@ -90,6 +90,15 @@ class Player(Unit):
         for item in self.__inventory:
             yield item
 
+    def inventory_item_add(self, item):
+        self.__inventory.append(item)
+
+    def inventory_item_remove(self, item):
+        try:
+            self.__inventory.remove(item)
+        except ValueError:
+            print('No item in inventory with that value')
+
     def profile_save_path(self):
         name = self.name.replace(' ', '_')
         desc = name + " " + self.job
