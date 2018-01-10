@@ -7,7 +7,7 @@ from .utils import blender
 from .charmap import DungeonCharmap as dcm
 from .charmap import WildernessCharmap as wcm
 from .unit import Unit
-from .neutrals import Shopkeeper, Innkeeper, Bishop, Soldier, Villager, Blacksmith, VillagerChild
+from .neutrals import neutrals
 
 class City(Map):
     chars = {
@@ -137,16 +137,6 @@ class City(Map):
     def parse_cfg(self):
         if not self.spaces:
             raise AttributeError("No world configuration")
-
-        jobs = {
-            "bishop": Bishop,
-            "innkeeper": Innkeeper,
-            "shopkeeper": Shopkeeper,
-            "soldier": Soldier,
-            "villager": Villager,
-            "blacksmith": Blacksmith,
-            "child": VillagerChild,
-        }
         self.stats = "{}: Unit List\n".format(self.map_id)
         try:
             with open(self.map_cfg, 'r') as cfg:
@@ -164,7 +154,7 @@ class City(Map):
                         if modifier == "":
                             e="Configuration file has no race specifier"
                             raise ValueError(e)
-                        if job.lower() in jobs.keys():
+                        if job.lower() in neutrals.keys():
                             for _ in range(int(number)):
                                 try:
                                     spaces=self.unit_spaces[character] \
@@ -173,9 +163,11 @@ class City(Map):
 
                                 except KeyError:
                                     spaces = self.spaces
+
                                 else:
                                     i, j = choice(spaces)
-                                self.units_add([jobs[job.lower()](
+
+                                self.units_add([neutrals[job.lower()](
                                     x=i, 
                                     y=j,
                                     race=modifier,
@@ -226,4 +218,3 @@ if __name__ == "__main__":
     cfg = "./assets/maps/shadowbarrow.cfg"
     test = City("shadowbarrow", img, cfg, 80, 25)
     print(test)
-    # print(repr(test))

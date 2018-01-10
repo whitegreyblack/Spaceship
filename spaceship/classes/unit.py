@@ -22,7 +22,7 @@ class Energy:
         self.cur_energy = 0
         self.max_energy = 30
     
-    def gain_energy(self):
+    def gain(self):
         self.cur_energy += self.speed
     
     def ready(self):

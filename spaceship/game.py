@@ -17,6 +17,7 @@ from .classes.city import City
 from .classes.cave import Cave
 from .action import commands_player
 from .scene import Scene
+from time import sleep
 
 def single_element(container):
     return len(container) == 1
@@ -98,6 +99,7 @@ class Start(Scene):
             self.location = self.world = World(
                 map_name="Calabston", 
                 map_link="./assets/worldmap.png")
+            self.world.units_add([self.player])
 
         self.gamelog = GameLogger(
             screenlinelimit=3 if self.height <= 25 else 4,
@@ -105,7 +107,11 @@ class Start(Scene):
 
         while self.proceed and self.player.is_alive:
             self.draw()
-        
+            self.process_units()
+
+            if self.map_change:
+                self.determine_map_location()
+
         self.proceed = True
         if hasattr(self, 'ret'):
             return self.ret
@@ -114,38 +120,39 @@ class Start(Scene):
         term.clear()
         self.draw_log(refresh=False)
         self.draw_player_status()
-
-        if self.map_change:
-            self.determine_map_location()
-
-        # print(list(u.__class__.__name__ for u in self.location.units))
-        # print(self.location.__class__.__name__)
-        # print(self.player.position)
-
         self.draw_world()
         term.refresh()
 
-
-        # units = list(self.location.units)
-
-        # units.append(self.player)
-
-        # self.process_player_turn()
-        if isinstance(self.location, World):
-            self.process_player_turn()
-        else:
+    def process_units(self):
+        # print(list(self.location.units))
+        if isinstance(self.location, World) or isinstance(self.location, City):
             for unit in self.location.units:
                 self.unit = unit
-                if self.unit.energy.ready():
-                    self.unit.energy.reset()
-                    self.process_unit_turn()
+                self.process_turn()
+        else:
+            for unit in self.location.units:
+                if unit.energy.ready():
+                    unit.energy.reset()
+                    self.unit = unit
+                    self.process_turn()      
                 else:
-                    self.unit.energy.gain_energy()
+                    unit.energy.gain()
 
-            if self.player.energy.ready():
-                self.process_player_turn()
-            else:
-                self.player.energy.gain_energy()
+        # if isinstance(self.location, World):
+        #     self.process_turn_player()
+        # else:
+        #     for unit in self.location.units:
+        #         self.unit = unit
+        #         if self.unit.energy.ready():
+        #             self.unit.energy.reset()
+        #             self.process_turn_unit()
+        #         else:
+        #             self.unit.energy.gain()
+
+        #     if self.player.energy.ready():
+        #         self.process_turn_player()
+        #     else:
+        #         self.player.energy.gain()
 
     def draw_log(self, log=None, refresh=True):
         if log:
@@ -362,24 +369,36 @@ class Start(Scene):
                 if current_range < 10: current_range += 1
         term.clear()
 
-    def process_player_turn(self):
+    def process_turn(self):
+        if isinstance(self.unit, Player):
+            self.process_turn_player()
+        else:
+            self.process_turn_unit()
+
+    def process_turn_player(self):
         action = self.key_input()
         if not self.proceed:
             return
         self.process_handler(*action)
 
-    def process_unit_turn(self):
+    def process_turn_unit(self):
         if hasattr(self.unit, 'acts'):
+            units = { u.position: u for u in self.location.units 
+                                                        if u != self.unit }
             positions = self.location.fov_calc_blocks(
                                                 self.unit.x, 
                                                 self.unit.y, 
                                                 self.unit.sight)
+            units = { self.location.unit_at(*position).position: self.location.unit_at(*position) 
+                        for position in positions if self.location.unit_at(*position) }
+
+            if self.player not in units.values():
+                return
+
             tiles = { position: self.location.square(*position) 
                                                 for position in positions }
-            units = { u.position: u for u in self.location.units 
-                                                if u != self.unit }
+
             action = self.unit.acts(self.player, tiles, units)
-            print('AI ACTION: ', action)
             if action:
                 self.process_handler_unit(*action)
 
@@ -434,7 +453,7 @@ class Start(Scene):
             invalid_command = "'{}' is not a valid command".format(action)
             self.draw_log(invalid_command)
 
-    def process_move_unit_to_empty(self):
+    def process_move_unit_to_empty(self, tx, ty):
         occupied_player = self.player.position == (tx, ty)
         occupied_unit = self.location.occupied(tx, ty)
         print(occupied_player, occupied_unit)
@@ -449,8 +468,8 @@ class Start(Scene):
             ty = self.unit.y + y
 
             if self.location.walkable(tx, ty):
-                unit_bools = self.process_move_unit_to_empty()
-                if not unit_values:
+                unit_bools = self.process_move_unit_to_empty(tx, ty)
+                if not unit_bools:
                     return
                 else:
                     occupied_player, occupied_unit = unit_bools
@@ -708,6 +727,7 @@ class Start(Scene):
         self.reset()
 
     def determine_map_location(self):
+        self.location.unit_remove(self.player)
         if self.player.height == Level.WORLD:
             self.location = self.world
         
@@ -716,7 +736,7 @@ class Start(Scene):
             if self.player.height > 1:
                 for i in range(self.player.height - 1):
                     self.location = self.location.sublevel
-
+        self.location.units_add([self.player])
         self.map_change = False
 
     def determine_map_on_enter(self, map_type):
@@ -803,17 +823,20 @@ class Start(Scene):
                 self.location.sublevel = location
                 location.parent = self.location
 
-            self.location = self.location.sublevel
             self.player.move_height(1)
             self.player.position = self.location.stairs_up
+            self.location.unit_remove(self.player)
+            self.location = self.location.sublevel
+            self.location.units_add([self.player])
         else:
             self.draw_log('You cannot go downstairs without stairs')
 
     def action_interact_stairs_up(self):
         def move_upstairs(reset=False):
+            self.location.unit_remove(self.player)
             self.location = self.location.parent
             self.player.move_height(-1)
-
+            self.location.units_add([self.player])
             if reset:
                 self.player.position = self.location.sublevel
 

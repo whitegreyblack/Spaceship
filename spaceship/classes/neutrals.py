@@ -173,7 +173,6 @@ class Bishop(Unit):
         y = int(round(dy / dt))
         self.move(x, y)        
 
-
 class Soldier(Unit):
     ''' soldier class should be on patrol -- moves from position to position
     IF an enemy is spotted then chase
@@ -202,3 +201,13 @@ class Soldier(Unit):
         x = int(round(dx / dt))
         y = int(round(dy / dt))
         self.move(x, y)        
+
+neutrals = {
+    "bishop": Bishop,
+    "innkeeper": Innkeeper,
+    "shopkeeper": Shopkeeper,
+    "soldier": Soldier,
+    "villager": Villager,
+    "blacksmith": Blacksmith,
+    "child": VillagerChild,
+}
