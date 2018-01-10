@@ -18,6 +18,8 @@ from .classes.cave import Cave
 from .action import commands_player
 from .scene import Scene
 
+def single_element(container):
+    return len(container) == 1
 
 class Level: GLOBAL, WORLD, LOCAL = -1, 0, 1
 class Maps: CITY, CAVE, WILD, WORLD = range(4)
@@ -147,12 +149,16 @@ class Start(Scene):
         if log:
             self.gamelog.add(log)
 
-        term.clear_area(0, self.height - 2, self.width, 2)
+        term.clear_area(
+            0, 
+            self.height - self.log_height - 1, 
+            self.width, 
+            self.log_height)
+
         for index, message in enumerate(self.gamelog.write().messages):
             term.puts(
-                # x=14 if self.player.height == Level.GLOBAL else 1,
                 x=1,
-                y=self.height - 2 + index,
+                y=self.height + index - self.log_height - 1,
                 s=message[1]
             )
         
@@ -162,13 +168,31 @@ class Start(Scene):
     def draw_world(self):
         x, y = self.player.position if self.player.height >= 1 \
             else self.player.location
-        self.location.fov_calc([(x, y, self.player.sight * 2)])
+
+        g0 = isinstance(self.location, World)
+        if g0:
+            sight = round(self.player.sight / 1.5)
+        else:
+            sight = self.player.sight * (2 if isinstance(self.location, City)
+                                                                        else 1)
+        self.location.fov_calc([(x, y, sight)])
 
         for x, y, col, ch in self.location.output(x, y):
             term.puts(
                 x=x + self.display_offset_x,
                 y=y + self.display_offset_y,
                 s="[c={}]{}[/c]".format(col, ch))
+
+        # sets the location name at the bottom of the status bar
+        if g0 and self.player.location in self.world.enterable_legend.keys():
+            location = self.world.enterable_legend[self.player.location]
+            term.bkcolor('grey')
+            term.puts(14, 0, ' ' * (self.width - 14))
+            term.bkcolor('black')
+            term.puts(
+                x=14 + center(surround(location), self.width - 14), 
+                y=0, 
+                s=surround(location))
 
     def draw_player_status(self):
         col, row = self.player_status_col, self.player_status_row
@@ -200,17 +224,6 @@ class Start(Scene):
 
         # Turn status
         term.puts(1, self.height - 4, 'Turns: {:<4}'.format(self.turns))
-
-        # sets the location name at the bottom of the status bar
-        if self.player.location in self.world.enterable_legend.keys():
-            location = self.world.enterable_legend[self.player.location]
-            term.bkcolor('grey')
-            term.puts(14, 0, ' ' * (self.width - 14))
-            term.bkcolor('black')
-            term.puts(
-                x=14 + center(surround(location), self.width - 14), 
-                y=0, 
-                s=surround(location))
 
         # elif self.player.location in self.world.dungeon_legend.keys():
         #     location = self.world.dungeon_legend[self.player.location]
@@ -394,6 +407,14 @@ class Start(Scene):
             invalid_command = "'{}' is not a valid command".format(action)
             self.draw_log(invalid_command)
 
+    def process_move_unit_to_empty(self):
+        occupied_player = self.player.position == (tx, ty)
+        occupied_unit = self.location.occupied(tx, ty)
+        print(occupied_player, occupied_unit)
+        if not occupied_player and not occupied_unit:
+            self.unit.move(x, y)
+        return occupied_player, occupied_unit
+
     def process_movement_unit(self, x, y):
         print('unit processing')
         if (x, y) != (0, 0):
@@ -401,18 +422,17 @@ class Start(Scene):
             ty = self.unit.y + y
 
             if self.location.walkable(tx, ty):
-                occupied_unit = self.location.occupied(tx, ty)
-                occupied_player = self.player.position == (tx, ty)
-                print(occupied_player, occupied_unit)
-                if not occupied_unit and not occupied_player:
-                    # space is free -> move there
-                    self.unit.move(x, y)
+                unit_bools = self.process_move_unit_to_empty()
+                if not unit_values:
+                    return
                 else:
+                    occupied_player, occupied_unit = unit_bools
                     if occupied_unit:
-                        unit = self.location.unit_at_position(tx, ty)
+                        unit = self.location.unit_at(tx, ty)
                     else:
                         unit = self.player
                     player = isinstance(unit, Player)
+
                     if not player and unit.friendly:
                         unit.move(-x, -y)
                         self.unit.move(x, y)
@@ -498,7 +518,7 @@ class Start(Scene):
                             self.draw_log(self.pass_item_messages[item_message])
                         turn_inc = True
                     else:
-                        unit = self.location.unit_at_position(tx, ty)
+                        unit = self.location.unit_at(tx, ty)
                         if unit.friendly:
                             unit.move(-x, -y)
                             self.player.move(x, y)
@@ -623,14 +643,14 @@ class Start(Scene):
 
         return action
 
-    def single_element(self, container):
-        return len(container) == 1
-
-    def spaces(self, x, y):
-        squares = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+    def spaces(self, x, y, exclusive=True):
         space = namedtuple("Space", ("x","y"))
-        for i, j in squares:
-            yield space(x + i, y + j)
+        for dy in range(-1, 2):
+            for dx in range(-1, 2):
+                if (dx, dy) == (0, 0) and exclusive:
+                    continue
+                else:
+                    yield space(x + dx, y + dy)
 
     def action_save(self):
         self.draw_log("Save and exit game? (Y/N)")
@@ -797,28 +817,31 @@ class Start(Scene):
             self.location.reblock(i, j)
 
         doors = []
-        for i, j in self.spaces(*self.player.position):
-            if (i, j) != (self.player.position):
+        for x, y in self.spaces(*self.player.position):
+            if (x, y) != (self.player.position):
                 valid_space = False
                 try:
-                    if self.location.square(i, j).char == '/':
-                        doors.append((i, j))
+                    if self.location.square(x, y).char == '/':
+                        doors.append((x, y))
                 except IndexError:
                     self.draw_log('Out of bounds ({}, {})'.format(i, j))
 
         if not doors:
             self.draw_log('No open doors next to you')
-        elif self.single_element(doors):
-            i, j = doors.pop()
-            close_door(i, j)
+
+        elif single_element(doors):
+            x, y = doors.pop()
+            close_door(x, y)
+
         else:
             self.draw_log("There is more than one door near you. Which door?")
 
             code = term.read()
+            shifted = term.state(term.TK_SHIFT)
             try:
-                cx, cy, a, act = commands_player[(code, term.state(term.TK_SHIFT))]
-                if act == "move" and (x + cx, y + cy) in doors:
-                    close_door(x + cx, y + cy)
+                dx, dy, a, act = commands_player[(code, shifted)]
+                if act == "move" and (x + dx, y + dy) in doors:
+                    close_door(x + dx, y + dy)
                 else:
                     self.draw_log("Canceled closing door.")
 
@@ -835,7 +858,7 @@ class Start(Scene):
             term.refresh()
             self.location.open_door(i, j)
             self.location.unblock(i, j)
-        
+
         doors = []
         for i, j in self.spaces(*self.player.position):
             if (i, j) != (self.player.position):
@@ -849,22 +872,28 @@ class Start(Scene):
         
         if not doors:
             self.draw_log('No closed doors next to you.')
-        elif self.single_element(doors):
+
+        elif single_element(doors):
             i, j = doors.pop()
             open_door(i, j)
+
         else:
             log = "There is more than one closed door near you. Which door?"
             self.draw_log(log)
-
+            print(doors)
             code = term.read()
             try:
-                cx, cy, a, act = commands_player[(code, term.state(term.TK_SHIFT))]
-                if act == "move" and (x + cx, y + cy) in doors:
-                    open_door(x + cx, y + cy)
+                ci, cj, a, act = commands_player[(code, term.state(term.TK_SHIFT))]
+                print(i+ci, j + cj)
+                if act == "move" and (i + ci, j + cj) in doors:
+                    open_door(i + ci, j + cj)
+
                 else:
                     self.draw_log("Canceled opening door.")
                     
             except:
+                print('exception')
+                raise
                 self.draw_log("Canceled opening door.")
 
     def action_interact_unit_attack_melee(self):
@@ -892,8 +921,10 @@ class Start(Scene):
         items = self.location.square(x, y).items
         if not items:
             self.draw_log('No items on the ground where you stand')
-        elif self.single_element(items):
+
+        elif single_element(items):
             pickup_item(item)
+
         else:
             print('Multiple item pickup screen')
 

@@ -24,6 +24,7 @@ from bearlibterminal import terminal as term
 """
 keypress = namedtuple("Keypress", "x y char action")
 
+# handles processing input into keypress commands for player
 commands_player = {
     (term.TK_UP, 0): keypress(0, -1, None, "move"),
     (term.TK_DOWN, 0): keypress(0, 1, None, "move"),
@@ -57,6 +58,8 @@ commands_player = {
     (term.TK_COMMA, 1): keypress(None, None, "<", "exit"),
     (term.TK_PERIOD, 1): keypress(None, None, ">", "enter"),
 }
+
+# handles processing ai 'input' into keypress commands
 commands_ai = {
     'wait': keypress(0, 0, None, "move"),
     'move': {

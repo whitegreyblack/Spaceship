@@ -463,20 +463,17 @@ class Map:
     ###########################################################################
     @property
     def units(self):
-        '''Returns all units in the unit list'''
+        '''Yields all units in the unit list'''
         for unit in self.__units:
             yield unit
 
     @property
     def unit_positions(self):
-        '''Returns all unit positions for units in the unit list'''
+        '''Yields all unit positions for units in the unit list'''
         for unit in self.units:
             yield unit.position
     
-    # def unit_at(self, x, y):
-    #     return self.square(x, y).unit
-
-    def unit_at_position(self, x, y):
+    def unit_at(self, x, y):
         '''Returns a unit at the given position. If the unit exists then the
         unit is returned else an empty value is returned'''
         for u in self.__units:
@@ -484,23 +481,8 @@ class Map:
                 return u
 
     def units_add(self, units):
-        # if hasattr(self, 'units'):
-        #     self.__units += units
-        # else:
-        #     self.__units = units
+        '''Adds a list of units to the current unit list'''
         self.__units += units
-
-    
-    # def get_units(self):
-    #     '''Returns all units within the list'''
-    #     for unit in self.__units:
-    #         yield unit
-    #     return []
-
-    # def get_unit_positions(self):
-    #     if hasattr(self, 'units'):
-    #         return {u.position for u in self.__units}
-    #     return {}
 
     '''
     def remove(self, object):
@@ -655,35 +637,35 @@ class Map:
             self.height)
         ext_y = cam_y + self.map_display_height + (-6 if shorten_y else 0)
 
-        positions = {}
-        if hasattr(self, 'units') and self.__units:
-            for unit in self.__units:
-                positions[unit.position] = unit
+        # positions = {}
+        # if hasattr(self, 'units') and self.__units:
+        #     for unit in self.__units:
+        #         positions[unit.position] = unit
 
-        col = "#ffffff"
-        # width should total 80 units
-        for x in range(cam_x, ext_x):
-
-            # height should total 24/25 units
-            for y in range(cam_y, ext_y):
+        # height should total 24/25 units
+        for y in range(cam_y, ext_y):
+            # width should total 80 units
+            for x in range(cam_x, ext_x):
                 light_level = self.check_light_level(x, y)
                 if (x, y) == (player_x, player_y):
-                    char, color =  "@", "white"
-                    yield (x - cam_x, y - cam_y, color, char)
+                    yield (x - cam_x, y - cam_y, "white", "@")
 
                 elif light_level == 2:
                     # print(player_x, player_y)
                     # if (x, y) == (player_x, player_y):
                     #     char, color =  "@", "white"
-                    if (x, y) in positions.keys():
-                        unit = positions[(x, y)]
+                    if (x, y) in self.unit_positions:
+                        unit = self.unit_at(x, y)
                         char, color = unit.character, unit.foreground
+
                     elif self.square(x, y).items:
                         item = self.square(x, y).items[0]
                         char, color = item.char, item.color
+
                     else:
                         square = self.square(x, y)
                         char, color = square.char, square.color
+
                     yield (x - cam_x, y - cam_y, color, char)
 
                 elif light_level == 1:

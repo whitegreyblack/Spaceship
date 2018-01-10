@@ -290,32 +290,42 @@ class World(Map):
             self.height)
         ext_y = cam_y + self.map_display_height + (-6 if shorten_y else 0)
         
-        for x in range(cam_x, ext_x):
-            for y in range(cam_y, ext_y):
-
+        for y in range(cam_y, ext_y):
+            for x in range(cam_x, ext_x):
+                light_level = self.check_light_level(x, y)
                 if x == player_x and y == player_y:
-                    ch = "@"
-                    col = "white"
-                    
-                else:
-                    try:
-                        # char, color, _, terr, tcol, king, kcol, _ = self.data[j][i]
-                        tile = self.square(x, y)
-                    except IndexError:
-                        raise IndexError("{}, {}".format(x, y))
-                    
-                    ch = tile.char
-                    
-                    if len(ch) > 1:
-                        try:
-                            ch = toInt(ch)
-                        except ValueError:
-                            raise ValueError(ch)
+                    ch, col = "@", "white"
 
-                    col = tile.color
+                elif light_level == 2:
+                    square = self.square(x, y)
+                    ch, col = square.char, square.color
+
+                elif light_level == 1:
+                    square = self.square(x, y)
+                    ch, col = square.char, "darkest grey"
+
+                else:
+                    continue
+                # else:
+                #     try:
+                #         # char, color, _, terr, tcol, king, kcol, _ = self.data[j][i]
+                #         tile = self.square(x, y)
+                #     except IndexError:
+                #         raise IndexError("{}, {}".format(x, y))
+                    
+                #     ch = tile.char
+                    
+                #     if len(ch) > 1:
+                #         try:
+                #             ch = toInt(ch)
+                #         except ValueError:
+                #             raise ValueError(ch)
+
+                #     col = tile.color
 
                 # print(ch, col)
                 yield (x - cam_x, y - cam_y, col, ch)
+        self.lit_reset()
 
 if __name__ == "__main__":
     w = World(
