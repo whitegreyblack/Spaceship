@@ -5,7 +5,7 @@ from .color import Color
 from .unit import Unit
 from .world import World
 from .item import Armor, Weapon, Item, items
-
+from ..cc_strings import profile
 # class RelationTable:
 #     def __init__(self, unit):
 #         pass
@@ -110,32 +110,13 @@ class Player(Unit):
         self.desc = name + "(" + str(abs(hash(desc))) + ")"
 
     def profile(self):
-        string_1='''
-Name     : {name:>6}
-Gender   : {sex:>6}
-Race     : {race:>6} 
-Class    : {job:>6}
-
-STR      : {:>6}
-CON      : {:>6}
-DEX      : {:>6}
-WIS      : {:>6}
-INT      : {:>6}
-CHA      : {:>6}
-        '''[1:]
-
-        string_2='''
-Damage   : {dmg:>6}
-Accuracy : {acc:>5}
-        '''[1:]
-
-        return (string_1.format(
+        return (profile[0].format(
             *self.get_attribute_stats(),
             name=self.name,
             sex=self.gender,
             race=self.race,
             job=self.job), 
-            string_2.format(
+            profile[1].format(
                 dmg="(" + str(self.damage_lower) + ", " + str(self.damage_higher) + ")",
                 acc=self.damage_accuracy))
 

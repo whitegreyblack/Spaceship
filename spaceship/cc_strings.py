@@ -40,6 +40,25 @@ Rhand : {:<5}{delim}\nRing1 : {:<5}\nRing2 : {:<5}{delim}
 Waist : {:<5}{delim}\nLegs  : {:<5}{delim}\nFeet  : {:<5}\n
 """[1:]
 
+profile = ['''
+    Name     : {name:>6}
+    Gender   : {sex:>6}
+    Race     : {race:>6} 
+    Class    : {job:>6}
+
+    STR      : {:>6}
+    CON      : {:>6}
+    DEX      : {:>6}
+    WIS      : {:>6}
+    INT      : {:>6}
+    CHA      : {:>6}
+    '''[1:],
+    '''
+    Damage   : {dmg:>6}
+    Accuracy : {acc:>5}
+    '''[1:],
+]
+
 # Some formulas to use when developing a character
 STATS = namedtuple("STATS", "str con dex int wis cha")
 

@@ -235,11 +235,11 @@ class Map:
         '''Only acts on objects within the bounds of the map'''
         return self.out_of_bounds(x, y) or self.square(x, y).block_mov
 
-    def is_opened_door(x, y) -> bool:
+    def is_opened_door(self, x, y) -> bool:
         '''Checks if square character is an open door'''
         return self.square(x, y).char == "/"
 
-    def is_closed_door(x, y) -> bool:
+    def is_closed_door(self, x, y) -> bool:
         '''Checks if square character is a closed door'''
         return self.square(x,y).char == "+"
 
@@ -253,13 +253,13 @@ class Map:
 
     def open_door(self, x, y) -> None:
         '''Checks if door is closed and opens it if true'''
-        if is_closed_door(x, y):
+        if self.is_closed_door(x, y):
             self.square(x, y).char = "/"
-            self.unlock(x, y)
+            self.unblock(x, y)
 
     def close_door(self, x, y) -> None:
         '''Checks if door is open and closes it if true'''
-        if is_opened_door(x, y):
+        if self.is_opened_door(x, y):
             self.square(x, y).char = "+"
             self.reblock(x, y)
 

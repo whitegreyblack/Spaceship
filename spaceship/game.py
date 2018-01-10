@@ -185,21 +185,27 @@ class Start(Scene):
                 s="[c={}]{}[/c]".format(col, ch))
 
         # sets the location name at the bottom of the status bar
-        if g0 and self.player.location in self.world.enterable_legend.keys():
-            location = self.world.enterable_legend[self.player.location]
-            term.bkcolor('grey')
-            term.puts(
-                x=self.display_offset_x, 
-                y=0, 
-                s=' ' * (self.width - self.display_offset_x))
-                
-            term.bkcolor('black')
-            location_offset = center(text=surround(location), 
-                                     width=self.width - self.display_offset_x)
-            term.puts(
-                x=self.display_offset_x + location_offset,
-                y=0, 
-                s=surround(location))
+        if g0:
+            location = None
+            if self.player.location in self.world.enterable_legend.keys():
+                location = self.world.enterable_legend[self.player.location]
+            elif self.player.location in self.world.dungeon_legend.keys():
+                location = self.world.dungeon_legend[self.player.location]
+
+            if location:
+                term.bkcolor('grey')
+                term.puts(
+                    x=self.display_offset_x, 
+                    y=0, 
+                    s=' ' * (self.width - self.display_offset_x))
+                    
+                term.bkcolor('black')
+                location_offset = center(text=surround(location), 
+                                        width=self.width - self.display_offset_x)
+                term.puts(
+                    x=self.display_offset_x + location_offset,
+                    y=0, 
+                    s=surround(location))
 
     def draw_player_status(self):
         col, row = self.player_status_col, self.player_status_row
@@ -827,93 +833,97 @@ class Start(Scene):
             self.player.position = (0, 0)
 
     def action_interact_door_close(self):
-        def close_door(i, j):
+        def close_door(x, y):
             self.draw_log('Closing door.', refresh=False)
             term.puts(
-                x=i + self.display_offset_x, 
-                y=j + self.display_offset_y, 
-                s="[c=red]/[/c]")
+                x=x + self.display_offset_x, 
+                y=y + self.display_offset_y, 
+                s="[c=red]+[/c]")
             term.refresh()
-            self.location.close_door(i, j)
+            self.location.close_door(x, y)
 
         doors = []
+        px, py = self.player.position
         for x, y in self.spaces(*self.player.position):
-            if (x, y) != (self.player.position):
-                valid_space = False
+            if (x, y) != (px, py):
                 try:
                     if self.location.square(x, y).char == '/':
                         doors.append((x, y))
+
                 except IndexError:
-                    self.draw_log('Out of bounds ({}, {})'.format(i, j))
+                    self.draw_log('Out of bounds ({}, {})'.format(x, y))
 
         if not doors:
             self.draw_log('No open doors next to you')
 
         elif single_element(doors):
-            x, y = doors.pop()
-            close_door(x, y)
+            close_door(*doors.pop())
 
         else:
             self.draw_log("There is more than one door near you. Which door?")
 
             code = term.read()
             shifted = term.state(term.TK_SHIFT)
+
             try:
-                dx, dy, a, act = commands_player[(code, shifted)]
-                if act == "move" and (x + dx, y + dy) in doors:
-                    close_door(x + dx, y + dy)
-                else:
-                    self.draw_log("Canceled closing door.")
+                dx, dy, _, act = commands_player[(code, shifted)]
 
             except:
-                self.draw_log("Canceled closing door.")
+                raise
+                self.draw_log("Invalid direction. Canceled closing door.")
 
+            else:
+                if act == "move" and (px + dx, py + dy) in doors:
+                    close_door(px + dx, py + dy)
+
+                else:
+                    self.draw_log("Direction has no door. Canceled closing door.")
     def action_interact_door_open(self):
-        def open_door(i, j):
+        def open_door(x, y):
             self.draw_log('Opening door.')
             term.puts(
-                x=i + self.display_offset_x, 
-                y=j + self.display_offset_y, 
+                x=x + self.display_offset_x, 
+                y=y + self.display_offset_y, 
                 s="[c=red]+[/c]")
             term.refresh()
-            self.location.open_door(i, j)
+            self.location.open_door(x, y)
 
         doors = []
-        for i, j in self.spaces(*self.player.position):
-            if (i, j) != (self.player.position):
-                valid_space = False
+        px, py = self.player.position
+        for x, y in self.spaces(*self.player.position):
+            if (x, y) != (px, py):
                 try:
-                    if self.location.square(i, j).char == "+":
-                        doors.append((i, j))
+                    if self.location.square(x, y).char == "+":
+                        doors.append((x, y))
                         
                 except IndexError:
-                    self.draw_log('Out of bounds ({}, {})'.format(i, j))
+                    self.draw_log('Out of bounds ({}, {})'.format(x, y))
         
         if not doors:
             self.draw_log('No closed doors next to you.')
 
         elif single_element(doors):
-            i, j = doors.pop()
-            open_door(i, j)
+            open_door(*doors.pop())
 
         else:
             log = "There is more than one closed door near you. Which door?"
             self.draw_log(log)
-            print(doors)
-            code = term.read()
-            try:
-                ci, cj, a, act = commands_player[(code, term.state(term.TK_SHIFT))]
-                print(i+ci, j + cj)
-                if act == "move" and (i + ci, j + cj) in doors:
-                    open_door(i + ci, j + cj)
 
-                else:
-                    self.draw_log("Canceled opening door.")
+            code = term.read()
+            shifted = term.state(term.TK_SHIFT)
+
+            try:
+                dx, dy, _, act = commands_player[(code, shifted)]
                     
             except:
-                print('exception')
-                raise
-                self.draw_log("Canceled opening door.")
+                self.draw_log("Invalid direction. Canceled opening door.")
+
+            else:
+                if act == "move" and (px + dx, py + dy) in doors:
+                    open_door(px + dx, py + dy)
+
+                else:
+                    self.draw_log("Direction has no door. Canceled opening door.")
 
     def action_interact_unit_attack_melee(self):
         pass
