@@ -103,6 +103,7 @@ class Start(Scene):
             self.world.units_add([self.player])
 
         self.gamelog = GameLogger(
+            width=self.width,
             screenlinelimit=3 if self.height <= 25 else 4,
             footer="_" + self.player.name + "_" + self.player.job)
 
@@ -172,6 +173,17 @@ class Start(Scene):
                 x=1,
                 y=self.height + index - self.log_height - 1,
                 s=message[1])
+        
+        if refresh:
+            term.refresh()
+
+    def draw_drop_log(self, log, refresh=True):
+        term.clear_area(0, self.height - 3, self.width, 1)
+        
+        term.puts(
+            x=center(log, self.width),
+            y=self.height - 3,
+            s=log)
         
         if refresh:
             term.refresh()
@@ -1002,10 +1014,10 @@ class Start(Scene):
             else:
                 self.location.item_remove(*self.player.position, item)
                 self.player.inventory_item_add(item)
-                log = "You pick up {} and place it in your backpack".format(
+                log = "You pick up {} and place it in your backpack.".format(
                                                                     item.name)
+                log += "Your backpack feels heavier"                                            
                 self.draw_log(log)
-                self.draw_log("Your backpack feels heavier")
                 self.turn_inc = True
         
         items = [item for item in self.location.items_at(*self.player.position)]
@@ -1019,15 +1031,29 @@ class Start(Scene):
         else:
             # print('Multiple item pickup screen')
             pass
-
+    '''
+    Notes :- Dropping Items:
+        Dropping items will always be dropped from inventory
+        If an item is equipped it CANNOT be dropped unless it is unequiped.
+        When an item is unequipped the item will be added back to the inventory list
+        Then the player may drop the item from there
+    '''
     def action_interact_item_drop(self):
         def drop_item(item):
-            pass
+            nonlocal log
+            self.player.inventory_item_remove(item)
+            self.location.item_add(*self.player.position, item)
+            log = "You drop the {} onto the ground.".format(item.name)
+            log += " Your backpack feels lighter."
+        
+        log = ""
         # open up inventory
         while True:
             term.clear()
             self.draw_player_inventory()
             self.draw_player_eq_drop()
+            if log:
+                self.draw_drop_log(log)
             term.refresh()
 
             items = list(self.player.inventory)
@@ -1035,8 +1061,13 @@ class Start(Scene):
             code = term.read()
             if code in (term.TK_ESCAPE, term.TK_Q):
                 break
+            elif term.TK_A <= code <= term.TK_A + len(items) - 1:
+                drop_item(items[code - 4])
+            else:
+                log = ""
 
     def action_interact_item_use(self):
+        log = ""
         while True:
             term.clear()
             self.draw_player_inventory()

@@ -37,7 +37,7 @@ class GameLogger:
         Methods: {add, update, write, dump, dumps}
     """
 
-    def __init__(self, screenlinelimit, footer, ptt=False):
+    def __init__(self, width, screenlinelimit, footer, ptt=False):
         """
         @args: 
             screenlinelimit(required) -- specify number of lines to be shown on screen
@@ -47,6 +47,7 @@ class GameLogger:
         self.index = 0
         self.counter = 0
         self.messages = []
+        self.width = width
         self.print_to_term = ptt
         self.maxlines = screenlinelimit
         self.setupFileWriting(footer)
@@ -130,7 +131,7 @@ class GameLogger:
             self.messages.append([self.getHeader(), message])
             self.update()
 
-        messages = textwrap.wrap(message)
+        messages = textwrap.wrap(message, width=self.width)
         for msg in messages:
             add_message(msg)
 

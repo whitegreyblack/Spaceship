@@ -457,7 +457,7 @@ class Name(Scene):
         
         if self.invalid:
             term.puts(
-                self.xhalf - self.fifth - 5, 
+                self.xhalf - self.fifth + 1, 
                 self.yhalf + 1, 
                 '[c=red]{} is not a valid character[/c]'.format(
                     chr(term.state(term.TK_WCHAR))))
@@ -499,7 +499,7 @@ class Name(Scene):
                 '1234567890!@#$%^&&*()-=_+,./<>?";[]{}\|~`'):
                 self.final_name += chr(term.state(term.TK_WCHAR))
             else:
-                self.final_name = True
+                self.invalid = True
 
 class Create(Scene):
     def __init__(self, sid='create_menu'):
