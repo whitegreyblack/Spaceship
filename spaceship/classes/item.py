@@ -59,14 +59,22 @@ class Item:
     def __str__(self):
         return self.name
 
-    def eat(self):
-        ...
-    def throw(self):
-        ...
-    def kick(self):
-        ...
-    def light(self):
-        ...
+class Potion(Item):
+    def __init__(self, name, char, color, heal=10):
+        super().__init__(name, char, color)
+        self.heal = heal
+
+    def __repr__(self):
+        return "[Potion] {:<15}: HEAL={}:".format(self.name, self.heal)
+
+    def use(self, unit):
+        if unit.cur_health == unit.max_health:
+            print("The potion does nothing")
+        else:
+            print("Restoring lost health")
+            print(unit.cur_health)
+            unit.cur_health = min(unit.cur_health + self.heal, unit.max_health)
+            print(unit.max_health)
 
 class Armor(Item):
     def __init__(self, name, char, color, placement, me_h, mi_h, dv, pv):
@@ -146,14 +154,17 @@ items = {
     "medium shield": Weapon("medium shield", "[", "grey", 1, -3, (1, 3)),
     "mace": Weapon("mace", "(", "grey", 1, -1, (3, 9)),
     "warhammer": Weapon("warhammer", "(", "grey", 2, -3, (8, 15)),
-    # wooden staff, small shield, short bow, quarterstaff, long sword
+    'wooden staff': Weapon("wooden staff", "(", "grey", 2, -1, (4, 9)),
+    #  small shield, short bow, quarterstaff, long sword
     # ring of earth, ring of nature, ring of power, ring of regen, ring of protection
     # ring of light, ring of ice, ring of resistance, ring of fire, ring of water
     # leather belt, rope belt
     # common pants
     # leather boots, metal boots, sandals
     # tome, spellbook, scrolls
+    "health potion": Potion("health potion", "!", "red", 30),
 }
+
 def get_all_items():
     for key in items.keys():
         print(items[key].__repr__())

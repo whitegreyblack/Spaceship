@@ -296,14 +296,20 @@ class Start(Scene):
             term.puts(i, 1, '#')
         term.puts(center('backpack  ', self.width), 1, ' Backpack ')
 
-        for index, item in enumerate(self.player.inventory):
-            letter = chr(ord('a') + index) + ". "
-            item_desc = item.__str__() if item else ""
-
+        if not list(self.player.inventory):
             term.puts(
-                x=self.player_screen_col,
-                y=self.player_screen_row + index * (2 if self.height > 25 else 1),
-                s=letter + item_desc)
+                x=center('Nothing in inventory', self.width),
+                y=3,
+                s='Nothing in inventory')
+        else:
+            for index, item in enumerate(self.player.inventory):
+                letter = chr(ord('a') + index) + ". "
+                item_desc = item.__str__() if item else ""
+
+                term.puts(
+                    x=self.player_screen_col,
+                    y=self.player_screen_row + index * (2 if self.height > 25 else 1),
+                    s=letter + item_desc)
     
     def draw_player_eq_inv_switch(self):
         term.puts(
@@ -1013,7 +1019,7 @@ class Start(Scene):
 
             else:
                 self.location.item_remove(*self.player.position, item)
-                self.player.inventory_item_add(item)
+                self.player.inventory_add(item)
                 log = "You pick up {} and place it in your backpack.".format(
                                                                     item.name)
                 log += "Your backpack feels heavier"                                            
@@ -1041,7 +1047,7 @@ class Start(Scene):
     def action_interact_item_drop(self):
         def drop_item(item):
             nonlocal log
-            self.player.inventory_item_remove(item)
+            self.player.inventory_remove(item)
             self.location.item_add(*self.player.position, item)
             log = "You drop the {} onto the ground.".format(item.name)
             log += " Your backpack feels lighter."
@@ -1054,9 +1060,10 @@ class Start(Scene):
             self.draw_player_eq_drop()
             if log:
                 self.draw_drop_log(log)
-            term.refresh()
+            term.refresh()            
 
             items = list(self.player.inventory)
+
 
             code = term.read()
             if code in (term.TK_ESCAPE, term.TK_Q):
@@ -1067,11 +1074,22 @@ class Start(Scene):
                 log = ""
 
     def action_interact_item_use(self):
+        def use_item(item):
+            nonlocal log
+            item = self.player.inventory.use(item)
+            item.use(self.player)
+            log = "You use the {}".format(item.name)
+            log += " Your backpack feels lighter."
+
         log = ""
         while True:
             term.clear()
             self.draw_player_inventory()
             self.draw_player_eq_use()
+            if log:
+                # self.draw_use_log(log)? or self.draw_log(log)?
+                ...
+
             term.refresh()
             
             items = list(self.player.inventory)
@@ -1079,6 +1097,10 @@ class Start(Scene):
             code = term.read()
             if code in (term.TK_ESCAPE, term.TK_Q):
                 break
+            elif term.TK_A <= code <= term.TK_A + len(items) - 1:
+                use_item(items[code - 4])
+            else:
+                log = ""
 
 if __name__ == "__main__":
     s = Start()

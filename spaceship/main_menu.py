@@ -530,6 +530,7 @@ class Create(Scene):
         # some helper objects used in character creation
         self.character = namedtuple("Character", "name gender_opt race_opt class_opt")
         equipment = namedtuple("Equipment", "hd nk bd ar hn lh rh lr rr wa lg ft")
+        inventory = namedtuple("Inventory", "inventory")
 
         # return type
         self.player=namedtuple("Player",
@@ -965,31 +966,34 @@ class Create(Scene):
                 else v 
                 for v in values)
 
-    def form_equipment(self, req, ceq):
+    def form_equipment(self, race_eq, class_eq):
         def get_eq(x):
             eq = []
             if x != "":
                 if isinstance(x, tuple):
                     for xx in x:
                         eq.append(xx)
+
                 else:
                     eq.append(x)
+
             return eq
 
-        def flatten(l):
+        def flatten(container):
+            # return [ item for items in container for item in items ]
             # return list(element
             #           for iteratable in container
             #           for element in iteratable)
             items = []
-            for i in l:
-                for ii in i:
-                    items.append(ii)
+            for inner in container:
+                for item in inner:
+                    items.append(item)
             return items
 
         inv = []
         
-        for r, c in zip(req, ceq):
-            inv.append(get_eq(r)+get_eq(c))
+        for r, c in zip(race_eq, race_eq):
+            inv.append(get_eq(r) + get_eq(c))
         
         eqp = [i.pop(0) if len(i) > 0 else [] for i in inv]
 

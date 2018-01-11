@@ -96,12 +96,19 @@ class Player(Unit):
         for item in self.__inventory:
             yield item
 
-    def inventory_item_add(self, item):
+    def inventory_add(self, item):
         self.__inventory.append(item)
 
-    def inventory_item_remove(self, item):
+    def inventory_remove(self, item):
         try:
             self.__inventory.remove(item)
+        except ValueError:
+            print('No item in inventory with that value')
+
+    def inventory_use(self, item):
+        try:
+            index = self.__inventory.index(item)
+            return self.__inventory.pop(index)
         except ValueError:
             print('No item in inventory with that value')
 
