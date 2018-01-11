@@ -11,7 +11,7 @@ from .unit import Unit
 
 class Rat(Unit):
     def __init__(self, x, y, ch="r", fg=Color.orange_darker, bg=Color.black,
-                 race="rat", job="monster", rs=-100, speed="NORMAL"):
+                 race="rat", job="monster", rs=-100, speed=15):
         super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=-100, speed=speed)
         self.xp = 25
         self.job = "monster"
@@ -33,7 +33,6 @@ class Rat(Unit):
         The main purpose of the rat will be to wander and attack the player
         Only when the rat wanders into another creature or spots the player
         will it become hostile and start its attack phase
-
     '''
     def path(self, p1, p2, tiles):
         '''A star implementation'''

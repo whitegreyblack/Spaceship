@@ -17,10 +17,10 @@ self.defense_magical
 
 '''
 class Energy:
+    max_energy = 30
     def __init__(self, speed=10):
         self.speed = speed
         self.cur_energy = 0
-        self.max_energy = 30
     
     def gain(self):
         self.cur_energy += self.speed
@@ -29,7 +29,7 @@ class Energy:
         return self.cur_energy >= self.max_energy
 
     def reset(self):
-        self.cur_energy %= self.max_energy
+        self.cur_energy -= self.max_energy
 
 class Unit(Object):
     '''Object subclass used in the following subclasses:

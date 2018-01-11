@@ -128,20 +128,16 @@ class Start(Scene):
             for unit in self.location.units:
                 self.unit = unit
                 self.process_turn()
+        elif len(list(self.location.units)) == 1:
+                self.unit = self.player
+                self.process_turn()
         else:
-            # for unit in self.location.units:
-            #     if unit.energy.ready():
-            #         unit.energy.reset()
-            #         self.unit = unit
-            #         self.process_turn()      
-            #     else:
-            #         unit.energy.gain()
             for unit in self.location.units:
                 unit.energy.gain()
-                if unit.energy.ready():
-                    unit.energy.reset()
-                    self.unit = unit
-                    self.process_turn()
+                self.unit = unit
+                while unit.energy.ready():
+                    self.unit.energy.reset()
+                    self.process_turn()      
 
         # if isinstance(self.location, World):
         #     self.process_turn_player()
@@ -184,7 +180,7 @@ class Start(Scene):
 
         g0 = isinstance(self.location, World)
         if g0:
-            sight = round(self.player.sight * .75)
+            sight = round(self.player.sight / 1.5)
         else:
             sight = self.player.sight * (2 if isinstance(self.location, City)
                                                                         else 1)
@@ -376,7 +372,6 @@ class Start(Scene):
 
     def process_turn(self):
         if isinstance(self.unit, Player):
-            # print('process player')
             self.process_turn_player()
         else:
             self.process_turn_unit()
@@ -520,7 +515,7 @@ class Start(Scene):
                                     exit('DEAD')
                                 item = unit.drops()
                                 if item:
-                                    self.location.item_add(*unit.position, item)
+                                    self.location.item_add(item)
                                     self.draw_log("The {} has dropped {}".format(
                                         unit.race, item.name))
                                 self.location.unit_remove(unit)
@@ -614,7 +609,7 @@ class Start(Scene):
                                     item = unit.drops()
 
                                     if item:
-                                        self.location.item_add(*unit.position, item)
+                                        self.location.square(*unit.position).items.append(item)
                                         self.draw_log("The {} has dropped {}".format(
                                             unit.race, 
                                             item.name))
@@ -662,10 +657,7 @@ class Start(Scene):
                             #     y=ty + self.display_offset_y, 
                             #     s='[c=red]X[/c]')
                             # term.refresh()
-    def get_input(self):   
-        # while term.has_input():
-        #     print('del')
-        #     term.read()
+    def get_input(self):     
         key = term.read()
         if key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
             # skip any non-action keys
@@ -788,11 +780,9 @@ class Start(Scene):
                 location = Cave(
                     width=self.width,
                     height=self.height,
-                    generate=True,
                     max_rooms=random.randint(15, 20))
 
                 self.player.position = location.stairs_up
-                print('Loc', list(self.location.units))
 
             else:
                 # map type should be in the wilderness
@@ -800,8 +790,7 @@ class Start(Scene):
                 # neighbors = world.access_neighbors(*player.location)
                 location = self.determine_map_on_enter(tile.tile_type)(
                     width=self.width,
-                    height=self.height,
-                    generate=False)
+                    height=self.height)
 
                 x, y = self.player.get_position_on_enter()
                 self.player.position = self.determine_map_enterance(x, y, location)
@@ -835,7 +824,6 @@ class Start(Scene):
                 location = Cave(
                     width=self.width,
                     height=self.height,
-                    generate=False,
                     max_rooms=random.randint(15, 20))
                 
                 self.location.sublevel = location
