@@ -124,14 +124,15 @@ class Start(Scene):
         term.refresh()
 
     def process_units(self):
-        # print(list(self.location.units))
         if isinstance(self.location, World) or isinstance(self.location, City):
             for unit in self.location.units:
                 self.unit = unit
                 self.process_turn()
+
         elif len(list(self.location.units)) == 1:
                 self.unit = self.player
                 self.process_turn()
+
         else:
             for unit in self.location.units:
                 unit.energy.gain()
@@ -443,9 +444,6 @@ class Start(Scene):
             except KeyError:
                 invalid_command = "'{}' is not a valid command".format(action)
                 self.draw_log(invalid_command)        
-        # except TypeError:
-        #     print('te')
-        #     self.actions[max(0, min(self.player.height, 1))][action](action)
 
         except KeyError:
             invalid_command = "'{}' is not a valid command".format(action)
@@ -454,46 +452,57 @@ class Start(Scene):
     def process_move_unit_to_empty(self, tx, ty):
         occupied_player = self.player.position == (tx, ty)
         occupied_unit = self.location.occupied(tx, ty)
-        # print(occupied_player, occupied_unit)
+
         if not occupied_player and not occupied_unit:
             self.unit.move(x, y)
+
         return occupied_player, occupied_unit
 
     def process_movement_unit(self, x, y):
-        # print('unit processing')
         if (x, y) != (0, 0):
             tx = self.unit.x + x
             ty = self.unit.y + y
 
             if self.location.walkable(tx, ty):
                 unit_bools = self.process_move_unit_to_empty(tx, ty)
+
                 if not unit_bools:
                     return
+
                 else:
                     occupied_player, occupied_unit = unit_bools
+
                     if occupied_unit:
                         unit = self.location.unit_at(tx, ty)
+
                     else:
                         unit = self.player
+
                     player = isinstance(unit, Player)
 
                     if not player and unit.friendly:
                         unit.move(-x, -y)
                         self.unit.move(x, y)
+
                         log = "The {} switches places with the {}".format(
                             self.unit.__class__.__name__, unit.race)
                         self.draw_log(log) 
+
                     else:
                         chance = self.unit.calculate_attack_chance()
+
                         if chance == 0:
                             log = "The {} tries attacking {} but misses".format(
                                 self.unit.race, 
                                 "you" if player else "the " + unit.race)
                             self.draw_log(log)
+
                         else:
                             damage = self.unit.calculate_attack_damage()
+
                             if chance == 2:
                                 damage *= 2
+
                             unit.cur_health -= damage
 
                             term.puts(
@@ -508,15 +517,18 @@ class Start(Scene):
                                 damage)
 
                             self.draw_log(log)
+
                             if not unit.is_alive:
                                 log = "The {} has killed {}!".format(
                                     self.unit.race,
                                     "you" if player else "the " + unit.race)
                                 self.draw_log(log)
+
                                 if player:
-                                    print('YOU DIED -> GOTO EXIT')
                                     exit('DEAD')
+
                                 item = unit.drops()
+                                
                                 if item:
                                     self.location.item_add(*unit.position, item)
                                     self.draw_log("The {} has dropped {}".format(
@@ -563,32 +575,40 @@ class Start(Scene):
                     if not self.location.occupied(tx, ty):
                         self.player.move(x, y)
                         msg_chance = random.randint(0, 5)
-                        if self.location.items_at(x, y) and msg_chance:
+
+                        if self.location.items_at(tx, ty) and msg_chance:
                             item_message = random.randint(
                                 a=0, 
                                 b=len(self.pass_item_messages) - 1)
                             self.draw_log(self.pass_item_messages[item_message])
+                            
                         turn_inc = True
+
                     else:
                         unit = self.location.unit_at(tx, ty)
+
                         if unit.friendly:
                             unit.move(-x, -y)
                             self.player.move(x, y)
                             log = "You switch places with the {}".format(
                                                                     unit.race)
                             self.draw_log(log)
+
                         else:
                             chance = self.player.calculate_attack_chance()
+
                             if chance == 0:
                                 log = "You try attacking the {} but miss".format(
                                     unit.race)
                                 self.draw_log(log)
+
                             else:
                                 damage = self.player.calculate_attack_damage()
                                 # if chance returns crit ie. a value of 2 
                                 # then multiply damage by 2
                                 if chance == 2:
                                     damage *= 2
+
                                 unit.cur_health -= damage
                                 
                                 term.puts(
@@ -618,7 +638,7 @@ class Start(Scene):
                                     item = unit.drops()
 
                                     if item:
-                                        self.location.square(*unit.position).items.append(item)
+                                        self.location.item_add(*unit.position, item)
                                         self.draw_log("The {} has dropped {}".format(
                                             unit.race, 
                                             item.name))
@@ -799,7 +819,8 @@ class Start(Scene):
                 # neighbors = world.access_neighbors(*player.location)
                 location = self.determine_map_on_enter(tile.tile_type)(
                     width=self.width,
-                    height=self.height)
+                    height=self.height,
+                    generate=True)
 
                 x, y = self.player.get_position_on_enter()
                 self.player.position = self.determine_map_enterance(x, y, location)
@@ -974,7 +995,6 @@ class Start(Scene):
         pass
 
     def action_interact_item_pickup(self):
-        print('pickup')
         def pickup_item(item):
             if len(list(self.player.inventory)) >= 25:
                 gamelog.add("Backpack is full. Cannot pick up {}".format(item))
@@ -988,7 +1008,7 @@ class Start(Scene):
                 self.draw_log("Your backpack feels heavier")
                 self.turn_inc = True
         
-        items = self.location.square(*self.player.position).items
+        items = [item for item in self.location.items_at(*self.player.position)]
 
         if not items:
             self.draw_log('No items on the ground where you stand')
@@ -997,7 +1017,8 @@ class Start(Scene):
             pickup_item(items.pop())
 
         else:
-            print('Multiple item pickup screen')
+            # print('Multiple item pickup screen')
+            pass
 
     def action_interact_item_drop(self):
         def drop_item(item):
@@ -1010,7 +1031,6 @@ class Start(Scene):
             term.refresh()
 
             items = list(self.player.inventory)
-            print(items)
 
             code = term.read()
             if code in (term.TK_ESCAPE, term.TK_Q):
@@ -1024,7 +1044,6 @@ class Start(Scene):
             term.refresh()
             
             items = list(self.player.inventory)
-            print(items)
 
             code = term.read()
             if code in (term.TK_ESCAPE, term.TK_Q):

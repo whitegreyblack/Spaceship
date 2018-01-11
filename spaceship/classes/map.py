@@ -465,19 +465,21 @@ class Map:
         '''Adds an item object to the list of items at position (x, y)
         on the map
         '''
-        print('add item', x, y, i)
+        print('add item', x, y, i, self.square(x, y).items)
         self.square(x, y).items.append(i)
+        print('add item', x, y, i, self.square(x, y).items)
 
     def item_remove(self, x, y, i) -> None:
         '''Removes the item object from the list of items at position (x, y)
         on the map
         '''
-        print(x, y, i)
-        print(self.square(x, y).items)
+        print('remv item', x, y, i, self.square(x, y).items)
         try:
-            self.square(x ,y).items.remove(i)
+            self.square(x, y).items.remove(i)
         except ValueError:
+            raise
             print('no item with that value')
+        print('remv item', x, y, i, self.square(x, y).items)
 
     def items_at(self, x, y) -> object:
         '''Returns a list of item objects at position (x, y) on the map.
