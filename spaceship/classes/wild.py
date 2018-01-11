@@ -13,16 +13,17 @@ class Desert(Map):
     # Hills has a modified block_move char set due to hills having the same char as water
     #   The modified set has removed the hill char while other maps include it
     chars_block_move =  {"#", "+", "o", "x", "%", "Y", "T"}
-    def __init__(self, width, height):
+    def __init__(self, width, height, generate=False):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
-        self.generate_units()
+        if generate:
+            self.generate_units()
 
     def build(self):
         self.spaces = []
         self.data = []
-        for y in range(self.height):
+        for y in range(self.height, generate=False):
             col = []
             for x in range(self.width):
                 col.append("~")
@@ -55,17 +56,18 @@ class Forest(Map):
         "T": (wcm.TREES.chars, blender(wcm.GRASS.hexcode)),
     }
     chars_block_move =  {"#", "+", "o", "x", "%"}
-    def __init__(self, width, height):
+    def __init__(self, width, height, generate=False):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
-        self.generate_units()
+        if generate:
+            self.generate_units()
 
     def build(self):
         num_trees = 200
         self.spaces = []
         self.data = []
-        for y in range(self.height):
+        for y in range(self.height, generate=False):
             col = []
             for x in range(self.width):
                 if num_trees:
@@ -94,11 +96,12 @@ class Grassland(Map):
         "T": (wcm.TREES.chars, blender(wcm.GRASS.hexcode)),
     }
     chars_block_move = {"#", "+", "o", "x", "~", "%"}
-    def __init__(self, width, height):
+    def __init__(self, width, height, generate=False):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
-        self.generate_units()
+        if generate:
+            self.generate_units()
 
     def build(self):
         num_trees = 10
@@ -122,18 +125,19 @@ class Hills(Map):
     # Hills has a modified block_move char set due to hills having the same char as water
     #   The modified set has removed the hill char while other maps include it
     chars_block_move =  {"#", "+", "o", "x", "%", "Y", "T"}
-    def __init__(self, width, height):
+    def __init__(self, width, height, generate=False):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
-        self.generate_units()
+        if generate:
+            self.generate_units()
 
     def build(self):
         num_trees = 10
         vege_chars = (".", "~")
         self.spaces = []
         self.data = []
-        for y in range(self.height):
+        for y in range(self.height, generate=False):
             col = []
             for x in range(self.width):
                 col.append(choice(vege_chars))
@@ -148,11 +152,12 @@ class Plains(Map):
             ".": (".", blender(wcm.PLAIN.hexcode)),
             "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
     }
-    def __init__(self, width, height):
+    def __init__(self, width, height, generate=False):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
-        self.generate_units()
+        if generate:
+            self.generate_units()
 
     def build(self):
         num_trees = 10
@@ -175,11 +180,12 @@ class Woods(Map):
             ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
             "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),            
     }
-    def __init__(self, width, height):
+    def __init__(self, width, height, generate=False):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
-        self.generate_units()
+        if generate:
+            self.generate_units()
 
     def build(self):
         num_trees = 200

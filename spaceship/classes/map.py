@@ -47,15 +47,15 @@ MapType = {T: V for V, T in enumerate(('City', 'Cave', 'Wild', 'World'))}
 
 class Map:
     '''The "ABSTRACT CLASS" that should hold the functions shared across all map class types'''
-    class Tile:
-        def __init__(self, char, color, block_mov, block_lit):
-            self.char = char
-            self.color = color
-            self.block_mov = block_mov
-            self.block_lit = block_lit
-            self.items = []
-            self.light = 0
-
+    # class Tile:
+    #     def __init__(self, char, color, block_mov, block_lit):
+    #         self.char = char
+    #         self.color = color
+    #         self.block_mov = block_mov
+    #         self.block_lit = block_lit
+    #         self.items = []
+    #         self.light = 0
+    Tile = namedlist("Tile", ['char', 'color', 'block_mov', 'block_lit', ('light', 0), ('items', [])])
     mult = [
                 [1,  0,  0, -1, -1,  0,  0,  1],
                 [0,  1, -1,  0,  0, -1,  1,  0],
@@ -88,11 +88,6 @@ class Map:
 
     def __repr__(self) -> str:
         return "\n".join("".join(row) for row in self.data)
-
-    def debug_set_global_light(self) -> None:
-        for y in range(self.height):
-            for x in range(self.width):
-                self.square(x, y).light = 2
                 
     ###########################################################################
     # Level Initialization, Setup, Terraform and Evaluation                   #
@@ -559,7 +554,7 @@ class Map:
                 i, j = self.spaces[randint(0, len(self.spaces)-1)]
                 unit = choice([Rat, Rat])(x=i, y=j, speed=choice([15, 30]))
                 self.__units.append(unit)
-                self.square(i, j).unit = unit
+                # self.square(i, j).units = units
         else:
             raise AttributeError("Spaces has not yet been initialized")
 

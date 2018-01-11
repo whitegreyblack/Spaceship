@@ -473,7 +473,7 @@ class Name(Scene):
 
             # elif not self.final_name:
             else:
-                self.ret['scene'] = 'start_game'
+                self.ret['scene'] = 'create_menu'
 
             # else:
             #     self.final_name = self.final_name[0:len(self.final_name) - 1]
