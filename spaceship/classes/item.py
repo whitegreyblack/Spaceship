@@ -128,41 +128,79 @@ class Weapon(Item):
 
 items = {
     # TODO -- implement commented items 
-    "horned helmet": Armor("horned helmet", "[", "grey", "head", 1, 0, 0, 1),
-    "metal helmet": Armor("metal helmet", "[", "grey", "head", 1, 0, 0, 1),
-    # leather cap, hood
-
-    "gold necklace": Armor("gold necklace", "'", "yellow", "neck", 0, 0, 0, 0),
-    "holy symbol": Armor("holy_symbol", "'", "white", "neck", 0, 0, 0, 0),
-    "whistle": Armor("whistle", "'", "grey", "neck", 0, 0, 0, 0),
-    "amulet of power": Armor("amulet of power", "'", "red", "neck", 0, 0, 0, 0),
-    # holy symbol, whistle, amulet of power
-
-    "elven chainmail": Armor("elven chainmail", "[", "blue", "body", 2, 1, 1, 1),
-    "metal armor": Armor("metal armor", "[", "grey", "body", 1, 1, 0, 1),  
-
-    # thick fur coat, light robe, heavy cloak, leather armor
-    # thick fur bracers, leather bracers    
-    # cloth gloves, leather gloves
-
-    "long spear": Weapon("long spear", "(", "grey", 2, 2, (2, 6)),
-    "silver sword": Weapon("silver sword", "(", "grey", 1, 1, (3, 7)),
-    "battle axe": Weapon("battle axe", "(", "grey", 2, -1, (3, 12)),
-    "copper pick": Weapon("copper pick", "(", "grey", 1, 1, (1, 4)),
-    "mithril dagger": Weapon("mithril dagger", "(", "grey", 1, 3, (2, 5)),
-    "broadsword": Weapon("broadsword", "(", "grey", 1, -1, (4, 8)),
-    "medium shield": Weapon("medium shield", "[", "grey", 1, -3, (1, 3)),
-    "mace": Weapon("mace", "(", "grey", 1, -1, (3, 9)),
-    "warhammer": Weapon("warhammer", "(", "grey", 2, -3, (8, 15)),
-    'wooden staff': Weapon("wooden staff", "(", "grey", 2, -1, (4, 9)),
-    #  small shield, short bow, quarterstaff, long sword
+    "horned helmet": Armor("horned helmet", 
+        "[", "grey", "head", 1, 0, 0, 1),
+    "metal helmet": Armor("metal helmet", 
+        "[", "grey", "head", 1, 0, 0, 1),
+    "leather cap": Armor("leather cap", 
+        "[", "grey", "head", 0, 0, 0, 0),
+    "cloth hood": Armor("cloth hood",
+        "[", "grey", "head", 1, 0, 0, 1),
+    "gold necklace": Armor("gold necklace", 
+        "'", "yellow", "neck", 0, 0, 0, 0),
+    "holy symbol": Armor("holy_symbol", "'", 
+        "white", "neck", 0, 0, 0, 0),
+    "whistle": Armor("whistle", "'", "grey", 
+        "neck", 0, 0, 0, 0),
+    "amulet of power": Armor("amulet of power", 
+        "'", "red", "neck", 0, 0, 0, 0),
+    "elven chainmail": Armor("elven chainmail", 
+        "[", "blue", "body", 2, 1, 1, 1),
+    "metal armor": Armor("metal armor", 
+        "[", "grey", "body", 1, 1, 0, 1),  
+    "thick fur coat": Armor("thick fur coat", 
+        "[", "grey", "body", 0, 0, 0, 0),
+    "light robe": Armor("light robe", 
+        "[", "grey", "body", 0, 0, 0, 0),
+    "heavy cloak":  Armor("heavy cloak", 
+        "[", "grey", "body", 0, 0, 0, 0),
+    "leather armor": Armor("leather armor", 
+        "[", "grey", "body", 0, 0, 0, 0),
+    "thick fur bracers": Armor("thick fur bracers", 
+        "[", "grey", "body", 0, 0, 0, 0),
+    "leather bracers": Armor("leather bracers", 
+        "[", "grey", "body", 0, 0, 0, 0),
+    "cloth gloves": Armor("cloth gloves",
+        "[", "grey", "body", 0, 0, 0, 0),
+    "leather gloves": Armor("leather gloves",
+        "[", "grey", "body", 0, 0, 0, 0),
+    "long spear": Weapon("long spear", 
+        "(", "grey", 2, 2, (2, 6)),
+    "silver sword": Weapon("silver sword", 
+        "(", "grey", 1, 1, (3, 7)),
+    "battle axe": Weapon("battle axe", 
+        "(", "grey", 2, -1, (3, 12)),
+    "copper pick": Weapon("copper pick", 
+        "(", "grey", 1, 1, (1, 4)),
+    "mithril dagger": Weapon("mithril dagger", 
+        "(", "grey", 1, 3, (2, 5)),
+    "broadsword": Weapon("broadsword", 
+        "(", "grey", 1, -1, (4, 8)),
+    "long sword": Weapon("long sword", 
+        "(", "grey", 1, -1, (4, 8)),
+    "medium shield": Weapon("medium shield", 
+        "[", "grey", 1, -3, (1, 3)),
+    "mace": Weapon("mace", 
+        "(", "grey", 1, -1, (3, 9)),
+    "warhammer": Weapon("warhammer", 
+        "(", "grey", 2, -3, (8, 15)),
+    "wooden staff": Weapon("wooden staff", 
+        "(", "grey", 2, -1, (4, 9)),
+    "quarterstaff": Weapon("quarterstaff", 
+        "(", "grey", 2, -1, (4, 9)),
+    # small shield, short bow, long sword
+    
     # ring of earth, ring of nature, ring of power, ring of regen, ring of protection
     # ring of light, ring of ice, ring of resistance, ring of fire, ring of water
-    # leather belt, rope belt
+    "leather belt": Armor("leather belt", "[", "green", "waist", 0, 0, 0, 1),
+    "rope belt": Armor("rope belt", "[", "green", "waist", 0, 0, 1, 0),
     # common pants
     # leather boots, metal boots, sandals
     # tome, spellbook, scrolls
-    "health potion": Potion("health potion", "!", "red", 30),
+    "small health potion": Potion("small health potion", "!", "red", 10),
+    "medium health potion": Potion("medium health potion", "!", "red", 20),
+    "large health potion": Potion("large health potion", "!", "red", 30),
+    "small shield potion": Potion("small shield potion", "!", "blue", 10),
 }
 
 def get_all_items():
