@@ -129,13 +129,19 @@ class Start(Scene):
                 self.unit = unit
                 self.process_turn()
         else:
+            # for unit in self.location.units:
+            #     if unit.energy.ready():
+            #         unit.energy.reset()
+            #         self.unit = unit
+            #         self.process_turn()      
+            #     else:
+            #         unit.energy.gain()
             for unit in self.location.units:
+                unit.energy.gain()
                 if unit.energy.ready():
                     unit.energy.reset()
                     self.unit = unit
-                    self.process_turn()      
-                else:
-                    unit.energy.gain()
+                    self.process_turn()
 
         # if isinstance(self.location, World):
         #     self.process_turn_player()
@@ -514,7 +520,7 @@ class Start(Scene):
                                     exit('DEAD')
                                 item = unit.drops()
                                 if item:
-                                    self.location.item_add(item)
+                                    self.location.item_add(*unit.position, item)
                                     self.draw_log("The {} has dropped {}".format(
                                         unit.race, item.name))
                                 self.location.unit_remove(unit)
@@ -608,7 +614,7 @@ class Start(Scene):
                                     item = unit.drops()
 
                                     if item:
-                                        self.location.item_add(item)
+                                        self.location.item_add(*unit.position, item)
                                         self.draw_log("The {} has dropped {}".format(
                                             unit.race, 
                                             item.name))
@@ -782,7 +788,7 @@ class Start(Scene):
                 location = Cave(
                     width=self.width,
                     height=self.height,
-                    generate=False,
+                    generate=True,
                     max_rooms=random.randint(15, 20))
 
                 self.player.position = location.stairs_up

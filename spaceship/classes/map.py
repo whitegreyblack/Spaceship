@@ -55,7 +55,7 @@ class Map:
     #         self.block_lit = block_lit
     #         self.items = []
     #         self.light = 0
-    Tile = namedlist("Tile", ['char', 'color', 'block_mov', 'block_lit', ('light', 0), ('items', [])])
+    Tile = namedlist("Tile", 'char color block_mov, block_lit items light')
     mult = [
                 [1,  0,  0, -1, -1,  0,  0,  1],
                 [0,  1, -1,  0,  0, -1,  1,  0],
@@ -123,7 +123,9 @@ class Map:
                     char=choice(chars),
                     color=choice(hexcodes),
                     block_mov=block_mov,
-                    block_lit=block_lit)
+                    block_lit=block_lit,
+                    items=[],
+                    light=0)
 
                 cols.append(tile)
             rows.append(cols)
@@ -463,6 +465,7 @@ class Map:
         '''Adds an item object to the list of items at position (x, y)
         on the map
         '''
+        print('add item')
         self.square(x, y).items.append(i)
 
     def item_remove(self, x, y, i) -> None:
@@ -659,14 +662,12 @@ class Map:
                     yield (x - cam_x, y - cam_y, "white", "@")
 
                 elif light_level == 2:
-                    # print(player_x, player_y)
-                    # if (x, y) == (player_x, player_y):
-                    #     char, color =  "@", "white"
                     if (x, y) in self.unit_positions:
                         unit = self.unit_at(x, y)
                         char, color = unit.character, unit.foreground
 
                     elif self.square(x, y).items:
+                        print('items')
                         item = self.square(x, y).items[0]
                         char, color = item.char, item.color
 

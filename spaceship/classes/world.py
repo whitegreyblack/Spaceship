@@ -99,11 +99,17 @@ class World(Map):
         (20, 57): "Beach Cave",
         (22, 50): "Small Dungeon",
     }
-    class WorldTile(Map.Tile):
+    # class WorldTile(Map.Tile):
+    class WorldTile:
         def __init__(self, char, color, block_mov, block_lit, tile_type, tile_name=None):
             '''Inherits from Map.Tile to create a tile specific for a world map'''
-            super().__init__(char, color, block_mov, block_lit)
+            # super().__init__(char, color, block_mov, block_lit)
+            self.char = char
+            self.color = color
+            self.block_mov = block_mov
+            self.block_lit = block_lit
             self.tile_type = tile_type
+            self.light = 0
             if tile_name:
                 self.name = tile_name
 
