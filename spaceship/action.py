@@ -17,7 +17,7 @@ from bearlibterminal import terminal as term
     Actions:
         (O|o)pen (blockable(s)): -> unblockable(s)
         (C|c)lose (unblockable(s)): -> blockable(s)
-        (T|t)alk (object(s)): -> string 
+        (T|t)alk (object(s)): -> string
     Menu Screens:
         (I|i)nventory (menu): -> inventory screen
         (Esc|Escape) (menu): -> escape screen/main menu
@@ -29,7 +29,7 @@ commands_player = {
     (term.TK_UP, 0): keypress(0, -1, None, "move"),
     (term.TK_DOWN, 0): keypress(0, 1, None, "move"),
     (term.TK_LEFT, 0): keypress(-1, 0, None, "move"),
-    (term.TK_RIGHT, 0): keypress(1, 0, None, "move"),    
+    (term.TK_RIGHT, 0): keypress(1, 0, None, "move"),
     (term.TK_KP_1, 0): keypress(-1, 1, None, "move"),
     (term.TK_KP_2, 0): keypress(0, 1, None, "move"),
     (term.TK_KP_3, 0): keypress(1, 1, None, "move"),
@@ -48,8 +48,6 @@ commands_player = {
     (term.TK_V, 0): keypress(None, None, "v", "equipment"),
     (term.TK_D, 0): keypress(None, None, "d", "drop"),
     (term.TK_U, 0): keypress(None, None, "u", "use"),
-    # term.TK_F1: keypress("f1", "func_key"),
-    # term.TK_F2: keypress("f2", "func_key"),
     (term.TK_COMMA, 0): keypress(None, None, ",", "pickup"),
     (term.TK_I, 0): keypress(None, None, "i", "equipment"),
     (term.TK_V, 0): keypress(None, None, "v", "inventory"),

@@ -465,13 +465,15 @@ class Map:
         '''Adds an item object to the list of items at position (x, y)
         on the map
         '''
-        print('add item')
+        print('add item', x, y, i)
         self.square(x, y).items.append(i)
 
     def item_remove(self, x, y, i) -> None:
         '''Removes the item object from the list of items at position (x, y)
         on the map
         '''
+        print(x, y, i)
+        print(self.square(x, y).items)
         try:
             self.square(x ,y).items.remove(i)
         except ValueError:
@@ -547,7 +549,7 @@ class Map:
 
     def generate_units(self):
         if self.height <= 25:
-            max_units = 1
+            max_units = 5
         else:
             max_units = 0
 
@@ -667,7 +669,6 @@ class Map:
                         char, color = unit.character, unit.foreground
 
                     elif self.square(x, y).items:
-                        print('items')
                         item = self.square(x, y).items[0]
                         char, color = item.char, item.color
 

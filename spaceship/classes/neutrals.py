@@ -12,6 +12,7 @@ class VillagerChild(Unit):
     def __init__(self, x, y, ch="v", fg=Color.white, bg=Color.black, 
                  race="human", job="villager", rs=0):
         super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
+        self.sight = self.sight_city
         self.job = job
         self.spaces = spaces 
     
@@ -62,7 +63,8 @@ class Villager(Unit):
         super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
         self.job = job
         self.spaces = spaces 
-        
+        self.sight = self.sight_city
+
     def talk(self):
         return "{}: Are you from around here?".format(self.__class__.__name__)
 
@@ -106,6 +108,7 @@ class Shopkeeper(Unit):
         super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
         self.job = job
         self.spaces = spaces 
+        self.sight = self.sight_city
 
     def talk(self):
         return "{}: Looking for something?".format(self.__class__.__name__)
@@ -128,6 +131,7 @@ class Blacksmith(Unit):
         super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
         self.job = job
         self.spaces = spaces 
+        self.sight = self.sight_city
 
 class Innkeeper(Unit):
     def __init__(self, x, y, ch="I", fg=Color.white, bg=Color.black, 
@@ -135,7 +139,8 @@ class Innkeeper(Unit):
         super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
         self.job = job
         self.spaces = spaces
-        
+        self.sight = self.sight_city
+
     def talk(self):
         return "{}: Need a room to stay?".format(self.__class__.__name__)
 
@@ -157,7 +162,8 @@ class Bishop(Unit):
         super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
         self.job = job
         self.spaces = spaces
-        
+        self.sight = self.sight_city
+
     def talk(self):
         return "{}: Blessings. Need some healing?".format(self.__class__.__name__)
     
@@ -186,6 +192,7 @@ class Soldier(Unit):
         super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
         self.job = job
         self.spaces = spaces 
+        self.sight = self.sight_city
 
     def talk(self):
         return "{}: Don't be causing trouble. Move along.".format(self.__class__.__name__)

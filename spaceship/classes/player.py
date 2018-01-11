@@ -30,6 +30,7 @@ class Player(Unit):
         super().__init__(0, 0, race=character.race)
         self.exp = 0
         self.level = 1
+        self.sight_world = round(self.sight_norm / 1.5)
         self.job = character.job
         self.gold = character.gold
         self.gender = character.gender

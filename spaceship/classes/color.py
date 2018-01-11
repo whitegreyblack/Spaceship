@@ -93,6 +93,18 @@ class Color:
     pink_darker = "#72173A"
     pink_darkest = "#45051E"
 
+    class Frost:
+        colors = {
+            "#323246", 
+            "#F0F0F0", 
+            "#1E828C", 
+            "#3C788C", 
+            "#5A7882", 
+            "#6EA0B4", 
+            "#6E8CA0", 
+            "#8C8CA0", 
+            "#96BEC8", }
+
     @classmethod
     def color(cls, col: str) -> str:
         '''Returns the hex value of a given color

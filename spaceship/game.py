@@ -63,6 +63,7 @@ class Start(Scene):
                 '>': self.action_interact_stairs_down,
                 'c': self.action_interact_door_close,
                 'o': self.action_interact_door_open,
+                ',': self.action_interact_item_pickup,
                 'd': self.action_interact_item_drop,
                 'u': self.action_interact_item_use,
             },
@@ -180,10 +181,11 @@ class Start(Scene):
 
         g0 = isinstance(self.location, World)
         if g0:
-            sight = round(self.player.sight / 1.5)
+            sight = self.player.sight_world
+        elif isinstance(self.location, City):
+            sight = self.player.sight_city
         else:
-            sight = self.player.sight * (2 if isinstance(self.location, City)
-                                                                        else 1)
+            sight = self.player.sight_norm
         self.location.fov_calc([(x, y, sight)])
 
         for x, y, col, ch in self.location.output(x, y):
@@ -197,6 +199,7 @@ class Start(Scene):
             location = None
             if self.player.location in self.world.enterable_legend.keys():
                 location = self.world.enterable_legend[self.player.location]
+
             elif self.player.location in self.world.dungeon_legend.keys():
                 location = self.world.dungeon_legend[self.player.location]
 
@@ -246,14 +249,6 @@ class Start(Scene):
         # Turn status
         term.puts(1, self.height - 4, 'Turns: {:<4}'.format(self.turns))
 
-        # elif self.player.location in self.world.dungeon_legend.keys():
-        #     location = self.world.dungeon_legend[self.player.location]
-
-        # else:
-        #     location = ""
-
-        # term.puts(col, row + 20, "{}".format(location))
-
     def draw_player_profile(self):
         '''Handles player profile screen'''
         # draws header border
@@ -273,11 +268,6 @@ class Start(Scene):
         for i in range(self.width):
             term.puts(i, 1, '#')
         term.puts(center(' Equipment ', self.width), 1, ' Equipment ')
-        
-        # for index, (part, item) in enumerate(self.player.equipment()):
-        #     letter = chr(ord('a') + index)
-        #     body_part = ".  {:<10}: ".format(part)
-        #     item_desc = item.__str__() if item else ""
 
         for index, (body_part, item_desc) in enumerate(list(self.player.equipment)):
             letter = chr(ord('a') + index)
@@ -337,9 +327,11 @@ class Start(Scene):
             if current_screen == "i":
                 self.draw_player_equipment()
                 self.draw_player_eq_inv_switch()
+
             elif current_screen == "v":
                 self.draw_player_inventory()
                 self.draw_player_inv_eq_switch()
+
             else:
                 self.draw_player_profile()
 
@@ -368,20 +360,22 @@ class Start(Scene):
 
             elif code == term.TK_DOWN:
                 if current_range < 10: current_range += 1
+
         term.clear()
 
     def process_turn(self):
         if isinstance(self.unit, Player):
             self.process_turn_player()
+
         else:
             self.process_turn_unit()
 
     def process_turn_player(self):
-        # t0 = time()
         action = self.key_input()
-        # print(time() - t0)
+
         if not self.proceed:
             return
+
         self.process_handler(*action)
 
     def process_turn_unit(self):
@@ -391,17 +385,18 @@ class Start(Scene):
             positions = self.location.fov_calc_blocks(
                                                 self.unit.x, 
                                                 self.unit.y, 
-                                                self.unit.sight)
+                                                self.unit.sight_norm)
             units = { self.location.unit_at(*position).position: self.location.unit_at(*position) 
                         for position in positions if self.location.unit_at(*position) }
 
-            if self.player not in units.values():
-                return
+            # if self.player not in units.values():
+            #     return
 
             tiles = { position: self.location.square(*position) 
                                                 for position in positions }
 
             action = self.unit.acts(self.player, tiles, units)
+
             if action:
                 self.process_handler_unit(*action)
 
@@ -500,10 +495,18 @@ class Start(Scene):
                             if chance == 2:
                                 damage *= 2
                             unit.cur_health -= damage
+
+                            term.puts(
+                                x=tx + self.display_offset_x, 
+                                y=ty + self.display_offset_y, 
+                                s='[c=red]{}[/c]'.format(damage if damage <= 9 else '*'))
+                            term.refresh()
+
                             log = "The {} attacks {} for {} damage".format(
                                 self.unit.race,
                                 "you" if player else "the " + unit.race,
                                 damage)
+
                             self.draw_log(log)
                             if not unit.is_alive:
                                 log = "The {} has killed {}!".format(
@@ -515,14 +518,14 @@ class Start(Scene):
                                     exit('DEAD')
                                 item = unit.drops()
                                 if item:
-                                    self.location.item_add(item)
+                                    self.location.item_add(*unit.position, item)
                                     self.draw_log("The {} has dropped {}".format(
                                         unit.race, item.name))
                                 self.location.unit_remove(unit)
                             # term.puts(
                             #     x=tx + self.display_offset_x, 
                             #     y=ty + self.display_offset_y, 
-                            #     s='[c=red]*[/c]')
+                            #     s='[c=red]{}[/c]'.format(damage if damage <= 9 else '*'))
                             # term.refresh()
             # else:
             #     term.puts(
@@ -560,7 +563,7 @@ class Start(Scene):
                     if not self.location.occupied(tx, ty):
                         self.player.move(x, y)
                         msg_chance = random.randint(0, 5)
-                        if self.location.square(tx, ty).items and msg_chance:
+                        if self.location.items_at(x, y) and msg_chance:
                             item_message = random.randint(
                                 a=0, 
                                 b=len(self.pass_item_messages) - 1)
@@ -587,6 +590,12 @@ class Start(Scene):
                                 if chance == 2:
                                     damage *= 2
                                 unit.cur_health -= damage
+                                
+                                term.puts(
+                                    x=tx + self.display_offset_x, 
+                                    y=ty + self.display_offset_y, 
+                                    s='[c=red]{}[/c]'.format(damage if damage <= 9 else '*'))
+                                term.refresh()
 
                                 log = "You{}attack the {} for {} damage. ".format(
                                     " crit and " if chance == 2 else " ", 
@@ -624,7 +633,7 @@ class Start(Scene):
                                     # term.puts(
                                     #     x=tx + self.display_offset_x, 
                                     #     y=ty + self.display_offset_y, 
-                                    #     s='[c=red]*[/c]')
+                                    #     s='[c=red]{}[/c]'.format(damage if damage <= 9 else '*'))
                                     # term.refresh()
 
                         turn_inc = True
@@ -655,7 +664,7 @@ class Start(Scene):
                             # term.puts(
                             #     x=tx + self.display_offset_x, 
                             #     y=ty + self.display_offset_y, 
-                            #     s='[c=red]X[/c]')
+                            #     s='[c=red]{}[/c]'.format(damage if damage <= 9 else '*'))
                             # term.refresh()
     def get_input(self):     
         key = term.read()
@@ -843,8 +852,8 @@ class Start(Scene):
             self.location = self.location.parent
             self.player.move_height(-1)
             self.location.units_add([self.player])
-            if reset:
-                self.player.position = self.location.sublevel
+            # if reset:
+            #     self.player.position = 
 
         if self.player.location in self.world.enterable_legend.keys():
             move_upstairs()
@@ -964,26 +973,28 @@ class Start(Scene):
     def action_interact_unit_displace(self):
         pass
 
-    def action_interact_item_pickup(self, x, y):
+    def action_interact_item_pickup(self):
+        print('pickup')
         def pickup_item(item):
-            if len(self.player.inventory) >= 25:
+            if len(list(self.player.inventory)) >= 25:
                 gamelog.add("Backpack is full. Cannot pick up {}".format(item))
 
             else:
-                self.location.item_remove(item)
+                self.location.item_remove(*self.player.position, item)
                 self.player.inventory_item_add(item)
                 log = "You pick up {} and place it in your backpack".format(
                                                                     item.name)
                 self.draw_log(log)
                 self.draw_log("Your backpack feels heavier")
-                self.turn_inc = true
+                self.turn_inc = True
         
-        items = self.location.square(x, y).items
+        items = self.location.square(*self.player.position).items
+
         if not items:
             self.draw_log('No items on the ground where you stand')
 
         elif single_element(items):
-            pickup_item(item)
+            pickup_item(items.pop())
 
         else:
             print('Multiple item pickup screen')

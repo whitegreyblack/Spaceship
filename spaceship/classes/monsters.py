@@ -82,7 +82,7 @@ class Rat(Unit):
             '''purely visual recording of environment -- no evaluation yet'''
             def map_out():
                 return "\n".join("".join(row[::-1]) for row in sight_map[::-1])
-            sight_map[self.sight][self.sight] = self.character
+            sight_map[self.sight_norm][self.sight_norm] = self.character
             spotted = False
             for (x, y) in tiles:
                 if player.position == (x, y):
@@ -101,7 +101,7 @@ class Rat(Unit):
                     # empty square
                     char = tiles[(x, y)].char
                 # offset the location based on unit position and sight range
-                dx, dy = self.x-x+self.sight, self.y-y+self.sight
+                dx, dy = self.x-x+self.sight_norm, self.y-y+self.sight_norm
                 sight_map[dy][dx] = char
 
             if spotted:
@@ -114,7 +114,7 @@ class Rat(Unit):
         item_spotted = []
         # maybe traps later
 
-        sight_range = self.sight * 2 + 1 # accounts for radius
+        sight_range = self.sight_norm * 2 + 1 # accounts for radius
         sight_map = [[" " for x in range(sight_range)] for y in range(sight_range)]
         paths = []
         build_sight_map()
@@ -177,14 +177,17 @@ class Rat(Unit):
 
         # these are all the non wall tiles
         points = list(filter(lambda t: tiles[t].char != "#", tiles.keys()))
-        emptys = list(filter(lambda xy: sight[self.y-xy[1]+self.sight][self.x-xy[0]+self.sight] not in unit_chars, points))
+        emptys = list(filter(
+            lambda xy: sight[self.y - xy[1] + self.sight_norm][self.x- xy[0] + self.sight_norm] 
+                not in unit_chars, 
+            points))
         point = choice(emptys)
         self.moving_torwards(point)
 
     def follow(self, sight, units, path):
         # print('following')
-        # print(sight[self.y - path[1] + self.sight][self.x - path[0] + self.sight])
-        empty = sight[self.y - path[1] + self.sight][self.x - path[0] + self.sight] not in unit_chars
+        # print(sight[self.y - path[1] + self.sight_norm][self.x - path[0] + self.sight_norm])
+        empty = sight[self.y - path[1] + self.sight_norm][self.x - path[0] + self.sight_norm] not in unit_chars
         if not empty:
             # print('tile not empty')
             # print(units[(path)])

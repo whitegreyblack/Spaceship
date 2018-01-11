@@ -6,7 +6,7 @@ class Bat(Unit):
         super().__init__(x, y, ch, fg, bg)
         Unit.unit_id += 1
 
-        self.sight = 5
+        self.sight_norm = 5
         self.xp = 20
         self.health = 5
         self.character = "b"
