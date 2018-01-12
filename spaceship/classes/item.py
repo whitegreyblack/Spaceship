@@ -77,20 +77,33 @@ class Potion(Item):
             print(unit.max_health)
 
 class Ring(Item):
-    placement = "ring"
+    placement = {"eq_ring_left", "eq_ring_right"}
     def __init__(self, name, char, color):
         super().__init__(name, char, color)
         self.effect = None
 
-    def wear(self, unit):
-        if self.effect and hasattr(unit, self.effect[0]):
-            self.effect[0] += self.effect[1]
+    def wear(self, unit, part):
+        if not part in self.placement:
+            '''Cannot equip to current part slot'''
+            return False
+    
+        if not getattr(unit, self.effect[0]):
+            '''Check if slot is empty'''
+            return False
+
+        if self.effect:
+            attribute = getattr(unit, self.effect[0])
+            setattr(unit, self.effect[0], attribute + self.effect[1])
+            setattr(unit, part, self)
+            unit.inventory_remove(self)
+            return True
+
+        return False
 
 class RingProtection(Ring):
     def __init__(self):
         super().__init__("ring of protection", "=", "grey")
         self.effect = ("max_health", 10)
-        print(self.placement)
 
 class Armor(Item):
     def __init__(self, name, char, color, placement, me_h, mi_h, dv, pv):

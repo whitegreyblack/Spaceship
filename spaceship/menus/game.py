@@ -42,14 +42,6 @@ class Start(Scene):
 
         self.reset_size()
 
-    def test_data(self):
-        self.ret['kwargs'] = {
-            'player': {
-                'race': 'Human',
-                
-            }, 
-            'name': 'rando'}
-
     def setup(self):
         # self.reset()
         self.actions = {
@@ -1108,7 +1100,12 @@ class Start(Scene):
                 log = ""
 
 if __name__ == "__main__":
+    from .make import Create
+    term.open()
+    c = Create()
+    ret = c.run()
+    ret['kwargs']['name'] = 'grey'
+    print(ret)
     s = Start()
-    s.test_data()
+    s.add_args(**ret['kwargs'])
     s.run()
-

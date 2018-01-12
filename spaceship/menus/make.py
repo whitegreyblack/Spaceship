@@ -142,15 +142,15 @@ class Create(Scene):
 
         # BONUS
         if self.character_index == 0:
-            total = strings.STATS(*(sum(stats) for stats in zip(strings.HUMAN, 
+            total = strings.stats(*(sum(stats) for stats in zip(strings.HUMAN, 
                                                                 gbonus)))
 
         elif self.character_index == 1:
-            total = strings.STATS(*(sum(stats) for stats in zip(stats, 
+            total = strings.stats(*(sum(stats) for stats in zip(stats, 
                                                                 gbonus, 
                                                                 rbonus)))
         else:
-            total = strings.STATS(*(sum(stats) for stats in zip(stats,
+            total = strings.stats(*(sum(stats) for stats in zip(stats,
                                                                 gbonus,
                                                                 rbonus,
                                                                 cbonus)))
@@ -285,20 +285,20 @@ class Create(Scene):
                 job = self.class_row(draw=False)
                 eq, inv = self.form_equipment(race.eq, job.equipment)
                 self.ret['kwargs'] = {
-                    'player': self.player(
-                            # name,
-                            race.location,
-                            race.gold,
-                            race.stats,
-                            gender.gender,
-                            gender.bonus,
-                            race.race,
-                            race.bonus,
-                            job.classes,
-                            job.bonuses,
-                            race.skills,
-                            eq,
-                            inv)
+                    'player': player(
+                        # name,
+                        race.location,
+                        race.gold,
+                        race.stats,
+                        gender.gender,
+                        gender.bonus,
+                        race.race,
+                        race.bonus,
+                        job.classes,
+                        job.bonuses,
+                        race.skills,
+                        eq,
+                        inv)
                 }
                 self.ret['scene'] = 'name_menu'
                 self.proceed = False
@@ -308,31 +308,31 @@ class Create(Scene):
         elif code == term.TK_ENTER:
             # check to see if we are at the final index
             if self.character_index == 3:
-                # name = new_name((race, occu))
-                # print("CHARACTER NAME: {}".format(name.value))
-                # if name.proceed == 0:
                 gender = self.gender_row(draw=False)
                 race = self.race_row(draw=False)
                 job = self.class_row(draw=False)
+
                 self.ret['kwargs'] = {
-                    'player': self.player(
-                            # name,
-                            race.location,
-                            race.gold,
-                            race.stats,
-                            gender.gender,
-                            gender.bonus,
-                            race.race,
-                            race.bonus,
-                            job.classes,
-                            job.bonuses,
-                            race.skills,
-                            eq,
-                            inv)
+                    'player': player(
+                    # name,
+                    race.location,
+                    race.gold,
+                    race.stats,
+                    gender.gender,
+                    gender.bonus,
+                    race.race,
+                    race.bonus,
+                    job.classes,
+                    job.bonuses,
+                    race.skills,
+                    eq,
+                    inv)
                 }
+
                 self.ret['scene'] = 'name_menu'
                 self.proceed = False
                 self.reset()
+
             else:
                 self.character_index += 1
 
@@ -506,6 +506,31 @@ class Create(Scene):
         eqp = [i.pop(0) if len(i) > 0 else [] for i in inv]
 
         return eqp, flatten(inv)
+
+def test_hero():
+    c = Create()
+    gender = c.gender_row(draw=False)
+    race = c.race_row(draw=False)
+    job = c.class_row(draw=False)
+    eq, inv = c.form_equipment(race.eq, job.equipment)
+
+    return {'player': player(
+        # name,
+        race.location,
+        race.gold,
+        race.stats,
+        gender.gender,
+        gender.bonus,
+        race.race,
+        race.bonus,
+        job.classes,
+        job.bonuses,
+        race.skills,
+        eq,
+        inv),
+    'name': 'Grey',
+    }
+
 
 if __name__ == "__main__":
     term.open()

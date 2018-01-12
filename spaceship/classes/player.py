@@ -6,16 +6,9 @@ from .unit import Unit
 from .world import World
 from .item import Armor, Weapon, Item, items
 from ..strings import profile
-# class RelationTable:
-#     def __init__(self, unit):
-#         pass
 
-#     def calculate_relations(self):
-#         pass
-
-# Player should inherit from unit just so evaluation makes
-# it so that player evaluates to a unit just like every other
-# unit 
+# Player should inherit from unit just so during main game loop
+# the player class can be accessed in the same way as other units
 class Player(Unit):
     parts=("eq_head", "eq_neck", "eq_body", "eq_arms", "eq_hands", 
            "eq_hand_left", "eq_hand_right", "eq_ring_left", 
