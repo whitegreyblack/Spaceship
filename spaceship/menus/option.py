@@ -7,44 +7,44 @@ from screen_functions import center
 class Option:
     def __init__(self, title, opt=None, subopts=None):
         self.title = title
-        # opt list
+        # options list
         self.opts = [opt] if opt else []
-        # opt index
+        # options index
         self.optindex = 0
-        # subopt list
+        # suboptions list
         self.subopts = [subopts] if subopts else []
-        # subopt pointers
+        # suboptions pointers
         self.suboptindex = [-1] if subopts else []
         # list of expansions
         self.expand = set()
 
-    def expansion(self, n: int):
+    def expansion(self, n: int) -> None:
         if n > len(self.opts):
             raise IndexError('invalid index for expansion')
 
         if n not in self.expand:
             self.expand.add(n)
 
-    def collapse(self, n: int):
+    def collapse(self, n: int) -> None:
         if n > len(self.opts):
             raise IndexError('invalid index for collapse')
 
         if n in self.expand:
             self.expand.remove(n)
 
-    def add_opt(self, opt: str, subopts: list):
+    def add_opt(self, opt: str, subopts: list) -> None:
         self.opts.append(opt)
         self.subopts.append(subopts)
         self.suboptindex.append(-1)
 
-    def move_pointer(self, move: int):
-        self.optindex = self.optindex+move
+    def move_pointer(self, move: int) -> None:
+        self.optindex = self.optindex + move
 
 
-    def correct_pointer(self):
-        self.optindex = max(min(self.optindex, len(self.opts)-1), 0)
+    def correct_pointer(self) -> None:
+        self.optindex = max(min(self.optindex, len(self.opts) - 1), 0)
     
-    def move_subpointer(self, move: int):
+    def move_subpointer(self, move: int) -> None:
         self.suboptindex[self.optindex] += move
         
         # # moving up
@@ -125,7 +125,7 @@ if __name__ == "__main__":
                 # option.move_subpointer(1)
         elif key == term.TK_DOWN:
             if len(option.expand):
-                option.move_subpointer(1)e`
+                option.move_subpointer(1)
                 option.correct_subpointer()
             else:
                 option.move_pointer(1)

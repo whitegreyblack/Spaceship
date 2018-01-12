@@ -100,10 +100,11 @@ stringify_colors = {
     }
 }
 
-
+'''
 Light levels depends on two factors -- discovered and visible
                      Discovered | Visible
     0 - Unexplored : False      | False
     1 - Unex b Vis?: False      | True -- 
     2 - Explored   : True       | False
     3 - Visible    : True       | True
+'''

@@ -1,33 +1,8 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
-from .constants import *
 from bearlibterminal import terminal as term
-from collections import namedtuple
-
-output = namedtuple("Out", "proceed value")
-opout = namedtuple("Out", "proceed options")
-ccout = namedtuple("Out", "proceed player")
-nnout = namedtuple("Out", "proceed name")
-ngout = namedtuple("Out", "proceed error")
-cgout = namedtuple("Out", "proceed error")
-
-def toChr(intval):
-    try:
-        return chr(toInt(intval))
-    except TypeError:
-        print("TOCHR ERROR: ", intval)
-        raise
-
-def toInt(hexval):
-    try:
-        return int(hexval, 16)
-    except TypeError:
-        print("TOINT ERROR: ", hexval)
-        raise
-
-def alphabetize(text):    
-    return list(map(lambda x: toChr(alphabet[x]) if x in alphabet.keys() else x, list(text)))
+from strings import *
 
 def setup():
     term.open()

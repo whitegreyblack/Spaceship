@@ -5,7 +5,7 @@ from .color import Color
 from .unit import Unit
 from .world import World
 from .item import Armor, Weapon, Item, items
-from ..cc_strings import profile
+from ..strings import profile
 # class RelationTable:
 #     def __init__(self, unit):
 #         pass

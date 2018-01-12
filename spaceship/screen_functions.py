@@ -39,8 +39,8 @@ def pad(string, center=True, length=0):
         return string.upper()
 
     if center:
-        l_pad = " " * padding // 2
-        r_pad = " " * (padding + 1) // 2
+        l_pad = " " * (padding // 2)
+        r_pad = " " * ((padding + 1) // 2)
         
         return l_pad + string.upper() + r_pad
 
@@ -118,3 +118,20 @@ def box(x, y, dx, dy, c):
     for j in range(y, y + dy + 1):
         term.puts(x, j, c)
         term.puts(x+dx, j, c)
+
+def toChr(intval):
+    try:
+        return chr(toInt(intval))
+    except TypeError:
+        print("TOCHR ERROR: ", intval)
+        raise
+
+def toInt(hexval):
+    try:
+        return int(hexval, 16)
+    except TypeError:
+        print("TOINT ERROR: ", hexval)
+        raise
+
+def alphabetize(text):    
+    return list(map(lambda x: toChr(alphabet[x]) if x in alphabet.keys() else x, list(text)))

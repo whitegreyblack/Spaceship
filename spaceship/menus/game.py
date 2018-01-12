@@ -3,21 +3,21 @@ import sys
 import shelve
 import random
 import textwrap
+from time import sleep, time
 from collections import namedtuple
 from bearlibterminal import terminal as term
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../../')
-from .setup_game import setup, setup_font, setup_menu, output, toChr
-import strings as strings
-from .classes.wild import wilderness
-from .classes.player import Player
-from .classes.world import World
-from .screen_functions import *
-from .gamelog import GameLogger
-from .classes.city import City
-from .classes.cave import Cave
-from .action import commands_player
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
+import strings
 from .scene import Scene
-from time import sleep, time
+from screen_functions import *
+from action import commands_player
+from gamelog import GameLogger
+
+from ..classes.wild import wilderness
+from ..classes.player import Player
+from ..classes.world import World
+from ..classes.city import City
+from ..classes.cave import Cave
 
 def single_element(container):
     return len(container) == 1
@@ -42,8 +42,13 @@ class Start(Scene):
 
         self.reset_size()
 
-    def test_run(self):
-        self.ret['kwargs'] = {'player': {}, 'name': 'rando'}
+    def test_data(self):
+        self.ret['kwargs'] = {
+            'player': {
+                'race': 'Human',
+                
+            }, 
+            'name': 'rando'}
 
     def setup(self):
         # self.reset()
@@ -1104,5 +1109,6 @@ class Start(Scene):
 
 if __name__ == "__main__":
     s = Start()
+    s.test_data()
     s.run()
 
