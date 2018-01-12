@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
-from spaceship.constants import *
+from .constants import *
 from bearlibterminal import terminal as term
 from collections import namedtuple
 

@@ -18,6 +18,25 @@ from .monsters import Rat
 from .bat import Bat
 
 '''
+The largest difference between World and City map tiles is that you can
+enter any tile in a World map that is not water/mountain. Which makes 
+more than 75% of the playable map enterable. Compared to city map tiles
+which only allow one to five enterable locations if any. This leads to a
+consideration of what kind of data structure should be used when storing
+levels underneath each map.
+
+For world maps: Use a hashmap(x, y) -> coordinate structure
+	we create an empty dictionary. This dictionary stores references to
+	locations reached by the player. We initialize it as empty at runtime
+	since doing so reduces the amount of memory needed and the dictionary
+	will build itself dynamically once the player reaches more and more 
+	locations around the map.
+
+For city maps: Use a doubly linked list structure
+	we create an none variable [sublevel] which will hold a single reference
+	to a location. This leads to a user's ability to iterate through top and
+	sub levels by following the parent/child references in each map
+
 TODO: seperate map and dungeon
     Map holds:
         dungeon class
@@ -259,6 +278,13 @@ class Map:
 
     ###########################################################################
     # Sight, Light and Color Functions                                        #
+    ###########################################################################
+    # Light levels depends on two factors -- discovered and visible
+    #                  Discovered | Visible
+    # 0 - Unexplored : False      | False
+    # 1 - Unex b Vis?: False      | True -- 
+    # 2 - Explored   : True       | False
+    # 3 - Visible    : True       | True
     ###########################################################################
     def check_light_level(self, x, y) -> int:
         '''Gets the value of light at square specified by x and y'''

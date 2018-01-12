@@ -11,6 +11,100 @@ from .utils import splitter, blender
 from ..tools import toInt, scroll
 from .map import Map
 
+'''
+Calabaston : Roguelike
+    Game: {
+        Planet: {
+            Name: Unknown,
+                Ecology: {
+                    Hills,
+                    Plains,
+                    Forests,
+                    Dark Woods,
+                    Grasslands,
+                    Mountains,
+                    Rivers,
+                    Oceans,
+                    Seas,
+                    },
+                Races: {
+                    Orcs,
+                    Elves,
+                    Beasts,
+                    Humans,
+                    Dwarves,
+                    Demons, # -- maybe
+                    Monsters # -- all of them
+                }
+            Continents: {
+            Calabaston: {
+                Countries: {
+                Empire of Rane: {
+                    Capital: Renmar,
+                    Cities: {
+                    Shadowbarrow,
+                    Westwatch,
+                    Lakepost,     
+                    Northshore,         
+                    }
+                },
+                Highlands: {
+                    Cities: {
+                    Dun Kaldergan,
+                    Dun Mogan,
+                    Dun Badur,
+                    Dun Baras,
+                    Dun Caden,
+                    Dun Molbur,
+                    Dun Vargar,
+                    }
+                },
+                Lowlands: {
+                    Capital: Gom Bashur,
+                    Cities: {
+                    Lok Zargoth,
+                    Lok Gurrah,
+                    Lok Midgoth,
+                    Lok Toragoth,
+                    Gorrathah,
+                    }
+                }
+                Aurendelim: {
+                    Capital: Aurendel,
+                    Cities: {
+                    Falaeth,
+                    Aerathalar,
+                    Galaloth,
+                    Runagathor,
+                    Lantathor,
+                    Elenos,
+                    Elenloth,
+                    }
+                },
+                Free Cities: {
+                    Fragos,
+                    Yarrin,
+                    Tiphmore,
+                    Houndsbeach,
+                    Dawnvalley,
+                    Eastshore,
+                    Whitewater,
+                }
+            },
+            Dungeons: {
+            Pigs Beach,
+            Small Dungeon,
+            Beach Cave,
+            }
+        },
+        Merma: Unknown,
+        Decadon: Unknown,
+        Rygor: Unknown,
+    }
+  }
+}
+'''
+
 class World(Map):
     chars = {
         "&": (["&"], "#FF8844"),

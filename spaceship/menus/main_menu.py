@@ -6,31 +6,11 @@ from collections import namedtuple
 from bearlibterminal import terminal as term
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
 import spaceship.cc_strings as strings
-from .setup_game import setup, setup_font, setup_menu, output, toChr
+# from .setup_game import setup, setup_font, setup_menu, output, toChr
 from .screen_functions import *
 from .options import Option
 from .scene import Scene
 from .game import Start
-
-class Engine:
-    def __init__(self, scene):
-        self.scene = scene
-        self.proceed = True
-        self.playing = False
-
-    def run(self):
-        while self.proceed:
-            ret = self.scene.run()
-            if isinstance(self.scene.scene(ret), Scene):
-                self.scene = self.scene.scene(ret)
-                self.scene.reset()
-                if isinstance(self.scene, Start):
-                    self.playing = True
-                    self.proceed = False
-            else:
-                self.proceed = False
-            
-        self.proceed = False
 
 class GameEngine:
     def __init__(self):
@@ -87,11 +67,6 @@ class Main(Scene):
                 '[[q]] quit']
 
         self.reset()       
-        # self.title_height = 1 if self.height <= 25 else self.height // 5
-
-        # self.title = self.calc_title()
-        # options_header_offset = self.title_height + len(self.title.split('\n'))
-        # self.options_height = self.calc_options_heights(options_header_offset, 3)
 
     def reset(self):
         self.reset_size()
@@ -103,14 +78,18 @@ class Main(Scene):
     def calc_title(self):
         if self.height <= 25:
             from .constants import GAME_TITLE_SHORT as game_title
+
         else:
             from .constants import GAME_TITLE as game_title
+
         return game_title
 
-    def calc_options_heights(self, header_offset, footer_offset):
+    def calc_options_heights(self, header_offset:int, footer_offset:int) -> list:
+        '''Returns the height values for the options based on screen height'''
         def calculate(option):
             half_height = total_height // 2
             quarter_height = total_height // 4
+
             return header_offset + half_height - quarter_height + option
 
         total_height = self.height - header_offset - footer_offset

@@ -252,3 +252,130 @@ class GiantRat(Unit):
 
 if __name__ == "__main__":
     print('Monsters.py')
+
+'''
+RACE SUB NAME COLOR EXP ITENS
+----------------------------
+#30D0F0 #000000 monster invertabrate slime 15
+#ffffff #000000 monster invertabrate worm 
+
+#904040 #000000 monster rodent rat 10
+#904040 #000000 monster rodent bat 10
+
+#307000 #000000 monster reptile snake 15
+#307000 #000000 monster repitle lizard 15
+
+#222222 #ffffff monster arachnid spider 5
+#222222 #ffffff monster arachnid motherspider 50
+
+human <-> shopowner #C08000 #000000 25
+#A04000 #000000 human <-> chieftan 30
+#F08000 #000000 human <-> villager 25
+human <-> poacher  #306030 #000000 30
+human <-> adventurer #408080 #000000 35
+human <-> soldier
+
+
+elven drow lord
+elven drow soldier
+elven drow villager
+
+elven high lord
+elven high soldier
+elven high villager
+
+elven wood lord
+elven wood soldier
+elven wood villager
+
+
+dwarven lord
+dwarven citizen
+dwarven soldier
+dwarven metalworker
+dwarven stoneworker
+dwarven woodworker
+
+
+orcen peon
+orcen slave
+orcen warrior
+orcen warlord
+
+
+beast aries soldier
+beast aries villager
+
+beast capricorn soldier
+beast capricorn villager
+
+beast leo soldier
+beast leo villager
+
+beast taurus soldier
+beast taurus villager
+
+
+human boss Regulus
+beast boss Zorn
+orcen boss Ko Mun
+elven boss Edochas
+dwarf boss Dekay
+
+You are a reincarnated spirit in a new vessel in Calabaston
+You choose a new body and birth location
+
+Enemies would be faction related as well an neutral creeps/monsters
+Want to do hometown for each faction but might be time consuming
+Try hometown of humans first then build outwards
+
+5 serpents? Kings
+The main game is to defeat the five legends that aim to bring the factions
+to total war leading to annihalation.
+These five legends are:
+    Zorn - King of Wrath (German) -> Located in Beast Territory | 
+    Ko Mun - The Torturer (Korean) -> Ork Territory (vainglory?) | 
+    Edochas - The King of Despair (Irish?) -> Elf Forest/Dark Forest (sorrow) |
+    Dekay - the Rotten King -> Dwarf (pun) (greed) | 
+    Crassus Regulus - the Fat King Gluttony (king of humans) |
+
+# Farm Animals:
+Chicken, Cock
+Cat
+Dog
+Sheep
+Cow
+Horse
+# Wilderness Animals:
+Rat
+Frog
+Deer
+Snake
+Bat
+Bee
+Spider
+Bear
+Wolf
+Lion
+# Racial Factions
+Goblins
+Dwarves
+Ogres -- Cyclops
+Orken
+Centaurs
+Minotaurs
+Mud Golem
+Treant
+Skeleton
+Imp
+Gnome
+Eyeclops
+Succubus
+Fire Elemental
+Earth Elemental
+Storm Elemental
+Water Elemental
+Gorgon
+Sphynx
+Slime
+'''

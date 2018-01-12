@@ -5,9 +5,9 @@ import random
 import textwrap
 from collections import namedtuple
 from bearlibterminal import terminal as term
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../../')
 from .setup_game import setup, setup_font, setup_menu, output, toChr
-import spaceship.cc_strings as strings
+import strings as strings
 from .classes.wild import wilderness
 from .classes.player import Player
 from .classes.world import World

@@ -101,15 +101,9 @@ stringify_colors = {
 }
 
 
-class Light:
-    '''Light levels depends on two factors -- discovered and visible
+Light levels depends on two factors -- discovered and visible
                      Discovered | Visible
     0 - Unexplored : False      | False
     1 - Unex b Vis?: False      | True -- 
     2 - Explored   : True       | False
     3 - Visible    : True       | True
-
-    lightlevel = namedtuple("Light", "UNEXPLORED EXPLORED VISIBLE"'''
-    pass
-
-color = namedtuple("Color", "r g b")
