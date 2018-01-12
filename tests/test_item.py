@@ -42,7 +42,7 @@ def test_ring_earth():
 
     player.inventory_add(item)
     
-    assert player.eq_ring_left == None
+    assert player.eq_ring_left is None
     assert type(player.eq_ring_right) == type(item)
     assert item in player.inventory
     assert player.mod_str == 0
@@ -62,7 +62,7 @@ def test_ring_power():
 
     player.inventory_add(item)
     
-    assert player.eq_ring_left == None
+    assert player.eq_ring_left is None
     assert type(player.eq_ring_right) == type(item)
     assert item in player.inventory
     assert player.mod_str == 0
@@ -85,7 +85,7 @@ def test_ring_power_two():
 
     player.inventory_add(item)
     
-    assert player.eq_ring_left == None
+    assert player.eq_ring_left is None
     assert type(player.eq_ring_right) == type(item)
     assert item in player.inventory
     assert player.mod_str == 0
