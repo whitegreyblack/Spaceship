@@ -66,7 +66,9 @@ class Player(Unit):
                 try:
                     setattr(self, part, items[self.__equipment[p]])
                 except KeyError:
+                    print(self.__equipment[p], ' not in list')
                     setattr(self, part, self.__equipment[p])
+                print(part, getattr(self, part))
 
     def convert_inventory(self):
         '''Transforms inventory tuples into actual item objects'''
@@ -83,6 +85,18 @@ class Player(Unit):
             item_desc = item.__str__() if item else ""
             body = ". {:<10}: ".format(part.replace("eq_", "").replace("_", " "))
             yield body, item_desc
+
+    def equipment_remove(self, part):
+        item = getattr(self, part)
+        if item:
+            self.inventory_add(item)
+        setattr(self, part, None)
+
+    def equipment_equip(self, part, item):
+        if not getattr(self, part):
+            setattr(self, part, item)
+        else:
+            print('Slot is not empty')
 
     @property
     def inventory(self):
@@ -121,19 +135,68 @@ class Player(Unit):
                 dmg="(" + str(self.damage_lower) + ", " + str(self.damage_higher) + ")",
                 acc=self.damage_accuracy))
 
+    def stats_pack(self):
+        self.stats = tuple(s + g + r + c for s, g, r, c in zip(
+                                                        self.base_stats,
+                                                        self.gender_bonus,
+                                                        self.race_bonus,
+                                                        self.job_bonus))
+
+    def stats_unpack(self):
+        self.str, self.con, self.dex, self.int, self.wis, self.cha = self.stats
+
+    def stats_modifiers(self):
+        self.mod_str = 0
+        self.mod_con = 0
+        self.mod_dex = 0
+        self.mod_int = 0
+        self.mod_wis = 0
+        self.mod_cha = 0
+
     def calculate_initial_stats(self) -> None:
-        stats = tuple(s + g + r + c for s, g, r, c
-                            in zip(self.base_stats,
-                                   self.gender_bonus,
-                                   self.race_bonus,
-                                   self.job_bonus))
+        self.stats_pack()
+        self.stats_unpack()
+        self.stats_modifiers()
 
-        self.str, self.con, self.dex, self.int, self.wis, self.cha = stats
-        self.cur_health = self.max_health = self.str + self.con * 2
-        self.mp = self.total_mp = self.int * self.wis * 2
-        self.sp = self.dex // 5
+        self.calculate_total_str()
+        self.calculate_total_con()
+        self.calculate_total_dex()
+        self.calculate_total_int()
+        self.calculate_total_wis()
+        self.calculate_total_cha()
 
-    def get_attribute_stats(self):
+        self.calculate_health()
+        self.calculate_mana()
+        self.calculate_speed()
+
+    def calculate_health(self):
+        self.cur_hp = self.tot_hp = self.tot_str + self.tot_con * 2
+
+    def calculate_mana(self):
+        self.cur_mp = self.tot_mp = self.tot_int * self.tot_wis * 2
+
+    def calculate_speed(self):
+        self.sp = self.tot_dex // 2
+
+    def calculate_total_str(self):
+        self.tot_str = self.str + self.mod_str
+
+    def calculate_total_con(self):
+        self.tot_con = self.con + self.mod_con
+
+    def calculate_total_dex(self):
+        self.tot_dex = self.dex + self.mod_dex
+
+    def calculate_total_int(self):
+        self.tot_int = self.int + self.mod_int
+
+    def calculate_total_wis(self):
+        self.tot_wis = self.wis + self.mod_wis
+
+    def calculate_total_cha(self):
+        self.tot_cha = self.cha + self.mod_cha
+
+    def stats_attributes(self):
         return self.str, self.con, self.dex, self.int, self.wis, self.cha
 
     def calculate_attack_variables(self):

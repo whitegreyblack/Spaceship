@@ -240,11 +240,11 @@ class Start(Scene):
             self.player.exp, 
             self.player.advexp)))
         term.puts(col, row + 7, "HP:  {:>6}".format("{}/{}".format(
-            self.player.cur_health, 
-            self.player.max_health)))
+            self.player.cur_hp, 
+            self.player.tot_hp)))
         term.puts(col, row + 8, "MP:  {:>6}".format("{}/{}".format(
-            self.player.mp, 
-            self.player.total_mp)))
+            self.player.cur_mp, 
+            self.player.tot_mp)))
         term.puts(col, row + 9, "SP:  {:>6}".format(self.player.sp))
 
         term.puts(col, row + 11, "STR: {:>6}".format(self.player.str)) 
@@ -518,7 +518,7 @@ class Start(Scene):
                             if chance == 2:
                                 damage *= 2
 
-                            unit.cur_health -= damage
+                            unit.cur_hp -= damage
 
                             term.puts(
                                 x=tx + self.display_offset_x, 
@@ -624,7 +624,7 @@ class Start(Scene):
                                 if chance == 2:
                                     damage *= 2
 
-                                unit.cur_health -= damage
+                                unit.cur_hp -= damage
                                 
                                 term.puts(
                                     x=tx + self.display_offset_x, 
@@ -637,7 +637,7 @@ class Start(Scene):
                                     unit.race, 
                                     damage)
 
-                                if unit.cur_health < 1:
+                                if unit.cur_hp < 1:
                                     log = "You have killed the {}! ".format(
                                         unit.race)
                                     log += "You gain {} exp.".format(unit.xp)
@@ -663,7 +663,7 @@ class Start(Scene):
                                 else:
                                     log += "The {} has {} health left".format(
                                         unit.race, 
-                                        max(0, unit.cur_health))
+                                        max(0, unit.cur_hp))
                                     self.draw_log(log)
                                     # term.puts(
                                     #     x=tx + self.display_offset_x, 

@@ -484,27 +484,26 @@ class Create(Scene):
 
                 else:
                     eq.append(x)
-
             return eq
 
         def flatten(container):
-            # return [ item for items in container for item in items ]
+            return [ item for items in container for item in items ]
             # return list(element
             #           for iteratable in container
             #           for element in iteratable)
-            items = []
-            for inner in container:
-                for item in inner:
-                    items.append(item)
-            return items
+            # items = []
+            # for inner in container:
+            #     for item in inner:
+            #         items.append(item)
+            # return items
 
         inv = []
-        
-        for r, c in zip(race_eq, race_eq):
-            inv.append(get_eq(r) + get_eq(c))
-        
-        eqp = [i.pop(0) if len(i) > 0 else [] for i in inv]
 
+        for r, c in zip(class_eq, race_eq):
+            inv.append(get_eq(r) + get_eq(c))
+
+        eqp = [ i.pop(0) if len(i) > 0 else [] for i in inv ]
+        print(eqp, flatten(inv))
         return eqp, flatten(inv)
 
 def test_hero():
@@ -535,4 +534,5 @@ def test_hero():
 if __name__ == "__main__":
     term.open()
     c = Create()
-    c.run()
+    ret = c.run()
+    print(ret)
