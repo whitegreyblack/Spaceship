@@ -66,9 +66,7 @@ class Player(Unit):
                 try:
                     setattr(self, part, items[self.__equipment[p]])
                 except KeyError:
-                    print(self.__equipment[p], ' not in list')
                     setattr(self, part, self.__equipment[p])
-                print(part, getattr(self, part))
 
     def convert_inventory(self):
         '''Transforms inventory tuples into actual item objects'''

@@ -112,9 +112,13 @@ class Cave(Map):
 
         def distance(p1, p2):
             try:
-                return sqrt((p2.x-p1.x)**2+(p2.y-p1.y)**2)
+                x, y = p2.x - p1.x, p2.y - p1.y
+
             except AttributeError:
-                return sqrt((p2[0]-p1[0])**2+(p2[1]-p1[1])**2)
+                x, y = p2[0] - p1[0], p2[1] - p1[1]
+                
+            finally:
+                return sqrt(x ** 2 + y ** 2)
 
         def volume(box):
             return (box.x2-box.x1) * (box.y2-box.y1)

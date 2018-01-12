@@ -488,14 +488,6 @@ class Create(Scene):
 
         def flatten(container):
             return [ item for items in container for item in items ]
-            # return list(element
-            #           for iteratable in container
-            #           for element in iteratable)
-            # items = []
-            # for inner in container:
-            #     for item in inner:
-            #         items.append(item)
-            # return items
 
         inv = []
 
@@ -503,7 +495,6 @@ class Create(Scene):
             inv.append(get_eq(r) + get_eq(c))
 
         eqp = [ i.pop(0) if len(i) > 0 else [] for i in inv ]
-        print(eqp, flatten(inv))
         return eqp, flatten(inv)
 
 def test_hero():

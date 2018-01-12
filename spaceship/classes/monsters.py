@@ -131,13 +131,13 @@ class Rat(Unit):
         if unsafe and need to heal -> run
         if unsafe and no need to heal -> fight
         '''
-        if self.cur_health <= self.max_health * .10:
+        if self.cur_hp <= self.tot_hp * .10:
             # monster is wounded/damaged -- try preserving its life
             # print('Waiting and resting')
             return commands_ai['wait']
 
         else:
-            # monster is healthy -- do monster stuff
+            # monster is hpy -- do monster stuff
             if not paths:
                 # nothing of interest to the rat
                 if self.last_action == "following":
@@ -230,10 +230,10 @@ class Rat(Unit):
             # print('rat rolls to hit -- rolls a hit')
             damage = self.calculate_attack_damage()
             # print('rat rolls damage -- rolls {}'.format(damage))
-            unit.cur_health -= damage
+            unit.cur_hp -= damage
             # print('rat deals {} damage to {}'.format(damage, unit))
-            # print('{} has {} health left'.format(unit, unit.cur_health))
-            if unit.cur_health <= 0:
+            # print('{} has {} hp left'.format(unit, unit.cur_hp))
+            if unit.cur_hp <= 0:
                 # print('unit has died')
                 pass
 
@@ -241,7 +241,7 @@ class GiantRat(Unit):
     def __init__(self, x, y):
         self.x, self.y = x, y
         self.xp = 35
-        self.health = 10
+        self.hp = 10
         self.character = "r"
         self.job = "giant rat"
         self.race = "monster"

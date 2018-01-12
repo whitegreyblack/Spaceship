@@ -23,7 +23,7 @@ class Desert(Map):
     def build(self):
         self.spaces = []
         self.data = []
-        for y in range(self.height, generate=False):
+        for y in range(self.height):
             col = []
             for x in range(self.width):
                 col.append("~")
@@ -52,7 +52,8 @@ class Forest(Map):
         build()
     """
     chars = {
-        ".": ("\"", blender([wcm.GRASS.hexcode[0], wcm.TREES.hexcode[0]])),
+        # ".": ("\"", blender([wcm.GRASS.hexcode[0], wcm.TREES.hexcode[0]])),
+        ".": ("\"", ("#5D9645",)),
         "T": (wcm.TREES.chars, blender(wcm.GRASS.hexcode)),
     }
     chars_block_move =  {"#", "+", "o", "x", "%"}
@@ -67,7 +68,7 @@ class Forest(Map):
         num_trees = 200
         self.spaces = []
         self.data = []
-        for y in range(self.height, generate=False):
+        for y in range(self.height):
             col = []
             for x in range(self.width):
                 if num_trees:
@@ -109,11 +110,11 @@ class Grassland(Map):
 
         # for sure at least 3 trees
         for t in range(3):
-             self.data[randint(0, self.height-1)][randint(0, self.width-1)] = "T"
+             self.data[randint(0, self.height-1)][randint(0, self.width - 1)] = "T"
 
-        for t in range(num_trees-3):
-            self.data[randint(0, self.height-1)][randint(0, self.width-1)] = "T"
-            stop_chance = randint(0, num_trees-t)
+        for t in range(num_trees - 3):
+            self.data[randint(0, self.height - 1)][randint(0, self.width - 1)] = "T"
+            stop_chance = randint(0, num_trees - t)
             if stop_chance == 0:
                 break       
 
@@ -137,7 +138,7 @@ class Hills(Map):
         vege_chars = (".", "~")
         self.spaces = []
         self.data = []
-        for y in range(self.height, generate=False):
+        for y in range(self.height):
             col = []
             for x in range(self.width):
                 col.append(choice(vege_chars))

@@ -943,7 +943,6 @@ class Start(Scene):
                 dx, dy, _, act = commands_player[(code, shifted)]
 
             except:
-                raise
                 self.draw_log("Invalid direction. Canceled closing door.")
 
             else:

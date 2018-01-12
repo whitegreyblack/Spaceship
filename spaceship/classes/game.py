@@ -18,22 +18,33 @@ class Point:
 
     def __iadd__(self, other):
         try:
-            return Point(self.x + other.x, self.y + other.y)
-        except:
-            return Point(self.x + other[0], self.y + other[1])
+            x, y = self.x + other.x, self.y + other.y
+
+        except AttributeError:
+            x, y = self.x + other[0], self.y + other[1]
+
+        finally:
+            return Point(x, y)
 
     def __isub__(self, other):
         try:
-            return Point(self.x - other.x, self.y - other.y)
-        except:
-            return Point(self.x - other[0], self.y - other[1])
+            x, y = self.x - other.x, self.y - other.y
+
+        except AttributeError:
+            x, y = self.x - other[0], self.y - other[1]
+
+        finally:
+            return Point(x, y)
 
     def __eq__(self, other):
         try:        
-            return self.x == other.x and self.y == other.y
-        except:
-            return self.x == other[0] and self.y == other[1]
+            equal = self.x == other.x and self.y == other.y
 
+        except AttributeError:
+            equal = self.x == other[0] and self.y == other[1]
+
+        finally:
+            return equal
 class Tile:
     def __init__(self, ch, fg, bg):
         self.character = ch

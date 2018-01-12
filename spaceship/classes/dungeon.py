@@ -68,11 +68,12 @@ def rotate(box):
 
 def equal(p1, p2):
     try:
+        # point comparison
         return p1.x == p2.x and p1.y == p2.y
     except AttributeError:
+        # room comparison
         return center(p1) == center(p2)
     except:
-        print(p1, p2)
         raise
 
 def ooe(i, j):
