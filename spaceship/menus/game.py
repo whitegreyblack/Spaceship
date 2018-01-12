@@ -96,7 +96,7 @@ class Start(Scene):
             self.player = Player(player, name)
             self.location = self.world = World(
                 map_name="Calabston", 
-                map_link="./assets/worldmap.png")
+                map_link="./spaceship/assets/worldmap.png")
             self.world.units_add([self.player])
 
         self.gamelog = GameLogger(
@@ -806,8 +806,8 @@ class Start(Scene):
             if self.player.location in self.world.enterable_legend.keys():
                 fileloc = self.world.enterable_legend[self.player.location]
                 fileloc = fileloc.replace(' ', '_').lower()
-                img_name = "./assets/maps/" + fileloc + ".png"
-                cfg_name = "./assets/maps/" + fileloc + ".cfg"
+                img_name = "./spaceship/assets/maps/" + fileloc + ".png"
+                cfg_name = "./spaceship/assets/maps/" + fileloc + ".cfg"
 
                 location = City(
                     map_id=fileloc,
