@@ -152,12 +152,16 @@ class Player(Unit):
         self.mod_int = 0
         self.mod_wis = 0
         self.mod_cha = 0
+        self.mod_hp, self.mod_mp, self.mod_sp = 0, 0, 0
 
     def calculate_initial_stats(self) -> None:
         self.stats_pack()
         self.stats_unpack()
         self.stats_modifiers()
 
+        self.calculate_stats()
+
+    def calculate_stats(self) -> None:
         self.calculate_total_str()
         self.calculate_total_con()
         self.calculate_total_dex()
@@ -170,7 +174,8 @@ class Player(Unit):
         self.calculate_speed()
 
     def calculate_health(self):
-        self.cur_hp = self.tot_hp = self.tot_str + self.tot_con * 2
+        self.base_hp = self.tot_str + self.tot_con * 2
+        self.cur_hp = self.tot_hp = self.base_hp + self.mod_hp
 
     def calculate_mana(self):
         self.cur_mp = self.tot_mp = self.tot_int * self.tot_wis * 2

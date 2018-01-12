@@ -94,14 +94,18 @@ class Ring(Item):
             print('slot not is empty')
             return False
 
-        if self.effect:
-            attribute = getattr(unit, self.effect[0])
-            setattr(unit, self.effect[0], attribute + self.effect[1])
-            setattr(unit, part, self)
-            unit.inventory_remove(self)
-            return True
+        # remove from inventory and place it on the unit equipment
+        unit.inventory_remove(self)
+        setattr(unit, part, self)
 
-        return False
+        # run through the effect modifiers
+        for effect, value in self.effect:
+            attribute = getattr(unit, effect)
+            setattr(unit, effect, attribute + value)
+            print(effect, value, attribute, getattr(unit, effect))
+            
+        unit.calculate_stats()
+        return True
 
 class Armor(Item):
     def __init__(self, name, char, color, placement, me_h, mi_h, dv, pv):
@@ -218,7 +222,7 @@ items = {
     # small shield, short bow, long sword
     "ring of earth": Ring("ring of earth", "=", "green", ("mod_str", 1)),
     "ring of nature": None,
-    "ring of power": None,
+    "ring of power": Ring("ring of power", "=", "red", (("mod_str", 2), ("mod_dex", 1))),
     "ring of regen": None,
     "ring of protection": None,
     "ring of light": None,

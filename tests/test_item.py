@@ -8,35 +8,36 @@ from spaceship.classes.player import Player
 
 def test_ring_protection_ring_left():
     hero = test_hero()
-    item = Ring("ring of protection", "=", "grey", ("tot_hp", 10))
+    item = Ring("ring of protection", "=", "grey", (("mod_hp", 10),))
     player = Player(*hero.values())
     
     player.inventory_add(item)
 
     assert item in player.inventory
+    assert player.mod_hp == 0
 
     result = item.wear(player, 'eq_ring_left')
     
     assert player.eq_ring_left == item
-    assert player.cur_hp + item.effect[1] == player.tot_hp
+    assert player.mod_hp == item.effect[0][1]
     assert item not in player.inventory
 
 def test_ring_protection_ring_right():
     hero = test_hero()
-    item = Ring("ring of protection", "=", "grey", ("tot_hp", 10))
+    item = Ring("ring of protection", "=", "grey", (("mod_hp", 10),))
     player = Player(*hero.values())
 
     player.inventory_add(item)
     ring = player.equipment_remove('eq_ring_right')
     result = item.wear(player, 'eq_ring_right')
     
-    assert player.cur_hp + item.effect[1] == player.tot_hp
+    assert player.mod_hp == item.effect[0][1]
     assert player.eq_ring_right == item
     assert item not in player.inventory
 
-def test_ring_earth_ring_left():
+def test_ring_earth():
     hero = test_hero()
-    item = Ring("ring of earth", "=", "green", ("mod_str", 1))
+    item = Ring("ring of earth", "=", "green", (("mod_str", 1),))
     player = Player(*hero.values())
 
     player.inventory_add(item)
@@ -52,10 +53,66 @@ def test_ring_earth_ring_left():
     assert item not in player.inventory
 
     assert player.mod_str == 1
-    assert player.mod_str + player.str == player.tot_str + 1
-
-    player.calculate_total_str()
     assert player.mod_str + player.str == player.tot_str
+
+def test_ring_power():
+    hero = test_hero()
+    item = Ring("ring of power", "=", "green", (("mod_str", 1), ("mod_dex", 1),))
+    player = Player(*hero.values())
+
+    player.inventory_add(item)
+    
+    assert player.eq_ring_left == None
+    assert type(player.eq_ring_right) == type(item)
+    assert item in player.inventory
+    assert player.mod_str == 0
+
+    result = item.wear(player, 'eq_ring_left')
+
+    assert player.eq_ring_left == item
+    assert item not in player.inventory
+
+    assert player.mod_str == 1
+    assert player.mod_str + player.str == player.tot_str
+
+    assert player.mod_dex == 1
+    assert player.mod_dex + player.dex == player.tot_dex
+
+def test_ring_power_two():
+    hero = test_hero()
+    item = Ring("ring of power", "=", "green", (("mod_str", 1), ("mod_dex", 1),))
+    player = Player(*hero.values())
+
+    player.inventory_add(item)
+    
+    assert player.eq_ring_left == None
+    assert type(player.eq_ring_right) == type(item)
+    assert item in player.inventory
+    assert player.mod_str == 0
+
+    result = item.wear(player, 'eq_ring_left')
+
+    assert player.eq_ring_left == item
+    assert item not in player.inventory
+
+    assert player.mod_str == 1
+    assert player.mod_str + player.str == player.tot_str
+
+    assert player.mod_dex == 1
+    assert player.mod_dex + player.dex == player.tot_dex
+
+    item = Ring("ring of power", "=", "green", (("mod_str", 1), ("mod_dex", 1),))
+    assert player.eq_ring_left != item
+
+    player.inventory_add(item)
+    ring = player.equipment_remove('eq_ring_right')
+    result = item.wear(player, 'eq_ring_right')
+
+    assert player.mod_str == 2
+    assert player.mod_str + player.str == player.tot_str
+
+    assert player.mod_dex == 2
+    assert player.mod_dex + player.dex == player.tot_dex
 
 if __name__ == "__main__":
     print(*test_hero())
