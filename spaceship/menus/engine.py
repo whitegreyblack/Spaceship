@@ -28,7 +28,7 @@ class GameEngine:
     def setup(self):
         '''sets up instance of terminal'''
         term.open()
-        self.setup_font('Ibm_cga', cx=8, cy=16)
+        self.setup_font('Ibm_cga', cx=8, cy=8)
         term.set('window: size=80x25, cellsize=auto, title="Spaceship", fullscreen=false')
 
     def setup_font(self, font, cx=8, cy=None):
@@ -56,5 +56,4 @@ class GameEngine:
 
 if __name__ == "__main__":
     e = GameEngine()
-    e.setup()
     e.run()
