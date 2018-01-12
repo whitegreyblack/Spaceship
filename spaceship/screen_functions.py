@@ -5,6 +5,7 @@ def center(text, width):
     '''Returns x position for string given a width length'''
     if isinstance(text, str):
         text = len(text)
+
     return width // 2 - text // 2
 
 def colorize(text, color):
@@ -34,18 +35,16 @@ def pad(string, center=True, length=0):
     which pads the leftside instead
     '''
     padding = length - len(string)
-    if center:
-        return padding//2 * " " + string.upper() + (padding+1)//2 * " " if padding else string.upper()
-    return string.upper() + padding * " " if padding else string.upper()
+    if padding <= 0:
+        return string.upper()
 
-def switch(x, y, text, bg_before='black', bg_after='black', color='white'):
-    '''Abstract function in place of UNSELECTED, SELECTED, and PASSED'''
-    if bg_before == bg_after:
-        term.puts(x, y, colorize(text, color))
-    else:
-        term.bkcolor(bg_before)
-        term.puts(x, y, colorize(text, color))
-        term.bkcolor(bg_after)
+    if center:
+        l_pad = " " * padding // 2
+        r_pad = " " * (padding + 1) // 2
+        
+        return l_pad + string.upper() + r_pad
+
+    return string.upper() + " " * padding
 
 def surround(text, char=' ', times=1, length=0):
     '''Surrounds the text inputted with a character by a number of times
@@ -53,12 +52,27 @@ def surround(text, char=' ', times=1, length=0):
     if length:
         while len(text) <= length:
             if len(text) % 2:
-                text += char
+                text = text + char
+                
             else:
                 text = char + text
+
         return text
+
     else:
-        return char * times + text + char * times
+        pad = char * times
+        
+        return pad + text + pad
+
+def switch(x, y, text, bg_before='black', bg_after='black', color='white'):
+    '''Abstract function in place of UNSELECTED, SELECTED, and PASSED'''
+    if bg_before == bg_after:
+        term.puts(x, y, colorize(text, color))
+
+    else:
+        term.bkcolor(bg_before)
+        term.puts(x, y, colorize(text, color))
+        term.bkcolor(bg_after)
 
 def modify(increment, index, options):
     '''Increments an integer parameter index and clamps the value between
