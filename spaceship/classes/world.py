@@ -314,7 +314,7 @@ class World(Map):
             self.__tile_map.append(col)
 
     def save_map_check(self):
-        maps_path = "./assets/maps/world/"
+        maps_path = "./spaceship/assets/maps/world/"
         if not os.path.isdir(maps_path):
             print("Picturfy folder does not exist -- Creating 'world' folder")
             os.makedirs(maps_path)
@@ -327,12 +327,12 @@ class World(Map):
         for j, row in enumerate(self.tilemap):
             for i, tile in enumerate(row):
                 img.load()[i, j] = tuple(toInt(color) for color in splitter(tile.color))
-        img.save("./assets/maps/world/" + file_name)
+        img.save("./spaceship/assets/maps/world/" + file_name)
                 
     def save_map(self):
         self.save_map_check()
         file_name = "world.txt"
-        with open("./assets/maps/world/" + file_name, 'w') as text:
+        with open("./spaceship/assets/maps/world/" + file_name, 'w') as text:
             text.write(str(self))
 
     def legend(self) -> Tuple[str, str, str, int]:
@@ -429,7 +429,7 @@ class World(Map):
 if __name__ == "__main__":
     w = World(
         map_name="Calabaston",
-        map_link="./assets/worldmap.png")
+        map_link="./spaceship/assets/worldmap.png")
     print(w.__repr__())
     # w.create_tile_map()
     print(w)

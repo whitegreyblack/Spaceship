@@ -117,7 +117,7 @@ def box(x, y, dx, dy, c):
 
     for j in range(y, y + dy + 1):
         term.puts(x, j, c)
-        term.puts(x+dx, j, c)
+        term.puts(x + dx, j, c)
 
 def toChr(intval):
     try:

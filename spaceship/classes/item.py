@@ -77,20 +77,35 @@ class Potion(Item):
             print(unit.max_health)
 
 class Ring(Item):
-    placement = "ring"
-    def __init__(self, name, char, color):
+    placement = {"eq_ring_left", "eq_ring_right"}
+    def __init__(self, name, char, color, effect=None):
         super().__init__(name, char, color)
-        self.effect = None
+        self.effect = effect
 
-    def wear(self, unit):
-        if self.effect and hasattr(unit, self.effect[0]):
-            self.effect[0] += self.effect[1]
+    def wear(self, unit, part):
+        print(unit, part)
+        if not part in self.placement:
+            '''Cannot equip to current part slot'''
+            print('not in placement')
+            return False
 
-class RingProtection(Ring):
-    def __init__(self):
-        super().__init__("ring of protection", "=", "grey")
-        self.effect = ("max_health", 10)
-        print(self.placement)
+        if getattr(unit, part):
+            '''Check if slot is empty'''
+            print('slot not is empty')
+            return False
+
+        # remove from inventory and place it on the unit equipment
+        unit.inventory_remove(self)
+        setattr(unit, part, self)
+
+        # run through the effect modifiers
+        for effect, value in self.effect:
+            attribute = getattr(unit, effect)
+            setattr(unit, effect, attribute + value)
+            print(effect, value, attribute, getattr(unit, effect))
+            
+        unit.calculate_stats()
+        return True
 
 class Armor(Item):
     def __init__(self, name, char, color, placement, me_h, mi_h, dv, pv):
@@ -205,9 +220,9 @@ items = {
     "quarterstaff": Weapon("quarterstaff", 
         "(", "grey", 2, -1, (4, 9)),
     # small shield, short bow, long sword
-    "ring of earth": (),
+    "ring of earth": Ring("ring of earth", "=", "green", ("mod_str", 1)),
     "ring of nature": None,
-    "ring of power": None,
+    "ring of power": Ring("ring of power", "=", "red", (("mod_str", 2), ("mod_dex", 1))),
     "ring of regen": None,
     "ring of protection": None,
     "ring of light": None,

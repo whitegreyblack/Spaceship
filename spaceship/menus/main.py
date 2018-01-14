@@ -141,5 +141,6 @@ class Main(Scene):
             self.proceed = False
 
 if __name__ == "__main__":
-    g = GameEngine()
-    g.run()
+    term.open()
+    m = Main()
+    m.run()

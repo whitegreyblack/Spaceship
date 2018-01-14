@@ -569,7 +569,7 @@ if __name__ == "__main__":
 
     world = World() # adding character which will be passed down everywhere
     world.load(
-        "./assets/worldmap.png", 
-        "./assets/worldmap_territories.png",
-        "./assets/worldmap_kingdoms.png")
+        "./spaceship/assets/worldmap.png", 
+        "./spaceship/assets/worldmap_territories.png",
+        "./spaceship/assets/worldmap_kingdoms.png")
     world.testdraw()

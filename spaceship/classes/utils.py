@@ -95,7 +95,9 @@ def picturfy(string, filename="picturfy-img.png", folder="./", debug=False):
     for j in range(h):
         string_list = list(mapping[j])
         for i in range(len(string_list)):
-            drawer.rectangle((i, j, i+1, j+1), picturfy_chars[string_list[i]])
+            drawer.rectangle(
+                xy=(i, j, i + 1, j + 1), 
+                outline=picturfy_chars[string_list[i]])
 
     print("Saving string as {}".format(folder + filename))
     img_to_save.save(folder + filename)
@@ -120,12 +122,15 @@ def asciify(string, debug=False):
                 r, g, b, _ = pixels[i, j]
             except ValueError:
                 r, g, b = pixels[i, j]
+
             if (r, g, b) not in colors:
                 colors.add((r,g,b))
+
             try:
                 column.append(stringify_chars[(r, g, b)])
             except KeyError:
                 print((r, g, b))
+
         array.append(column)
 
     if debug:
@@ -147,11 +152,13 @@ def evaluate_blocks(data, w, h, array=False):
         debug=11
         for i, j in ((0,-1), (1,0), (0,1), (-1, 0)):
                 try:
-                    char = data[y+j][x+i]
+                    char = data[y + j][x + i]
                 except IndexError:
                     char = ""
+
                 if char in ("#", "o", "+"):
                     bit_value += increment
+
                 increment *= 2
         return bit_value
 
@@ -189,22 +196,26 @@ def blender(hexes, n=10):
         value /= n
         value *= i
         value = round(value)
-        value = hex(cb+value)
+        value = hex(cb + value)
         value = value.replace("0x", "")
         #value = hex(((abs(ca-cb)//n))*i).replace("0x", "")
         return value
 
-    def mash(color):
-        return "#ff"+"".join(map(lambda x: "0"+str(x) if len(str(x)) < 2 else str(x), color))
+    def mash(color, saturation=False):
+        hex_color = "".join(map(lambda x: "0" + str(x) if len(str(x)) < 2 else str(x), color))
+        if saturation:
+            return "#ff" + hex_color
+        else:
+            return "#" + hex_color
 
     colorA = transform(splitter(hex2))
     colorB = transform(splitter(hex1))
     colorS = [mash(splitter(hex1.replace("#","")))]
 
-    for i in range(n-2):
+    for i in range(n - 2):
         color=[]
         for j in range(3):
-            color.append(blend(colorA[j], colorB[j], n-2, i))
+            color.append(blend(colorA[j], colorB[j], n - 2, i))
         colorS.append(mash(color))
 
     colorS.append(mash(splitter(hex2.replace("#",""))))
@@ -254,3 +265,30 @@ def dimensions(data, array=False):
 def gradient(x, y, characters, colors):
     """Returns a more realistic map color gradient"""
     return table(characters, blender(colors), x, y)
+
+def test_blender():
+    colors = blender(("#87CC1D", "#5D9645"))
+    print(colors)
+
+def run_blender():
+    colors = blender(("#87CC1D", "#5D9645"))
+
+    term.open()
+    for j in range(term.state(term.TK_HEIGHT)):
+        for i in range(term.state(term.TK_WIDTH)):
+            try:
+                term.puts(
+                    x=i, y=j, 
+                    s="[c={}]{}[/c]".format(
+                        colors[i // (len(colors) - 1)], "Q"))
+                        
+            except IndexError:
+                print(i, j, colors, len(colors), i // (len(colors) - 1))
+                raise
+
+    term.refresh()
+    term.read()
+
+if __name__ == "__main__":
+    run_blender()
+    # test_blender()

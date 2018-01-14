@@ -120,6 +120,7 @@ ENV/
 *.swp
 
 # game save files
+save/
 saves/
 
 # game log folder

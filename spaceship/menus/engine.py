@@ -56,5 +56,4 @@ class GameEngine:
 
 if __name__ == "__main__":
     e = GameEngine()
-    e.setup()
     e.run()

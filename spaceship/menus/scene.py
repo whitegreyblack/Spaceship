@@ -35,7 +35,7 @@ class Scene:
         return self.sid
 
     def add_args(self, **kwargs):
-        if self.ret['kwargs'] == None:
+        if self.ret['kwargs'] is None:
             self.ret['kwargs'] = {k: v for k, v in kwargs.items()}
         else:
             self.ret['kwargs'].update({k: v for k, v in kwargs.items()})
@@ -118,13 +118,16 @@ class Scene:
             sid = sid.sid
 
         try:
-            return self.scenes[1][sid]
+            scene = self.scenes[1][sid]
 
         except KeyError:
             raise KeyError('No parent scene with that title')
 
         except:
             raise
+
+        else:
+            return scene
 
     @property
     def children(self):
@@ -155,13 +158,16 @@ class Scene:
             sid = sid.sid
 
         try:
-            return self.scenes[0][sid]
+            scene = self.scenes[0][sid]
 
         except KeyError:
             raise KeyError('No parent scene with that title')
 
         except:
             raise
+        
+        else:
+            return scene
 
     def add_scene_parent(self, scene):
         self.check_scene(scene)

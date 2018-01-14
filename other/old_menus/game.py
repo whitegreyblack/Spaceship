@@ -1628,7 +1628,7 @@ def new_game(character=None, world=None, turns=0):
             log_box(gamelog, turns)
         else:
             gamelog.maxlines = 4 if term.state(term.TK_HEIGHT) > 25 else 2  
-            if dungeon == None:
+            if dungeon is None:
                 dungeon = calabaston.location(*player.location)
                 
                 if player.height == 0:

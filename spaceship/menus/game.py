@@ -42,14 +42,6 @@ class Start(Scene):
 
         self.reset_size()
 
-    def test_data(self):
-        self.ret['kwargs'] = {
-            'player': {
-                'race': 'Human',
-                
-            }, 
-            'name': 'rando'}
-
     def setup(self):
         # self.reset()
         self.actions = {
@@ -104,7 +96,7 @@ class Start(Scene):
             self.player = Player(player, name)
             self.location = self.world = World(
                 map_name="Calabston", 
-                map_link="./assets/worldmap.png")
+                map_link="./spaceship/assets/worldmap.png")
             self.world.units_add([self.player])
 
         self.gamelog = GameLogger(
@@ -248,11 +240,11 @@ class Start(Scene):
             self.player.exp, 
             self.player.advexp)))
         term.puts(col, row + 7, "HP:  {:>6}".format("{}/{}".format(
-            self.player.cur_health, 
-            self.player.max_health)))
+            self.player.cur_hp, 
+            self.player.tot_hp)))
         term.puts(col, row + 8, "MP:  {:>6}".format("{}/{}".format(
-            self.player.mp, 
-            self.player.total_mp)))
+            self.player.cur_mp, 
+            self.player.tot_mp)))
         term.puts(col, row + 9, "SP:  {:>6}".format(self.player.sp))
 
         term.puts(col, row + 11, "STR: {:>6}".format(self.player.str)) 
@@ -526,7 +518,7 @@ class Start(Scene):
                             if chance == 2:
                                 damage *= 2
 
-                            unit.cur_health -= damage
+                            unit.cur_hp -= damage
 
                             term.puts(
                                 x=tx + self.display_offset_x, 
@@ -632,7 +624,7 @@ class Start(Scene):
                                 if chance == 2:
                                     damage *= 2
 
-                                unit.cur_health -= damage
+                                unit.cur_hp -= damage
                                 
                                 term.puts(
                                     x=tx + self.display_offset_x, 
@@ -645,7 +637,7 @@ class Start(Scene):
                                     unit.race, 
                                     damage)
 
-                                if unit.cur_health < 1:
+                                if unit.cur_hp < 1:
                                     log = "You have killed the {}! ".format(
                                         unit.race)
                                     log += "You gain {} exp.".format(unit.xp)
@@ -671,7 +663,7 @@ class Start(Scene):
                                 else:
                                     log += "The {} has {} health left".format(
                                         unit.race, 
-                                        max(0, unit.cur_health))
+                                        max(0, unit.cur_hp))
                                     self.draw_log(log)
                                     # term.puts(
                                     #     x=tx + self.display_offset_x, 
@@ -814,8 +806,8 @@ class Start(Scene):
             if self.player.location in self.world.enterable_legend.keys():
                 fileloc = self.world.enterable_legend[self.player.location]
                 fileloc = fileloc.replace(' ', '_').lower()
-                img_name = "./assets/maps/" + fileloc + ".png"
-                cfg_name = "./assets/maps/" + fileloc + ".cfg"
+                img_name = "./spaceship/assets/maps/" + fileloc + ".png"
+                cfg_name = "./spaceship/assets/maps/" + fileloc + ".cfg"
 
                 location = City(
                     map_id=fileloc,
@@ -951,7 +943,6 @@ class Start(Scene):
                 dx, dy, _, act = commands_player[(code, shifted)]
 
             except:
-                raise
                 self.draw_log("Invalid direction. Canceled closing door.")
 
             else:
@@ -1108,7 +1099,12 @@ class Start(Scene):
                 log = ""
 
 if __name__ == "__main__":
+    from .make import Create
+    term.open()
+    c = Create()
+    ret = c.run()
+    ret['kwargs']['name'] = 'grey'
+    print(ret)
     s = Start()
-    s.test_data()
+    s.add_args(**ret['kwargs'])
     s.run()
-

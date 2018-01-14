@@ -17,7 +17,7 @@ self.defense_magical
 
 '''
 class Energy:
-    max_energy = 30
+    tot_energy = 30
     def __init__(self, speed=10):
         self.speed = speed
         self.cur_energy = 0
@@ -26,10 +26,10 @@ class Energy:
         self.cur_energy += self.speed
     
     def ready(self):
-        return self.cur_energy >= self.max_energy
+        return self.cur_energy >= self.tot_energy
 
     def reset(self):
-        self.cur_energy -= self.max_energy
+        self.cur_energy -= self.tot_energy
 
 class Unit(Object):
     '''Object subclass used in the following subclasses:
@@ -50,7 +50,7 @@ class Unit(Object):
         self.sight_city = 14
         self.sight_norm = 7
         self.race = race
-        self.cur_health = self.max_health = 5
+        self.cur_hp = self.tot_hp = 5
         self.relationship = rs
         self.energy = Energy(speed)
         Unit.unit_id += 1
@@ -65,15 +65,15 @@ class Unit(Object):
             self.background,
             self.race,
             self.sight_norm,
-            self.cur_health,
+            self.cur_hp,
             self.energy.speed,
-            self.max_health
+            self.tot_hp
         )
 
     @property
     def is_alive(self):
-        '''Checks if current health is above 0'''
-        return self.cur_health > 0
+        '''Checks if current hp is above 0'''
+        return self.cur_hp > 0
 
     def move(self, dx: int, dy: int) -> None:
         self.x += dx
