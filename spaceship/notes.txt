@@ -59,3 +59,13 @@ other, an item of great value some equal distance away from both the units, and
 also a trap between them which action would the ais' take during their turn.  
 So for this development this mechanic will certainly be given great thought in
 its logic and implementation.
+
+The overall flow of Gitflow is:
+A [develop] branch is created from master
+A [release] branch is created from develop
+A [release] branch is merged into develop and master
+A [feature] branch is created from develop
+A [feature] branch is merged into develop
+When the release branch is done it is merged into develop and master
+If an issue in master is detected a hotfix branch is created from master
+Once the hotfix is complete it is merged to both develop and master
