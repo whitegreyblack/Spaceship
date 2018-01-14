@@ -30,8 +30,9 @@ class Create(Scene):
     def reset(self):
         self.shorten = self.height <= 25
         self.delim, self.row, self.row_bonus = "\n", 11, 11
+
         if self.shorten:
-            self.delim, self.row, self.row_bonus= "", 5, 6
+            self.delim, self.row, self.row_bonus = "", 5, 6
         
         self.col1, self.col2, self.col3 = 3, 26, 49
 
