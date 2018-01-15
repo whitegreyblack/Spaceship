@@ -45,36 +45,6 @@ class VillagerChild(Unit):
             
         build_sight_map()
         self.wander(tiles, sight_map)
-    
-    def wander(self, tiles, sight):
-
-        def translate(x, y):
-            sx, sy = self.translate_sight(x, y)
-            return sight[sy][sx] not in unit_chars
-
-        # points = list(filter(lambda t: within(*t) and not tiles[t].block_mov, 
-        #                       tiles.keys()))
-        points = list(filter(
-            lambda t: self.within(*t) and not tiles[(x, y)].block_mov, 
-            tiles.keys()))
-
-        # emptys = list(filter(lambda xy: 
-        #   sight[self.y - xy[1] + self.sight][self.x - xy[0] + self.sight] 
-        #       not in unit_chars, 
-        #   points))
-        emptys = list(filter(lambda xy: translate(*xy), points))
-        point = choice(emptys)
-        self.moving_torwards(point)
-
-    def moving_torwards(self, point):
-        dx = point[0] - self.x
-        dy = point[1] - self.y
-        dt = distance(*self.position, *point)
-
-        x = int(round(dx / dt))
-        y = int(round(dy / dt))
-
-        self.move(x, y)
 
 class Villager(Unit):
     def __init__(self, x, y, ch="V", fg=Color.white, bg=Color.black, 
@@ -106,20 +76,6 @@ class Villager(Unit):
         sight_map = [[" " for x in range(sight_range)] for y in range(sight_range)]
         build_sight_map()
         self.wander(tiles, sight_map)
-    
-    def wander(self, tiles, sight):
-        points = list(filter(lambda t: tiles[t].char != "#", tiles.keys()))
-        emptys = list(filter(lambda xy: sight[self.y-xy[1]+self.sight][self.x-xy[0]+self.sight] not in unit_chars, points))
-        point = choice(emptys)
-        self.moving_torwards(point)
-
-    def moving_torwards(self, point):
-        dx = point[0] - self.x
-        dy = point[1] - self.y
-        dt = distance(*self.position, *point)
-        x = int(round(dx / dt))
-        y = int(round(dy / dt))
-        self.move(x, y)
 
 class Shopkeeper(Unit):
     def __init__(self, x, y, ch="S", fg=Color.white, bg=Color.black, 
@@ -135,14 +91,6 @@ class Shopkeeper(Unit):
     def acts(self, player, tiles, units):
         spaces = list(filter(lambda xy: xy != self.position, self.spaces))
         self.moving_torwards(choice(spaces))
-
-    def moving_torwards(self, point):
-        dx = point[0] - self.x
-        dy = point[1] - self.y
-        dt = distance(*self.position, *point)
-        x = int(round(dx / dt))
-        y = int(round(dy / dt))
-        self.move(x, y)        
 
 class Blacksmith(Unit):
     def __init__(self, x, y, ch="B", fg=Color.white, bg=Color.black,
@@ -166,14 +114,6 @@ class Innkeeper(Unit):
     def acts(self, player, tiles, units):
         spaces = list(filter(lambda xy: xy != self.position, self.spaces))
         self.moving_torwards(choice(spaces))
-
-    def moving_torwards(self, point):
-        dx = point[0] - self.x
-        dy = point[1] - self.y
-        dt = distance(*self.position, *point)
-        x = int(round(dx / dt))
-        y = int(round(dy / dt))
-        self.move(x, y)        
 
 class Bishop(Unit):
     def __init__(self, x, y, ch="B", fg=Color.white, bg=Color.black, 
@@ -285,15 +225,7 @@ class Soldier(Unit):
     def acts(self, player, tiles, units):
         spaces = list(filter(lambda xy: xy != self.position, self.spaces))
         self.moving_torwards(choice(spaces))
-
-    def moving_torwards(self, point):
-        dx = point[0] - self.x
-        dy = point[1] - self.y
-        dt = distance(*self.position, *point)
-        x = int(round(dx / dt))
-        y = int(round(dy / dt))
-        self.move(x, y)        
-
+        
 neutrals = {
     "bishop": Bishop,
     "innkeeper": Innkeeper,

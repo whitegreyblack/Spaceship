@@ -105,9 +105,11 @@ class Unit(Object):
     def translate_sight(self, x, y):
         sx = self.x - x + self.sight_norm
         sy = self.y - y + self.sight_norm
+
         return sx, sy
 
     def moving_torwards(self, point):
+        '''Returns the closest 1:1 point torwards input point'''
         try:
             dx, dy = point.x - self.x, point.y - self.y
             dt = distance(*self.position, *point.position)
