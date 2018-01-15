@@ -465,10 +465,7 @@ class Map:
                         # if not self.blocked and not self.viewable - empty space
                         if self.blocked(X, Y) and not self.viewable(X, Y):
                             new_start = r_slope
-                        # elif self.blocked(X, Y) and self.viewable(X, Y):
-                        #     blocked = False
-                        #     start = new_start
-                        # if not self.blocked(x, y)
+
                         else:
                             blocked = False
                             start = new_start
@@ -491,21 +488,17 @@ class Map:
         '''Adds an item object to the list of items at position (x, y)
         on the map
         '''
-        print('add item', x, y, i, self.square(x, y).items)
         self.square(x, y).items.append(i)
-        print('add item', x, y, i, self.square(x, y).items)
 
     def item_remove(self, x, y, i) -> None:
         '''Removes the item object from the list of items at position (x, y)
         on the map
         '''
-        print('remv item', x, y, i, self.square(x, y).items)
         try:
             self.square(x, y).items.remove(i)
+
         except ValueError:
-            raise
             print('no item with that value')
-        print('remv item', x, y, i, self.square(x, y).items)
 
     def items_at(self, x, y) -> object:
         '''Returns a list of item objects at position (x, y) on the map.
@@ -543,37 +536,9 @@ class Map:
         '''Removes the unit from the list of units if the unit is found'''
         try:
             self.__units.remove(unit)
+
         except ValueError:
             print('No unit with that value')
-
-    def process_unit_actions(self, player):
-        for unit in self.__units:
-            if hasattr(unit, 'do_ai_stuff'):
-                units, items = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
-                unit.do_ai_stuff(units, items)
-
-    def handle_units(self, player):
-        # print(hasattr(self, 'units'))
-        for unit in self.__units:
-            # if hasattr(unit, 'acts'):
-            #     positions = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
-            #     tiles = {position: self.square(*position) for position in positions}
-            #     units = {u.position: u for u in self.__units if u != unit}
-            #     unit.acts(player, tiles, units)
-            #     if player.cur_health <= 0:
-            #         return
-            # print(unit, unit.energy.cur_energy)
-            if unit.energy.ready():
-                if hasattr(unit, 'acts'):
-                    positions = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
-                    tiles = {position: self.square(*position) for position in positions}
-                    units = {u.position: u for u in self.__units if u != unit}
-                    unit.acts(player, tiles, units)
-                    if player.cur_health <= 0:
-                        return
-                unit.energy.reset()
-            else:
-                unit.energy.gain_energy()
 
     def generate_units(self):
         if self.height <= 25:
@@ -588,6 +553,7 @@ class Map:
                 unit = choice([Rat, Rat])(x=i, y=j, speed=choice([5, 10, 15]))
                 self.__units.append(unit)
                 # self.square(i, j).units = units
+                
         else:
             raise AttributeError("Spaces has not yet been initialized")
 

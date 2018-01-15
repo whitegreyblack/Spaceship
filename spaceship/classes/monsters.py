@@ -81,8 +81,10 @@ class Rat(Unit):
 
             if spotted:
                 # print(self.energy.speed)
-                print(map_out())
-            
+                # print(map_out())
+                pass
+
+        paths = []            
         # start with an empty sight map
         unit_spotted = []
         item_spotted = []
@@ -90,7 +92,6 @@ class Rat(Unit):
 
         sight_range = self.sight_norm * 2 + 1 # accounts for radius
         sight_map = [[" " for x in range(sight_range)] for y in range(sight_range)]
-        paths = []
         build_sight_map()
 
         # monster is wounded/damaged -- try preserving its life
@@ -136,7 +137,6 @@ class Rat(Unit):
                             self.follow(sight_map, units, path[1].node)
 
     def wander(self, tiles, sight):
-        # print('wandering about')
         # filter out all tiles that are not empty spaces
         # do not want to go to tiles containing blockable objects or units
         # so filter twice: once to get floor tiles, again to get empty ones
@@ -197,20 +197,6 @@ class Rat(Unit):
     
     def talk(self):
         return "Reeeee!!"
-
-    def attack(self, unit):
-        # print('ATTACKING')
-        chance = self.calculate_attack_chance()
-        if chance == 1:
-            # print('rat rolls to hit -- rolls a hit')
-            damage = self.calculate_attack_damage()
-            # print('rat rolls damage -- rolls {}'.format(damage))
-            unit.cur_hp -= damage
-            # print('rat deals {} damage to {}'.format(damage, unit))
-            # print('{} has {} hp left'.format(unit, unit.cur_hp))
-            if unit.cur_hp <= 0:
-                # print('unit has died')
-                pass
 
 class GiantRat(Unit):
     def __init__(self, x, y):

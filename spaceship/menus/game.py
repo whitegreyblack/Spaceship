@@ -215,7 +215,7 @@ class Start(Scene):
         else:
             sight = self.player.sight_norm
 
-        self.location.fov_calc([(x, y, sight)])
+        self.location.fov_calc([(x, y, sight), (5, 5, sight)])
 
         for x, y, col, ch in self.location.output(x, y):
             term.puts(
@@ -896,21 +896,19 @@ class Start(Scene):
             self.player.move_height(-1)
             self.location.units_add([self.player])
 
-        # most likely a city, wilderness or level 1 of dungeon
+        # check if parent of this location is the World Map
         if isinstance(self.location.parent, World):
             move_upstairs()
             # reset position since re-entering world map
             self.player.position = (0, 0)
 
+        # check if parent location is a city, wilderness or dungeon map
         elif isinstance(self.location.parent, (City, Wild, Cave)):
             move_upstairs()
             self.player.position = self.location.stairs_down
 
         else:
             self.draw_log('You cannot go upstairs without stairs')
-
-        # if isinstance(self.location, World):
-        #     self.player.position = (0, 0)
 
     def action_interact_door_close(self):
         def close_door(x, y):
