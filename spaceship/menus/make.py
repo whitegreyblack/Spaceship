@@ -207,21 +207,27 @@ class Create(Scene):
 
         # EQUIPMENT and INVENTORY
         eq, inv = None, None
-        if self.character_index > 1:
+        if self.character_index > 0:
+            if self.character_index >= 2:
+                eq, inv = self.form_equipment(req, ceq)
 
-            eq, inv = self.form_equipment(req, ceq)
-            # if var is -1 then shows eq else shows inv
+            else:
+                eq, inv = self.form_equipment(req, ["" for _ in range(12)])
+
+            # check if flag is set to show inventory or equipment
             if self.inv_screen < 0:
                 x, y = self.col3, self.row + 1
                 term.puts(x, y,
                     strings._col3.format(
                         *(e if len(e) > 0 else "" for e in eq),
                         delim=self.delim))
+
             else:
                 for item, i in zip(inv, range(len(inv))):
                     x, y = self.col3, self.row + i + 1
                     string = "{}.{}".format(chr(ord('a') + i), item)
                     term.puts(x, y, string)
+
         else:
             term.puts(
                 self.col3, 
@@ -241,23 +247,41 @@ class Create(Scene):
 
         if code == term.TK_LEFT:
             if self.character_index == 0:
-                self.gender_index = modify(-1, self.gender_index, 2)
+                self.gender_index = modify(
+                    increment=-1, 
+                    index=self.gender_index, 
+                    options=len(self.gender_options))
 
             elif self.character_index == 1:
-                self.race_index = modify(-1, self.race_index, 5)
+                self.race_index = modify(
+                    increment=-1, 
+                    index=self.race_index, 
+                    options=len(self.race_options))
 
             elif self.character_index == 2:
-                self.class_index = modify(-1, self.class_index, 5)
+                self.class_index = modify(
+                    increment=-1, 
+                    index=self.class_index, 
+                    options=len(self.class_options))
 
         elif code == term.TK_RIGHT:
             if self.character_index == 0:
-                self.gender_index = modify(1, self.gender_index, 2)
+                self.gender_index = modify(
+                    increment=1, 
+                    index=self.gender_index, 
+                    options=len(self.gender_options))
 
             elif self.character_index == 1:
-                self.race_index = modify(1, self.race_index, 5)
+                self.race_index = modify(
+                    increment=1, 
+                    index=self.race_index, 
+                    options=len(self.race_options))
 
             elif self.character_index == 2:
-                self.class_index = modify(1, self.class_index, 5)
+                self.class_index = modify(
+                    increment=1, 
+                    index=self.class_index, 
+                    options=len(self.class_options))
 
         elif code == term.TK_UP:
             self.character_index = modify(-1, self.character_index, 4)
@@ -265,7 +289,10 @@ class Create(Scene):
                 self.inv_screen = -1
 
         elif code == term.TK_DOWN:
-            self.character_index = modify(1, self.character_index, 4)
+            self.character_index = modify(
+                increment=1, 
+                index=self.character_index, 
+                options=4)
 
         # Toggles V Key
         elif code == term.TK_V and self.character_index > 1:

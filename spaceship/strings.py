@@ -89,51 +89,51 @@ CLERIC = stats(0, 1, 0, 2, 2, 0)
 EXTRA = 3
 
 start="""
-Welcome to the realm of Calabaston. Your spirit has drifited to this place filled with intelligent races, a multitude of
- creatures and monsters, and history colored with tragedy, betrayal, and conquest. If you are willing, come and choose
-the vessel in which you will enter this world. Take careful consideration as your starting point depends on the choices 
-you make here. Good luck adventurer.
+Welcome to the realm of Calabaston. Your spirit has drifited to this place filled with intelligent races, a multitude 
+of creatures and monsters, and history colored with tragedy, betrayal, and conquest. If you are willing, come and 
+choose the vessel in which you will enter this world. Take careful consideration as your starting point depends on the 
+choices you make here. Good luck adventurer.
 """[1:]
 
 race_human="""
-The youngest race on the continent of Calabaston, humans were the last to arrive from across the Endless Water and, yet
-they have thrived and proved to be a dominant force throughout the land. Within less than a hundred years, they have
-built Renmar, the current capital city of the human empire of Rane. Humans can be skilled with a wide array of different
-weaponry and magic and are useful in any class.
+The youngest race on the continent of Calabaston, humans were the last to arrive from across the Endless Water, and yet, 
+they have thrived and proved to be a dominant force throughout the land. Within less than a hundred years, they have 
+built Renmar, the current capital city of the human empire of Rane. Humans can be skilled with a wide array of 
+different weaponry and magic and are useful in any class.
 """[1:]
 
 race_dwarf="""
-A hardy race, dwarves are most famous for their impenetrable fortresses and mass earthly wealth. Their vast fortune
-allows their people to pursue trades and crafts such as blacksmithing, jewelry, and weaponforging, which would not
-be possible otherwise. Dwarves seen outside their Yugahdah, the dwarven territory, are most often skilled traders
-and merchants or mercenaries. Dwarven soldiers prefer melee weapons but can also use magic and ranged weapons.
+A hardy race, dwarves are most famous for their impenetrable fortresses and mass earthly wealth. Their vast fortune 
+allows their people to pursue trades and crafts such as blacksmithing, jewelry, and weaponforging, which would not 
+be possible otherwise. Dwarves seen outside of Yugahdah, the dwarven territory, are most often skilled traders, 
+merchants, or mercenaries. Dwarves prefer melee weapons but can also use magic and ranged weapons.
 """[1:]
 
 race_beast="""
-Beasts have physical differences that set them apart from other races as they are born with a combination of fur, scales,
-horns, and tails. After being driven out of the plains of Tempest, they settled near the north west of the wetlands and
-now call Tiphmore, a gigantic trade city, their new home. Beasts have unusually high mana and health pools and are
-suited for either magic or melee classes.
+Beasts have physical differences that set them apart from other races as they are born with a combination of fur, 
+scales, horns, and tails. After being driven out of the plains of Tempest, they settled near the north west of the 
+wetlands and now call Tiphmore, a gigantic trade city, their new home. Beasts have unusually high health and mana pools 
+and are suited for either magic or melee classes.
 """[1:]
 
 race_elven="""
-The long-lived, mysterious race of elves reside deep within the forests of Aurendelim. Though they may look frail, their
-appearances betray them as they are more dextereous than other races. They live in accordance to the law of the forest
-and dissaprove of any attempt by other races that try to exploit the forest for its resources. Elven warriors are most
-often seen using magic or ranged weaponry but can be skilled in melee as well.
+The long-lived, mysterious race of elves reside deep within the forests of Aurendelim. Though they may look frail, 
+their appearances betray them as they are more dextereous than other races. They live in accordance to the law of the 
+forest and dissaprove of any attempt by other races that try to exploit the forest for its resources. Elven warriors 
+are most often seen using magic or ranged weaponry but can be skilled in melee as well.
 """[1:] 
 
 race_orcen="""
-Brutish and violent, the race of orcs are feared by other races, including the beast folk, due to their warring nature
-and the need to constantly engage in battle. They are split into many different tribal clans and factions that struggle
-to take power over their rivals and claim the blood bone crown which signifies the strongest clan in Calabaston. The
-bone crown is currently located in Lok Gurrah, the largest city in the Burning Hands territory.
+Brutish and violent, Orcs are feared by other races, including even beast-folk, due to their warring nature and needs 
+to constantly engage in battle. They are split into many different tribal clans throughout the Burning Lands territory 
+that struggle to take power among all other factions and claim the Blood-Bone crown, which signifies the strongest orc 
+clan. The bone crown is currently located in Lok Gurrah, the largest city in the Burning Lands territory.
 """[1:]
 
 race_ishtahari="""
-Among all the races that live across Calabaston, the Ishtahari are the oldest. Yet having lived on the continent hundreds
-of years before any of the other races, they are now as rare to meet as their magic is to learn. They are the only 
-race to master two elements of the seven, LIGHT and VOID
+Among all the races that live across Calabaston, the Ishtahari are the oldest. Yet having lived on the continent 
+hundreds of years before any of the other races, they are now as rare to meet as their magic is to learn. They are the 
+only race to master two elements of the seven, LIGHT and VOID.
 """[1:]
 
 race_ork="""

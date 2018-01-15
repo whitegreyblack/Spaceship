@@ -41,6 +41,9 @@ Item Classifiers: (-- Based on ADOM item classifiers)
 # weapon = namedtuple("weapon", "name char color hands accuracy damage")
 # armor = namedtuple("armor", "name char color placement melee_hit missile_hit dv pv")
 
+item_chars = ('[', '*', 'o', '\'', '(', '}', '/', '=', '\\', '!', '?', '%', '$', '"')
+# item_chars = ('[', '*', 'o', ']', '\'', '(', '}', '/', '=', '\\', '!', '?', '~', '%', '$', '{', '"')
+
 class Item:
     def __init__(self, name, char, color):
         self.name = name
@@ -58,6 +61,9 @@ class Item:
 
     def __str__(self):
         return self.name
+
+    def modify(self, value: str) -> str:
+        return value.replace('mod_', '')
 
 class Potion(Item):
     def __init__(self, name, char, color, heal=10):
@@ -80,7 +86,18 @@ class Ring(Item):
     placement = {"eq_ring_left", "eq_ring_right"}
     def __init__(self, name, char, color, effect=None):
         super().__init__(name, char, color)
-        self.effect = effect
+        self.effects = effect
+
+    def __str__(self):
+        return f"{self.name} ({self.seperate()})"
+
+    def seperate(self):
+        for e, v in self.effects:
+            print(e, v)
+        # print([e, v for e, v in self.effects])
+
+        return ", ".join(f"{self.modify(effect)}: {self.mark(value)}" 
+            for effect, value in self.effects)
 
     def wear(self, unit, part):
         print(unit, part)
@@ -99,7 +116,7 @@ class Ring(Item):
         setattr(unit, part, self)
 
         # run through the effect modifiers
-        for effect, value in self.effect:
+        for effect, value in self.effects:
             attribute = getattr(unit, effect)
             setattr(unit, effect, attribute + value)
             print(effect, value, attribute, getattr(unit, effect))
@@ -158,7 +175,9 @@ class Weapon(Item):
             self.mark(self.damage_higher))
 
 items = {
-    # TODO -- implement commented items 
+    # TODO -- implement shields
+    # TODO -- implement ranged weapons
+    # TODO -- implement readable items: scrolls, tomes
     "horned helmet": Armor("horned helmet", 
         "[", "grey", "head", 1, 0, 0, 1),
     "metal helmet": Armor("metal helmet", 
@@ -211,6 +230,8 @@ items = {
         "(", "grey", 1, -1, (4, 8)),
     "medium shield": Weapon("medium shield", 
         "[", "grey", 1, -3, (1, 3)),
+    "small shield": Weapon("small shield", 
+        "[", "grey", 1, -3, (1, 3)),
     "mace": Weapon("mace", 
         "(", "grey", 1, -1, (3, 9)),
     "warhammer": Weapon("warhammer", 
@@ -219,26 +240,28 @@ items = {
         "(", "grey", 2, -1, (4, 9)),
     "quarterstaff": Weapon("quarterstaff", 
         "(", "grey", 2, -1, (4, 9)),
-    # small shield, short bow, long sword
-    "ring of earth": Ring("ring of earth", "=", "green", ("mod_str", 1)),
-    "ring of nature": None,
+    
+    # small shield, short bow,
+    "ring of earth": Ring("ring of earth", "=", "dark green", (("mod_str", 1),)),
+    "ring of nature": Ring("ring of nature", "=", "green", (("mod_wis", 1),)),
     "ring of power": Ring("ring of power", "=", "red", (("mod_str", 2), ("mod_dex", 1))),
     "ring of regen": None,
     "ring of protection": None,
     "ring of light": None,
     "ring of chaos": None,
-    "ring of ice": None,
-    "ring of fire": None,
-    "ring of water": None,
-    "ring of lightning": None,
+    "ring of ice": Ring("ring of ice", "=", "light blue", (("mod_hp", 10),)),
+    "ring of fire": Ring("ring of fire", "=", "dark red", (("mod_dmg", 3),)),
+    "ring of water": Ring("ring of water", "=", "dark blue", (("mod_sp", 10),)),
+    "ring of lightning": Ring("ring of lightning", "=", "yellow", (("mod_wis", 2),)),
     "ring of resistance": None,
     "ring of darkness": None,
-    # ring of earth, ring of nature, ring of power, ring of regen, ring of protection
-    # ring of light, ring of ice, ring of resistance, ring of fire, ring of water
+    "storm ring": None,
     "leather belt": Armor("leather belt", "[", "green", "waist", 0, 0, 0, 1),
     "rope belt": Armor("rope belt", "[", "green", "waist", 0, 0, 1, 0),
-    # common pants
-    # leather boots, metal boots, sandals
+    "common pants": Armor("common pants", "[", "green", "legs", 0, 0, 0, 0),
+    "leather boots": Armor("leather boots", "[", "green", "feet", 0, 0, 0, 0),
+    "metal boots": Armor("metal boots", "[", "grey", "feet", 0, 0, 0, 0),
+    "sandals": Armor("sandals", "[", "green", "feet", 0, 0, 0, 0),
     # tome, spellbook, scrolls
     "small health potion": Potion("small health potion", "!", "red", 10),
     "medium health potion": Potion("medium health potion", "!", "red", 20),
@@ -257,7 +280,6 @@ def check_item(classifier, item):
         raise KeyError("Classifier or item name is wrong")
 
 if __name__ == "__main__":
-    # check_item("head", "horned helmet")
     get_all_items()
 
 '''

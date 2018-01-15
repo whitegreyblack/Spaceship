@@ -4,10 +4,9 @@ from typing import Tuple
 
 from ..tools import distance
 from .color import Color
-from .item import Armor, Weapon, Item, items
-from .charmap import item_chars, unit_chars
+from .item import Armor, Weapon, Item, items, item_chars
 from ..action import commands_ai
-from .unit import Unit
+from .unit import Unit, unit_chars
 
 class Rat(Unit):
     def __init__(self, x, y, ch="r", fg=Color.orange_darker, bg=Color.black,

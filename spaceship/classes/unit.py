@@ -11,11 +11,12 @@ self.damage_physical
 self.defense_physical
 self.damage_magical
 self.defense_magical
-
-# self.damage_lower = 1
-# self.damage_higher = 2
-
+self.damage_lower = 1
+self.damage_higher = 2
 '''
+
+unit_chars = ('@', 'o', 'r', 'b', 'R', "v", "V", "B", "G", "I", "S")
+
 class Energy:
     tot_energy = 30
     def __init__(self, speed=10):
@@ -38,7 +39,7 @@ class Unit(Object):
 
     Monsters :- Rat, Bat, Orc
 
-    Playables :- Player, Character
+    Playables :- Player, Character, Hero
 
     Implements movement and unit interactions
     '''

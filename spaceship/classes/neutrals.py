@@ -4,9 +4,8 @@ from typing import Tuple
 
 from ..tools import distance
 from .color import Color
-from .item import Armor, Weapon, Item, items
-from .charmap import item_chars, unit_chars
-from .unit import Unit
+from .item import Armor, Weapon, Item, items, item_chars
+from .unit import Unit, unit_chars
 
 class VillagerChild(Unit):
     def __init__(self, x, y, ch="v", fg=Color.white, bg=Color.black, 
@@ -19,6 +18,11 @@ class VillagerChild(Unit):
     def talk(self):
         return "{}: Are you from around here?".format(self.__class__.__name__)
 
+    def translate(self, x, y):
+        sx = self.x - x + self.sight
+        sy = self.y - y + self.sight
+        return sx, sy
+
     def acts(self, player, tiles, units):
         # Villagers just wander around
         def build_sight_map():
@@ -26,27 +30,46 @@ class VillagerChild(Unit):
                 if player.position == (x, y):
                     char = "@"
                     spotted = True
+
                 elif (x, y) in units.keys():
                     char = units[(x, y)].character
+
                 else:
                     char = tiles[(x, y)].char
             
-                dx, dy = self.x - x + self.sight, self.y - y + self.sight
+                dx, dy = self.translate(x, y)
+
                 sight_map[dy][dx] = char
+
             sight_map[self.sight][self.sight] = self.character
 
         sight_range = self.sight * 2 + 1 # accounts for radius
-        sight_map = [[" " for x in range(sight_range)] for y in range(sight_range)]
+        sight_map = [[" " 
+            for x in range(sight_range)] 
+            for y in range(sight_range)]
+            
         build_sight_map()
         self.wander(tiles, sight_map)
     
     def wander(self, tiles, sight):
         def within(x, y):
-            return 6 <= x <= 60 and 2 <= y <= 20
-        points = list(filter(lambda t: within(*t) and not tiles[t].block_mov, tiles.keys()))
-        emptys = list(filter(lambda xy: sight[self.y-xy[1]+self.sight][self.x-xy[0]+self.sight] not in unit_chars, points))
+            return 6 <= x <= 60 and 2 <= y <= 20 and not tiles[(x, y)].block_mov
+
+        def translate(x, y):
+            sy = self.y - y + self.sight
+            sx = self.x - x + self.sight
+            return sight[sy][sx] not in unit_chars
+
+        # points = list(filter(lambda t: within(*t) and not tiles[t].block_mov, 
+        #                       tiles.keys()))
+        points = list(filter(lambda t: within(*t), tiles.keys()))
+
+        # emptys = list(filter(lambda xy: 
+        #   sight[self.y - xy[1] + self.sight][self.x - xy[0] + self.sight] 
+        #       not in unit_chars, 
+        #   points))
+        emptys = list(filter(lambda xy: translate(*xy), points))
         point = choice(emptys)
-        print(tiles[point].char, tiles[point].block_mov)
         self.moving_torwards(point)
 
     def moving_torwards(self, point):

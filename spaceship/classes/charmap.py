@@ -2,9 +2,6 @@ from collections import namedtuple
 
 charmap = namedtuple("Charmap", "chars hexcode")
 
-item_chars = ('%', '[', ')')
-unit_chars = ('@', 'o', 'r', 'b', 'R', "v", "V", "B", "G", "I", "S")
-
 class WildernessCharmap:
     GRASS=charmap([",", ";", "`","\'", "\""], ("#56ab2f", "#a8e063"))
     PLAIN=charmap([".", "\"", ","], ("#F3E347", "#56ab2f"))

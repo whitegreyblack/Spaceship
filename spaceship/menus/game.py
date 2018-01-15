@@ -122,7 +122,7 @@ class Start(Scene):
         term.refresh()
 
     def process_units(self):
-        if isinstance(self.location, World) or isinstance(self.location, City):
+        if isinstance(self.location, World): # or isinstance(self.location, City):
             for unit in self.location.units:
                 self.unit = unit
                 self.process_turn()

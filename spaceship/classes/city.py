@@ -149,7 +149,7 @@ class City(Map):
                 w, h = img.size
         except FileNotFoundError:
             # raise FileNotFoundError("Cannot find file for stringify: {}".format(self.map_img))
-            with Image.open('.spaceship/assets/maps/sample.png') as img:
+            with Image.open('./spaceship/assets/maps/sample.png') as img:
                 pixels = img.load()
                 w, h = img.size
 

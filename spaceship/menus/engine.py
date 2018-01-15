@@ -39,7 +39,8 @@ class GameEngine:
         else:
             term.set("window: cellsize=8x8")
             cy = 'x'+str(cy) if cy else ''
-            term.set("font: ./fonts/{}.ttf, size={}{}".format(font, cx, cy))
+            term.set("font: ./spaceship/fonts/{}.ttf, size={}{}".format(
+                font, cx, cy))
 
     def run(self):
         '''Goes through the scenes until exit'''
