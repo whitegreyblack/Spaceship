@@ -136,59 +136,6 @@ class Rat(Unit):
                         else:
                             self.follow(sight_map, units, path[1].node)
 
-    def wander(self, tiles, sight):
-        # filter out all tiles that are not empty spaces
-        # do not want to go to tiles containing blockable objects or units
-        # so filter twice: once to get floor tiles, again to get empty ones
-
-        # these are all the non wall tiles
-        points = list(filter(
-            lambda t: tiles[t].char != "#", tiles.keys()))
-
-        for point in points:
-            sx, sy = self.translate_sight(*point)
-            empty_space = sight[sy][sx] not in unit_chars
-            if not empty_space:
-                points.remove(point)
-
-        point = choice(points)
-
-        self.moving_torwards(point)
-
-    def follow(self, sight, units, path):
-        sx, sy = self.translate_sight(*path)
-        empty_space = sight[sy][sx] not in unit_chars
-
-        # something in the way -- move it
-        if not empty_space:
-            self.displace(units[(path)])
-
-        # empty space -- go torward target
-        else:
-            self.moving_torwards(path)
-        
-    
-    def moving_torwards(self, unit):
-        try:
-            dx = unit.x - self.x
-            dy = unit.y - self.y
-
-            try:
-                dt = distance(*self.position, *unit.position_local())
-
-            except:
-                dt = distance(*self.position, *unit.position)
-
-        except:
-            dx = unit[0] - self.x
-            dy = unit[1] - self.y
-            dt = distance(*self.position, *unit)
-
-        x = int(round(dx / dt))
-        y = int(round(dy / dt))
-
-        self.move(x, y)
-
     def drops(self):
         if randint(0, 5):
             return Item("rat corpse", "%", "red")

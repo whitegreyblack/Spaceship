@@ -170,21 +170,23 @@ class Start(Scene):
         #     else:
         #         self.player.energy.gain()
 
-    def draw_log(self, log=None, refresh=True):
+    def draw_log(self, log=None, color="white", refresh=True):
         if log:
-            self.gamelog.add(log)
+            self.gamelog.add(log, color=color)
 
         term.clear_area(
             0, 
             self.height - self.log_height - 1, 
             self.width, 
             self.log_height)
+        
+        messages = self.gamelog.write()
 
-        for index, message in enumerate(self.gamelog.write().messages):
+        for index, msg in enumerate(messages):
             term.puts(
                 x=1,
                 y=self.height + index - self.log_height - 1,
-                s=message[1])
+                s="[c={}]{}[/c]".format(msg.color, msg.message))
         
         if refresh:
             term.refresh()
@@ -215,7 +217,8 @@ class Start(Scene):
         else:
             sight = self.player.sight_norm
 
-        self.location.fov_calc([(x, y, sight), (5, 5, sight)])
+        self.location.fov_calc([(x, y, sight)])
+        # self.location.fov_calc([(x, y, sight), (5, 5, sight)])
 
         for x, y, col, ch in self.location.output(x, y):
             term.puts(
@@ -561,7 +564,7 @@ class Start(Scene):
                                 log = "The {} has killed {}!".format(
                                     self.unit.race,
                                     "you" if player else "the " + unit.race)
-                                self.draw_log(log)
+                                self.draw_log(log, color="red")
 
                                 if player:
                                     exit('DEAD')
@@ -601,11 +604,11 @@ class Start(Scene):
                     self.player.travel(x, y)
                     turn_inc = True
                 else:
-                    travel_error = "You cannot travel there"
+                    travel_error = "You cannot travel there."
                     self.draw_log(travel_error)
         else:
             if (x, y) == (0, 0):
-                self.draw_log("You rest for a while")
+                self.draw_log("You rest for a while.")
                 turn_inc = True
 
             else:
@@ -633,7 +636,7 @@ class Start(Scene):
                             unit.move(-x, -y)
                             unit.energy.reset()
                             print(unit, switch)
-                            log = "You switch places with the {}".format(
+                            log = "You switch places with the {}.".format(
                                                 unit.__class__.__name__.lower())
                             self.draw_log(log)
 
@@ -641,7 +644,7 @@ class Start(Scene):
                             chance = self.player.calculate_attack_chance()
 
                             if chance == 0:
-                                log = "You try attacking the {} but miss".format(
+                                log = "You try attacking the {} but miss.".format(
                                     unit.race)
                                 self.draw_log(log)
 
@@ -682,28 +685,32 @@ class Start(Scene):
 
                                     if item:
                                         self.location.item_add(*unit.position, item)
-                                        self.draw_log("The {} has dropped {}".format(
+                                        self.draw_log("The {} has dropped {}.".format(
                                             unit.race, 
                                             item.name))
 
                                     self.location.unit_remove(unit)
 
                                 else:
-                                    log += "The {} has {} health left".format(
+                                    log += "The {} has {} health left.".format(
                                         unit.race, 
                                         max(0, unit.cur_hp))
-                                    self.draw_log(log)
+
+                                    self.draw_log(log, color="red")
 
                         turn_inc = True
                 else:
                     if self.location.out_of_bounds(tx, ty):
-                        self.draw_log("You reached the edge of the map")
+                        self.draw_log("You reached the edge of the map.")
+
                     else:
                         ch = self.location.square(tx, ty).char
+
                         if ch == "~":
-                            log = "You cannot swim"
+                            log = "You cannot swim."
                         else:
-                            log = "You walk into {}".format(walkChars[ch])
+                            log = "You walk into {}.".format(walkChars[ch])
+
                         self.draw_log(log)
 
     def get_input(self):     
@@ -887,7 +894,7 @@ class Start(Scene):
 
 
         else:
-            self.draw_log('You cannot go downstairs without stairs')
+            self.draw_log("You cannot go downstairs without stairs.")
 
     def action_interact_stairs_up(self):
         def move_upstairs():
@@ -908,7 +915,7 @@ class Start(Scene):
             self.player.position = self.location.stairs_down
 
         else:
-            self.draw_log('You cannot go upstairs without stairs')
+            self.draw_log("You cannot go upstairs without stairs.")
 
     def action_interact_door_close(self):
         def close_door(x, y):
@@ -926,7 +933,7 @@ class Start(Scene):
                     self.draw_log('Out of bounds ({}, {})'.format(*pos))
 
         if not doors:
-            self.draw_log('No open doors next to you')
+            self.draw_log("No open doors next to you.")
 
         elif single_element(doors):
             close_door(*doors.pop())
@@ -1047,21 +1054,21 @@ class Start(Scene):
     def action_interact_item_pickup(self):
         def pickup_item(item):
             if len(list(self.player.inventory)) >= 25:
-                gamelog.add("Backpack is full. Cannot pick up {}".format(item))
+                gamelog.add("Backpack is full. Cannot pick up {}.".format(item))
 
             else:
                 self.location.item_remove(*self.player.position, item)
                 self.player.inventory_add(item)
                 log = "You pick up {} and place it in your backpack.".format(
                                                                     item.name)
-                log += "Your backpack feels heavier"                                            
+                log += "Your backpack feels heavier."
                 self.draw_log(log)
                 self.turn_inc = True
         
         items = [item for item in self.location.items_at(*self.player.position)]
 
         if not items:
-            self.draw_log('No items on the ground where you stand')
+            self.draw_log("No items on the ground where you stand.")
 
         elif single_element(items):
             pickup_item(items.pop())

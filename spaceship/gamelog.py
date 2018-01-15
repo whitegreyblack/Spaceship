@@ -18,9 +18,7 @@ Implementation Details:
         -   ?should it update index dynamically or manually?
 """
 
-statement = namedtuple("Statement", "statement ctime clock")
-
-log = namedtuple("Logger", "messages")
+log = namedtuple("Logger", "message color")
 
 class GameLogger:
     """
@@ -97,7 +95,7 @@ class GameLogger:
         '''Returns a time string for use in log pre-messages'''
         return "[" + self.time() + "] :- "
 
-    def add(self, message):
+    def add(self, message, color):
         """Adds a message to queue and handles repeated messages from game"""
         def add_message(message):
             # checks terminal print flag
@@ -128,10 +126,10 @@ class GameLogger:
                 if not self.counter:
                     self.dump(self.messages.pop(0))
 
-            self.messages.append([self.getHeader(), message])
+            self.messages.append([self.getHeader(), message, color])
             self.update()
 
-        messages = textwrap.wrap(message, width=self.width)
+        messages = textwrap.wrap(message, width=self.width - 2)
         for msg in messages:
             add_message(msg)
 
@@ -142,9 +140,11 @@ class GameLogger:
     def write(self):
         """Return a set of messages for game loop to print"""
         if len(self.messages) < self.maxlines:  
-            return log(self.messages)
+            return [log(message[1], message[2]) for message in self.messages]
+            # return log(self.messages, )
 
-        return log([self.messages[i] for i in range(self.maxlines)])
+        return [log(self.messages[i][1], self.messages[i][2])
+                for i in range(self.maxlines)]
 
     def dump(self, message):
         """Write log to disk"""

@@ -124,7 +124,7 @@ class Player(Unit):
 
     def profile(self):
         return (profile[0].format(
-            *self.get_attribute_stats(),
+            *self.stats_attributes(),
             name=self.name,
             sex=self.gender,
             race=self.race,

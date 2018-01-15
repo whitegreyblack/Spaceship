@@ -221,8 +221,8 @@ class Bishop(Unit):
                 dx, dy = self.translate_sight(x, y)
                 sight_map[dy][dx] = char
 
-            if spotted:
-                print(map_out())
+            # if spotted:
+            #     print(map_out())
 
         paths = []            
         unit_spotted = []
@@ -238,7 +238,6 @@ class Bishop(Unit):
         else:
             if not paths:
                 # nothing of interest to the bishop
-                print('wander')
                 self.wander(tiles, sight_map)
 
             # else:
@@ -264,32 +263,6 @@ class Bishop(Unit):
             #             else:
             #                 # print("Saw {}".format(interest))
             #                 self.follow(sight_map, units, path[1].node)
-
-    def wander(self, tiles, sight):
-        # filter out all tiles that are not empty spaces
-        # do not want to go to tiles containing blockable objects or units
-        # so filter twice: once to get just floor tiles, again to get empty ones
-
-        # these are all the non wall tiles
-        points = list(filter(
-            lambda t: tiles[t].char != "#", tiles.keys()))
-
-        # of these points, these are the positions currently empty
-        emptys = list(filter(
-            lambda xy: self.translate_sight(*xy) not in unit_chars, points))
-
-        # then choose a single point to walk to
-        point = choice(emptys)
-
-        self.moving_torwards(point)
-
-    def moving_torwards(self, point):
-        dx = point[0] - self.x
-        dy = point[1] - self.y
-        dt = distance(*self.position, *point)
-        x = int(round(dx / dt))
-        y = int(round(dy / dt))
-        self.move(x, y)        
 
 class Soldier(Unit):
     ''' soldier class should be on patrol -- moves from position to position
