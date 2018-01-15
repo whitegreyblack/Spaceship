@@ -137,7 +137,7 @@ class Start(Scene):
         term.refresh()
 
     def process_units(self):
-        if isinstance(self.location, World): # or isinstance(self.location, City):
+        if isinstance(self.location, World):
             for unit in self.location.units:
                 self.unit = unit
                 self.process_turn()
@@ -229,6 +229,7 @@ class Start(Scene):
         # sets the location name at the bottom of the status bar
         if g0:
             location = None
+
             if self.player.location in self.world.enterable_legend.keys():
                 location = self.world.enterable_legend[self.player.location]
 
@@ -283,6 +284,7 @@ class Start(Scene):
 
     def draw_player_profile(self):
         '''Handles player profile screen'''
+
         # draws header border
         for i in range(self.width):
             term.puts(i, 1, '#')
@@ -296,6 +298,7 @@ class Start(Scene):
 
     def draw_player_equipment(self):
         '''Handles equipment screen'''
+
         # draws header border
         for i in range(self.width):
             term.puts(i, 1, '#')
@@ -356,27 +359,23 @@ class Start(Scene):
             for item in items:
                 if isinstance(item, Weapon):
                     weapons.append(item)
+
                 elif isinstance(item, Armor):
                     armors.append(item)
+
                 elif isinstance(item, Potion):
                     potions.append(item)    
+
                 elif isinstance(item, Ring):
                     rings.append(item)
+
                 else:
                     print(item, 'no class identifier')
 
             draw_item_grouping("Weapons", weapons)
-            
             draw_item_grouping("Armors", armors)
-
             draw_item_grouping("Potions", potions)
-
             draw_item_grouping("Rings", rings)
-
-            # for index, item in enumerate(items):
-            #     letter = chr(ord('a') + index) + ". "
-            #     item_desc = item.__str__() if item else ""
-
     
     def draw_player_eq_inv_switch(self):
         term.puts(
@@ -624,17 +623,6 @@ class Start(Scene):
                                     self.draw_log("The {} has dropped {}".format(
                                         unit.race, item.name))
                                 self.location.unit_remove(unit)
-                            # term.puts(
-                            #     x=tx + self.display_offset_x, 
-                            #     y=ty + self.display_offset_y, 
-                            #     s='[c=red]{}[/c]'.format(damage if damage <= 9 else '*'))
-                            # term.refresh()
-            # else:
-            #     term.puts(
-            #         x=tx + self.display_offset_x, 
-            #         y=ty + self.display_offset_y, 
-            #         s='[c=red]X[/c]')
-            #     term.refresh()
                             
     def process_movement(self, x, y):
         turn_inc = 0
@@ -1144,7 +1132,8 @@ class Start(Scene):
         while True:
             term.clear()
             self.draw_player_inventory()
-            self.draw_player_eq_drop()
+            if list(self.player.inventory):
+                self.draw_player_eq_drop()
             if log:
                 self.draw_drop_log(log)
             term.refresh()            
