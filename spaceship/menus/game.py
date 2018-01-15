@@ -19,6 +19,20 @@ from ..classes.world import World
 from ..classes.city import City
 from ..classes.cave import Cave
 
+walkChars = {
+    "=": "furniture",
+    "+": "a door",
+    "/": "a door",
+    "o": "a lamp",
+    "#": "a wall",
+    "x": "a post",
+    "~": "a river",
+    "T": "a tree",
+    "f": "a tree",
+    "Y": "a tree",
+    "%": "a wall",
+}
+
 def single_element(container):
     return len(container) == 1
 
@@ -615,10 +629,12 @@ class Start(Scene):
                         unit = self.location.unit_at(tx, ty)
 
                         if unit.friendly:
-                            unit.move(-x, -y)
                             self.player.move(x, y)
+                            unit.move(-x, -y)
+                            unit.energy.reset()
+                            print(unit, switch)
                             log = "You switch places with the {}".format(
-                                                                    unit.race)
+                                                unit.__class__.__name__.lower())
                             self.draw_log(log)
 
                         else:
@@ -650,7 +666,7 @@ class Start(Scene):
                                     damage)
 
                                 if unit.cur_hp < 1:
-                                    log = "You have killed the {}! ".format(
+                                    log += "You have killed the {}! ".format(
                                         unit.race)
                                     log += "You gain {} exp.".format(unit.xp)
                                     self.draw_log(log)
@@ -677,42 +693,19 @@ class Start(Scene):
                                         unit.race, 
                                         max(0, unit.cur_hp))
                                     self.draw_log(log)
-                                    # term.puts(
-                                    #     x=tx + self.display_offset_x, 
-                                    #     y=ty + self.display_offset_y, 
-                                    #     s='[c=red]{}[/c]'.format(damage if damage <= 9 else '*'))
-                                    # term.refresh()
 
                         turn_inc = True
                 else:
                     if self.location.out_of_bounds(tx, ty):
                         self.draw_log("You reached the edge of the map")
                     else:
-                        walkChars = {
-                            "=": "furniture",
-                            "+": "a door",
-                            "/": "a door",
-                            "o": "a lamp",
-                            "#": "a wall",
-                            "x": "a post",
-                            "~": "a river",
-                            "T": "a tree",
-                            "f": "a tree",
-                            "Y": "a tree",
-                            "%": "a wall",
-                        }
                         ch = self.location.square(tx, ty).char
                         if ch == "~":
-                            self.draw_log("You cannot swim")
+                            log = "You cannot swim"
                         else:
-                            self.draw_log("You walk into {}".format(
-                                walkChars[ch]))
-                                # refresh=False)
-                            # term.puts(
-                            #     x=tx + self.display_offset_x, 
-                            #     y=ty + self.display_offset_y, 
-                            #     s='[c=red]{}[/c]'.format(damage if damage <= 9 else '*'))
-                            # term.refresh()
+                            log = "You walk into {}".format(walkChars[ch])
+                        self.draw_log(log)
+
     def get_input(self):     
         key = term.read()
         if key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
@@ -887,36 +880,37 @@ class Start(Scene):
                 location.parent = self.location
 
             self.player.move_height(1)
-            self.player.position = self.location.stairs_up
             self.location.unit_remove(self.player)
             self.location = self.location.sublevel
             self.location.units_add([self.player])
+            self.player.position = self.location.stairs_up
+
+
         else:
             self.draw_log('You cannot go downstairs without stairs')
 
     def action_interact_stairs_up(self):
-        def move_upstairs(reset=False):
+        def move_upstairs():
             self.location.unit_remove(self.player)
             self.location = self.location.parent
             self.player.move_height(-1)
             self.location.units_add([self.player])
-            # if reset:
-            #     self.player.position = 
 
-        if self.player.location in self.world.enterable_legend.keys():
+        # most likely a city, wilderness or level 1 of dungeon
+        if isinstance(self.location.parent, World):
             move_upstairs()
+            # reset position since re-entering world map
+            self.player.position = (0, 0)
 
-        elif self.world.location_is(*self.player.location, 2):
+        elif isinstance(self.location.parent, (City, Wild, Cave)):
             move_upstairs()
-
-        elif self.player.position == self.location.stairs_up:
-            move_upstairs(reset=True)
+            self.player.position = self.location.stairs_down
 
         else:
             self.draw_log('You cannot go upstairs without stairs')
 
-        if isinstance(self.location, World):
-            self.player.position = (0, 0)
+        # if isinstance(self.location, World):
+        #     self.player.position = (0, 0)
 
     def action_interact_door_close(self):
         def close_door(x, y):

@@ -1,7 +1,5 @@
 from random import randint, choice
-from collections import namedtuple
 from typing import Tuple
-
 from ..tools import distance
 from .color import Color
 from .item import Armor, Weapon, Item, items, item_chars
@@ -35,33 +33,46 @@ class Rat(Unit):
     '''
 
     def acts(self, units, tiles):
+        '''So RAT AI starts with evaluating environment first before
+        evaluating itself.
+        It determines the safety of the environment before making decisions
+        if units do not exist -> safe
+        If units exist and does not include enemies -> safe
+        if units exist and does include enemies -> danger
+        Then makes a decision based on dungeon danger
+        if safe and need to heal -> heal
+        if safe and no need to heal -> wander
+        if unsafe and need to heal -> run
+        if unsafe and no need to heal -> fight
+        '''
         # need a function that returns all units/items/whatever in the 
         # rat line of sight -- basically a mini dungeon output based on sight
         def build_sight_map():
             '''purely visual recording of environment -- no evaluation yet'''
             def map_out():
+                '''Print out of the current sight map -- useful for debug'''
                 return "\n".join("".join(row[::-1]) for row in sight_map[::-1])
 
+            # place self in the middle of the map
             sight_map[self.sight_norm][self.sight_norm] = self.character
             spotted = False
 
             for tile in tiles:
-
+                # check if unit is on the square
                 if tile in units.keys():
-                    # check if unit is on the square
-                    unit = units[(x, y)]
+                    unit = units[tile]
                     char = unit.character
                     spotted = True
+                    # different racial unit
                     if self.character != char:
-                        # different racial unit
-                        paths.append((100, unit, self.path(self.position, unit.position, tiles))
+                        paths.append((100, unit, self.path(self.position, unit.position, tiles)))
 
+                # check for items on the square
                 elif tiles[tile].items:
-                    # check for items on the square
-                    char = tiles[(x, y)].items[0].char
+                    char = tiles[tile].items[0].char
 
+                # empty square
                 else:
-                    # empty square
                     char = tiles[tile].char
 
                 # offset the location based on unit position and sight range
@@ -82,55 +93,47 @@ class Rat(Unit):
         paths = []
         build_sight_map()
 
-        '''So RAT AI starts with evaluating environment first before
-        evaluating itself.
-        It determines the safety of the environment before making decisions
-        if units do not exist -> safe
-        If units exist and does not include enemies -> safe
-        if units exist and does include enemies -> danger
-        Then makes a decision based on dungeon danger
-        if safe and need to heal -> heal
-        if safe and no need to heal -> wander
-        if unsafe and need to heal -> run
-        if unsafe and no need to heal -> fight
-        '''
+        # monster is wounded/damaged -- try preserving its life
+        # print('Waiting and resting')
         if self.cur_hp <= self.tot_hp * .10:
-            # monster is wounded/damaged -- try preserving its life
-            # print('Waiting and resting')
             return commands_ai['wait']
 
+        # monster is healthy -- do monster stuff
         else:
-            # monster is hpy -- do monster stuff
+            # nothing of interest to the rat
             if not paths:
-                # nothing of interest to the rat
                 if self.last_action == "following":
-                    # print('Following trail of last seen unit')
                     self.moving_torwards()
-                self.wander(tiles, sight_map)
-            else:
 
+                self.wander(tiles, sight_map)
+
+            else:
                 _, interest, path = max(paths)
-                # print(self.position, interest, path)
+
+                # no path exists
                 if not path:
-                    # path returns false
                     self.wander(tiles, sight_map)
+
                 # get distance to determine action
                 # elif isinstance(interest, Unit) or isinstance(interest, Player):
                 elif isinstance(interest, Unit):
-                    if self.race in interest.__class__.__name__:
-                        # print('Saw another {}'.format(self.race))
-                        pass
+
+                    # its another rat -- do nothing
+                    if self.race == interest.race:
+                        self.wander(tiles, sight_map)
+
+                    # its another monster -- do nothing
+                    elif self.job == interest.job:
+                        self.wander(tiles, sight_map)
+
                     else:
+                        # must be an adventurer -- go for the juggular
                         dt = distance(*self.position, *interest.position)
                         if dt < 2:
-                            # x, y = self.x - interest.x, self.y - interest.y
-                            # self.attack(interest)
                             return commands_ai['move'][self.direction(interest)]
-
+                        # too far -- follow it
                         else:
-                            # print("Saw {}".format(interest))
                             self.follow(sight_map, units, path[1].node)
-        # print(paths)
 
     def wander(self, tiles, sight):
         # print('wandering about')
@@ -139,25 +142,29 @@ class Rat(Unit):
         # so filter twice: once to get floor tiles, again to get empty ones
 
         # these are all the non wall tiles
-        points = list(filter(lambda t: tiles[t].char != "#", tiles.keys()))
-        emptys = list(filter(
-            lambda xy: sight[self.y - xy[1] + self.sight_norm][self.x- xy[0] + self.sight_norm] 
-                not in unit_chars, 
-            points))
-        point = choice(emptys)
+        points = list(filter(
+            lambda t: tiles[t].char != "#", tiles.keys()))
+
+        for point in points:
+            sx, sy = self.translate_sight(*point)
+            empty_space = sight[sy][sx] not in unit_chars
+            if not empty_space:
+                points.remove(point)
+
+        point = choice(points)
+
         self.moving_torwards(point)
 
     def follow(self, sight, units, path):
-        # print('following')
-        # print(sight[self.y - path[1] + self.sight_norm][self.x - path[0] + self.sight_norm])
-        empty = sight[self.y - path[1] + self.sight_norm][self.x - path[0] + self.sight_norm] not in unit_chars
-        if not empty:
-            # print('tile not empty')
-            # print(units[(path)])
-            # print('switching placse with {}'.format(units[(path)]))
+        sx, sy = self.translate_sight(*path)
+        empty_space = sight[sy][sx] not in unit_chars
+
+        # something in the way -- move it
+        if not empty_space:
             self.displace(units[(path)])
+
+        # empty space -- go torward target
         else:
-            # print('empty tile')
             self.moving_torwards(path)
         
     
@@ -179,6 +186,7 @@ class Rat(Unit):
 
         x = int(round(dx / dt))
         y = int(round(dy / dt))
+
         self.move(x, y)
 
     def drops(self):

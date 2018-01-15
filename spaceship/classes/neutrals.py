@@ -18,7 +18,7 @@ class VillagerChild(Unit):
     def talk(self):
         return "{}: Are you from around here?".format(self.__class__.__name__)
 
-    def acts(self, player, tiles, units):
+    def acts(self, units, tiles):
         # Villagers just wander around
         def build_sight_map():
             for (x, y) in tiles:
@@ -47,8 +47,6 @@ class VillagerChild(Unit):
         self.wander(tiles, sight_map)
     
     def wander(self, tiles, sight):
-        def within(x, y):
-            return 6 <= x <= 60 and 2 <= y <= 20 and not tiles[(x, y)].block_mov
 
         def translate(x, y):
             sx, sy = self.translate_sight(x, y)
@@ -56,7 +54,9 @@ class VillagerChild(Unit):
 
         # points = list(filter(lambda t: within(*t) and not tiles[t].block_mov, 
         #                       tiles.keys()))
-        points = list(filter(lambda t: within(*t), tiles.keys()))
+        points = list(filter(
+            lambda t: self.within(*t) and not tiles[(x, y)].block_mov, 
+            tiles.keys()))
 
         # emptys = list(filter(lambda xy: 
         #   sight[self.y - xy[1] + self.sight][self.x - xy[0] + self.sight] 
@@ -190,7 +190,7 @@ class Bishop(Unit):
         spaces = list(filter(lambda xy: xy != self.position, self.spaces))
         self.moving_torwards(choice(spaces))
 
-    def acts(self, player, tiles, units):
+    def acts(self, units, tiles):
         def build_sight_map():
             '''purely visual recording of environment -- no evaluation yet'''
             def map_out():
@@ -200,21 +200,18 @@ class Bishop(Unit):
             spotted = False
 
             for tile in tiles:
-                if tile == player.position:
-                    char = "@"
-                    spotted = True
-
-                elif tile in units.keys():
+                if tile in units.keys():
                     # check if unit is on the square
                     unit = units[tile]
                     char = unit.character
-                    # spotted = True
+                    spotted = True
                     if unit.behaviour_score < 0:
                         paths.append((100, unit, self.path(self.position, unit.position, tiles)))
 
                 elif tiles[tile].items:
                     # check for items on the square
                     char = tiles[tile].items[0].char
+
                 else:
                     # empty square
                     char = tiles[tile].char
@@ -226,7 +223,7 @@ class Bishop(Unit):
 
             if spotted:
                 print(map_out())
-        print(units)
+
         paths = []            
         unit_spotted = []
         item_spotted = []
@@ -241,31 +238,50 @@ class Bishop(Unit):
         else:
             if not paths:
                 # nothing of interest to the bishop
+                print('wander')
                 self.wander(tiles, sight_map)
 
-            else:
+            # else:
+            #     print('not wander')
+            #     _, interest, path = max(paths)
+            #     # print(self.position, interest, path)
+            #     if not path:
+            #         # path returns false
+            #         self.wander(tiles, sight_map)
+            #     # get distance to determine action
+            #     # elif isinstance(interest, Unit) or isinstance(interest, Player):
+            #     elif isinstance(interest, Unit):
+            #         if self.race in interest.__class__.__name__:
+            #             # print('Saw another {}'.format(self.race))
+            #             pass
+            #         else:
+            #             dt = distance(*self.position, *interest.position)
+            #             if dt < 2:
+            #                 # x, y = self.x - interest.x, self.y - interest.y
+            #                 # self.attack(interest)
+            #                 return commands_ai['move'][self.direction(interest)]
 
-                _, interest, path = max(paths)
-                # print(self.position, interest, path)
-                if not path:
-                    # path returns false
-                    self.wander(tiles, sight_map)
-                # get distance to determine action
-                # elif isinstance(interest, Unit) or isinstance(interest, Player):
-                elif isinstance(interest, Unit):
-                    if self.race in interest.__class__.__name__:
-                        # print('Saw another {}'.format(self.race))
-                        pass
-                    else:
-                        dt = distance(*self.position, *interest.position)
-                        if dt < 2:
-                            # x, y = self.x - interest.x, self.y - interest.y
-                            # self.attack(interest)
-                            return commands_ai['move'][self.direction(interest)]
+            #             else:
+            #                 # print("Saw {}".format(interest))
+            #                 self.follow(sight_map, units, path[1].node)
 
-                        else:
-                            # print("Saw {}".format(interest))
-                            self.follow(sight_map, units, path[1].node)
+    def wander(self, tiles, sight):
+        # filter out all tiles that are not empty spaces
+        # do not want to go to tiles containing blockable objects or units
+        # so filter twice: once to get just floor tiles, again to get empty ones
+
+        # these are all the non wall tiles
+        points = list(filter(
+            lambda t: tiles[t].char != "#", tiles.keys()))
+
+        # of these points, these are the positions currently empty
+        emptys = list(filter(
+            lambda xy: self.translate_sight(*xy) not in unit_chars, points))
+
+        # then choose a single point to walk to
+        point = choice(emptys)
+
+        self.moving_torwards(point)
 
     def moving_torwards(self, point):
         dx = point[0] - self.x
@@ -274,21 +290,6 @@ class Bishop(Unit):
         x = int(round(dx / dt))
         y = int(round(dy / dt))
         self.move(x, y)        
-
-    def wander(self, tiles, sight):
-        # filter out all tiles that are not empty spaces
-        # do not want to go to tiles containing blockable objects or units
-        # so filter twice: once to get floor tiles, again to get empty ones
-
-        # these are all the non wall tiles
-        points = list(filter(lambda t: tiles[t].char != "#", tiles.keys()))
-        emptys = list(filter(
-            lambda xy: sight[self.y - xy[1] + self.sight_norm][self.x- xy[0] + self.sight_norm] 
-                not in unit_chars, 
-            points))
-        point = choice(emptys)
-        self.moving_torwards(point)
-
 
 class Soldier(Unit):
     ''' soldier class should be on patrol -- moves from position to position

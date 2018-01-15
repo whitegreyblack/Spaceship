@@ -1,6 +1,8 @@
 from random import choice
 from .object import Object
 from .color import Color
+from collections import namedtuple
+from ..tools import distance
 
 ''' TODO: implement unique attributes
 self.str, self.agi, self.int
@@ -149,6 +151,9 @@ class Unit(Object):
             return closelist
 
         return closelist        
+
+    def within(x, y, lx=6, hx=60, ly=2, hy=20):
+        return lx <= x <= hx and ly <= y <= hy
 
 if __name__ == "__main__":
     unit = Unit(x=5, y=5)
