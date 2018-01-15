@@ -63,6 +63,7 @@ class Start(Scene):
                 ',': self.action_interact_item_pickup,
                 'd': self.action_interact_item_drop,
                 'u': self.action_interact_item_use,
+                't': self.action_interact_unit_talk,
             },
         }
 
@@ -134,6 +135,7 @@ class Start(Scene):
         else:
             for unit in self.location.units:
                 unit.energy.gain()
+                print(unit)
                 self.unit = unit
                 while unit.energy.ready():
                     self.unit.energy.reset()
@@ -567,6 +569,7 @@ class Start(Scene):
             if (x, y) == (0, 0):
                 self.draw_log("You wait in the area")
                 turn_inc = True
+
             else:
                 tx = self.player.wx + x
                 ty = self.player.wy + y
@@ -582,6 +585,7 @@ class Start(Scene):
             if (x, y) == (0, 0):
                 self.draw_log("You rest for a while")
                 turn_inc = True
+
             else:
                 tx = self.player.x + x
                 ty = self.player.y + y
@@ -909,23 +913,17 @@ class Start(Scene):
     def action_interact_door_close(self):
         def close_door(x, y):
             self.draw_log('Closing door.')
-            # term.puts(
-            #     x=x + self.display_offset_x, 
-            #     y=y + self.display_offset_y, 
-            #     s="[c=red]+[/c]")
-            # term.refresh()
             self.location.close_door(x, y)
 
         doors = []
-        px, py = self.player.position
-        for x, y in self.spaces(*self.player.position):
-            if (x, y) != (px, py):
+        for pos in self.spaces(*self.player.position):
+            if pos != self.player.position:
                 try:
-                    if self.location.square(x, y).char == '/':
-                        doors.append((x, y))
+                    if self.location.square(*pos).char == '/':
+                        doors.append(pos)
 
                 except IndexError:
-                    self.draw_log('Out of bounds ({}, {})'.format(x, y))
+                    self.draw_log('Out of bounds ({}, {})'.format(*pos))
 
         if not doors:
             self.draw_log('No open doors next to you')
@@ -934,6 +932,7 @@ class Start(Scene):
             close_door(*doors.pop())
 
         else:
+            px, py = self.player.position
             self.draw_log("There is more than one door near you. Which door?")
 
             code = term.read()
@@ -955,11 +954,6 @@ class Start(Scene):
     def action_interact_door_open(self):
         def open_door(x, y):
             self.draw_log('Opening door.')
-            # term.puts(
-            #     x=x + self.display_offset_x, 
-            #     y=y + self.display_offset_y, 
-            #     s="[c=red]+[/c]")
-            # term.refresh()
             self.location.open_door(x, y)
 
         doors = []
@@ -998,6 +992,48 @@ class Start(Scene):
 
                 else:
                     self.draw_log("Direction has no door. Canceled opening door.")
+
+    def action_interact_unit_talk(self):
+        def talk_to(x, y):
+            self.draw_log(self.location.unit_at(x, y).talk())
+
+        units = []
+        px, py = self.player.position
+
+        for pos in self.spaces(*self.player.position):
+            if pos != self.player.position:
+                try:
+                    if self.location.unit_at(*pos):
+                        units.append(pos)
+
+                except IndexError:
+                    self.draw_log('Out of bounds ({}, {})'.format(*pos))
+        
+        if not units:
+            self.draw_log('No one to talk to')
+        
+        elif single_element(units):
+            talk_to(*units.pop())
+    
+        else:
+            px, py = self.player.position
+            self.draw_log("There is more than one character near you. Which direction?")
+            
+            code = term.read()
+            shifted = term.state(term.TK_SHIFT)
+
+            try:
+                dx, dy, _, act = commands_player[(code, shifted)]
+
+            except:
+                self.draw_log("Invalid direction. Canceled talking to character.")
+            
+            else:
+                if act == "move" and (px + dx, py + dy) in units:
+                    talk_to(px + dx, py + dy)
+                
+                else:
+                    self.draw_log("Direction has no unit. Canceled talking to character.")
 
     def action_interact_unit_attack_melee(self):
         pass

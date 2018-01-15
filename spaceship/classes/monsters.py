@@ -33,46 +33,6 @@ class Rat(Unit):
         Only when the rat wanders into another creature or spots the player
         will it become hostile and start its attack phase
     '''
-    def path(self, p1, p2, tiles):
-        '''A star implementation'''
-        node = namedtuple("Node", "df dg dh parent node")
-        openlist = set()
-        closelist = []
-        openlist.add(node(0, 0, 0, None, p1))
-        while openlist:
-            nodeq = min(sorted(openlist))
-            openlist.remove(nodeq)
-            for i in range(-1, 2):
-                for j in range(-1, 2):
-                    if (i, j) != (0, 0):
-                        neighbor = nodeq.node[0]+i, nodeq.node[1]+j
-
-                        if neighbor == p2:
-                            # print("found?")
-                            closelist.append(nodeq)
-                            # closelist.append(neighbor)
-                            return closelist
-
-                        if neighbor in tiles.keys() and tiles[neighbor].char not in ("#", "+"):
-
-                            sg = nodeq.dg + int(distance(*nodeq.node, *neighbor) * 10)
-                            sh = int(distance(*neighbor, *p2) * 10)
-                            sf = sg + sh
-
-                            if any(n.node == neighbor and n.df < sf for n in openlist):
-                                pass
-                            elif any(n.node == neighbor and n.df < sf for n in closelist):
-                                pass
-                            else:
-                                openlist.add(node(sf, sg, sh, nodeq.node, neighbor))
-
-            closelist.append(nodeq)
-        # the final closelist will be all nodes connecting p1 to p2
-        if not openlist:
-            # return False or closelist?
-            return closelist
-
-        return closelist        
 
     def acts(self, player, tiles, units):
         # need a function that returns all units/items/whatever in the 
@@ -201,14 +161,18 @@ class Rat(Unit):
         try:
             dx = unit.x - self.x
             dy = unit.y - self.y
+
             try:
                 dt = distance(*self.position, *unit.position_local())
+
             except:
                 dt = distance(*self.position, *unit.position)
+
         except:
             dx = unit[0] - self.x
             dy = unit[1] - self.y
             dt = distance(*self.position, *unit)
+
         x = int(round(dx / dt))
         y = int(round(dy / dt))
         self.move(x, y)
