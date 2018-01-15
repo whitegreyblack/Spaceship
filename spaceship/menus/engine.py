@@ -32,25 +32,34 @@ class GameEngine:
         term.set('window: size=80x25, cellsize=auto, title="Spaceship", fullscreen=false')
 
     def setup_font(self, font, cx=8, cy=None):
+        '''Determines font and cell size'''
         if font == "default":
             term.set('font: default, size=8')
+
         else:
             term.set("window: cellsize=8x8")
-            term.set("font: ./fonts/{}.ttf, size={}{}".format(font, cx, 'x'+str(cy) if cy else ''))
+            cy = 'x'+str(cy) if cy else ''
+            term.set("font: ./fonts/{}.ttf, size={}{}".format(font, cx, cy))
 
     def run(self):
+        '''Goes through the scenes until exit'''
         self.proceed = True
+
         while self.proceed:
             ret = self.scene.run()
+
             if not ret['scene']:
                 self.proceed = False
+
             else:
                 try:
                     self.scene = self.scenes[ret['scene']]
                     if ret['kwargs']:
                         self.scene.add_args(**ret['kwargs'])
+
                 except KeyError:
                     self.proceed = False
+
                 else:
                     self.scene.reset()
 

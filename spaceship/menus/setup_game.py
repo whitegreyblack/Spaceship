@@ -15,7 +15,7 @@ def setup_charsheet():
 def setup_ext(sx, sy, cx="auto", cy=None):
     term.set(
         "window: size={}x{}, cellsize={}{}, title='Spaceship'".format(
-            sx, sy, cx, "x"+str(cy) if cy else ""))
+            sx, sy, cx, "x" + str(cy) if cy else ""))
 
 def setup_menu():
     term.set(
@@ -34,7 +34,8 @@ def setup_font(font, cx=8, cy=None):
         term.set('font: default, size=8')
     else:
         term.set("window: cellsize=8x8")
-        term.set("font: ./fonts/{}.ttf, size={}{}".format(font, cx, 'x'+str(cy) if cy else ''))
+        cy = 'x' + str(cy) if cy else ''
+        term.set("font: ./fonts/{}.ttf, size={}{}".format(font, cx, cy))
 
 if __name__ == "__main__":
     setup()
