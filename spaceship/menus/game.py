@@ -793,6 +793,7 @@ class Start(Scene):
             for dx in range(-1, 2):
                 if (dx, dy) == (0, 0) and exclusive:
                     continue
+
                 else:
                     yield space(x + dx, y + dy)
 
@@ -906,7 +907,10 @@ class Start(Scene):
             else:
                 # reenter a wilderness
                 x, y = self.player.get_position_on_enter()
-                self.player.position = self.determine_map_enterance(x, y, location)
+                self.player.position = self.determine_map_enterance(
+                    x=x, 
+                    y=y, 
+                    location=location)
                 
         self.player.move_height(1)
         self.map_change = True
@@ -948,6 +952,7 @@ class Start(Scene):
         # check if parent location is a city, wilderness or dungeon map
         elif isinstance(self.location.parent, (City, Wild, Cave)):
             move_upstairs()
+            # reset position to the downstairs in the dungeon
             self.player.position = self.location.stairs_down
 
         else:
@@ -969,14 +974,16 @@ class Start(Scene):
                     self.draw_log('Out of bounds ({}, {})'.format(*pos))
 
         if not doors:
-            self.draw_log("No open doors next to you.")
+            log = "No open doors next to you."
+            self.draw_log(log)
 
         elif single_element(doors):
             close_door(*doors.pop())
 
         else:
             px, py = self.player.position
-            self.draw_log("There is more than one door near you. Which door?")
+            log = "There is more than one door near you. Which door?"
+            self.draw_log(log)
 
             code = term.read()
             shifted = term.state(term.TK_SHIFT)
@@ -985,14 +992,16 @@ class Start(Scene):
                 dx, dy, _, act = commands_player[(code, shifted)]
 
             except:
-                self.draw_log("Invalid direction. Canceled closing door.")
+                log = "Invalid direction. Canceled closing door."
+                self.draw_log(log)
 
             else:
                 if act == "move" and (px + dx, py + dy) in doors:
                     close_door(px + dx, py + dy)
 
                 else:
-                    self.draw_log("Direction has no door. Canceled closing door.")
+                    log = "Direction has no door. Canceled closing door."
+                    self.draw_log(log)
                     
     def action_interact_door_open(self):
         def open_door(x, y):
@@ -1060,7 +1069,8 @@ class Start(Scene):
     
         else:
             px, py = self.player.position
-            self.draw_log("There is more than one character near you. Which direction?")
+            log = "There is more than one character near you. Which direction?"
+            self.draw_log(log)
             
             code = term.read()
             shifted = term.state(term.TK_SHIFT)
@@ -1069,14 +1079,17 @@ class Start(Scene):
                 dx, dy, _, act = commands_player[(code, shifted)]
 
             except:
-                self.draw_log("Invalid direction. Canceled talking to character.")
+                log = "Invalid direction. Canceled talking to character."
+                self.draw_log(log)
             
             else:
                 if act == "move" and (px + dx, py + dy) in units:
                     talk_to(px + dx, py + dy)
                 
                 else:
-                    self.draw_log("Direction has no unit. Canceled talking to character.")
+                    log = "Direction has no unit. "
+                    log += "Canceled talking to character"
+                    self.draw_log(log)
 
     def action_interact_unit_attack_melee(self):
         pass
@@ -1116,7 +1129,7 @@ class Start(Scene):
     Notes :- Dropping Items:
         Dropping items will always be dropped from inventory
         If an item is equipped it CANNOT be dropped unless it is unequiped.
-        When an item is unequipped the item will be added back to the inventory list
+        When an item is unequipped the item will be added back to the inventory
         Then the player may drop the item from there
     '''
     def action_interact_item_drop(self):
