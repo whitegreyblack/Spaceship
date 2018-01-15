@@ -34,39 +34,43 @@ class Rat(Unit):
         will it become hostile and start its attack phase
     '''
 
-    def acts(self, player, tiles, units):
+    def acts(self, units, tiles):
         # need a function that returns all units/items/whatever in the 
         # rat line of sight -- basically a mini dungeon output based on sight
         def build_sight_map():
             '''purely visual recording of environment -- no evaluation yet'''
             def map_out():
                 return "\n".join("".join(row[::-1]) for row in sight_map[::-1])
+
             sight_map[self.sight_norm][self.sight_norm] = self.character
             spotted = False
-            for (x, y) in tiles:
-                if player.position == (x, y):
-                    # check if player position is on the tile
-                    char = "@"
-                    spotted = True
-                    paths.append((100, player, self.path(self.position, player.position, tiles)))
-                elif (x, y) in units.keys():
+
+            for tile in tiles:
+
+                if tile in units.keys():
                     # check if unit is on the square
-                    char = units[(x, y)].character
-                    # spotted = True
-                elif tiles[(x, y)].items:
+                    unit = units[(x, y)]
+                    char = unit.character
+                    spotted = True
+                    if self.character != char:
+                        # different racial unit
+                        paths.append((100, unit, self.path(self.position, unit.position, tiles))
+
+                elif tiles[tile].items:
                     # check for items on the square
                     char = tiles[(x, y)].items[0].char
+
                 else:
                     # empty square
-                    char = tiles[(x, y)].char
+                    char = tiles[tile].char
+
                 # offset the location based on unit position and sight range
-                dx, dy = self.x-x+self.sight_norm, self.y-y+self.sight_norm
+                dx, dy = self.translate_sight(*tile)
                 sight_map[dy][dx] = char
 
             if spotted:
                 # print(self.energy.speed)
-                # print(map_out())
-                pass
+                print(map_out())
             
         # start with an empty sight map
         unit_spotted = []

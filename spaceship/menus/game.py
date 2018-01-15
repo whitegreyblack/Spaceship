@@ -135,7 +135,6 @@ class Start(Scene):
         else:
             for unit in self.location.units:
                 unit.energy.gain()
-                print(unit)
                 self.unit = unit
                 while unit.energy.ready():
                     self.unit.energy.reset()
@@ -192,12 +191,16 @@ class Start(Scene):
             else self.player.location
 
         g0 = isinstance(self.location, World)
+
         if g0:
             sight = self.player.sight_world
+
         elif isinstance(self.location, City):
             sight = self.player.sight_city
+
         else:
             sight = self.player.sight_norm
+
         self.location.fov_calc([(x, y, sight)])
 
         for x, y, col, ch in self.location.output(x, y):
@@ -400,20 +403,25 @@ class Start(Scene):
         if hasattr(self.unit, 'acts'):
             units = { u.position: u for u in self.location.units 
                                                         if u != self.unit }
+
+            # subset of positions possible that can be seen due to sight
             positions = self.location.fov_calc_blocks(
                                                 self.unit.x, 
                                                 self.unit.y, 
                                                 self.unit.sight_norm)
-            units = { self.location.unit_at(*position).position: self.location.unit_at(*position) 
-                        for position in positions if self.location.unit_at(*position) }
+
+            # units = { self.location.unit_at(*position).position: self.location.unit_at(*position) 
+            #             for position in positions if self.location.unit_at(*position) }
 
             # if self.player not in units.values():
             #     return
 
+            # tile info for every position that can be seen
             tiles = { position: self.location.square(*position) 
                                                 for position in positions }
 
-            action = self.unit.acts(self.player, tiles, units)
+            # get the action variable after putting in all the info into unit.act
+            action = self.unit.acts(units, tiles)
 
             if action:
                 self.process_handler_unit(*action)

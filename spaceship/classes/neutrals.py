@@ -18,11 +18,6 @@ class VillagerChild(Unit):
     def talk(self):
         return "{}: Are you from around here?".format(self.__class__.__name__)
 
-    def translate(self, x, y):
-        sx = self.x - x + self.sight
-        sy = self.y - y + self.sight
-        return sx, sy
-
     def acts(self, player, tiles, units):
         # Villagers just wander around
         def build_sight_map():
@@ -37,7 +32,7 @@ class VillagerChild(Unit):
                 else:
                     char = tiles[(x, y)].char
             
-                dx, dy = self.translate(x, y)
+                dx, dy = self.translate_sight(x, y)
 
                 sight_map[dy][dx] = char
 
@@ -56,8 +51,7 @@ class VillagerChild(Unit):
             return 6 <= x <= 60 and 2 <= y <= 20 and not tiles[(x, y)].block_mov
 
         def translate(x, y):
-            sy = self.y - y + self.sight
-            sx = self.x - x + self.sight
+            sx, sy = self.translate_sight(x, y)
             return sight[sy][sx] not in unit_chars
 
         # points = list(filter(lambda t: within(*t) and not tiles[t].block_mov, 
@@ -76,8 +70,10 @@ class VillagerChild(Unit):
         dx = point[0] - self.x
         dy = point[1] - self.y
         dt = distance(*self.position, *point)
+
         x = int(round(dx / dt))
         y = int(round(dy / dt))
+
         self.move(x, y)
 
 class Villager(Unit):
@@ -199,34 +195,44 @@ class Bishop(Unit):
             '''purely visual recording of environment -- no evaluation yet'''
             def map_out():
                 return "\n".join("".join(row[::-1]) for row in sight_map[::-1])
+
             sight_map[self.sight_norm][self.sight_norm] = self.character
             spotted = False
-            for (x, y) in tiles:
-                if player.position == (x, y):
-                    # check if player position is on the tile
+
+            for tile in tiles:
+                if tile == player.position:
                     char = "@"
                     spotted = True
-                    # paths.append((100, player, self.path(self.position, player.position, tiles)))
-                elif (x, y) in units.keys():
+
+                elif tile in units.keys():
                     # check if unit is on the square
-                    char = units[(x, y)].character
+                    unit = units[tile]
+                    char = unit.character
                     # spotted = True
-                elif tiles[(x, y)].items:
+                    if unit.behaviour_score < 0:
+                        paths.append((100, unit, self.path(self.position, unit.position, tiles)))
+
+                elif tiles[tile].items:
                     # check for items on the square
-                    char = tiles[(x, y)].items[0].char
+                    char = tiles[tile].items[0].char
                 else:
                     # empty square
-                    char = tiles[(x, y)].char
+                    char = tiles[tile].char
+
                 # offset the location based on unit position and sight range
-                dx, dy = self.x-x+self.sight_norm, self.y-y+self.sight_norm
+                x, y = tile
+                dx, dy = self.translate_sight(x, y)
                 sight_map[dy][dx] = char
-            
+
+            if spotted:
+                print(map_out())
+        print(units)
+        paths = []            
         unit_spotted = []
         item_spotted = []
 
         sight_range = self.sight_norm * 2 + 1 # accounts for radius
         sight_map = [[" " for x in range(sight_range)] for y in range(sight_range)]
-        paths = []
         build_sight_map()
 
         if self.cur_hp <= self.tot_hp * .10:

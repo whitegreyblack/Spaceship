@@ -54,6 +54,7 @@ class Unit(Object):
         self.cur_hp = self.tot_hp = 5
         self.relationship = rs
         self.energy = Energy(speed)
+        self.behaviour_score = 0
         Unit.unit_id += 1
 
     def __str__(self):
@@ -98,6 +99,11 @@ class Unit(Object):
 
     def friendly():
         self.relationship >= 0
+
+    def translate_sight(self, x, y):
+        sx = self.x - x + self.sight_norm
+        sy = self.y - y + self.sight_norm
+        return sx, sy
 
     def path(self, p1, p2, tiles):
         '''A star implementation'''
