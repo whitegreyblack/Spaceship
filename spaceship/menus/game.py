@@ -312,26 +312,26 @@ class Start(Scene):
         '''Handles inventory screen'''
 
         def draw_item_header(item_header):
-            nonlocal index
+            nonlocal index_row
             term.puts(
                 x=self.player_screen_col,
-                y=self.player_screen_row + index * (2 if self.height > 25 else 1),
+                y=self.player_screen_row + index_row * (2 if self.height > 25 else 1),
                 s=item_header)
-            index += 1
+            index_row += 1
 
         def draw_item_row(item_desc):
-            nonlocal index
-            letter = chr(ord('a') + index) + ". "
+            nonlocal index_row, item_row
+            letter = chr(ord('a') + item_row) + ". "
             term.puts(
                 x=self.player_screen_col,
-                y=self.player_screen_row + index * (2 if self.height > 25 else 1),
+                y=self.player_screen_row + index_row * (2 if self.height > 25 else 1),
                 s=letter + item_desc) 
-            index += 1
+            index_row += 1
+            item_row += 1
 
         def draw_item_grouping(header, container):
-            nonlocal index
             if container:
-                draw_item_header(header)
+                draw_item_header("__" + header + "__")
                 for element in container:
                     draw_item_row(element.__str__())
 
@@ -339,9 +339,9 @@ class Start(Scene):
             term.puts(i, 1, '#')
         term.puts(center('backpack  ', self.width), 1, ' Backpack ')
 
-        index = 0
+        item_row = 0
+        index_row = 0
         items = list(self.player.inventory)
-        print(items)
 
         if not items:
             term.puts(
@@ -352,6 +352,7 @@ class Start(Scene):
 
             weapons, armors, potions, rings = [], [], [], []
 
+            # seperate each item into its own grouping
             for item in items:
                 if isinstance(item, Weapon):
                     weapons.append(item)
@@ -364,13 +365,13 @@ class Start(Scene):
                 else:
                     print(item, 'no class identifier')
 
-            draw_item_grouping("-- Weapons --", weapons)
+            draw_item_grouping("Weapons", weapons)
             
-            draw_item_grouping("-- Armors --", armors)
+            draw_item_grouping("Armors", armors)
 
-            draw_item_grouping("-- Potions --", potions)
+            draw_item_grouping("Potions", potions)
 
-            draw_item_grouping("-- Rings --", rings)
+            draw_item_grouping("Rings", rings)
 
             # for index, item in enumerate(items):
             #     letter = chr(ord('a') + index) + ". "
