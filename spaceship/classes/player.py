@@ -98,8 +98,15 @@ class Player(Unit):
 
     @property
     def inventory(self):
+        self.inventory_sort()
         for item in self.__inventory:
+            print(item)
             yield item
+
+    def inventory_sort(self):
+        self.inventory_book ={}
+        for item in self.__inventory:
+            print(item.__class__.__name__)
 
     def inventory_add(self, item):
         self.__inventory.append(item)

@@ -12,7 +12,7 @@ from .scene import Scene
 from screen_functions import *
 from action import commands_player
 from gamelog import GameLogger
-
+from ..classes.item import Ring, Potion, Armor, Weapon
 from ..classes.wild import wilderness
 from ..classes.player import Player
 from ..classes.world import World
@@ -310,25 +310,72 @@ class Start(Scene):
 
     def draw_player_inventory(self):
         '''Handles inventory screen'''
-        # draws header border for the backpack
+
+        def draw_item_header(item_header):
+            nonlocal index
+            term.puts(
+                x=self.player_screen_col,
+                y=self.player_screen_row + index * (2 if self.height > 25 else 1),
+                s=item_header)
+            index += 1
+
+        def draw_item_row(item_desc):
+            nonlocal index
+            letter = chr(ord('a') + index) + ". "
+            term.puts(
+                x=self.player_screen_col,
+                y=self.player_screen_row + index * (2 if self.height > 25 else 1),
+                s=letter + item_desc) 
+            index += 1
+
+        def draw_item_grouping(header, container):
+            nonlocal index
+            if container:
+                draw_item_header(header)
+                for element in container:
+                    draw_item_row(element.__str__())
+
         for i in range(self.width):
             term.puts(i, 1, '#')
         term.puts(center('backpack  ', self.width), 1, ' Backpack ')
 
-        if not list(self.player.inventory):
+        index = 0
+        items = list(self.player.inventory)
+        print(items)
+
+        if not items:
             term.puts(
                 x=center('Nothing in inventory', self.width),
                 y=3,
                 s='Nothing in inventory')
         else:
-            for index, item in enumerate(self.player.inventory):
-                letter = chr(ord('a') + index) + ". "
-                item_desc = item.__str__() if item else ""
 
-                term.puts(
-                    x=self.player_screen_col,
-                    y=self.player_screen_row + index * (2 if self.height > 25 else 1),
-                    s=letter + item_desc)
+            weapons, armors, potions, rings = [], [], [], []
+
+            for item in items:
+                if isinstance(item, Weapon):
+                    weapons.append(item)
+                elif isinstance(item, Armor):
+                    armors.append(item)
+                elif isinstance(item, Potion):
+                    potions.append(item)    
+                elif isinstance(item, Ring):
+                    rings.append(item)
+                else:
+                    print(item, 'no class identifier')
+
+            draw_item_grouping("-- Weapons --", weapons)
+            
+            draw_item_grouping("-- Armors --", armors)
+
+            draw_item_grouping("-- Potions --", potions)
+
+            draw_item_grouping("-- Rings --", rings)
+
+            # for index, item in enumerate(items):
+            #     letter = chr(ord('a') + index) + ". "
+            #     item_desc = item.__str__() if item else ""
+
     
     def draw_player_eq_inv_switch(self):
         term.puts(
@@ -1115,7 +1162,7 @@ class Start(Scene):
     def action_interact_item_use(self):
         def use_item(item):
             nonlocal log
-            item = self.player.inventory.use(item)
+            item = self.player.inventory_use(item)
             item.use(self.player)
             log = "You use the {}".format(item.name)
             log += " Your backpack feels lighter."

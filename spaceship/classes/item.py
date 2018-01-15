@@ -55,8 +55,10 @@ class Item:
         if isinstance(value, int):
             if value >= 0:
                 return "+" + str(value)
+            
             else:
                 return value
+
         return value
 
     def __str__(self):
@@ -66,6 +68,7 @@ class Item:
         return value.replace('mod_', '')
 
 class Potion(Item):
+    inventory = "potions"
     def __init__(self, name, char, color, heal=10):
         super().__init__(name, char, color)
         self.heal = heal
@@ -75,14 +78,13 @@ class Potion(Item):
 
     def use(self, unit):
         if unit.cur_health == unit.max_health:
-            print("The potion does nothing")
+            pass
+            
         else:
-            print("Restoring lost health")
-            print(unit.cur_health)
             unit.cur_health = min(unit.cur_health + self.heal, unit.max_health)
-            print(unit.max_health)
 
 class Ring(Item):
+    inventory = "rings"
     placement = {"eq_ring_left", "eq_ring_right"}
     def __init__(self, name, char, color, effect=None):
         super().__init__(name, char, color)
@@ -100,15 +102,12 @@ class Ring(Item):
             for effect, value in self.effects)
 
     def wear(self, unit, part):
-        print(unit, part)
         if not part in self.placement:
             '''Cannot equip to current part slot'''
-            print('not in placement')
             return False
 
         if getattr(unit, part):
             '''Check if slot is empty'''
-            print('slot not is empty')
             return False
 
         # remove from inventory and place it on the unit equipment
@@ -119,7 +118,6 @@ class Ring(Item):
         for effect, value in self.effects:
             attribute = getattr(unit, effect)
             setattr(unit, effect, attribute + value)
-            print(effect, value, attribute, getattr(unit, effect))
             
         unit.calculate_stats()
         return True
