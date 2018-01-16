@@ -19,20 +19,6 @@ from ..classes.world import World
 from ..classes.city import City
 from ..classes.cave import Cave
 
-walkChars = {
-    "=": "furniture",
-    "+": "a door",
-    "/": "a door",
-    "o": "a lamp",
-    "#": "a wall",
-    "x": "a post",
-    "~": "a river",
-    "T": "a tree",
-    "f": "a tree",
-    "Y": "a tree",
-    "%": "a wall",
-}
-
 def single_element(container):
     return len(container) == 1
 
@@ -80,14 +66,6 @@ class Start(Scene):
                 't': self.action_interact_unit_talk,
             },
         }
-
-        self.pass_item_messages = [
-            "You pass by an item.",
-            "There is something here."
-            "Your feet touches an object."
-        ]
-        self.string_drop = 'Which item to drop?'
-        self.string_use = 'Which item to use?'
 
         # player screen variables
         self.player_screen_col, self.player_screen_row = 1, 3
@@ -312,9 +290,12 @@ class Start(Scene):
                 s=letter + body_part + item_desc)
 
     def draw_player_inventory(self):
-        '''Handles inventory screen'''
+        '''Handles drawing of the inventory screen along with the specific 
+        groupings of each item type and their modification effects
+        '''
 
         def draw_item_header(item_header):
+            '''Handles drawing of the item grouping header'''
             nonlocal index_row
             term.puts(
                 x=self.player_screen_col,
@@ -323,6 +304,7 @@ class Start(Scene):
             index_row += 1
 
         def draw_item_row(item_desc):
+            '''Handles drawing the list of an item group to the screen'''
             nonlocal index_row, item_row
             letter = chr(ord('a') + item_row) + ". "
             term.puts(
@@ -333,17 +315,21 @@ class Start(Scene):
             item_row += 1
 
         def draw_item_grouping(header, container):
+            '''Handler to determine if we need to draw items or not'''
             if container:
                 draw_item_header("__" + header + "__")
                 for element in container:
                     draw_item_row(element.__str__())
 
+        # keep track of items and row index
+        item_row = 0
+        index_row = 0
+
+        # header for inventory
         for i in range(self.width):
             term.puts(i, 1, '#')
         term.puts(center('backpack  ', self.width), 1, ' Backpack ')
 
-        item_row = 0
-        index_row = 0
         items = list(self.player.inventory)
 
         if not items:
@@ -351,8 +337,8 @@ class Start(Scene):
                 x=center('Nothing in inventory', self.width),
                 y=3,
                 s='Nothing in inventory')
-        else:
 
+        else:
             weapons, armors, potions, rings = [], [], [], []
 
             # seperate each item into its own grouping
@@ -378,28 +364,31 @@ class Start(Scene):
             draw_item_grouping("Rings", rings)
     
     def draw_player_eq_inv_switch(self):
+        '''Draws instruction on screen the command to switch to inventory'''
         term.puts(
             x=center('press v to switch to inventory', self.width), 
             y=self.height - 2,
             s='press v to switch to inventory')
 
     def draw_player_inv_eq_switch(self):
+        '''Draws instruction on screen the command to switch to equipment'''
         term.puts(
             x=center('press i to switch to equipment', self.width), 
             y=self.height - 2,
             s='press i to switch to equipment')
 
     def draw_player_eq_drop(self):
+        '''Draws instruction on screen to drop an item'''
         term.puts(
-            x=center(self.string_drop, self.width),
+            x=center(self.strings.command_drop, self.width),
             y=self.height - 2,
-            s=self.string_drop)
+            s=self.strings.command_drop)
         
     def draw_player_eq_use(self):
         term.puts(
-            x=center(self.string_use, self.width),
+            x=center(strings.command_use, self.width),
             y=self.height - 2,
-            s=self.string_use)
+            s=strings.command_use)
 
     def draw_player_screens(self, key):
         playscreen = False
@@ -628,7 +617,7 @@ class Start(Scene):
         turn_inc = 0
         if  self.player.height == Level.WORLD:
             if (x, y) == (0, 0):
-                self.draw_log("You wait in the area")
+                self.draw_log(strings.movement_wait_world)
                 turn_inc = True
 
             else:
@@ -640,11 +629,10 @@ class Start(Scene):
                     self.player.travel(x, y)
                     turn_inc = True
                 else:
-                    travel_error = "You cannot travel there."
-                    self.draw_log(travel_error)
+                    self.draw_log(strings.movement_move_error)
         else:
             if (x, y) == (0, 0):
-                self.draw_log("You rest for a while.")
+                self.draw_log(strings.movement_wait_local)
                 turn_inc = True
 
             else:
@@ -660,7 +648,8 @@ class Start(Scene):
                             item_message = random.randint(
                                 a=0, 
                                 b=len(self.pass_item_messages) - 1)
-                            self.draw_log(self.pass_item_messages[item_message])
+                            self.draw_log(
+                                strings.pass_by_item[item_message])
                             
                         turn_inc = True
 
@@ -736,15 +725,16 @@ class Start(Scene):
                         turn_inc = True
                 else:
                     if self.location.out_of_bounds(tx, ty):
-                        self.draw_log("You reached the edge of the map.")
+                        self.draw_log(strings.movement_move_oob)
 
                     else:
                         ch = self.location.square(tx, ty).char
 
                         if ch == "~":
-                            log = "You cannot swim."
+                            log = strings.movement_move_swim
                         else:
-                            log = "You walk into {}.".format(walkChars[ch])
+                            log = strings.movement_move_block.format(
+                                strings.movement_move_chars[ch])
 
                         self.draw_log(log)
 
@@ -804,7 +794,7 @@ class Start(Scene):
         '''Save command: checks save folder and saves the current game objects
         to file before going back to the main menu
         '''
-        self.draw_log("Save and exit game? (Y/N)")
+        self.draw_log(strings.command_save)
         
         # User input -- confirm selection
         code = term.read()
@@ -813,8 +803,7 @@ class Start(Scene):
 
         if not os.path.isdir('saves'):
             os.makedirs('saves')
-            log = 'saved folder does not exist - creating folder: "./saves"'
-            self.draw_log(log)
+            self.draw_log(strings.command_save_folder)
 
         # prepare strings for file writing
         # player_hash used for same name / different character saves
@@ -987,7 +976,7 @@ class Start(Scene):
         doors, with multiple doors asking for input direction
         '''
         def close_door(x, y):
-            self.draw_log('Closing door.')
+            self.draw_log(strings.interact_door_close_act)
             self.location.close_door(x, y)
 
         doors = []
@@ -1001,16 +990,14 @@ class Start(Scene):
                     self.draw_log('Out of bounds ({}, {})'.format(*pos))
 
         if not doors:
-            log = "No open doors next to you."
-            self.draw_log(log)
+            self.draw_log(strings.interact_door_close_none)
 
         elif single_element(doors):
             close_door(*doors.pop())
 
         else:
             px, py = self.player.position
-            log = "There is more than one door near you. Which door?"
-            self.draw_log(log)
+            self.draw_log(strings.interact_door_close_many)
 
             code = term.read()
             shifted = term.state(term.TK_SHIFT)
@@ -1019,16 +1006,14 @@ class Start(Scene):
                 dx, dy, _, act = commands_player[(code, shifted)]
 
             except:
-                log = "Invalid direction. Canceled closing door."
-                self.draw_log(log)
+                self.draw_log(strings.interact_door_close_invalid)
 
             else:
                 if act == "move" and (px + dx, py + dy) in doors:
                     close_door(px + dx, py + dy)
 
                 else:
-                    log = "Direction has no door. Canceled closing door."
-                    self.draw_log(log)
+                    self.draw_log(strings.interact_door_close_error)
                     
     def action_interact_door_open(self):
         '''Open door command: handles opening doors in a one unit distance from
@@ -1036,7 +1021,7 @@ class Start(Scene):
         doors, with multiple doors asking for input direction
         '''
         def open_door(x, y):
-            self.draw_log('Opening door.')
+            self.draw_log(strings.interact_door_open_act)
             self.location.open_door(x, y)
 
         doors = []
@@ -1051,14 +1036,13 @@ class Start(Scene):
                     self.draw_log('Out of bounds ({}, {})'.format(x, y))
         
         if not doors:
-            self.draw_log('No closed doors next to you.')
+            self.draw_log(strings.interact_door_open_none)
 
         elif single_element(doors):
             open_door(*doors.pop())
 
         else:
-            log = "There is more than one closed door near you. Which door?"
-            self.draw_log(log)
+            self.draw_log(strings.interact_door_open_many)
 
             code = term.read()
             shifted = term.state(term.TK_SHIFT)
@@ -1067,14 +1051,14 @@ class Start(Scene):
                 dx, dy, _, act = commands_player[(code, shifted)]
                     
             except:
-                self.draw_log("Invalid direction. Canceled opening door.")
+                self.draw_log(strings.interact_door_open_invalid)
 
             else:
                 if act == "move" and (px + dx, py + dy) in doors:
                     open_door(px + dx, py + dy)
 
                 else:
-                    self.draw_log("Direction has no door. Canceled opening door.")
+                    self.draw_log(strings.interact_door_open_error)
 
     def action_interact_unit_talk(self):
         def talk_to(x, y):

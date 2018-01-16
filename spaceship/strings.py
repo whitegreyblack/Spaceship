@@ -379,7 +379,48 @@ GAME_TITLE_ALT_SEC="""
                                                           ||          
                                                        `..|'          
 """[1:]                                                       
-                                            
-CABAL = [
-    ""
-]                                            
+
+command_drop = "Which item to drop?"
+command_use  = "Which item to use?"
+command_save = "Save and exit game? (Y/N)"
+command_save_folder = 'saved folder does not exist - creating folder: "./saves"'
+movement_wait_local = "You rest for a while"
+movement_wait_world = "You wait in the area"
+movement_move_error = "You cannot travel there"
+movement_move_oob = "You reached the edge of the map"
+movement_move_swim = "You cannot swim"
+movement_move_block = "You walk into {}"
+movement_move_chars = {
+    "=": "furniture",
+    "+": "a door",
+    "/": "a door",
+    "o": "a lamp",
+    "#": "a wall",
+    "x": "a post",
+    "~": "a river",
+    "T": "a tree",
+    "f": "a tree",
+    "Y": "a tree",
+    "%": "a wall",
+}
+interact_door_close_act = "Closing door."
+interact_door_close_none = "No open doors next to you."
+interact_door_close_many = "There is more than one open door near you. Which door?"
+interact_door_close_invalid = "Invalid direction. Canceled closing door."
+interact_door_close_error = "Direction has no door. Canceled closing door."
+interact_door_open_act = "Opening door."
+interact_door_open_none = "No closed doors next to you."
+interact_door_open_many = "There is more than one closed door near you. Which door?"
+interact_door_open_invalid = "Invalid direction. Canceled opening door."
+interact_door_open_error = "Direction has no door. Canceled closing door."
+pass_by_item = [
+    "You pass by an item.",
+    "There is something here."
+    "Your feet touches an object."
+]
+
+if __name__ == "__main__":
+    try:
+        print(movement_move_chars[input()])
+    except KeyError:
+        raise
