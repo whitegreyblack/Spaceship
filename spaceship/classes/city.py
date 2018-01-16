@@ -155,23 +155,31 @@ class City(Map):
 
         for j in range(h):
             line = ""
+
             for i in range(w):
                 # sometimes alpha channel is included so test for all values first
                 try:
                     r, g, b, _ = pixels[i, j]
+                    
                 except ValueError:
                     r, g, b = pixels[i, j]
+
                 try:
                     char = stringify_chars[(r, g, b)]
+
                     if char in self.unit_spaces.keys():
                         self.unit_spaces[char].append((i, j))
                         # revert the char to its original space
                         char = "."
+
                     elif char in (".", ":", ",", "="):
                         self.spaces.append((i, j))
+
                     line += char
+
                 except KeyError:
                     print((r, g, b))
+
             self.data.append(line)
 
         # make sure accesses to the set are random
@@ -181,16 +189,21 @@ class City(Map):
     def parse_cfg(self):
         if not self.spaces:
             raise AttributeError("No world configuration")
+
         self.stats = "{}: Unit List\n".format(self.map_id)
+
         try:
             with open(self.map_cfg, 'r') as cfg:
                 modifier = ""
+
                 for line in cfg:
                     if line.strip().startswith('#'):
                         pass # these are comments in the file
+
                     elif line.strip().startswith('['):
                         modifier = line.replace('[', '').replace(']', '')
                         modifier = modifier.lower().strip()
+
                     else:
                         job, color, character, number = line.split()
                         self.stats += "{}: {}\n".format(job, number)
@@ -198,6 +211,7 @@ class City(Map):
                         if modifier == "":
                             e="Configuration file has no race specifier"
                             raise ValueError(e)
+
                         if job.lower() in neutrals.keys():
                             for _ in range(int(number)):
                                 try:
@@ -231,6 +245,7 @@ class City(Map):
                                     ch=character,
                                     fg=color,
                                     rs=self.relationship))
+                                    
         except FileNotFoundError:
             # not explicitely needed -- can just pass instead of printing
             print("No unit configuration file found")
