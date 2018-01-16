@@ -18,6 +18,12 @@ class Option:
         # list of expansions
         self.expand = set()
 
+    def option(self):
+        return self.opts[self.optindex]
+
+    def suboption(self):
+        return self.subopts[self.optindex][self.suboptindex[self.optindex]]
+
     def expansion(self, n: int) -> None:
         if n > len(self.opts):
             raise IndexError('invalid index for expansion')
@@ -39,7 +45,6 @@ class Option:
 
     def move_pointer(self, move: int) -> None:
         self.optindex = self.optindex + move
-
 
     def correct_pointer(self) -> None:
         self.optindex = max(min(self.optindex, len(self.opts) - 1), 0)

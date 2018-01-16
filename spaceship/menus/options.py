@@ -46,31 +46,31 @@ class Options(Scene):
         else:
             sx, sy = list(map(lambda x: int(x), screensize.split('x')))
 
-        if (self.p['gx'], self.p['gy']) != (sx, sy):
-            self.p['gx'], self.p['gy'] = sx, sy
+        if (self.prop['gx'], self.prop['gy']) != (sx, sy):
+            self.prop['gx'], self.prop['gy'] = sx, sy
             return True
         return False
 
     def parse_cellsize(self, cellsize):
         if cellsize == "Auto":
-            if self.p['cx'] != 'Auto':
-                self.p['cx'], self.p['cy'] = "auto", None
+            if self.prop['cx'] != 'Auto':
+                self.prop['cx'], self.prop['cy'] = "auto", None
                 return True
         else:
             cx, cy = list(map(lambda x: int(x), cellsize.split('x')))
-            if (self.p['cx'], self.p['cy']) != (cx, cy):
-                self.p['cx'], self.p['cy'] = (cx, cy)
+            if (self.prop['cx'], self.prop['cy']) != (cx, cy):
+                self.prop['cx'], self.prop['cy'] = (cx, cy)
                 return True
         return False
 
     def parse_fonts(self, font):
         if self.option == "Default":
             term.set('font: default, size={}{}'.format(
-                self.p['cx'], 
-                'x' + str(self.p['cy']) if self.p['cy'] != self.p['cx'] else ''))
+                self.prop['cx'], 
+                'x' + str(self.prop['cy']) if self.prop['cy'] != self.prop['cx'] else ''))
 
         else:
-            if self.p['cx'] == "auto":
+            if self.prop['cx'] == "auto":
                 cy = 8 if font not in ("Andale, Courier, VeraMono") else 16
                 term.set("font: ./fonts/{}.ttf, size={}{}".format(
                     font, 
@@ -78,8 +78,8 @@ class Options(Scene):
             else:
                 term.set("font: ./fonts/{}.ttf, size={}{}".format(
                     font, 
-                    self.p['cx'], 
-                    'x'+str(self.p['cy']) if self.p['cy'] != self.p['cx'] else ''))
+                    self.prop['cx'], 
+                    'x'+str(self.prop['cy']) if self.prop['cy'] != self.prop['cx'] else ''))
 
     def reset_screen(self):
         if self.prop['cx'] == "auto":

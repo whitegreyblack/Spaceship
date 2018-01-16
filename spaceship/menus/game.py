@@ -68,6 +68,7 @@ class Start(Scene):
         }
 
         # player screen variables
+        self.row_spacing = 2 if self.height > 25 else 1
         self.player_screen_col, self.player_screen_row = 1, 3
         self.player_status_col, self.player_status_row = 1, 2
         self.display_offset_x, self.display_offset_y = 14, 0
@@ -286,7 +287,7 @@ class Start(Scene):
             letter = chr(ord('a') + index)
             term.puts(
                 x=self.player_screen_col,
-                y=self.player_screen_row + index * (2 if self.height > 25 else 1),
+                y=self.player_screen_row + index * self.row_spacing,
                 s=letter + body_part + item_desc)
 
     def draw_player_inventory(self):
@@ -299,7 +300,7 @@ class Start(Scene):
             nonlocal index_row
             term.puts(
                 x=self.player_screen_col,
-                y=self.player_screen_row + index_row * (2 if self.height > 25 else 1),
+                y=self.player_screen_row + index_row * self.row_spacing,
                 s=item_header)
             index_row += 1
 
@@ -309,7 +310,7 @@ class Start(Scene):
             letter = chr(ord('a') + item_row) + ". "
             term.puts(
                 x=self.player_screen_col,
-                y=self.player_screen_row + index_row * (2 if self.height > 25 else 1),
+                y=self.player_screen_row + index_row * self.row_spacing,
                 s=letter + item_desc) 
             index_row += 1
             item_row += 1
