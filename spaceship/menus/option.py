@@ -69,10 +69,12 @@ class Option:
 if __name__ == "__main__":
     term.open()
     term.set('window: size=80x24, title="Option Expansion"')
+    
     option = Option("Options Screen")
     option.add_opt("option a", ["suboption 1", "suboption 2", "suboption 3"])
     option.add_opt("option b", ["suboption 1", "suboption 2"])
     option.add_opt("option c", ["suboption 1", "suboption 2", "suboption 3"])
+
     if not option.opts:
         raise AttributeError("No opts to display")
 
@@ -80,6 +82,7 @@ if __name__ == "__main__":
         term.clear()
         print(option.optindex, option.suboptindex)
         term.puts(center(option.title, term.state(term.TK_WIDTH)), 1, option.title)
+
         height = 3
         for index, opt in enumerate(option.opts):
             selected = index == option.optindex
@@ -87,51 +90,64 @@ if __name__ == "__main__":
             if selected:
                 if expanded:
                     opt = "[[-]] " + "[c=#00ffff]{}[/c]".format(opt)
+
                 else:
                     opt = "[[+]] " + "[c=#00ffff]{}[/c]".format(opt)
+
             else:
                 if expanded:
                     opt = "[[-]] " + opt
+
                 else:
                     opt = "[[+]] " + opt
                     
             term.puts(term.state(term.TK_WIDTH)//5, height, opt)
             height += 1
+
             if expanded:
                 for index, subopt in enumerate(option.subopts[index]):
                     if selected:
                         if index == option.suboptindex[option.optindex]:
                             subopt = "[c=#00ffff]{}[/c]".format(subopt)
+
                         else:
                              subopt = subopt
+
                     term.puts(term.state(term.TK_WIDTH)//4, height, subopt)
                     height += 1
 
         term.refresh()
         key = term.read()
+
         if key in (term.TK_CLOSE, term.TK_Q, term.TK_ESCAPE):
             break
+
         elif key == term.TK_ENTER:
             if option.optindex in option.expand:
                 if option.suboptindex[option.optindex] != -1:
                     print('SELECTED: {}|{}'.format(
                         option.opts[option.optindex], 
                         option.subopts[option.optindex][option.suboptindex[option.optindex]]))
+
                 else:
                     option.collapse(option.optindex)
+
             else:
                 option.expansion(option.optindex)
-                # option.move_subpointer(1)
+
         elif key == term.TK_DOWN:
             if len(option.expand):
                 option.move_subpointer(1)
                 option.correct_subpointer()
+
             else:
                 option.move_pointer(1)
                 option.correct_pointer()
+
         elif key == term.TK_UP:
             if len(option.expand):
                 option.move_subpointer(-1)
+
             else:
                 option.move_pointer(-1)
                 option.correct_pointer()
