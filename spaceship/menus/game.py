@@ -671,7 +671,6 @@ class Start(Scene):
                             self.player.move(x, y)
                             unit.move(-x, -y)
                             unit.energy.reset()
-                            print(unit, switch)
                             log = "You switch places with the {}.".format(
                                                 unit.__class__.__name__.lower())
                             self.draw_log(log)
@@ -750,6 +749,7 @@ class Start(Scene):
                         self.draw_log(log)
 
     def get_input(self):     
+        '''Handles input reading and parsing unrecognized keys'''
         key = term.read()
         if key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
             # skip any non-action keys
@@ -788,6 +788,9 @@ class Start(Scene):
         return action
 
     def spaces(self, x, y, exclusive=True):
+        '''Returns a list of spaces in a 8 space grid with the center (pos 5)
+        returned if exclusive is set as false
+        '''
         space = namedtuple("Space", ("x","y"))
         for dy in range(-1, 2):
             for dx in range(-1, 2):
@@ -798,6 +801,9 @@ class Start(Scene):
                     yield space(x + dx, y + dy)
 
     def action_save(self):
+        '''Save command: checks save folder and saves the current game objects
+        to file before going back to the main menu
+        '''
         self.draw_log("Save and exit game? (Y/N)")
         
         # User input -- confirm selection
@@ -826,15 +832,20 @@ class Start(Scene):
         self.reset()
 
     def determine_map_location(self):
+        '''Given player coordinates, determines player current location and 
+        adds player object to that location
+        '''
         self.location.unit_remove(self.player)
         if self.player.height == Level.WORLD:
             self.location = self.world
         
         else:
             self.location = self.world.location(*self.player.location)
+
             if self.player.height > 1:
                 for i in range(self.player.height - 1):
                     self.location = self.location.sublevel
+
         self.location.units_add([self.player])
         self.map_change = False
 
@@ -851,6 +862,10 @@ class Start(Scene):
                 max(int(location.height * y - 1), 0))
 
     def action_enter_map(self):
+        '''Enter map command: determines which kind of world to create when
+        entering a location based on teh world enterable and dungeon dicts.
+        If world is already created just load world as current location
+        '''
         if not self.world.location_exists(*self.player.location):
             if self.player.location in self.world.enterable_legend.keys():
                 fileloc = self.world.enterable_legend[self.player.location]
@@ -916,6 +931,10 @@ class Start(Scene):
         self.map_change = True
 
     def action_interact_stairs_down(self):
+        '''Go Down command: Checks player position to the downstairs position
+        in the current location. If they match then create a dungeon with the
+        player starting position at the upstairs of the new location
+        '''
         if self.player.position == self.location.stairs_down:
             if not self.location.sublevel:
                 location = Cave(
@@ -937,6 +956,10 @@ class Start(Scene):
             self.draw_log("You cannot go downstairs without stairs.")
 
     def action_interact_stairs_up(self):
+        '''Go Up command: Checks player position to the upstairs position
+        in the current location. Then determine the parent location 
+        and reset position according to the type of parent
+        '''
         def move_upstairs():
             self.location.unit_remove(self.player)
             self.location = self.location.parent
@@ -959,6 +982,10 @@ class Start(Scene):
             self.draw_log("You cannot go upstairs without stairs.")
 
     def action_interact_door_close(self):
+        '''Close door command: handles closing doors in a one unit distance
+        from the player. Cases can range from no doors, single door, multiple 
+        doors, with multiple doors asking for input direction
+        '''
         def close_door(x, y):
             self.draw_log('Closing door.')
             self.location.close_door(x, y)
@@ -1004,6 +1031,10 @@ class Start(Scene):
                     self.draw_log(log)
                     
     def action_interact_door_open(self):
+        '''Open door command: handles opening doors in a one unit distance from
+        the player. Cases can range from no doors, single door, multiple 
+        doors, with multiple doors asking for input direction
+        '''
         def open_door(x, y):
             self.draw_log('Opening door.')
             self.location.open_door(x, y)
