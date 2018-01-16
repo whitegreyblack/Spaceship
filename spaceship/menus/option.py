@@ -18,13 +18,16 @@ class Option:
         # list of expansions
         self.expand = set()
 
-    def option(self):
+    def option(self) -> str:
+        '''Return current option'''
         return self.opts[self.optindex]
 
-    def suboption(self):
+    def suboption(self) -> str:
+        '''Return current suboption'''
         return self.subopts[self.optindex][self.suboptindex[self.optindex]]
 
     def expansion(self, n: int) -> None:
+        '''Expand the current option list if it is not currently collapsed'''
         if n > len(self.opts):
             raise IndexError('invalid index for expansion')
 
@@ -32,6 +35,7 @@ class Option:
             self.expand.add(n)
 
     def collapse(self, n: int) -> None:
+        '''Collapse the current list if it is not currently expanded'''
         if n > len(self.opts):
             raise IndexError('invalid index for collapse')
 
@@ -39,38 +43,28 @@ class Option:
             self.expand.remove(n)
 
     def add_opt(self, opt: str, subopts: list) -> None:
+        '''Add a header option to the option'''
         self.opts.append(opt)
         self.subopts.append(subopts)
         self.suboptindex.append(-1)
 
     def move_pointer(self, move: int) -> None:
+        '''Increment optindex by the value of move'''
         self.optindex = self.optindex + move
 
     def correct_pointer(self) -> None:
+        '''Clamp optindex to be within the bounds of the options length'''
         self.optindex = max(min(self.optindex, len(self.opts) - 1), 0)
     
     def move_subpointer(self, move: int) -> None:
+        '''Increment suboptindex by the value of move'''
         self.suboptindex[self.optindex] += move
-        
-        # # moving up
-        # if self.suboptindex < 0:
-        #     self.move_pointer(-1)
-        #     if self.optindex == 0:
-        #         self.suboptindex = len(self.subopts[self.optindex]) - 1
-        #     else:
-        #         self.suboptindex = 0
-
-        # # moving down
-        # elif self.suboptindex > len(self.subopts[self.optindex]) - 1:
-        #     self.move_pointer(1)
-        #     if self.optindex == len(self.opts):
-        #         self.suboptindex = len(self.subopts[self.optindex]) - 1
-        #     else:
-        #         self.suboptindex = -1
-        # # self.suboptindex = max(min(self.suboptindex+move, len(self.subopts[self.optindex])-1), 0)
     
-    def correct_subpointer(self):
-        self.suboptindex[self.optindex] = max(min(self.suboptindex[self.optindex], len(self.subopts[self.optindex])-1), 0)
+    def correct_subpointer(self) -> None:
+        '''Clamp suboptindex to be within the bounds of the suboptions length'''
+        self.suboptindex[self.optindex] = max(min(
+            self.suboptindex[self.optindex], 
+            len(self.subopts[self.optindex])-1), 0)
 
 if __name__ == "__main__":
     term.open()

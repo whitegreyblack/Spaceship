@@ -31,20 +31,25 @@ class Option:
         self.expand = set()
 
     def option(self):
+        '''Return current option'''
         return self.opts[self.optindex]
 
     def suboption(self):
+        '''Return current suboption'''
         return self.subopts[self.optindex][self.suboptindex[self.optindex]]
 
     def suboptsize(self):
+        '''Return size of suboption list'''
         return len(self.subopts[self.optindex])
 
     def reset_all(self):
+        '''Reset and close all option lists'''
         self.optindex = 0
         self.suboptindex = [-1 for i in range(len(self.opts))]
         self.collapse_all()
 
     def expansion(self, n: int):
+        '''Expand the current option list if it is not currently collapsed'''
         if n > len(self.opts):
             raise IndexError('invalid index for expansion')
 
@@ -52,11 +57,13 @@ class Option:
             self.expand.add(n)
 
     def expand_all(self):
+        '''Expand all option lists that are not expanded'''
         for i in range(len(self.opts)):
             if i not in self.expand:
                 self.expand.add(i)
 
     def collapse(self, n: int):
+        '''Collapse the current list if it is not currently expanded'''
         if n > len(self.opts):
             raise IndexError('invalid index for collapse')
 
@@ -64,9 +71,11 @@ class Option:
             self.expand.remove(n)
 
     def collapse_all(self):
+        '''Collapse all option lists that are not collapsed'''
         self.expand = set()
 
     def add_opt(self, opt: str, subopts: list):
+        '''Add a header option to the option'''
         self.opts.append(opt)
         self.subopts.append(subopts)
         self.suboptindex.append(-1)
