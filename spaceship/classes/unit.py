@@ -80,6 +80,7 @@ class Unit(Object):
         return self.cur_hp > 0
 
     def move(self, dx: int, dy: int) -> None:
+        '''Adds a vector to current position to change positions'''
         self.x += dx
         self.y += dy
         
@@ -87,22 +88,28 @@ class Unit(Object):
         return "Hello there!"
 
     def displace(self, other):
+        '''Switches positions of target with self, vice versa'''
         self.position, other.position = other.position, self.position
         # other.energy.reset()
 
     def calculate_attack_damage(self):
+        '''Returns the damage amount of a single hit'''
         return 1
 
     def calculate_attack_chance(self):
+        '''Returns the chance to hit'''
         return choice([0, 1, 2])
 
     def direction(self, unit):
+        '''Returns a point indicating the vector towards target'''
         return unit.x - self.x, unit.y - self.y
 
     def friendly():
+        '''Returns a boolean indicating if unit is friendly'''
         self.relationship >= 0
 
     def translate_sight(self, x, y):
+        '''Offsets input point by current position and sight radius'''
         sx = self.x - x + self.sight_norm
         sy = self.y - y + self.sight_norm
 
