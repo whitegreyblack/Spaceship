@@ -283,12 +283,22 @@ class Start(Scene):
             term.puts(i, 1, '#')
         term.puts(center(' Equipment ', self.width), 1, ' Equipment ')
 
-        for index, (body_part, item_desc) in enumerate(list(self.player.equipment)):
+        equipment = list(self.player.equipment)
+
+        for index, (part, item) in enumerate(equipment):
+            if item:
+                item = item.__str__()
+            else:
+                item = ""
+
+            body = ". {:<10}: ".format(
+                part.replace("eq_", "").replace("_", " "))
+
             letter = chr(ord('a') + index)
             term.puts(
                 x=self.player_screen_col,
                 y=self.player_screen_row + index * self.row_spacing,
-                s=letter + body_part + item_desc)
+                s=letter + body + item)
 
     def draw_player_inventory(self):
         '''Handles drawing of the inventory screen along with the specific 
@@ -393,7 +403,8 @@ class Start(Scene):
 
     def draw_player_screens(self, key):
         def unequip_item(code):
-            print(code)
+            equipment = [item for _, item in self.player.equipment]
+            print(equipment[code-4])
 
         playscreen = False
         current_screen = key

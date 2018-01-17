@@ -94,8 +94,8 @@ class Ring(Item):
         return f"{self.name} ({self.seperate()})"
 
     def seperate(self):
-        for e, v in self.effects:
-            print(e, v)
+        # for e, v in self.effects:
+        #     print(e, v)
         # print([e, v for e, v in self.effects])
 
         return ", ".join(f"{self.modify(effect)}: {self.mark(value)}" 

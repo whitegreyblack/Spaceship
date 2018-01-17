@@ -84,10 +84,7 @@ class Player(Unit):
     @property
     def equipment(self):
         for part in self.parts:
-            item = getattr(self, part)
-            item_desc = item.__str__() if item else ""
-            body = ". {:<10}: ".format(part.replace("eq_", "").replace("_", " "))
-            yield body, item_desc
+            yield part, getattr(self, part)
 
     def equipment_remove(self, part):
         item = getattr(self, part)
@@ -104,15 +101,8 @@ class Player(Unit):
 
     @property
     def inventory(self):
-        self.inventory_sort()
         for item in self.__inventory:
-            print(item)
             yield item
-
-    def inventory_sort(self):
-        self.inventory_book ={}
-        for item in self.__inventory:
-            print(item.__class__.__name__)
 
     def inventory_add(self, item):
         self.__inventory.append(item)
