@@ -60,7 +60,7 @@ class Create(Scene):
             # Tiphmore -- Largest Free City in Calabaston
             races("Beast", "Tiphmore", strings.HUMAN, strings.BEAST_BONUS, 300,
                   ("thick fur", "animal senses"),
-                  equipment("", "", "", "", "", ("long spear", "silver sword"),
+                  equipment("", "", "", "", "", ("long spear", "ring of ice"),
                             "", "", "", "", "", "")),
 
             # Capital of Yugahdahrum

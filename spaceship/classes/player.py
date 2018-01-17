@@ -30,6 +30,8 @@ class Player(Unit):
         self.skills = character.skills
         self.advexp = self.level * 150
 
+        self.equip_weapon_double = False
+
         self.base_stats = character.stats
         self.job_bonus = character.jbonus
         self.race_bonus = character.rbonus
@@ -60,11 +62,13 @@ class Player(Unit):
             if isinstance(self.__equipment[p], list):
                 # No item is set for the current body part
                 setattr(self, part, None) 
+
             else:
                 # Check to see if the item is defined in the items table already
                 # if defined create the item, else just set the part to the eq
                 try:
                     setattr(self, part, items[self.__equipment[p]])
+
                 except KeyError:
                     setattr(self, part, self.__equipment[p])
 
@@ -74,6 +78,7 @@ class Player(Unit):
             try:
                 self.__inventory[index] = items[item]
             except KeyError:
+
                 pass
 
     @property
@@ -93,6 +98,7 @@ class Player(Unit):
     def equipment_equip(self, part, item):
         if not getattr(self, part):
             setattr(self, part, item)
+
         else:
             print('Slot is not empty')
 
@@ -114,15 +120,19 @@ class Player(Unit):
     def inventory_remove(self, item):
         try:
             self.__inventory.remove(item)
+
         except ValueError:
             print('No item in inventory with that value')
 
     def inventory_use(self, item):
         try:
             index = self.__inventory.index(item)
-            return self.__inventory.pop(index)
+
         except ValueError:
             print('No item in inventory with that value')
+
+        else:
+            return self.__inventory.pop(index)
 
     def profile_save_path(self):
         name = self.name.replace(' ', '_')
@@ -225,31 +235,36 @@ class Player(Unit):
             self.damage_lower += self.eq_hand_right.damage_lower
             self.damage_higher += self.eq_hand_right.damage_higher
 
-    def calculate_attack_chance(self):
+    def calculate_attack_chance(self) -> int:
         '''Returns 0 for miss, 1 for regular hit, 2 for critical'''
         for var in ('damage_accuracy', 'damage_lower', 'damage_higher'):
             if not hasattr(self, var):
                 raise AttributeError("Attack Variables not set")
+
         chance = randint(0, 20) + self.damage_accuracy
+
         if chance <= 1:
             return 0
+
         elif chance >= 20:
             return 2
+
         else:
             return 1
 
-    def calculate_attack_damage(self):
+    def calculate_attack_damage(self) -> int:
         return randint(self.damage_lower, self.damage_higher) # + max(self.str, self.dex)
 
-    def gain_exp(self, exp):
+    def gain_exp(self, exp: int) -> None:
         self.exp += exp
 
-    def check_exp(self):
+    def check_exp(self) -> bool:
         if self.exp >= self.advexp:
             self.level += 1
             self.exp = 0
             self.advexp = self.level * 150
             return True
+
         return False
 
     @property
@@ -291,6 +306,7 @@ class Player(Unit):
 
         if not hasattr(self, "last_location"):
             raise AttributeError("No last location variable")
+
         try:
             return direction(
                 self.last_location[0] - self.wx, 

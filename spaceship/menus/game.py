@@ -392,6 +392,9 @@ class Start(Scene):
             s=strings.command_use)
 
     def draw_player_screens(self, key):
+        def unequip_item(code):
+            print(code)
+
         playscreen = False
         current_screen = key
         current_range = 0
@@ -416,6 +419,7 @@ class Start(Scene):
             if code in (term.TK_ESCAPE,):
                 if current_screen == 1:
                     current_screen = 0
+
                 else:
                     break
 
@@ -430,11 +434,14 @@ class Start(Scene):
                 # @ goes to profile
                 current_screen = '@'
 
-            elif code == term.TK_UP:
-                if current_range > 0: current_range -= 1
+            # elif code == term.TK_UP:
+            #     if current_range > 0: current_range -= 1
 
-            elif code == term.TK_DOWN:
-                if current_range < 10: current_range += 1
+            # elif code == term.TK_DOWN:
+            #     if current_range < 10: current_range += 1
+
+            elif term.TK_A <= code <= term.TK_L:
+                unequip_item(code)
 
         term.clear()
 
