@@ -46,15 +46,15 @@ class Start(Scene):
         # self.reset()
         self.actions = {
             0: {
-                '@': self.draw_player_screens,
-                'i': self.draw_player_screens,
+                # '@': self.draw_player_screens,
+                'q': self.draw_player_screens,
                 'v': self.draw_player_screens,
                 'S': self.action_save,
                 '>': self.action_enter_map,
             },
             1: {
-                '@': self.draw_player_screens,
-                'i': self.draw_player_screens,
+                # '@': self.draw_player_screens,
+                'q': self.draw_player_screens,
                 'v': self.draw_player_screens,
                 '<': self.action_interact_stairs_up,
                 '>': self.action_interact_stairs_down,
@@ -70,7 +70,7 @@ class Start(Scene):
         # player screen variables
         self.row_spacing = 2 if self.height > 25 else 1
         self.player_screen_col, self.player_screen_row = 1, 3
-        self.player_status_col, self.player_status_row = 1, 2
+        self.player_status_col, self.player_status_row = 0, 1
         self.display_offset_x, self.display_offset_y = 14, 0
         self.log_width, self.log_height = self.width, 2
         self.display_width = self.width - self.display_offset_x
@@ -231,35 +231,9 @@ class Start(Scene):
                     s=surround(location))
 
     def draw_player_status(self):
-        col, row = self.player_status_col, self.player_status_row
-        term.puts(col, row - 1, self.player.name)
-        term.puts(col, row + 0, self.player.gender)
-        term.puts(col, row + 1, self.player.race)
-        term.puts(col, row + 2, self.player.job)
-
-        term.puts(col, row + 4, "LVL: {:>6}".format(self.player.level))
-        term.puts(col, row + 5, "EXP: {:>6}".format("{}/{}".format(
-            self.player.exp, 
-            self.player.advexp)))
-        term.puts(col, row + 7, "HP:  {:>6}".format("{}/{}".format(
-            self.player.cur_hp, 
-            self.player.tot_hp)))
-        term.puts(col, row + 8, "MP:  {:>6}".format("{}/{}".format(
-            self.player.cur_mp, 
-            self.player.tot_mp)))
-        term.puts(col, row + 9, "SP:  {:>6}".format(self.player.sp))
-
-        term.puts(col, row + 11, "STR: {:>6}".format(self.player.str)) 
-        term.puts(col, row + 12, "CON: {:>6}".format(self.player.con))
-        term.puts(col, row + 13, "DEX: {:>6}".format(self.player.dex))
-        term.puts(col, row + 14, "INT: {:>6}".format(self.player.int))
-        term.puts(col, row + 15, "WIS: {:>6}".format(self.player.wis))
-        term.puts(col, row + 16, "CHA: {:>6}".format(self.player.cha))
-
-        term.puts(col, row + 18, "GOLD:{:>6}".format(self.player.gold))
-
-        # Turn status
-        term.puts(1, self.height - 4, 'Turns: {:<4}'.format(self.turns))
+        term.puts(self.player_status_col, self.player_status_row,
+            strings.status.format(
+                *self.player.status(), self.turns))
 
     def draw_player_profile(self):
         '''Handles player profile screen'''
@@ -391,9 +365,9 @@ class Start(Scene):
     def draw_player_eq_drop(self):
         '''Draws instruction on screen to drop an item'''
         term.puts(
-            x=center(self.strings.command_drop, self.width),
+            x=center(strings.command_drop, self.width),
             y=self.height - 2,
-            s=self.strings.command_drop)
+            s=strings.command_drop)
         
     def draw_player_eq_use(self):
         term.puts(
@@ -404,7 +378,6 @@ class Start(Scene):
     def draw_player_screens(self, key):
         def unequip_item(code):
             equipment = [item for _, item in self.player.equipment]
-            print(equipment)
             print(equipment[code - 4])
 
         playscreen = False
@@ -414,19 +387,21 @@ class Start(Scene):
         while True:
             term.clear()
 
-            if current_screen == "i":
+            if current_screen == "q":
                 self.draw_player_equipment()
                 self.draw_player_eq_inv_switch()
 
             elif current_screen == "v":
                 self.draw_player_inventory()
                 self.draw_player_inv_eq_switch()
-
+            '''
             else:
                 self.draw_player_profile()
-
+            '''
             term.refresh()
             code = term.read()
+            while code in (term.TK_ALT, term.TK_CONTROL, term.TK_SHIFT):
+                code = term.read()
 
             if code in (term.TK_ESCAPE,):
                 if current_screen == 1:
@@ -441,11 +416,11 @@ class Start(Scene):
             elif code == term.TK_V:
                 # V goes to inventory screen
                 current_screen = 'v'
-            
-            elif code == term.TK_2 and term.state(term.TK_SHIFT):
-                # @ goes to profile
-                current_screen = '@'
 
+            # elif code == term.TK_2 and term.state(term.TK_SHIFT):
+            #     @ goes to profile
+            #     current_screen = '@'
+            
             # elif code == term.TK_UP:
             #     if current_range > 0: current_range -= 1
 
@@ -783,8 +758,10 @@ class Start(Scene):
             # exit command -- maybe need a back to menu screen?
             if shifted:
                 exit('Early Exit')
+
             elif self.player.height >= Level.WORLD:
                 self.draw_log('Escape key disabled.')
+
             else:
                 self.ret['scene'] = 'main_menu'
                 self.proceed = False
@@ -794,7 +771,7 @@ class Start(Scene):
             action = commands_player[(key, shifted)]
         except KeyError:
             pass
-
+            
         return action
 
     def spaces(self, x, y, exclusive=True):
@@ -1190,7 +1167,7 @@ class Start(Scene):
 
 
             code = term.read()
-            if code in (term.TK_ESCAPE, term.TK_Q):
+            if code == term.TK_ESCAPE:
                 break
             elif term.TK_A <= code <= term.TK_A + len(items) - 1:
                 drop_item(items[code - 4])
@@ -1219,7 +1196,7 @@ class Start(Scene):
             items = list(self.player.inventory)
 
             code = term.read()
-            if code in (term.TK_ESCAPE, term.TK_Q):
+            if code == term.TK_ESCAPE:
                 break
             elif term.TK_A <= code <= term.TK_A + len(items) - 1:
                 use_item(items[code - 4])

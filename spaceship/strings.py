@@ -31,7 +31,13 @@ WIS : [c=#00ffff]{:>2}[/c]{delim}
 CHA : [c=#00ffff]{:>2}[/c]{delim}
 """[1:]
 
-_bon = """{:>2}{delim}\n{:>2}{delim}\n{:>2}{delim}\n{:>2}{delim}\n{:>2}{delim}\n{:>2}"""
+_bon = """
+{:>2}{delim}
+{:>2}{delim}
+{:>2}{delim}
+{:>2}{delim}
+{:>2}{delim}
+{:>2}"""[1:]
 
 _col3 = """
 Head  : {:<5}{delim}\nNeck  : {:<5}{delim}\nBody  : {:<5}{delim}
@@ -40,23 +46,47 @@ Rhand : {:<5}{delim}\nRing1 : {:<5}\nRing2 : {:<5}{delim}
 Waist : {:<5}{delim}\nLegs  : {:<5}{delim}\nFeet  : {:<5}\n
 """[1:]
 
-profile = ['''
-    Name     : {name:>6}
-    Gender   : {sex:>6}
-    Race     : {race:>6} 
-    Class    : {job:>6}
+status = '''
+ {:13}
+ {:13}
+ {:13}
+ {:13}
 
-    STR      : {:>6}
-    CON      : {:>6}
-    DEX      : {:>6}
-    WIS      : {:>6}
-    INT      : {:>6}
-    CHA      : {:>6}
-    '''[1:],
-    '''
-    Damage   : {dmg:>6}
-    Accuracy : {acc:>5}
-    '''[1:],
+ LVL: {:>6}
+ EXP: {:>6}
+
+ HP : {:>6}
+ MP : {:>6}
+
+ STR: {:>6}
+ CON: {:>6}
+ DEX: {:>6}
+ INT: {:>6}
+ WIS: {:>6}
+ CHA: {:>6}
+
+ GOLD: {:>5}
+ TURNS: {:>4}
+'''[1:]
+
+profile = [
+'''
+Name     : {name:>6}
+Gender   : {sex:>6}
+Race     : {race:>6} 
+Class    : {job:>6}
+
+STR      : {:>6}
+CON      : {:>6}
+DEX      : {:>6}
+WIS      : {:>6}
+INT      : {:>6}
+CHA      : {:>6}
+'''[1:],
+'''
+Damage   : {dmg:>6}
+Accuracy : {acc:>5}
+'''[1:],
 ]
 
 # Some formulas to use when developing a character

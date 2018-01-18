@@ -119,7 +119,7 @@ class Player(Unit):
             index = self.__inventory.index(item)
 
         except ValueError:
-            print('No item in inventory with that value')
+            ('No item in inventory with that value')
 
         else:
             return self.__inventory.pop(index)
@@ -139,6 +139,15 @@ class Player(Unit):
             profile[1].format(
                 dmg="(" + str(self.damage_lower) + ", " + str(self.damage_higher) + ")",
                 acc=self.damage_accuracy))
+
+    def status(self):
+        return (self.name, self.gender, self.race, self.job, self.level,
+            "{}/{}".format(self.exp, self.advexp),
+            "{}/{}".format(self.cur_hp, self.tot_hp),
+            "{}/{}".format(self.cur_mp, self.tot_mp),
+            self.tot_str, self.tot_con, self.tot_dex, 
+            self.tot_int, self.tot_wis, self.tot_cha,
+            self.gold)
 
     def stats_pack(self):
         self.stats = tuple(s + g + r + c for s, g, r, c in zip(
