@@ -115,73 +115,8 @@ class Start(Scene):
         self.draw_world()
         term.refresh()
 
-    def process_units(self):
-        if isinstance(self.location, World):
-            for unit in self.location.units:
-                self.unit = unit
-                self.process_turn()
-
-        elif len(list(self.location.units)) == 1:
-                self.unit = self.player
-                self.process_turn()
-
-        else:
-            for unit in self.location.units:
-                unit.energy.gain()
-                self.unit = unit
-                while unit.energy.ready():
-                    self.unit.energy.reset()
-                    self.process_turn()      
-
-        # if isinstance(self.location, World):
-        #     self.process_turn_player()
-        # else:
-        #     for unit in self.location.units:
-        #         self.unit = unit
-        #         if self.unit.energy.ready():
-        #             self.unit.energy.reset()
-        #             self.process_turn_unit()
-        #         else:
-        #             self.unit.energy.gain()
-
-        #     if self.player.energy.ready():
-        #         self.process_turn_player()
-        #     else:
-        #         self.player.energy.gain()
-
-    def draw_log(self, log=None, color="white", refresh=True):
-        if log:
-            self.gamelog.add(log, color=color)
-
-        term.clear_area(
-            0, 
-            self.height - self.log_height - 1, 
-            self.width, 
-            self.log_height)
-        
-        messages = self.gamelog.write()
-
-        for index, msg in enumerate(messages):
-            term.puts(
-                x=1,
-                y=self.height + index - self.log_height - 1,
-                s="[c={}]{}[/c]".format(msg.color, msg.message))
-        
-        if refresh:
-            term.refresh()
-
-    def draw_drop_log(self, log, refresh=True):
-        term.clear_area(0, self.height - 3, self.width, 1)
-        
-        term.puts(
-            x=center(log, self.width),
-            y=self.height - 3,
-            s=log)
-        
-        if refresh:
-            term.refresh()
-
     def draw_world(self):
+        '''Handles drawing of world features and map'''
         x, y = self.player.position if self.player.height >= 1 \
             else self.player.location
 
@@ -231,6 +166,7 @@ class Start(Scene):
                     s=surround(location))
 
     def draw_player_status(self):
+        '''Handles player status screen'''
         term.puts(self.player_status_col, self.player_status_row,
             strings.status.format(
                 *self.player.status(), self.turns))
@@ -313,15 +249,15 @@ class Start(Scene):
         # header for inventory
         for i in range(self.width):
             term.puts(i, 1, '#')
-        term.puts(center('backpack  ', self.width), 1, ' Backpack ')
+        term.puts(center('inventory  ', self.width), 1, ' Inventory ')
 
         items = list(self.player.inventory)
 
         if not items:
             term.puts(
-                x=center('Nothing in inventory', self.width),
+                x=center('Nothing in your inventory', self.width),
                 y=3,
-                s='Nothing in inventory')
+                s='Nothing in your inventory')
 
         else:
             weapons, armors, potions, rings = [], [], [], []
@@ -348,19 +284,40 @@ class Start(Scene):
             draw_item_grouping("Potions", potions)
             draw_item_grouping("Rings", rings)
     
+    def draw_log(self, log=None, color="white", refresh=True):
+        if log:
+            self.gamelog.add(log, color=color)
+
+        term.clear_area(
+            0, 
+            self.height - self.log_height - 1, 
+            self.width, 
+            self.log_height)
+        
+        messages = self.gamelog.write()
+
+        for index, msg in enumerate(messages):
+            term.puts(
+                x=1,
+                y=self.height + index - self.log_height - 1,
+                s="[c={}]{}[/c]".format(msg.color, msg.message))
+        
+        if refresh:
+            term.refresh()
+
     def draw_player_eq_inv_switch(self):
         '''Draws instruction on screen the command to switch to inventory'''
         term.puts(
-            x=center('press v to switch to inventory', self.width), 
+            x=center(strings.command_switch_eq, self.width), 
             y=self.height - 2,
-            s='press v to switch to inventory')
+            s=strings.command_switch_eq)
 
     def draw_player_inv_eq_switch(self):
         '''Draws instruction on screen the command to switch to equipment'''
         term.puts(
-            x=center('press i to switch to equipment', self.width), 
+            x=center(strings.command_switch_iv, self.width), 
             y=self.height - 2,
-            s='press i to switch to equipment')
+            s=strings.command_switch_iv)
 
     def draw_player_eq_drop(self):
         '''Draws instruction on screen to drop an item'''
@@ -375,17 +332,44 @@ class Start(Scene):
             y=self.height - 2,
             s=strings.command_use)
 
+    def draw_player_unequip_confirm(self, item):
+        string = strings.command_unequip.format(item)
+        term.puts(x=center(string, self.width), y=self.height - 2, s=string)
+
+    def draw_screen_log(self, log, refresh=True):
+        term.clear_area(0, self.height - 3, self.width, 1)
+        term.puts(x=center(log, self.width), y=self.height - 3, s=log)
+
+        if refresh:
+            term.refresh()
+
     def draw_player_screens(self, key):
         def unequip_item(code):
-            equipment = [item for _, item in self.player.equipment]
-            print(equipment[code - 4])
+            # nonlocal log
+            part, item = next(self.player.equipment_code(code - 4))
 
-        playscreen = False
+            if item:
+                self.draw_player_unequip_confirm(item)
+                term.refresh()
+
+                confirm = term.read()
+                if confirm in (term.TK_Y, term.TK_ENTER):
+                    self.player.equipment_remove(part)
+                    log = strings.command_unequip.format(item)
+
+            # else:
+            #     self.draw_player_equip_item()
+            #     term.refresh()
+            #     term.read()
+
         current_screen = key
-        current_range = 0
 
+        log = ""
         while True:
             term.clear()
+
+            if log:
+                self.draw_screen_log(log)
 
             if current_screen == "q":
                 self.draw_player_equipment()
@@ -394,21 +378,14 @@ class Start(Scene):
             elif current_screen == "v":
                 self.draw_player_inventory()
                 self.draw_player_inv_eq_switch()
-            '''
-            else:
-                self.draw_player_profile()
-            '''
+
             term.refresh()
             code = term.read()
             while code in (term.TK_ALT, term.TK_CONTROL, term.TK_SHIFT):
                 code = term.read()
 
             if code in (term.TK_ESCAPE,):
-                if current_screen == 1:
-                    current_screen = 0
-
-                else:
-                    break
+                break
 
             elif code == term.TK_Q:
                 current_screen = 'q'
@@ -417,20 +394,52 @@ class Start(Scene):
                 # V goes to inventory screen
                 current_screen = 'v'
 
+            elif current_screen == 'q' and term.TK_A <= code <= term.TK_L:
+                unequip_item(code)
+
             # elif code == term.TK_2 and term.state(term.TK_SHIFT):
             #     @ goes to profile
             #     current_screen = '@'
-            
             # elif code == term.TK_UP:
             #     if current_range > 0: current_range -= 1
-
             # elif code == term.TK_DOWN:
             #     if current_range < 10: current_range += 1
 
-            elif term.TK_A <= code <= term.TK_L:
-                unequip_item(code)
-
         term.clear()
+
+    def process_units(self):
+        if isinstance(self.location, World):
+            for unit in self.location.units:
+                self.unit = unit
+                self.process_turn()
+
+        elif len(list(self.location.units)) == 1:
+                self.unit = self.player
+                self.process_turn()
+
+        else:
+            for unit in self.location.units:
+                unit.energy.gain()
+                self.unit = unit
+                while unit.energy.ready():
+                    self.unit.energy.reset()
+                    self.process_turn()      
+
+        # if isinstance(self.location, World):
+        #     self.process_turn_player()
+        # else:
+        #     for unit in self.location.units:
+        #         self.unit = unit
+        #         if self.unit.energy.ready():
+        #             self.unit.energy.reset()
+        #             self.process_turn_unit()
+        #         else:
+        #             self.unit.energy.gain()
+
+        #     if self.player.energy.ready():
+        #         self.process_turn_player()
+        #     else:
+        #         self.player.energy.gain()
 
     def process_turn(self):
         if isinstance(self.unit, Player):
@@ -508,6 +517,7 @@ class Start(Scene):
         Position method should return position based on height
         So height would be independent and position would be depenedent on height
         '''
+        print(action)
         try:
             divided = self.actions[max(0, min(self.player.height, 1))]
             try:
@@ -751,7 +761,6 @@ class Start(Scene):
             Elif key is valid command return the command from command list with continue
             Else return invalid action tuple with continue value
         '''
-
         action = tuple(None for _ in range(4))
         key, shifted = self.get_input()
         if key in (term.TK_ESCAPE, term.TK_CLOSE):
@@ -1157,20 +1166,24 @@ class Start(Scene):
         while True:
             term.clear()
             self.draw_player_inventory()
+
             if list(self.player.inventory):
                 self.draw_player_eq_drop()
+
             if log:
-                self.draw_drop_log(log)
+                self.draw_screen_log(log)
+
             term.refresh()            
 
             items = list(self.player.inventory)
 
-
             code = term.read()
             if code == term.TK_ESCAPE:
                 break
+
             elif term.TK_A <= code <= term.TK_A + len(items) - 1:
                 drop_item(items[code - 4])
+
             else:
                 log = ""
 
@@ -1187,10 +1200,6 @@ class Start(Scene):
             term.clear()
             self.draw_player_inventory()
             self.draw_player_eq_use()
-            if log:
-                # self.draw_use_log(log)? or self.draw_log(log)?
-                ...
-
             term.refresh()
             
             items = list(self.player.inventory)
@@ -1198,8 +1207,11 @@ class Start(Scene):
             code = term.read()
             if code == term.TK_ESCAPE:
                 break
+
             elif term.TK_A <= code <= term.TK_A + len(items) - 1:
+
                 use_item(items[code - 4])
+
             else:
                 log = ""
 

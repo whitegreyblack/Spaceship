@@ -410,6 +410,9 @@ GAME_TITLE_ALT_SEC="""
                                                        `..|'          
 """[1:]                                                       
 
+command_switch_eq = "Press 'v' to switch to inventory"
+command_switch_iv = "Press 'q' to switch to equipment"
+command_unequip = "Are you sure you want to unequip the {}?"
 command_drop = "Which item to drop?"
 command_use  = "Which item to use?"
 command_save = "Save and exit game? (Y/N)"
@@ -419,7 +422,7 @@ movement_wait_world = "You wait in the area"
 movement_move_error = "You cannot travel there"
 movement_move_oob = "You reached the edge of the map"
 movement_move_swim = "You cannot swim"
-movement_move_block = "You walk into {}"
+movement_move_block = "You walk into {}."
 movement_move_chars = {
     "=": "furniture",
     "+": "a door",

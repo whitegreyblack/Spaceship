@@ -86,10 +86,21 @@ class Player(Unit):
         for part in self.parts:
             yield part, getattr(self, part)
 
+    def equipment_code(self, code):
+        part = self.parts[code]
+        item = getattr(self, part)
+
+        if not item:
+            yield None, None
+
+        yield part, item
+
     def equipment_remove(self, part):
         item = getattr(self, part)
+
         if item:
             self.inventory_add(item)
+
         setattr(self, part, None)
 
     def equipment_equip(self, part, item):
