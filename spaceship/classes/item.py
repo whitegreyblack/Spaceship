@@ -121,7 +121,7 @@ class Shoes(Item):
 class Ring(Item):
     inventory = "rings"
     placement = {"eq_ring_left", "eq_ring_right"}
-    
+
     def __init__(self, name, char, color, effect=None):
         super().__init__(name, char, color)
         self.effects = effect

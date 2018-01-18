@@ -91,7 +91,7 @@ class Player(Unit):
         item = getattr(self, part)
 
         if not item:
-            yield None, None
+            yield part, None
 
         yield part, item
 
@@ -105,6 +105,7 @@ class Player(Unit):
 
     def equipment_equip(self, part, item):
         if not getattr(self, part):
+            self.inventory_remove(item)
             setattr(self, part, item)
 
         else:
@@ -114,6 +115,11 @@ class Player(Unit):
     def inventory(self):
         for item in self.__inventory:
             yield item
+
+    def inventory_type(self, part):
+        for item in self.__inventory:
+            if hasattr(item, 'placement') and part in item.placement:
+                yield item
 
     def inventory_add(self, item):
         self.__inventory.append(item)

@@ -2,12 +2,12 @@ import os
 import sys
 from bearlibterminal import terminal as term
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
-from .main import Main
-from .options import Options
-from .game import Start
-from .load import Continue
-from .make import Create
-from .name import Name
+from .menus.main import Main
+from .menus.options import Options
+from .menus.game import Start
+from .menus.load import Continue
+from .menus.make import Create
+from .menus.name import Name
 
 class GameEngine:
     def __init__(self):

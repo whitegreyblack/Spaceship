@@ -51,7 +51,8 @@ help:
 	@echo "        Runs pytest in tests folder"
 
 run:
-	python -m spaceship.start
+	# python -m spaceship.start
+	python -m spaceship.engine
 
 check-classes:
 	python -m spaceship.classes.color
