@@ -4,24 +4,102 @@ from random import randint
 from .color import Color
 from .unit import Unit
 from .world import World
-from .item import Armor, Weapon, Item, items
-from ..strings import profile
+from .item import Armor, Weapon, Item, items, convert
 
 # Player should inherit from unit just so during main game loop
 # the player class can be accessed in the same way as other units
-class Equipment(list):
+class Equipment:
     '''Tied to body parts'''
-    pass
+    parts=("head", "neck", "body", "arms", "hands", 
+           "hand_left", "hand_right", "ring_left", 
+           "ring_right", "waist", "legs", "feet")
+
+    def __init__(self, equipment=[]):
+        if not equipment:
+            for part in self.parts:
+                setattr(self, part, None) 
+
+        else:
+            for p, part in enumerate(self.parts):
+                if not equipment[p]:
+                    # No item is set for the current body part
+                    setattr(self, part, None) 
+
+                else:
+                    # Check to see if the item is defined in the items table already
+                    # if defined create the item, else just set the part to the eq
+                    try:
+                        item = items[equipment[p]]
+        
+                    except KeyError:
+                        item = equipment[p]
+
+                    setattr(self, part, item)
+            
+                    if hasattr(item, 'equip'):
+                        item.equip(self)
+
+        print(list(self.items))
+
+    def by_part(self, index):
+        '''Returns the item at the given body part'''
+        part = self.parts[index]
+        item = getattr(self, part)
+
+        if not item:
+            yield part, None
+
+        yield part, item
+
+    @property
+    def items(self):
+        for part in self.parts:
+            yield getattr(self, part)
+
+    def remove(self, part):
+        item = getattr(self, part)
+
+        if item:
+            if hasattr(item, 'effects'):
+                for effect, value in list(item.effects):
+                    print(effect, value)
+                    print(self, getattr(self, effect))
+
+            # self.inventory_add(item)
+
+        setattr(self, part, None)
+
+    def equip(self, part, item):
+        if not getattr(self, part):
+            # self.inventory_remove(item)
+            setattr(self, part, item)
+
+        else:
+            print('Slot is not empty')
 
 class Inventory(list):
     '''Regular list'''
-    pass
+    def __init__(self, items):
+        super().__init__()
+        self.extend([convert(item) for item in items])
+
+    def by_part(self, part):
+        for item in self:
+            if hasattr(item, 'placement') and part in item.placement:
+                yield item
+
+    @property
+    def item(self, item):
+        try:
+            index = self.index(item)
+
+        except ValueError:
+            raise ValueError('No item in inventory with that value')
+
+        else:
+            return self.pop(index)
 
 class Player(Unit):
-    parts=("eq_head", "eq_neck", "eq_body", "eq_arms", "eq_hands", 
-           "eq_hand_left", "eq_hand_right", "eq_ring_left", 
-           "eq_ring_right", "eq_waist", "eq_legs", "eq_feet")
-
     def __init__(self, character, name):
         '''Unpacks the character tuple and calculates stats
 
@@ -50,13 +128,11 @@ class Player(Unit):
         self.setup(character.home)
         self.calculate_initial_stats()
             
-        self.__equipment = character.equipment
-        self.__inventory = character.inventory
-        self.convert_equipment()
-        self.convert_inventory()
+        self.__equipment = Equipment(character.equipment)
+        self.__inventory = Inventory(character.inventory)
 
+        self.calculate_final_stats()
         self.calculate_attack_variables()
-
 
         self.profile_save_path()
         
@@ -68,101 +144,15 @@ class Player(Unit):
     def __str__(self):
         return self.name
 
-    def convert_equipment(self):
-        '''Transforms equipment tuples into actual item objects'''
-        for p, part in enumerate(self.parts):
-            # if isinstance(self.__equipment[p], list):
-            if not self.__equipment[p]:
-                print(part)
-                # No item is set for the current body part
-                setattr(self, part, None) 
-
-            else:
-                # Check to see if the item is defined in the items table already
-                # if defined create the item, else just set the part to the eq
-                try:
-                    setattr(self, part, items[self.__equipment[p]])
-
-                except KeyError:
-                    setattr(self, part, self.__equipment[p])
-
-    def convert_inventory(self):
-        '''Transforms inventory tuples into actual item objects'''
-        for index, item in enumerate(self.__inventory):
-            try:
-                self.__inventory[index] = items[item]
-                
-            except KeyError:
-                pass
-
-    def update(self, attribute):
-        '''On equips/unequips, stat values need to change'''
-        
-
     @property
     def equipment(self):
-        for part in self.parts:
+        for part in self.__equipment.items:
             yield part, getattr(self, part)
-
-    def equipment_code(self, code):
-        part = self.parts[code]
-        item = getattr(self, part)
-
-        if not item:
-            yield part, None
-
-        yield part, item
-
-    def equipment_remove(self, part):
-        item = getattr(self, part)
-
-        if item:
-            if hasattr(item, 'effects'):
-                for effect, value in list(item.effects):
-                    print(effect, value)
-                    print(self, getattr(self, effect))
-
-            self.inventory_add(item)
-
-        setattr(self, part, None)
-
-    def equipment_equip(self, part, item):
-        if not getattr(self, part):
-            self.inventory_remove(item)
-            setattr(self, part, item)
-
-        else:
-            print('Slot is not empty')
 
     @property
     def inventory(self):
         for item in self.__inventory:
             yield item
-
-    def inventory_type(self, part):
-        for item in self.__inventory:
-            if hasattr(item, 'placement') and part in item.placement:
-                yield item
-
-    def inventory_add(self, item):
-        self.__inventory.append(item)
-
-    def inventory_remove(self, item):
-        try:
-            self.__inventory.remove(item)
-
-        except ValueError:
-            print('No item in inventory with that value')
-
-    def inventory_use(self, item):
-        try:
-            index = self.__inventory.index(item)
-
-        except ValueError:
-            ('No item in inventory with that value')
-
-        else:
-            return self.__inventory.pop(index)
 
     def profile_save_path(self):
         name = self.name.replace(' ', '_')
@@ -212,9 +202,7 @@ class Player(Unit):
         self.stats_unpack()
         self.stats_modifiers()
 
-        self.calculate_stats()
-
-    def calculate_stats(self) -> None:
+    def calculate_final_stats(self) -> None:
         self.calculate_total_str()
         self.calculate_total_con()
         self.calculate_total_dex()
@@ -263,15 +251,20 @@ class Player(Unit):
         self.damage_lower = 0
         self.damage_higher = 0
 
-        if self.eq_hand_left:
-            self.damage_accuracy += self.eq_hand_left.accuracy
-            self.damage_lower += self.eq_hand_left.damage_lower
-            self.damage_higher += self.eq_hand_left.damage_higher
+        print(self.damage_accuracy, self.damage_lower, self.damage_higher)
+        for dmgattr in 'accuracy damage_lower damage_higher':
+            if hasattr(self.__equipment.hand_left, dmgattr):
+                value = getattr(self.__equipment.hand_left, dmgattr)
+                setattr(self, dmgattr, value)   
 
-        if self.eq_hand_right:
-            self.damage_accuracy += self.eq_hand_right.accuracy
-            self.damage_lower += self.eq_hand_right.damage_lower
-            self.damage_higher += self.eq_hand_right.damage_higher
+        if not self.damage_accuracy:
+            self.damage_accuracy = 1
+        if not self.damage_lower:
+            self.damage_lower = 1
+        if not self.damage_higher:
+            self.damage_higher = 2
+
+        print(self.damage_accuracy, self.damage_lower, self.damage_higher)
 
     def calculate_attack_chance(self) -> int:
         '''Returns 0 for miss, 1 for regular hit, 2 for critical'''

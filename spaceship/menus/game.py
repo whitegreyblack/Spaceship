@@ -244,10 +244,12 @@ class Start(Scene):
 
         def draw_item_grouping(header, container):
             '''Handler to determine if we need to draw items or not'''
+            nonlocal index_row, item_row
             if container:
                 draw_item_header("   __" + header + "__")
                 for element in container:
                     draw_item_row(element.__str__())
+                index_row += 1
 
         # keep track of items and row index
         item_row = 0
@@ -266,7 +268,7 @@ class Start(Scene):
                 s='Nothing in your inventory')
 
         else:
-            weapons, armors, potions, rings = [], [], [], []
+            weapons, armors, potions, rings, other = [], [], [], [], []
 
             # seperate each item into its own grouping
             for item in items:
@@ -284,11 +286,11 @@ class Start(Scene):
 
                 else:
                     print(item, 'no class identifier')
+                    other.append(item)
 
-            draw_item_grouping("Weapons", weapons)
-            draw_item_grouping("Armors", armors)
-            draw_item_grouping("Potions", potions)
-            draw_item_grouping("Rings", rings)
+            headers = "Weapons Armors Potions Rings Other".split()
+            for header, items in zip(headers, (weapons, armors, potions, rings, other)):
+                draw_item_grouping(header, items)
     
     def draw_log(self, log=None, color="white", refresh=True):
         if log:
@@ -588,7 +590,6 @@ class Start(Scene):
         Position method should return position based on height
         So height would be independent and position would be depenedent on height
         '''
-        print(action)
         try:
             divided = self.actions[max(0, min(self.player.height, 1))]
             try:
