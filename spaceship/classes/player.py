@@ -77,8 +77,8 @@ class Player(Unit):
         for index, item in enumerate(self.__inventory):
             try:
                 self.__inventory[index] = items[item]
+                
             except KeyError:
-
                 pass
 
     @property

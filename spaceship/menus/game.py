@@ -404,7 +404,8 @@ class Start(Scene):
     def draw_player_screens(self, key):
         def unequip_item(code):
             equipment = [item for _, item in self.player.equipment]
-            print(equipment[code-4])
+            print(equipment)
+            print(equipment[code - 4])
 
         playscreen = False
         current_screen = key
@@ -434,8 +435,8 @@ class Start(Scene):
                 else:
                     break
 
-            elif code == term.TK_I:
-                current_screen = 'i'
+            elif code == term.TK_Q:
+                current_screen = 'q'
 
             elif code == term.TK_V:
                 # V goes to inventory screen
