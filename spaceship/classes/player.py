@@ -9,6 +9,14 @@ from ..strings import profile
 
 # Player should inherit from unit just so during main game loop
 # the player class can be accessed in the same way as other units
+class Equipment(list):
+    '''Tied to body parts'''
+    pass
+
+class Inventory(list):
+    '''Regular list'''
+    pass
+
 class Player(Unit):
     parts=("eq_head", "eq_neck", "eq_body", "eq_arms", "eq_hands", 
            "eq_hand_left", "eq_hand_right", "eq_ring_left", 
@@ -35,17 +43,21 @@ class Player(Unit):
         self.base_stats = character.stats
         self.job_bonus = character.jbonus
         self.race_bonus = character.rbonus
-        self.__equipment = character.equipment
-        self.__inventory = character.inventory
         self.gender_bonus = character.gbonus
         self.name = name[0].upper() + name[1:]
 
         # functions after unpacking
         self.setup(character.home)
+        self.calculate_initial_stats()
+            
+        self.__equipment = character.equipment
+        self.__inventory = character.inventory
         self.convert_equipment()
         self.convert_inventory()
-        self.calculate_initial_stats()
+
         self.calculate_attack_variables()
+
+
         self.profile_save_path()
         
     def setup(self, home: str) -> None:
@@ -59,7 +71,9 @@ class Player(Unit):
     def convert_equipment(self):
         '''Transforms equipment tuples into actual item objects'''
         for p, part in enumerate(self.parts):
-            if isinstance(self.__equipment[p], list):
+            # if isinstance(self.__equipment[p], list):
+            if not self.__equipment[p]:
+                print(part)
                 # No item is set for the current body part
                 setattr(self, part, None) 
 
@@ -81,6 +95,10 @@ class Player(Unit):
             except KeyError:
                 pass
 
+    def update(self, attribute):
+        '''On equips/unequips, stat values need to change'''
+        
+
     @property
     def equipment(self):
         for part in self.parts:
@@ -99,6 +117,11 @@ class Player(Unit):
         item = getattr(self, part)
 
         if item:
+            if hasattr(item, 'effects'):
+                for effect, value in list(item.effects):
+                    print(effect, value)
+                    print(self, getattr(self, effect))
+
             self.inventory_add(item)
 
         setattr(self, part, None)
@@ -166,15 +189,13 @@ class Player(Unit):
             self.tot_int, self.tot_wis, self.tot_cha,
             self.gold)
 
-    def stats_pack(self):
-        self.stats = tuple(s + g + r + c for s, g, r, c in zip(
-                                                        self.base_stats,
-                                                        self.gender_bonus,
-                                                        self.race_bonus,
-                                                        self.job_bonus))
-
     def stats_unpack(self):
-        self.str, self.con, self.dex, self.int, self.wis, self.cha = self.stats
+        self.str, self.con, self.dex, self.int, self.wis, self.cha = \
+                                    tuple(s + g + r + c for s, g, r, c in zip(
+                                                            self.base_stats,
+                                                            self.gender_bonus,
+                                                            self.race_bonus,
+                                                            self.job_bonus))
 
     def stats_modifiers(self):
         self.mod_str = 0
@@ -183,10 +204,11 @@ class Player(Unit):
         self.mod_int = 0
         self.mod_wis = 0
         self.mod_cha = 0
-        self.mod_hp, self.mod_mp, self.mod_sp = 0, 0, 0
+        self.mod_hp = 0
+        self.mod_mp = 0
+        self.mod_sp = 0
 
     def calculate_initial_stats(self) -> None:
-        self.stats_pack()
         self.stats_unpack()
         self.stats_modifiers()
 

@@ -122,9 +122,9 @@ class Ring(Item):
     inventory = "rings"
     placement = {"eq_ring_left", "eq_ring_right"}
 
-    def __init__(self, name, char, color, effect=None):
+    def __init__(self, name, char, color, effects=None):
         super().__init__(name, char, color)
-        self.effects = effect
+        self.effects = effects
 
     def __str__(self):
         return f"{self.name} ({self.seperate()})"
@@ -154,6 +154,15 @@ class Ring(Item):
         unit.calculate_stats()
         return True
 
+    @property
+    def effects(self):
+        for effect, value in self.__effects:
+            yield effect, value
+
+    @effects.setter
+    def effects(self, effects):
+        self.__effects = effects
+        
 class Armor(Item):
     def __init__(self, name, char, color, placement, me_h, mi_h, dv, pv):
         super().__init__(name, char, color)
