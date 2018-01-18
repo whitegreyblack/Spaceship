@@ -652,7 +652,7 @@ class Start(Scene):
                         if self.location.items_at(tx, ty) and msg_chance:
                             item_message = random.randint(
                                 a=0, 
-                                b=len(self.pass_item_messages) - 1)
+                                b=len(strings.pass_by_item) - 1)
                             self.draw_log(
                                 strings.pass_by_item[item_message])
                             

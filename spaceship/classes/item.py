@@ -83,9 +83,45 @@ class Potion(Item):
         else:
             unit.cur_health = min(unit.cur_health + self.heal, unit.max_health)
 
+class Shoes(Item):
+    inventory = "shoes"
+    placement = {"eq_feet"}
+    def __init__(self, name, char, color, effect):
+        super().__init__(name, char, color)
+        self.effects = effect
+
+    def __str__(self):
+        return f"{self.name} ({self.seperate()})"
+
+    def seperate(self):
+        return ", ".join(f"{self.modify(effect)}: {self.mark(value)}" 
+            for effect, value in self.effects)
+
+    def equip(self, unit, part):
+        if not part in self.placement:
+            '''Cannot equip to current part slot'''
+            return False
+
+        if getattr(unit, part):
+            '''Check if slot is empty'''
+            return False
+
+        # remove from inventory and place it on the unit equipment
+        unit.inventory_remove(self)
+        setattr(unit, part, self)
+
+        # run through the effect modifiers
+        for effect, value in self.effects:
+            attribute = getattr(unit, effect)
+            setattr(unit, effect, attribute + value)
+            
+        unit.calculate_stats()
+        return True
+
 class Ring(Item):
     inventory = "rings"
     placement = {"eq_ring_left", "eq_ring_right"}
+    
     def __init__(self, name, char, color, effect=None):
         super().__init__(name, char, color)
         self.effects = effect
@@ -94,10 +130,6 @@ class Ring(Item):
         return f"{self.name} ({self.seperate()})"
 
     def seperate(self):
-        # for e, v in self.effects:
-        #     print(e, v)
-        # print([e, v for e, v in self.effects])
-
         return ", ".join(f"{self.modify(effect)}: {self.mark(value)}" 
             for effect, value in self.effects)
 
@@ -257,7 +289,8 @@ items = {
     "leather belt": Armor("leather belt", "[", "green", "waist", 0, 0, 0, 1),
     "rope belt": Armor("rope belt", "[", "green", "waist", 0, 0, 1, 0),
     "common pants": Armor("common pants", "[", "green", "legs", 0, 0, 0, 0),
-    "leather boots": Armor("leather boots", "[", "green", "feet", 0, 0, 0, 0),
+
+    "leather boots": Shoes("leather boots", "[", "green", (("mod_sp", 10),)),
     "metal boots": Armor("metal boots", "[", "grey", "feet", 0, 0, 0, 0),
     "sandals": Armor("sandals", "[", "green", "feet", 0, 0, 0, 0),
     # tome, spellbook, scrolls

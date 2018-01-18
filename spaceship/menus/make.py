@@ -180,8 +180,8 @@ class Create(Scene):
         
         # STATUS :- GENDER BONUSES
         term.puts(
-            self.col2 + 10, 
-            self.row + (11 if not self.shorten else 6), 
+            self.col2 + 9, 
+            self.row + (12 if not self.shorten else 7), 
             strings._bon.format(
                 *self.transform_values(gbonus), 
                 delim=self.delim))
@@ -189,8 +189,8 @@ class Create(Scene):
         # STATUS :- RACE BONUSES
         # if self.character_index > 0:
         term.puts(
-            self.col2 + 14, 
-            self.row + (11 if not self.shorten else 6), 
+            self.col2 + 12, 
+            self.row + (12 if not self.shorten else 7), 
             strings._bon.format(
                 *(self.transform_values(rbonus) if self.character_index > 0 
                 else (0 for _ in range(6))),
@@ -198,12 +198,18 @@ class Create(Scene):
             
         # STATUS :- CLASS BONUSES
         term.puts(
-            self.col2 + 18, 
-            self.row + (11 if not self.shorten else 6), 
+            self.col2 + 15, 
+            self.row + (12 if not self.shorten else 7), 
             strings._bon.format(
                 *self.transform_values(cbonus) if self.character_index > 1
                 else (0 for _ in range(6)),
                 delim=self.delim))
+
+        # STATUS :- Item bonuses
+        term.puts(
+            self.col2 + 18, 
+            self.row + (12 if not self.shorten else 7), 
+            strings._bon.format(*(0 for _ in range(6)), delim=self.delim))
 
         # EQUIPMENT and INVENTORY
         eq, inv = None, None

@@ -66,6 +66,16 @@ class Option:
             self.suboptindex[self.optindex], 
             len(self.subopts[self.optindex])-1), 0)
 
+    def reset_all(self):
+        '''Reset and close all option lists'''
+        self.optindex = 0
+        self.suboptindex = [-1 for i in range(len(self.opts))]
+        self.collapse_all()
+
+    def collapse_all(self):
+        '''Collapse all option lists that are not collapsed'''
+        self.expand = set()
+
 if __name__ == "__main__":
     term.open()
     term.set('window: size=80x24, title="Option Expansion"')
