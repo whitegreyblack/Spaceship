@@ -50,6 +50,9 @@ def totattr(effect):
 def modattr(effect):
     return "mod_" + effect
 
+def curattr(effects):
+    return "cur_" + effect
+    
 def mark(value: int) -> str:
     if isinstance(value, int):
         if value >= 0:
@@ -122,6 +125,7 @@ class Wearable:
                 print(effect, stat)
                 setattr(unit, effect, stat + value)
                 print(effect, stat + value)
+                unit.update_stat(effect)
 
     def unequip(self, unit):
         for effect, value in self.effects:
@@ -130,7 +134,7 @@ class Wearable:
                 print(effect, stat)
                 setattr(unit, effect, stat - value)
                 print(effect, stat - value)
-
+                unit.update_stat(effect)
 
 class Shoes(Wearable):
     inventory = "shoes"

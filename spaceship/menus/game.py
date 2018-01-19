@@ -294,7 +294,6 @@ class Start(Scene):
             ' Inventory ')
 
         items = list(self.player.inventory)
-
         if not items:
             term.puts(
                 x=center('Nothing in your inventory', self.width) \
@@ -303,28 +302,10 @@ class Start(Scene):
                 s='Nothing in your inventory')
 
         else:
-            weapons, armors, potions, rings, other = [], [], [], [], []
-
-            # seperate each item into its own grouping
-            for item in items:
-                if isinstance(item, Weapon):
-                    weapons.append(item)
-
-                elif isinstance(item, Armor):
-                    armors.append(item)
-
-                elif isinstance(item, Potion):
-                    potions.append(item)    
-
-                elif isinstance(item, Ring):
-                    rings.append(item)
-
-                else:
-                    print(item, 'no class identifier')
-                    other.append(item)
+            weapons, armors, potions, rings, others = self.player.inventory
 
             headers = "Weapons Armors Potions Rings Other".split()
-            for header, items in zip(headers, (weapons, armors, potions, rings, other)):
+            for header, items in zip(headers, list(self.player.inventory)):
                 draw_item_grouping(header, items)
 
     def draw_player_eq_inv_switch(self):
@@ -387,7 +368,7 @@ class Start(Scene):
             confirm = term.read()
 
             if confirm in (term.TK_Y, term.TK_ENTER, code):
-                self.player.item_unequip(part)
+                self.player.unequip(part)
                 log = strings.command_unequip.format(item)
                 update_status = True
                 print('unequipe')
@@ -432,7 +413,7 @@ class Start(Scene):
 
                     elif term.TK_1 <= selection <= term.TK_1 + len(items) - 1:
                         item = items[selection - term.TK_1]
-                        self.player.item_equip(part, item)
+                        self.player.equip(part, item)
                         log = strings.command_equip.format(item)
                         update_status = True
                         break 
@@ -462,6 +443,8 @@ class Start(Scene):
             elif current_screen == "v":
                 self.draw_player_inventory()
                 self.draw_player_inv_eq_switch()
+
+            items = [item for group in self.player.inventory for item in group]
 
             term.refresh()
             
@@ -1249,34 +1232,46 @@ class Start(Scene):
         Then the player may drop the item from there
     '''
     def action_interact_item_drop(self):
+        def draw_eq_drop():
+            term.puts(
+                x=center(strings.command_drop, self.width),
+                y=self.height - 2,
+                s=strings.command_drop)
+
         def drop_item(item):
             nonlocal log
-            self.player.inventory_remove(item)
+            self.player.drop(item)
             self.location.item_add(*self.player.position, item)
-            log = "You drop the {} onto the ground.".format(item.name)
+            if hasattr(item, 'name'):
+                item_name = item.name
+            else:
+                item_name = item
+            log = "You drop the {} onto the ground.".format(item_name)
             log += " Your backpack feels lighter."
         
         log = ""
         # open up inventory
+        print("DROP")
         while True:
-            term.clear()
+            self.draw_clear_main_display()
             self.draw_player_inventory()
 
-            if list(self.player.inventory):
-                self.draw_player_eq_drop()
+            items = [item for group in self.player.inventory for item in group]
+
+            if items:
+                draw_eq_drop()
 
             if log:
                 self.draw_screen_log(log)
 
             term.refresh()            
 
-            items = list(self.player.inventory)
-
             code = term.read()
             if code == term.TK_ESCAPE:
                 break
 
             elif term.TK_A <= code <= term.TK_A + len(items) - 1:
+                print("ITEM: ", items[code - 4])
                 drop_item(items[code - 4])
 
             else:
@@ -1293,7 +1288,7 @@ class Start(Scene):
         log = ""
         while True:
             term.clear()
-            self.draw_player_inventory()
+            items = next(self.draw_player_inventory())
             self.draw_player_eq_use()
             term.refresh()
             
@@ -1304,7 +1299,7 @@ class Start(Scene):
                 break
 
             elif term.TK_A <= code <= term.TK_A + len(items) - 1:
-
+                print("ITEM: ", items[code - 4])
                 use_item(items[code - 4])
 
             else:

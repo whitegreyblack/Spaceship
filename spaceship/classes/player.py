@@ -4,11 +4,29 @@ from random import randint
 from .color import Color
 from .unit import Unit
 from .world import World
-from .item import Armor, Weapon, Item, items, convert, totattr, modattr
+from .item import Ring, items, convert, totattr, modattr
 
 parts=("head", "neck", "body", "arms", "hands", 
         "hand_left", "hand_right", "ring_left", 
         "ring_right", "waist", "legs", "feet")
+
+attrs=('str con dex wis int cha hp sp mp acc att_lo att_hi')
+
+class Stats:
+    def __init__(self, bstats, jbonus, rbonus, gbonus):
+        self.bstats = bstats
+        self.gbonus = gbonus
+        self.rbonus = rbonus
+        self.jbonus = jbonus
+        self.initialize_stats()
+    
+    def initialize_base(self):
+        self.str, self.con, self.dex, self.int, self.wis, self.cha = \
+                            tuple(s + g + r + c for s, g, r, c in zip(
+                                                    self.base_stats,
+                                                    self.gender_bonus,
+                                                    self.race_bonus,
+                                                    self.job_bonus))
 
 class Equipment:
     '''Tied to body parts'''
@@ -69,19 +87,34 @@ class Inventory(list):
         super().__init__()
         self.extend([convert(item) for item in items])
 
-    @property
-    def item(self, item):
-        try:
-            index = self.index(item)
-        except ValueError:
-            raise ValueError('No item in inventory with that value')
-        else:
-            return self.pop(index)
-
     def by_type(self, part):
         for item in self:
             if hasattr(item, 'placement') and part in item.placement:
                 yield item
+
+    @property
+    def items(self):
+        weapons, armors, potions, rings, others = [], [], [], [], []
+
+        # seperate each item into its own grouping
+        for item in self:
+            # if isinstance(item, Weapon):
+            #     weapons.append(item)
+
+            # elif isinstance(item, Armor):
+            #     armors.append(item)
+
+            # elif isinstance(item, Potion):
+            #     potions.append(item)    
+
+            if isinstance(item, Ring):
+                rings.append(item)
+
+            else:
+                # print(item, 'no class identifier')
+                others.append(item)
+        print(weapons, armors, potions, rings, others)
+        yield weapons, armors, potions, rings, others
 
 # Player should inherit from unit just so during main game loop
 # the player class can be accessed in the same way as other units
@@ -104,6 +137,7 @@ class Player(Unit):
 
         self.equip_weapon_double = False
 
+        print('STATS: ', character.stats)
         self.base_stats = character.stats
         self.job_bonus = character.jbonus
         self.race_bonus = character.rbonus
@@ -130,54 +164,6 @@ class Player(Unit):
     def __str__(self):
         return self.name
 
-    @property
-    def equipment(self):
-        for part, item in self.__equipment.items:
-            yield part, item
-
-    @equipment.setter
-    def equipment(self, equipment):
-        equipment = [convert(item) for item in equipment]
-        self.__equipment = Equipment(parts, equipment)
-        for item in equipment:
-            if item and hasattr(item, 'equip'):
-                item.equip(self)
-                for effect, _ in item.effects:
-                    self.update_stat(effect)
-
-    def item_equip(self, part, item):
-        if self.__equipment.equip(part, item):
-            self.__inventory.remove(item)
-            if hasattr(item, 'equip'):
-                item.equip(item)
-                for effect, _ in item.effects:
-                    self.update_stat(effect)
-
-    def item_unequip(self, part):
-        item = next(self.__equipment.unequip(part))
-        if item:
-            self.__inventory.append(item)
-            if hasattr(item, 'unequip'):
-                item.unequip(self)
-                for effect, _ in item.effects:
-                    self.update_stat(effect)
-
-    def item_on(self, index):
-        yield next(self.__equipment.by_part(index))
-
-    @property
-    def inventory(self):
-        for item in self.__inventory:
-            yield item
-
-    @inventory.setter
-    def inventory(self, inventory):
-        self.__inventory = inventory
-
-    def inventory_type(self, part):
-        for item in self.__inventory.by_type(part):
-            yield item
-
     def profile_save_path(self):
         name = self.name.replace(' ', '_')
         desc = name + " " + self.job
@@ -203,6 +189,59 @@ class Player(Unit):
             self.tot_int, self.tot_wis, self.tot_cha,
             self.gold)
 
+    @property
+    def equipment(self):
+        for part, item in self.__equipment.items:
+            yield part, item
+
+    @equipment.setter
+    def equipment(self, equipment):
+        equipment = [convert(item) for item in equipment]
+        self.__equipment = Equipment(parts, equipment)
+
+        for item in equipment:
+            if item and hasattr(item, 'equip'):
+                item.equip(self)
+
+                for effect, _ in item.effects:
+                    self.update_stat(effect)
+
+    def equip(self, part, item):
+        if self.__equipment.equip(part, item):
+            self.__inventory.remove(item)
+            
+            if hasattr(item, 'effects'):
+                item.equip(self)
+
+    def unequip(self, part):
+        item = next(self.__equipment.unequip(part))
+        if item:
+            self.__inventory.append(item)
+
+            if hasattr(item, 'effects'):
+                item.unequip(self)
+
+    def item_on(self, index):
+        yield next(self.__equipment.by_part(index))
+
+    @property
+    def inventory(self):
+        for group in self.__inventory.items:
+            for item in group:
+                yield item
+
+    @inventory.setter
+    def inventory(self, inventory):
+        print(inventory)
+        self.__inventory = inventory
+
+    def inventory_type(self, part):
+        for item in self.__inventory.by_type(part):
+            yield item
+
+    def drop(self, item):
+        self.__inventory.remove(item)
+
     def initialize_base_stats(self) -> None:
         self.str, self.con, self.dex, self.int, self.wis, self.cha = \
                                     tuple(s + g + r + c for s, g, r, c in zip(
@@ -210,6 +249,8 @@ class Player(Unit):
                                                             self.gender_bonus,
                                                             self.race_bonus,
                                                             self.job_bonus))
+
+        self.hp, self.mp, self.sp = 0, 0, 0
 
         for stat in ('str con dex int wis cha hp mp sp'.split()):
             setattr(self, modattr(stat), 0)
@@ -228,10 +269,12 @@ class Player(Unit):
         base = getattr(self, stat)
         mods = getattr(self, modattr(stat))
         setattr(self, totattr(stat), base + mods)
+        if stat in ('hp mp'.split()):
+            setattr(sef, curattr(stat), base + mods)
 
     def calculate_health(self):
-        self.base_hp = self.tot_str + self.tot_con * 2
-        self.cur_hp = self.tot_hp = self.base_hp + self.mod_hp
+        self.hp = self.str + self.con * 2
+        self.cur_hp = self.tot_hp = self.hp + self.mod_hp
 
     def calculate_mana(self):
         self.cur_mp = self.tot_mp = self.tot_int * self.tot_wis * 2
