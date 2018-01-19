@@ -187,13 +187,20 @@ class Start(Scene):
                     y=0, 
                     s=surround(location))
 
-    def draw_screen_header(self):
+    def draw_screen_header(self, header=None):
         '''Draws a line across the top of the window'''
         term.bkcolor('dark grey')
         for i in range(self.width - self.display_offset_x):
             term.puts(self.display_offset_x + i, 0, ' ')
         term.bkcolor('black')
-
+        if header:
+            string = surround(header)
+            term.puts(
+                center(
+                    string, 
+                    self.width + self.display_offset_x), 
+                0, string)
+                
     def draw_player_status(self):
         '''Handles player status screen'''
         term.puts(self.player_status_col, self.player_status_row,
@@ -214,12 +221,19 @@ class Start(Scene):
                 y=self.player_screen_row, 
                 s=column)
 
-    def draw_clear_main_display(self):
+    def clear_main_display(self):
         term.clear_area(
             self.display_offset_x, 
             0, 
             self.width - self.display_offset_x,
-            self.height - self.display_offset_y)
+            self.height - self.log_height - 1)
+
+    def clear_item_box(self):
+        term.clear_area(
+            self.width // 2, 
+            2, 
+            self.width // 2, 
+            self.height - 5)
 
     def draw_player_equipment(self):
         '''Handles equipment screen'''
@@ -248,7 +262,7 @@ class Start(Scene):
                 y=self.player_screen_row + index * self.row_spacing,
                 s=letter + body + item)
 
-    def draw_player_inventory(self):
+    def draw_player_inventory(self, items):
         '''Handles drawing of the inventory screen along with the specific 
         groupings of each item type and their modification effects
         '''
@@ -287,17 +301,13 @@ class Start(Scene):
         index_row = 0
 
         # header for inventory
-        self.draw_screen_header()
-        term.puts(
-            center('inventory  ', self.width + self.display_offset_x), 
-            0, 
-            ' Inventory ')
+        self.draw_screen_header('Inventory')
 
-        items = list(self.player.inventory)
         if not items:
             term.puts(
-                x=center('Nothing in your inventory', self.width) \
-                + self.display_offset_x,
+                x=center(
+                    'Nothing in your inventory', 
+                    self.width - self.display_offset_x) + self.display_offset_x,
                 y=3,
                 s='Nothing in your inventory')
 
@@ -338,12 +348,12 @@ class Start(Scene):
     def draw_player_unequip_confirm(self, item):
         string = strings.command_unequip_confirm.format(item)
         term.puts(x=center(string, self.width), y=self.height - 3, s=string)
-
+# 
     def draw_screen_log(self, log):
-        self.draw_clear_screen_log()
+        self.clear_screen_log()
         term.puts(x=center(log, self.width), y=self.height - 3, s=log)
 
-    def draw_clear_screen_log(self):
+    def clear_screen_log(self):
         term.clear_area(0, self.height - 3, self.width, 1)
 
     def draw_item_border(self):
@@ -371,7 +381,6 @@ class Start(Scene):
                 self.player.unequip(part)
                 log = strings.command_unequip.format(item)
                 update_status = True
-                print('unequipe')
 
         def equip_item(part):
             nonlocal log, update_status
@@ -383,14 +392,9 @@ class Start(Scene):
             else:
                 while True:
                     if log:
-                        self.draw_screen_log(log)
+                        self.draw_log(log)
 
-                    term.clear_area(
-                        self.width // 2, 
-                        2, 
-                        self.width // 2, 
-                        self.height - 5)
-
+                    self.clear_item_box()
                     self.draw_item_border()
 
                     term.puts(
@@ -408,7 +412,7 @@ class Start(Scene):
 
                     selection = term.read()
                     if selection == term.TK_ESCAPE:
-                        self.draw_clear_screen_log()
+                        self.clear_screen_log()
                         break
 
                     elif term.TK_1 <= selection <= term.TK_1 + len(items) - 1:
@@ -424,27 +428,27 @@ class Start(Scene):
         log = ""
         current_screen = key
         update_status = False
+        items = [item for group in self.player.inventory for item in group]
+        
         while True:
-            self.draw_clear_main_display()
+            self.clear_main_display()
 
             if log:
-                self.draw_screen_log(log)
+                self.draw_log(log)
                 log = ""
 
             if update_status:
-                print('updating')
                 self.draw_player_status()
                 update_status = False
+                items = [item for group in self.player.inventory for item in group]
 
             if current_screen == "q":
                 self.draw_player_equipment()
                 self.draw_player_eq_inv_switch()
 
             elif current_screen == "v":
-                self.draw_player_inventory()
+                self.draw_player_inventory(items)
                 self.draw_player_inv_eq_switch()
-
-            items = [item for group in self.player.inventory for item in group]
 
             term.refresh()
             
@@ -1200,18 +1204,46 @@ class Start(Scene):
         pass
 
     def action_interact_item_pickup(self):
+        def draw_item_header(item_header):
+            '''Handles drawing of the item grouping header'''
+            nonlocal index_row
+            term.puts(
+                x=self.player_screen_col + self.display_offset_x,
+                y=self.player_screen_row + index_row * self.row_spacing,
+                s=item_header)
+            index_row += 1
+
+        def draw_item_row(item_desc):
+            '''Handles drawing the list of an item group to the screen'''
+            nonlocal index_row, item_row
+            letter = chr(ord('a') + item_row) + ". "
+            term.puts(
+                x=self.player_screen_col + self.display_offset_x,
+                y=self.player_screen_row + index_row * self.row_spacing,
+                s=letter + item_desc) 
+            index_row += 1
+            item_row += 1
+
+        def draw_item_grouping(header, container):
+            '''Handler to determine if we need to draw items or not'''
+            nonlocal index_row, item_row
+            if container:
+                draw_item_header("   __" + header + "__")
+                for element in container:
+                    draw_item_row(element.__str__())
+                index_row += 1
+
         def pickup_item(item):
             if len(list(self.player.inventory)) >= 25:
                 gamelog.add("Backpack is full. Cannot pick up {}.".format(item))
 
             else:
                 self.location.item_remove(*self.player.position, item)
-                self.player.inventory_add(item)
+                self.player.item_add(item)
                 log = "You pick up {} and place it in your backpack.".format(
                                                                     item.name)
                 log += "Your backpack feels heavier."
                 self.draw_log(log)
-                self.turn_inc = True
         
         items = [item for item in self.location.items_at(*self.player.position)]
 
@@ -1222,8 +1254,35 @@ class Start(Scene):
             pickup_item(items.pop())
 
         else:
-            # print('Multiple item pickup screen')
-            pass
+            log = ""
+            index_row, item_row = 0, 0
+            update_items = False
+
+            while True:
+                self.clear_main_display()
+                self.draw_screen_header()
+                term.puts(
+                    center('Pickup  ', self.width + self.display_offset_x), 
+                    0, 
+                    ' Pickup ')        
+
+                if log:
+                    self.draw_log(log)
+                    log = ""
+                
+                if update_items:
+                    items = [item 
+                        for item in self.location.items_at(*self.player.position)]
+
+                # self.draw_tile_inventory()
+
+                if log:
+                    self.draw_log(log)
+
+                term.refresh()
+                code = term.read()
+                break
+
     '''
     Notes :- Dropping Items:
         Dropping items will always be dropped from inventory
@@ -1234,13 +1293,15 @@ class Start(Scene):
     def action_interact_item_drop(self):
         def draw_eq_drop():
             term.puts(
-                x=center(strings.command_drop, self.width),
+                x=center(
+                    strings.command_drop, 
+                    self.width - self.display_offset_x) + self.display_offset_x,
                 y=self.height - 2,
                 s=strings.command_drop)
 
         def drop_item(item):
             nonlocal log
-            self.player.drop(item)
+            self.player.item_drop(item)
             self.location.item_add(*self.player.position, item)
             if hasattr(item, 'name'):
                 item_name = item.name
@@ -1250,19 +1311,22 @@ class Start(Scene):
             log += " Your backpack feels lighter."
         
         log = ""
-        # open up inventory
-        print("DROP")
-        while True:
-            self.draw_clear_main_display()
-            self.draw_player_inventory()
+        update_items = False
+        items = [item for group in self.player.inventory for item in group]
 
-            items = [item for group in self.player.inventory for item in group]
+        while True:
+            self.clear_main_display()
+            self.draw_player_inventory(items)
+
+            if update_items:
+                items = [item for group in self.player.inventory for item in group]
+                update_items = False
 
             if items:
                 draw_eq_drop()
 
             if log:
-                self.draw_screen_log(log)
+                self.draw_log(log)
 
             term.refresh()            
 
@@ -1271,8 +1335,7 @@ class Start(Scene):
                 break
 
             elif term.TK_A <= code <= term.TK_A + len(items) - 1:
-                print("ITEM: ", items[code - 4])
-                drop_item(items[code - 4])
+                drop_item(items.pop(code - 4))
 
             else:
                 log = ""
@@ -1286,21 +1349,26 @@ class Start(Scene):
             log += " Your backpack feels lighter."
 
         log = ""
+        update_items = False
+        items = [item for group in self.player.inventory for item in group]
+
         while True:
             term.clear()
             items = next(self.draw_player_inventory())
             self.draw_player_eq_use()
             term.refresh()
             
-            items = list(self.player.inventory)
+            if update_items:
+                items = list(self.player.inventory)
+                update_items = False
 
             code = term.read()
             if code == term.TK_ESCAPE:
                 break
 
             elif term.TK_A <= code <= term.TK_A + len(items) - 1:
-                print("ITEM: ", items[code - 4])
                 use_item(items[code - 4])
+                update_items = True
 
             else:
                 log = ""

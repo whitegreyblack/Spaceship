@@ -4,7 +4,7 @@ from typing import Tuple
 
 from ..tools import distance
 from .color import Color
-from .item import Armor, Weapon, Item, items, item_chars
+from .item import Armor, Weapon, Item, itemlist, item_chars
 from .unit import Unit, unit_chars
 
 class VillagerChild(Unit):

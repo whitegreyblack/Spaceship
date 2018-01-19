@@ -53,6 +53,28 @@ def modattr(effect):
 def curattr(effects):
     return "cur_" + effect
     
+def sort(items):
+    weapons, armors, potions, rings, others = [], [], [], [], []
+    # seperate each item into its own grouping
+    for item in items:
+        # if isinstance(item, Weapon):
+        #     weapons.append(item)
+
+        # elif isinstance(item, Armor):
+        #     armors.append(item)
+
+        # elif isinstance(item, Potion):
+        #     potions.append(item)    
+
+        if isinstance(item, Ring):
+            rings.append(item)
+
+        else:
+            # print(item, 'no class identifier')
+            others.append(item)
+
+    return weapons, armors, potions, rings, others
+
 def mark(value: int) -> str:
     if isinstance(value, int):
         if value >= 0:
@@ -220,7 +242,7 @@ class Weapon(Item):
             mark(self.damage_lower),
             mark(self.damage_higher))
 
-items = {
+itemlist = {
     # TODO -- implement shields
     # TODO -- implement ranged weapons
     # TODO -- implement readable items: scrolls, tomes
@@ -318,17 +340,17 @@ items = {
 
 def get_all_items():
     for key in items.keys():
-        print(items[key].__repr__())
+        print(itemlist[key].__repr__())
 
 def check_item(classifier, item):
     try:
-        print(items[classifier][item])
+        print(itemlist[classifier][item])
     except KeyError:
         raise KeyError("Classifier or item name is wrong")
 
 def convert(item):
     try:
-        item = items[item]
+        item = itemlist[item]
     except KeyError:
         pass
     except TypeError:

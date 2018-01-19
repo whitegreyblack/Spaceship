@@ -4,7 +4,7 @@ from random import randint
 from .color import Color
 from .unit import Unit
 from .world import World
-from .item import Ring, items, convert, totattr, modattr
+from .item import Ring, itemlist, convert, totattr, modattr, sort
 
 parts=("head", "neck", "body", "arms", "hands", 
         "hand_left", "hand_right", "ring_left", 
@@ -32,7 +32,7 @@ class Equipment:
     '''Tied to body parts'''
     def __init__(self, parts, equipment=None):
         self.parts = parts
-        if items:
+        if equipment:
             self.items = equipment
 
     @property
@@ -48,7 +48,7 @@ class Equipment:
                 
             else:
                 try:
-                    item = items[equipment[p]]
+                    item = itemlist[equipment[p]]
 
                 except KeyError:
                     item = equipment[p]
@@ -94,27 +94,7 @@ class Inventory(list):
 
     @property
     def items(self):
-        weapons, armors, potions, rings, others = [], [], [], [], []
-
-        # seperate each item into its own grouping
-        for item in self:
-            # if isinstance(item, Weapon):
-            #     weapons.append(item)
-
-            # elif isinstance(item, Armor):
-            #     armors.append(item)
-
-            # elif isinstance(item, Potion):
-            #     potions.append(item)    
-
-            if isinstance(item, Ring):
-                rings.append(item)
-
-            else:
-                # print(item, 'no class identifier')
-                others.append(item)
-        print(weapons, armors, potions, rings, others)
-        yield weapons, armors, potions, rings, others
+        yield sort(self)
 
 # Player should inherit from unit just so during main game loop
 # the player class can be accessed in the same way as other units
@@ -232,14 +212,16 @@ class Player(Unit):
 
     @inventory.setter
     def inventory(self, inventory):
-        print(inventory)
         self.__inventory = inventory
 
     def inventory_type(self, part):
         for item in self.__inventory.by_type(part):
             yield item
 
-    def drop(self, item):
+    def item_add(self, item):
+        self.__inventory.append(item)
+
+    def item_drop(self, item):
         self.__inventory.remove(item)
 
     def initialize_base_stats(self) -> None:
@@ -270,7 +252,7 @@ class Player(Unit):
         mods = getattr(self, modattr(stat))
         setattr(self, totattr(stat), base + mods)
         if stat in ('hp mp'.split()):
-            setattr(sef, curattr(stat), base + mods)
+            setattr(self, curattr(stat), base + mods)
 
     def calculate_health(self):
         self.hp = self.str + self.con * 2
@@ -286,7 +268,6 @@ class Player(Unit):
         return self.str, self.con, self.dex, self.int, self.wis, self.cha
 
     def calculate_attack_variables(self):
-        # two items
         self.damage_accuracy = 0
         self.damage_lower = 0
         self.damage_higher = 0
