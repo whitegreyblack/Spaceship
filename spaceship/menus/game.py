@@ -373,7 +373,7 @@ class Start(Scene):
             confirm = term.read()
 
             if confirm in (term.TK_Y, term.TK_ENTER, code):
-                self.player.equipment_remove(part)
+                self.player.item_unequip(part)
                 log = strings.command_unequip.format(item)
 
         def equip_item(part):
@@ -416,7 +416,7 @@ class Start(Scene):
 
                     elif term.TK_1 <= selection <= term.TK_1 + len(items) - 1:
                         item = items[selection - term.TK_1]
-                        self.player.equipment_equip(part, item)
+                        self.player.item_equip(part, item)
                         log = strings.command_equip.format(item)
                         break 
 
@@ -459,7 +459,7 @@ class Start(Scene):
                 log = ""
 
             elif current_screen == 'q' and term.TK_A <= code <= term.TK_L:
-                part, item = next(self.player.equipment_code(code - 4))
+                part, item = next(self.player.item_on(code - 4))
 
                 if item:
                     unequip_item(code)

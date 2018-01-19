@@ -6,40 +6,36 @@ from .unit import Unit
 from .world import World
 from .item import Armor, Weapon, Item, items, convert
 
-# Player should inherit from unit just so during main game loop
-# the player class can be accessed in the same way as other units
+parts=("head", "neck", "body", "arms", "hands", 
+        "hand_left", "hand_right", "ring_left", 
+        "ring_right", "waist", "legs", "feet")
+
 class Equipment:
     '''Tied to body parts'''
-    parts=("head", "neck", "body", "arms", "hands", 
-           "hand_left", "hand_right", "ring_left", 
-           "ring_right", "waist", "legs", "feet")
+    def __init__(self, parts, equipment=None):
+        self.parts = parts
+        if items:
+            self.items = equipment
 
-    def __init__(self, equipment=[]):
-        if not equipment:
-            for part in self.parts:
+    @property
+    def items(self):
+        for part in self.parts:
+            yield part, getattr(self, part)
+
+    @items.setter
+    def items(self, equipment):
+        for p, part in enumerate(self.parts):
+            if not equipment[p]:
                 setattr(self, part, None) 
+                
+            else:
+                try:
+                    item = items[equipment[p]]
 
-        else:
-            for p, part in enumerate(self.parts):
-                if not equipment[p]:
-                    # No item is set for the current body part
-                    setattr(self, part, None) 
+                except KeyError:
+                    item = equipment[p]
 
-                else:
-                    # Check to see if the item is defined in the items table already
-                    # if defined create the item, else just set the part to the eq
-                    try:
-                        item = items[equipment[p]]
-        
-                    except KeyError:
-                        item = equipment[p]
-
-                    setattr(self, part, item)
-            
-                    if hasattr(item, 'equip'):
-                        item.equip(self)
-
-        print(list(self.items))
+                setattr(self, part, item)
 
     def by_part(self, index):
         '''Returns the item at the given body part'''
@@ -51,31 +47,21 @@ class Equipment:
 
         yield part, item
 
-    @property
-    def items(self):
-        for part in self.parts:
-            yield getattr(self, part)
-
-    def remove(self, part):
-        item = getattr(self, part)
-
-        if item:
-            if hasattr(item, 'effects'):
-                for effect, value in list(item.effects):
-                    print(effect, value)
-                    print(self, getattr(self, effect))
-
-            # self.inventory_add(item)
-
-        setattr(self, part, None)
-
     def equip(self, part, item):
         if not getattr(self, part):
             # self.inventory_remove(item)
             setattr(self, part, item)
+            return True
 
-        else:
-            print('Slot is not empty')
+        return False
+
+    def unequip(self, part):
+        item = getattr(self, part)
+        if item:
+            setattr(self, part, None)
+            yield item
+
+        yield None
 
 class Inventory(list):
     '''Regular list'''
@@ -83,22 +69,22 @@ class Inventory(list):
         super().__init__()
         self.extend([convert(item) for item in items])
 
-    def by_part(self, part):
-        for item in self:
-            if hasattr(item, 'placement') and part in item.placement:
-                yield item
-
     @property
     def item(self, item):
         try:
             index = self.index(item)
-
         except ValueError:
             raise ValueError('No item in inventory with that value')
-
         else:
             return self.pop(index)
 
+    def by_type(self, part):
+        for item in self:
+            if hasattr(item, 'placement') and part in item.placement:
+                yield item
+
+# Player should inherit from unit just so during main game loop
+# the player class can be accessed in the same way as other units
 class Player(Unit):
     def __init__(self, character, name):
         '''Unpacks the character tuple and calculates stats
@@ -127,8 +113,8 @@ class Player(Unit):
         # functions after unpacking
         self.setup(character.home)
         self.calculate_initial_stats()
-            
-        self.__equipment = Equipment(character.equipment)
+        
+        self.equipment = character.equipment
         self.__inventory = Inventory(character.inventory)
 
         self.calculate_final_stats()
@@ -146,12 +132,41 @@ class Player(Unit):
 
     @property
     def equipment(self):
-        for part in self.__equipment.items:
-            yield part, getattr(self, part)
+        for part, item in self.__equipment.items:
+            yield part, item
+
+    @equipment.setter
+    def equipment(self, equipment):
+        equipment = [convert(item) for item in equipment]
+        self.__equipment = Equipment(parts, equipment)
+        for item in equipment:
+            print(item)
+            if item and hasattr(item, 'equip'):
+                item.equip(self)
+
+    def item_equip(self, part, item):
+        if self.__equipment.equip(part, item):
+            self.__inventory.remove(item)
+            if hasattr(item, 'equip'):
+                item.equip(item)
+
+    def item_unequip(self, part):
+        item = next(self.__equipment.unequip(part))
+        if item:
+            self.__inventory.append(item)
+            if hasattr(item, 'unequip'):
+                item.unequip(self)
+
+    def item_on(self, index):
+        yield next(self.__equipment.by_part(index))
 
     @property
     def inventory(self):
         for item in self.__inventory:
+            yield item
+
+    def inventory_type(self, part):
+        for item in self.__inventory.by_type(part):
             yield item
 
     def profile_save_path(self):

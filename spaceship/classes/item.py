@@ -81,22 +81,14 @@ class Potion(Item):
             unit.cur_health = min(unit.cur_health + self.heal, unit.max_health)
 
 class Wearable:
-    def __init__(self, name, char, color, effects):
+    def __init__(self, name, char, color, effects, slots=None):
         self.__name = name
         self.char = char
         self.color = color
         self.__effects = effects
 
-    def mark(self, value: int) -> str:
-        '''returns a signed integer for an attribute'''
-        if isinstance(value, int):
-            if value >= 0:
-                return "+" + str(value)
-            
-            else:
-                return value
-
-        return value
+        if slots:
+            self.inventory, self.placement = slots
 
     def __str__(self):
         return f"{self.name} ({self.seperate()})"
@@ -121,25 +113,27 @@ class Wearable:
         for effect, value in self.effects:
             if hasattr(unit, effect):
                 print(unit, effect, getattr(unit, effect))
-                setattr(unit, effect, value)
+                stat = getattr(unit, effect)
+                setattr(unit, effect, stat + value)
                 print(unit, effect, getattr(unit, effect))
 
     def unequip(self, unit):
         for effect, value in self.effects:
             if hasattr(unit, effect):
                 print(unit, effect, getattr(unit, effect))
-                setattr(unit, effect, -value)
+                stat = getattr(unit, effect)
+                setattr(unit, effect, stat - value)
                 print(unit, effect, getattr(unit, effect))
 
 class Shoes(Wearable):
     inventory = "shoes"
-    placement = {"eq_feet"}
+    placement = {"feet"}
     def __init__(self, name, char, color, effects=None):
         super().__init__(name, char, color, effects)
 
 class Ring(Wearable):
     inventory = "rings"
-    placement = {"eq_ring_left", "eq_ring_right"}
+    placement = {"ring_left", "ring_right"}
 
     def __init__(self, name, char, color, effects=None):
         super().__init__(name, char, color, effects)
@@ -326,7 +320,8 @@ def convert(item):
         item = items[item]
     except KeyError:
         pass
-    
+    except TypeError:
+        pass    
     return item
 
 if __name__ == "__main__":
