@@ -308,10 +308,7 @@ class Start(Scene):
                 s='Nothing in your inventory')
 
         else:
-            weapons, armors, potions, rings, others = self.player.inventory
-
-            headers = "Weapons Armors Potions Rings Other".split()
-            for header, items in zip(headers, list(self.player.inventory)):
+            for header, items in list(self.player.inventory):
                 draw_item_grouping(header, items)
 
     def draw_player_unequip_confirm(self, item):
@@ -416,7 +413,7 @@ class Start(Scene):
         log = ""
         current_screen = key
         update_status = False
-        items = [item for group in self.player.inventory for item in group]
+        items = [item for _, inv in self.player.inventory for item in inv]
         
         while True:
             self.clear_main_display()
@@ -428,7 +425,7 @@ class Start(Scene):
             if update_status:
                 self.draw_player_status()
                 update_status = False
-                items = [item for group in self.player.inventory for item in group]
+                items = [item for _, inv in self.player.inventory for item in inv]
 
             if current_screen == "q":
                 self.draw_player_equipment()
@@ -1225,23 +1222,23 @@ class Start(Scene):
             nonlocal log
             if self.player.item_add(item):
                 self.location.item_remove(*self.player.position, item)
-                self.player.item_add(item)
                 log = "You pick up {} and place it in your backpack.".format(
                                                                     item.name)
-                log += "Your backpack feels heavier."
+                log += " Your backpack feels heavier."
             else:
                 log = "Backpack is full. Cannot pick up {}.".format(item)
 
         items = self.location.items_at(*self.player.position)
 
+        log = ""
         if not items:
             self.draw_log("No items on the ground where you stand.")
 
         elif single_element(items):
             pickup_item(items.pop())
+            self.draw_log(log)
 
         else:
-            log = ""
             index_row, item_row = 0, 0
             update_items = False
 
@@ -1289,11 +1286,11 @@ class Start(Scene):
         
         log = ""
         update_items = False
-        items = [item for group in self.player.inventory for item in group]
+        items = [item for _, inv in self.player.inventory for item in inv]
 
         while True:
             if update_items:
-                items = [item for group in self.player.inventory for item in group]
+                items = [item for _, inv in self.player.inventory for item in inv]
                 update_items = False
 
             self.clear_main_display()
@@ -1337,7 +1334,7 @@ class Start(Scene):
 
         log = ""
         update_items = False
-        items = [item for group in self.player.inventory for item in group]
+        items = [item for _, inv in self.player.inventory for item in inv]
 
         while True:
             if update_items:

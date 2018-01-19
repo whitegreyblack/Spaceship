@@ -54,26 +54,18 @@ def curattr(effect):
     return "cur_" + effect
     
 def sort(items):
-    weapons, armors, potions, rings, others = [], [], [], [], []
+    groups = {
+        g: [] for g in "weapon armor potion ring food others".split()
+    }
+    # weapons, armors, potions, rings, food, others = [], [], [], [], []
     # seperate each item into its own grouping
     for item in items:
-        # if isinstance(item, Weapon):
-        #     weapons.append(item)
-
-        # elif isinstance(item, Armor):
-        #     armors.append(item)
-
-        # elif isinstance(item, Potion):
-        #     potions.append(item)    
-
-        if isinstance(item, Ring):
-            rings.append(item)
-
-        else:
-            # print(item, 'no class identifier')
-            others.append(item)
-
-    return weapons, armors, potions, rings, others
+        try:
+            group = groups[item.__class__.__name__.lower()]
+        except KeyError:
+            group = groups['others']
+        group.append(item)
+    return groups
 
 def mark(value: int) -> str:
     if isinstance(value, int):
@@ -146,7 +138,12 @@ class Item:
         #         print(effect, stat - value)
         #         unit.stat_update_final(effect)
         pass
-        
+
+class Food(Item):
+    inventory = "foods"
+    def __init__(self, name, char, color, effects=None):
+        super().__init__(name, char, color, effects)
+
 class Potion(Item):
     inventory = "potions"
     def __init__(self, name, char, color, heal=10):

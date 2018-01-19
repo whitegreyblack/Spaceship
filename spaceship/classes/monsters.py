@@ -103,17 +103,14 @@ class Rat(Unit):
         else:
             # nothing of interest to the rat
             if not paths:
-                if self.last_action == "following":
-                    return self.moving_torwards()
-
-                self.wander(tiles, sight_map)
+                return self.wander(tiles, sight_map)
 
             else:
                 _, interest, path = max(paths)
 
                 # no path exists
                 if not path:
-                    self.wander(tiles, sight_map)
+                    return self.wander(tiles, sight_map)
 
                 # get distance to determine action
                 # elif isinstance(interest, Unit) or isinstance(interest, Player):
@@ -121,11 +118,11 @@ class Rat(Unit):
 
                     # its another rat -- do nothing
                     if self.race == interest.race:
-                        self.wander(tiles, sight_map)
+                        return self.wander(tiles, sight_map)
 
                     # its another monster -- do nothing
                     elif self.job == interest.job:
-                        self.wander(tiles, sight_map)
+                        return self.wander(tiles, sight_map)
 
                     else:
                         # must be an adventurer -- go for the juggular
@@ -134,11 +131,11 @@ class Rat(Unit):
                             return commands_ai['move'][self.direction(interest)]
                         # too far -- follow it
                         else:
-                            self.follow(sight_map, units, path[1].node)
+                            return self.follow(sight_map, units, path[1].node)
 
     def drops(self):
         if randint(0, 5):
-            return Item("rat corpse", "%", "red")
+            return Item("rat corpse", "%", "red", (('hp', 2),))
         else:
             return None
     

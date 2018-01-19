@@ -110,7 +110,12 @@ class Inventory(list):
 
     @property
     def items(self):
-        yield sort(self)
+        for group, items in sort(self).items():
+            if group not in 'food others'.split():
+                group = list(group + 's')
+                group[0] = group[0].upper()
+                group = "".join(group)
+            yield group, items
 
 # Player should inherit from unit just so during main game loop
 # the player class can be accessed in the same way as other units
@@ -215,9 +220,8 @@ class Player(Unit):
 
     @property
     def inventory(self):
-        for group in self.__inventory.items:
-            for item in group:
-                yield item
+        for group, items in self.__inventory.items:
+            yield group, items
 
     @inventory.setter
     def inventory(self, inventory):
@@ -228,7 +232,7 @@ class Player(Unit):
             yield item
 
     def item_add(self, item):
-        return self.__inventory.append(item)
+        return self.__inventory.add(item)
 
     def item_drop(self, item):
         return self.__inventory.remove(item)

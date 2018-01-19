@@ -545,9 +545,9 @@ class Map:
 
     def generate_units(self):
         if self.height <= 25:
-            max_units = 5
+            max_units = 1
         else:
-            max_units = 0
+            max_units = 1
 
         if hasattr(self, 'spaces'):
             shuffle(self.spaces)
