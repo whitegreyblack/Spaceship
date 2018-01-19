@@ -550,7 +550,6 @@ class Start(Scene):
 
             # get the action variable after putting in all the info into unit.act
             action = self.unit.acts(units, tiles)
-
             if action:
                 self.process_handler_unit(*action)
 
@@ -607,7 +606,9 @@ class Start(Scene):
         occupied_unit = self.location.occupied(tx, ty)
 
         if not occupied_player and not occupied_unit:
-            self.unit.move(x, y)
+            # self.unit.move(tx, ty)
+            self.unit.position = (tx, ty)
+            return None
 
         return occupied_player, occupied_unit
 
@@ -633,12 +634,12 @@ class Start(Scene):
 
                     player = isinstance(unit, Player)
 
-                    if not player and unit.friendly:
-                        unit.move(-x, -y)
-                        self.unit.move(x, y)
-
-                        log = "The {} switches places with the {}".format(
-                            self.unit.__class__.__name__, unit.race)
+                    if isinstance(self.location, City):
+                        self.unit.displace(unit)
+                        unit.energy.reset()
+                        log = "The {} switches places with the {}.".format(
+                            self.unit.__class__.__name__, 
+                            unit.race if not player else "you")
                         self.draw_log(log) 
 
                     else:
@@ -731,9 +732,8 @@ class Start(Scene):
                     else:
                         unit = self.location.unit_at(tx, ty)
 
-                        if unit.friendly:
-                            self.player.move(x, y)
-                            unit.move(-x, -y)
+                        if isinstance(self.location, City):
+                            self.player.displace(unit)
                             unit.energy.reset()
                             log = "You switch places with the {}.".format(
                                                 unit.__class__.__name__.lower())

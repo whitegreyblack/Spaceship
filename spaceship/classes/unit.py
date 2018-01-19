@@ -3,6 +3,7 @@ from .object import Object
 from .color import Color
 from collections import namedtuple
 from ..tools import distance
+from ..action import commands_ai
 
 ''' TODO: implement unique attributes
 self.str, self.agi, self.int
@@ -128,7 +129,7 @@ class Unit(Object):
         x = int(round(dx / dt))
         y = int(round(dy / dt))
 
-        self.move(x, y)
+        return commands_ai['move'][(x, y)]
 
     def wander(self, tiles, sight):
         # filter out all tiles that are not empty spaces
@@ -139,18 +140,26 @@ class Unit(Object):
         points = list(filter(
             lambda t: tiles[t].char != "#", tiles.keys()))
 
-        # of these points, these are the positions currently empty
-        for point in points:
-            sx, sy = self.translate_sight(*point)
-            empty_space = sight[sy][sx] not in unit_chars
+        # # of these points, these are the positions currently empty
+        # for point in points:
+        #     sx, sy = self.translate_sight(*point)
+        #     empty_space = sight[sy][sx] in ". ; : , = /".split()
+        #     occupied = sight[sy][sx] in unit_chars
 
-            if not empty_space:
-                points.remove(point)
-
+        #     if not empty_space or occupied:
+        #         points.remove(point)
+            
         # then choose a single point to walk to
         point = choice(points)
 
-        self.moving_torwards(point)  
+        sx, sy = self.translate_sight(*point)
+        empty_space = sight[sy][sx] in ". ; : , = /".split()
+        occupied = sight[sy][sx] in unit_chars
+        
+        if not empty_space or occupied:
+            return commands_ai['wait']
+
+        return self.moving_torwards(point)  
 
     def follow(self, sight, units, path):
         sx, sy = self.translate_sight(*path)
@@ -162,7 +171,7 @@ class Unit(Object):
 
         # empty space -- go torward target
         else:
-            self.moving_torwards(path)
+            return self.moving_torwards(path)
 
     def path(self, p1, p2, tiles):
         '''A star implementation'''

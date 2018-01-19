@@ -173,7 +173,8 @@ class City(Map):
                         char = "."
 
                     elif char in (".", ":", ",", "="):
-                        self.spaces.append((i, j))
+                        if self.within_generate_bounds(i, j):
+                            self.spaces.append((i, j))
 
                     line += char
 
@@ -236,6 +237,7 @@ class City(Map):
                                     spaces=self.unit_spaces[character] 
                                         if self.unit_spaces[character] 
                                         else self.spaces)])
+
                         else:
                             for _ in range(int(number)):
                                 i, j = self.spaces.pop()

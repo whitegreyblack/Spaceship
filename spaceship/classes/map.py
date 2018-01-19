@@ -229,6 +229,9 @@ class Map:
     def within_bounds(self, x, y) -> bool:
         return 0 <= x < self.width and 0 <= y < self.height
 
+    def within_generate_bounds(self, x, y):
+        return 6 <= x < self.width - 6 and 2 <= y < self.width - 2
+
     def out_of_bounds(self, x, y) -> bool:
         return not self.within_bounds(x, y)
 

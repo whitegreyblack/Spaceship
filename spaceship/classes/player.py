@@ -4,7 +4,7 @@ from random import randint
 from .color import Color
 from .unit import Unit
 from .world import World
-from .item import Ring, itemlist, convert, totattr, modattr, sort
+from .item import Ring, itemlist, convert, totattr, modattr, sort, curattr
 
 parts=("head", "neck", "body", "arms", "hands", 
         "hand_left", "hand_right", "ring_left", 
@@ -67,7 +67,6 @@ class Equipment:
 
     def stats(self):
         for _, item in self.items:
-            print('item', item)
             if hasattr(item, 'effects'):
                 for effect, value in item.effects:
                     yield effect, value
@@ -193,7 +192,6 @@ class Player(Unit):
     def equipment(self, equipment):
         self.__equipment = Equipment(parts, equipment)
         for attr, value in list(self.__equipment.stats()):
-            print('ces', attr, value)
             self.stat_update(attr, value)
             self.stat_update_final(attr)
 
@@ -206,7 +204,6 @@ class Player(Unit):
 
     def unequip(self, part):
         for attr, value in list(self.__equipment.stats_by_part(part)):
-            print('UNEQ', attr, -value)
             self.stat_update(attr, -value)
             self.stat_update_final(attr)
 
@@ -377,7 +374,7 @@ class Player(Unit):
         self.last_position_local = self.x, self.y
 
     def dump(self) -> str:
-        '''Prints out player information to terminal'''
+        '''Return player information to output to terminal'''
 
         dump_template="""
             [Character Sheet -- Spaceship]

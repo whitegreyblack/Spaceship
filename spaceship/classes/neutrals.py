@@ -178,7 +178,7 @@ class Bishop(Unit):
         else:
             if not paths:
                 # nothing of interest to the bishop
-                self.wander(tiles, sight_map)
+                return self.wander(tiles, sight_map)
 
             # else:
             #     print('not wander')

@@ -104,7 +104,7 @@ class Rat(Unit):
             # nothing of interest to the rat
             if not paths:
                 if self.last_action == "following":
-                    self.moving_torwards()
+                    return self.moving_torwards()
 
                 self.wander(tiles, sight_map)
 
