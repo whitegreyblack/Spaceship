@@ -115,6 +115,27 @@ class Start(Scene):
         self.draw_world()
         term.refresh()
 
+    def draw_log(self, log=None, color="white", refresh=True):
+        if log:
+            self.gamelog.add(log, color=color)
+
+        term.clear_area(
+            0, 
+            self.height - self.log_height - 1, 
+            self.width, 
+            self.log_height)
+        
+        messages = self.gamelog.write()
+
+        for index, msg in enumerate(messages):
+            term.puts(
+                x=1,
+                y=self.height + index - self.log_height - 1,
+                s="[c={}]{}[/c]".format(msg.color, msg.message))
+        
+        if refresh:
+            term.refresh()
+
     def draw_world(self):
         '''Handles drawing of world features and map'''
         x, y = self.player.position if self.player.height >= 1 \
@@ -169,8 +190,8 @@ class Start(Scene):
     def draw_screen_header(self):
         '''Draws a line across the top of the window'''
         term.bkcolor('dark grey')
-        for i in range(self.width):
-            term.puts(i, 0, ' ')
+        for i in range(self.width - self.display_offset_x):
+            term.puts(self.display_offset_x + i, 0, ' ')
         term.bkcolor('black')
 
     def draw_player_status(self):
@@ -193,12 +214,22 @@ class Start(Scene):
                 y=self.player_screen_row, 
                 s=column)
 
+    def draw_clear_main_display(self):
+        term.clear_area(
+            self.display_offset_x, 
+            0, 
+            self.width - self.display_offset_x,
+            self.height - self.display_offset_y)
+
     def draw_player_equipment(self):
         '''Handles equipment screen'''
 
         # draws header border
         self.draw_screen_header()
-        term.puts(center(' Equipment ', self.width), 0, ' Equipment ')
+        term.puts(
+            x=center(' Equipment ', self.width + self.display_offset_x), 
+            y=0, 
+            s=' Equipment ')
 
         equipment = list(self.player.equipment)
 
@@ -213,7 +244,7 @@ class Start(Scene):
 
             letter = chr(ord('a') + index)
             term.puts(
-                x=self.player_screen_col,
+                x=self.player_screen_col + self.display_offset_x,
                 y=self.player_screen_row + index * self.row_spacing,
                 s=letter + body + item)
 
@@ -226,7 +257,7 @@ class Start(Scene):
             '''Handles drawing of the item grouping header'''
             nonlocal index_row
             term.puts(
-                x=self.player_screen_col,
+                x=self.player_screen_col + self.display_offset_x,
                 y=self.player_screen_row + index_row * self.row_spacing,
                 s=item_header)
             index_row += 1
@@ -236,7 +267,7 @@ class Start(Scene):
             nonlocal index_row, item_row
             letter = chr(ord('a') + item_row) + ". "
             term.puts(
-                x=self.player_screen_col,
+                x=self.player_screen_col + self.display_offset_x,
                 y=self.player_screen_row + index_row * self.row_spacing,
                 s=letter + item_desc) 
             index_row += 1
@@ -257,13 +288,17 @@ class Start(Scene):
 
         # header for inventory
         self.draw_screen_header()
-        term.puts(center('inventory  ', self.width), 0, ' Inventory ')
+        term.puts(
+            center('inventory  ', self.width + self.display_offset_x), 
+            0, 
+            ' Inventory ')
 
         items = list(self.player.inventory)
 
         if not items:
             term.puts(
-                x=center('Nothing in your inventory', self.width),
+                x=center('Nothing in your inventory', self.width) \
+                + self.display_offset_x,
                 y=3,
                 s='Nothing in your inventory')
 
@@ -291,27 +326,6 @@ class Start(Scene):
             headers = "Weapons Armors Potions Rings Other".split()
             for header, items in zip(headers, (weapons, armors, potions, rings, other)):
                 draw_item_grouping(header, items)
-    
-    def draw_log(self, log=None, color="white", refresh=True):
-        if log:
-            self.gamelog.add(log, color=color)
-
-        term.clear_area(
-            0, 
-            self.height - self.log_height - 1, 
-            self.width, 
-            self.log_height)
-        
-        messages = self.gamelog.write()
-
-        for index, msg in enumerate(messages):
-            term.puts(
-                x=1,
-                y=self.height + index - self.log_height - 1,
-                s="[c={}]{}[/c]".format(msg.color, msg.message))
-        
-        if refresh:
-            term.refresh()
 
     def draw_player_eq_inv_switch(self):
         '''Draws instruction on screen the command to switch to inventory'''
@@ -366,7 +380,7 @@ class Start(Scene):
         
     def draw_player_screens(self, key):
         def unequip_item(code):
-            nonlocal log
+            nonlocal log, update_status
             self.draw_player_unequip_confirm(item)
             term.refresh()
 
@@ -375,9 +389,11 @@ class Start(Scene):
             if confirm in (term.TK_Y, term.TK_ENTER, code):
                 self.player.item_unequip(part)
                 log = strings.command_unequip.format(item)
+                update_status = True
+                print('unequipe')
 
         def equip_item(part):
-            nonlocal log
+            nonlocal log, update_status
             items = list(self.player.inventory_type(part))
 
             if not items:
@@ -418,6 +434,7 @@ class Start(Scene):
                         item = items[selection - term.TK_1]
                         self.player.item_equip(part, item)
                         log = strings.command_equip.format(item)
+                        update_status = True
                         break 
 
                     else:
@@ -425,12 +442,18 @@ class Start(Scene):
 
         log = ""
         current_screen = key
-
+        update_status = False
         while True:
-            term.clear()
+            self.draw_clear_main_display()
 
             if log:
                 self.draw_screen_log(log)
+                log = ""
+
+            if update_status:
+                print('updating')
+                self.draw_player_status()
+                update_status = False
 
             if current_screen == "q":
                 self.draw_player_equipment()
@@ -451,12 +474,12 @@ class Start(Scene):
 
             elif code == term.TK_Q:
                 current_screen = 'q'
-                log = ""
+                # log = ""
 
             elif code == term.TK_V:
                 # V goes to inventory screen
                 current_screen = 'v'
-                log = ""
+                # log = ""
 
             elif current_screen == 'q' and term.TK_A <= code <= term.TK_L:
                 part, item = next(self.player.item_on(code - 4))

@@ -44,6 +44,12 @@ Item Classifiers: (-- Based on ADOM item classifiers)
 item_chars = ('[', '*', 'o', '\'', '(', '}', '/', '=', '\\', '!', '?', '%', '$', '"')
 # item_chars = ('[', '*', 'o', ']', '\'', '(', '}', '/', '=', '\\', '!', '?', '~', '%', '$', '{', '"')
 
+def totattr(effect):
+    return "tot_" + effect
+
+def modattr(effect):
+    return "mod_" + effect
+
 def mark(value: int) -> str:
     if isinstance(value, int):
         if value >= 0:
@@ -53,7 +59,7 @@ def mark(value: int) -> str:
     return value
 
 def modify(value: str) -> str:
-    return value.replace('mod_', '')
+    return value.replace('', '')
 
 class Item:
     def __init__(self, name, char, color):
@@ -112,18 +118,19 @@ class Wearable:
     def equip(self, unit):
         for effect, value in self.effects:
             if hasattr(unit, effect):
-                print(unit, effect, getattr(unit, effect))
                 stat = getattr(unit, effect)
+                print(effect, stat)
                 setattr(unit, effect, stat + value)
-                print(unit, effect, getattr(unit, effect))
+                print(effect, stat + value)
 
     def unequip(self, unit):
         for effect, value in self.effects:
             if hasattr(unit, effect):
-                print(unit, effect, getattr(unit, effect))
                 stat = getattr(unit, effect)
+                print(effect, stat)
                 setattr(unit, effect, stat - value)
-                print(unit, effect, getattr(unit, effect))
+                print(effect, stat - value)
+
 
 class Shoes(Wearable):
     inventory = "shoes"
@@ -277,17 +284,17 @@ items = {
     #     "(", "grey", 2, -1, (4, 9)),
     
     # small shield, short bow,
-    "ring of earth": Ring("ring of earth", "=", "dark green", (("mod_str", 1),)),
-    "ring of nature": Ring("ring of nature", "=", "green", (("mod_wis", 1),)),
-    "ring of power": Ring("ring of power", "=", "red", (("mod_str", 2), ("mod_dex", 1))),
+    "ring of earth": Ring("ring of earth", "=", "dark green", (("str", 1),)),
+    "ring of nature": Ring("ring of nature", "=", "green", (("wis", 1),)),
+    "ring of power": Ring("ring of power", "=", "red", (("str", 2), ("dex", 1))),
     # "ring of regen": None,
     # "ring of protection": None,
     # "ring of light": None,
     # "ring of chaos": None,
-    "ring of ice": Ring("ring of ice", "=", "light blue", (("mod_hp", 10),)),
-    "ring of fire": Ring("ring of fire", "=", "dark red", (("mod_dmg", 3),)),
-    "ring of water": Ring("ring of water", "=", "dark blue", (("mod_sp", 10),)),
-    "ring of lightning": Ring("ring of lightning", "=", "yellow", (("mod_wis", 2),)),
+    "ring of ice": Ring("ring of ice", "=", "light blue", (("hp", 10),)),
+    "ring of fire": Ring("ring of fire", "=", "dark red", (("dmg", 3),)),
+    "ring of water": Ring("ring of water", "=", "dark blue", (("sp", 10),)),
+    "ring of lightning": Ring("ring of lightning", "=", "yellow", (("wis", 2),)),
     # "ring of resistance": None,
     # "ring of darkness": None,
     # "storm ring": None,
@@ -295,7 +302,7 @@ items = {
     # "rope belt": Armor("rope belt", "[", "green", "waist", 0, 0, 1, 0),
     # "common pants": Armor("common pants", "[", "green", "legs", 0, 0, 0, 0),
 
-    "leather boots": Shoes("leather boots", "[", "green", (("mod_sp", 10),)),
+    # "leather boots": Shoes("leather boots", "[", "green", (("sp", 10),)),
     # "metal boots": Armor("metal boots", "[", "grey", "feet", 0, 0, 0, 0),
     # "sandals": Armor("sandals", "[", "green", "feet", 0, 0, 0, 0),
     # tome, spellbook, scrolls

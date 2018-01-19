@@ -4,7 +4,7 @@ from random import randint
 from .color import Color
 from .unit import Unit
 from .world import World
-from .item import Armor, Weapon, Item, items, convert
+from .item import Armor, Weapon, Item, items, convert, totattr, modattr
 
 parts=("head", "neck", "body", "arms", "hands", 
         "hand_left", "hand_right", "ring_left", 
@@ -112,10 +112,10 @@ class Player(Unit):
 
         # functions after unpacking
         self.setup(character.home)
-        self.calculate_initial_stats()
+        self.initialize_base_stats()
         
         self.equipment = character.equipment
-        self.__inventory = Inventory(character.inventory)
+        self.inventory = Inventory(character.inventory)
 
         self.calculate_final_stats()
         self.calculate_attack_variables()
@@ -140,15 +140,18 @@ class Player(Unit):
         equipment = [convert(item) for item in equipment]
         self.__equipment = Equipment(parts, equipment)
         for item in equipment:
-            print(item)
             if item and hasattr(item, 'equip'):
                 item.equip(self)
+                for effect, _ in item.effects:
+                    self.update_stat(effect)
 
     def item_equip(self, part, item):
         if self.__equipment.equip(part, item):
             self.__inventory.remove(item)
             if hasattr(item, 'equip'):
                 item.equip(item)
+                for effect, _ in item.effects:
+                    self.update_stat(effect)
 
     def item_unequip(self, part):
         item = next(self.__equipment.unequip(part))
@@ -156,6 +159,8 @@ class Player(Unit):
             self.__inventory.append(item)
             if hasattr(item, 'unequip'):
                 item.unequip(self)
+                for effect, _ in item.effects:
+                    self.update_stat(effect)
 
     def item_on(self, index):
         yield next(self.__equipment.by_part(index))
@@ -164,6 +169,10 @@ class Player(Unit):
     def inventory(self):
         for item in self.__inventory:
             yield item
+
+    @inventory.setter
+    def inventory(self, inventory):
+        self.__inventory = inventory
 
     def inventory_type(self, part):
         for item in self.__inventory.by_type(part):
@@ -194,7 +203,7 @@ class Player(Unit):
             self.tot_int, self.tot_wis, self.tot_cha,
             self.gold)
 
-    def stats_unpack(self):
+    def initialize_base_stats(self) -> None:
         self.str, self.con, self.dex, self.int, self.wis, self.cha = \
                                     tuple(s + g + r + c for s, g, r, c in zip(
                                                             self.base_stats,
@@ -202,32 +211,23 @@ class Player(Unit):
                                                             self.race_bonus,
                                                             self.job_bonus))
 
-    def stats_modifiers(self):
-        self.mod_str = 0
-        self.mod_con = 0
-        self.mod_dex = 0
-        self.mod_int = 0
-        self.mod_wis = 0
-        self.mod_cha = 0
-        self.mod_hp = 0
-        self.mod_mp = 0
-        self.mod_sp = 0
-
-    def calculate_initial_stats(self) -> None:
-        self.stats_unpack()
-        self.stats_modifiers()
-
+        for stat in ('str con dex int wis cha hp mp sp'.split()):
+            setattr(self, modattr(stat), 0)
+            setattr(self, totattr(stat), 0)
+    
     def calculate_final_stats(self) -> None:
-        self.calculate_total_str()
-        self.calculate_total_con()
-        self.calculate_total_dex()
-        self.calculate_total_int()
-        self.calculate_total_wis()
-        self.calculate_total_cha()
+        for stat in ('str con dex int wis cha'.split()):
+            self.update_stat(stat)
 
         self.calculate_health()
         self.calculate_mana()
         self.calculate_speed()
+
+    def update_stat(self, stat):
+        print(getattr(self, totattr(stat)))
+        base = getattr(self, stat)
+        mods = getattr(self, modattr(stat))
+        setattr(self, totattr(stat), base + mods)
 
     def calculate_health(self):
         self.base_hp = self.tot_str + self.tot_con * 2
@@ -238,24 +238,6 @@ class Player(Unit):
 
     def calculate_speed(self):
         self.sp = self.tot_dex // 2
-
-    def calculate_total_str(self):
-        self.tot_str = self.str + self.mod_str
-
-    def calculate_total_con(self):
-        self.tot_con = self.con + self.mod_con
-
-    def calculate_total_dex(self):
-        self.tot_dex = self.dex + self.mod_dex
-
-    def calculate_total_int(self):
-        self.tot_int = self.int + self.mod_int
-
-    def calculate_total_wis(self):
-        self.tot_wis = self.wis + self.mod_wis
-
-    def calculate_total_cha(self):
-        self.tot_cha = self.cha + self.mod_cha
 
     def stats_attributes(self):
         return self.str, self.con, self.dex, self.int, self.wis, self.cha
