@@ -239,11 +239,7 @@ class Start(Scene):
         '''Handles equipment screen'''
 
         # draws header border
-        self.draw_screen_header()
-        term.puts(
-            x=center(' Equipment ', self.width + self.display_offset_x), 
-            y=0, 
-            s=' Equipment ')
+        self.draw_screen_header('Equipment')
 
         equipment = list(self.player.equipment)
 
@@ -318,33 +314,6 @@ class Start(Scene):
             for header, items in zip(headers, list(self.player.inventory)):
                 draw_item_grouping(header, items)
 
-    def draw_player_eq_inv_switch(self):
-        '''Draws instruction on screen the command to switch to inventory'''
-        term.puts(
-            x=center(strings.command_switch_eq, self.width), 
-            y=self.height - 2,
-            s=strings.command_switch_eq)
-
-    def draw_player_inv_eq_switch(self):
-        '''Draws instruction on screen the command to switch to equipment'''
-        term.puts(
-            x=center(strings.command_switch_iv, self.width), 
-            y=self.height - 2,
-            s=strings.command_switch_iv)
-
-    def draw_player_eq_drop(self):
-        '''Draws instruction on screen to drop an item'''
-        term.puts(
-            x=center(strings.command_drop, self.width),
-            y=self.height - 2,
-            s=strings.command_drop)
-        
-    def draw_player_eq_use(self):
-        term.puts(
-            x=center(strings.command_use, self.width),
-            y=self.height - 2,
-            s=strings.command_use)
-
     def draw_player_unequip_confirm(self, item):
         string = strings.command_unequip_confirm.format(item)
         term.puts(x=center(string, self.width), y=self.height - 3, s=string)
@@ -370,6 +339,24 @@ class Start(Scene):
         term.bkcolor('black')
         
     def draw_player_screens(self, key):
+        def draw_player_eq_inv_switch():
+            '''Draws instruction on screen the command to switch to inventory'''
+            term.puts(
+                x=center(
+                    strings.command_switch_eq,
+                    self.width - self.display_offset_x) + self.display_offset_x,
+                y=self.height - 5,
+                s=strings.command_switch_eq)
+
+        def draw_player_inv_eq_switch():
+            '''Draws instruction on screen the command to switch to equipment'''
+            term.puts(
+                x=center(
+                    strings.command_switch_iv,
+                    self.width - self.display_offset_x) + self.display_offset_x,
+                y=self.height - 5,
+                s=strings.command_switch_iv)
+
         def unequip_item(code):
             nonlocal log, update_status
             self.draw_player_unequip_confirm(item)
@@ -395,7 +382,6 @@ class Start(Scene):
                         self.draw_log(log)
 
                     self.clear_item_box()
-                    self.draw_item_border()
 
                     term.puts(
                         x=self.width // 2 + center(' items ', self.width // 2), 
@@ -408,6 +394,8 @@ class Start(Scene):
                             y=index + 4,
                             s="{}. {}".format(index + 1, item)
                         )
+
+                    self.draw_item_border()
                     term.refresh()
 
                     selection = term.read()
@@ -444,11 +432,11 @@ class Start(Scene):
 
             if current_screen == "q":
                 self.draw_player_equipment()
-                self.draw_player_eq_inv_switch()
+                draw_player_eq_inv_switch()
 
             elif current_screen == "v":
                 self.draw_player_inventory(items)
-                self.draw_player_inv_eq_switch()
+                draw_player_inv_eq_switch()
 
             term.refresh()
             
@@ -1234,18 +1222,17 @@ class Start(Scene):
                 index_row += 1
 
         def pickup_item(item):
-            if len(list(self.player.inventory)) >= 25:
-                gamelog.add("Backpack is full. Cannot pick up {}.".format(item))
-
-            else:
+            nonlocal log
+            if self.player.item_add(item):
                 self.location.item_remove(*self.player.position, item)
                 self.player.item_add(item)
                 log = "You pick up {} and place it in your backpack.".format(
                                                                     item.name)
                 log += "Your backpack feels heavier."
-                self.draw_log(log)
-        
-        items = [item for item in self.location.items_at(*self.player.position)]
+            else:
+                log = "Backpack is full. Cannot pick up {}.".format(item)
+
+        items = self.location.items_at(*self.player.position)
 
         if not items:
             self.draw_log("No items on the ground where you stand.")
@@ -1260,24 +1247,14 @@ class Start(Scene):
 
             while True:
                 self.clear_main_display()
-                self.draw_screen_header()
-                term.puts(
-                    center('Pickup  ', self.width + self.display_offset_x), 
-                    0, 
-                    ' Pickup ')        
+                self.draw_screen_header('Pickup Items')
 
                 if log:
                     self.draw_log(log)
                     log = ""
                 
                 if update_items:
-                    items = [item 
-                        for item in self.location.items_at(*self.player.position)]
-
-                # self.draw_tile_inventory()
-
-                if log:
-                    self.draw_log(log)
+                    items = self.location.items_at(*self.player.position)
 
                 term.refresh()
                 code = term.read()
@@ -1296,7 +1273,7 @@ class Start(Scene):
                 x=center(
                     strings.command_drop, 
                     self.width - self.display_offset_x) + self.display_offset_x,
-                y=self.height - 2,
+                y=self.height - 5,
                 s=strings.command_drop)
 
         def drop_item(item):
@@ -1315,12 +1292,12 @@ class Start(Scene):
         items = [item for group in self.player.inventory for item in group]
 
         while True:
-            self.clear_main_display()
-            self.draw_player_inventory(items)
-
             if update_items:
                 items = [item for group in self.player.inventory for item in group]
                 update_items = False
+
+            self.clear_main_display()
+            self.draw_player_inventory(items)
 
             if items:
                 draw_eq_drop()
@@ -1332,15 +1309,25 @@ class Start(Scene):
 
             code = term.read()
             if code == term.TK_ESCAPE:
+                log = ""
                 break
 
             elif term.TK_A <= code <= term.TK_A + len(items) - 1:
                 drop_item(items.pop(code - 4))
+                update_items = True
 
             else:
                 log = ""
 
     def action_interact_item_use(self):
+        def draw_player_eq_use():
+            term.puts(
+                x=center(
+                    strings.command_use, 
+                    self.width - self.display_offset_x) + self.display_offset_x,
+                y=self.height - 5,
+                s=strings.command_use)
+
         def use_item(item):
             nonlocal log
             item = self.player.inventory_use(item)
@@ -1353,14 +1340,20 @@ class Start(Scene):
         items = [item for group in self.player.inventory for item in group]
 
         while True:
-            term.clear()
-            items = next(self.draw_player_inventory())
-            self.draw_player_eq_use()
-            term.refresh()
-            
             if update_items:
                 items = list(self.player.inventory)
                 update_items = False
+
+            self.clear_main_display()
+            self.draw_player_inventory(items)
+
+            if items:
+                draw_player_eq_use()
+
+            if log:
+                self.draw_log(log)
+
+            term.refresh()
 
             code = term.read()
             if code == term.TK_ESCAPE:

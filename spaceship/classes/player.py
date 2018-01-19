@@ -32,8 +32,13 @@ class Equipment:
     '''Tied to body parts'''
     def __init__(self, parts, equipment=None):
         self.parts = parts
+        self.initialize_parts()
         if equipment:
             self.items = equipment
+
+    def initialize_parts(self):
+        for part in self.parts:
+            setattr(self, part, None)
 
     @property
     def items(self):
@@ -42,35 +47,41 @@ class Equipment:
 
     @items.setter
     def items(self, equipment):
+        equipment = [convert(item) for item in equipment]
         for p, part in enumerate(self.parts):
-            if not equipment[p]:
-                setattr(self, part, None) 
-                
-            else:
-                try:
-                    item = itemlist[equipment[p]]
+            if equipment[p]:
+                self.equip(part, equipment[p])
 
-                except KeyError:
-                    item = equipment[p]
+    def check_part(self, part):
+        if isinstance(part, int):
+            return self.parts[part]
+        return part
 
-                setattr(self, part, item)
-
-    def by_part(self, index):
+    def item_by_part(self, part):
         '''Returns the item at the given body part'''
-        part = self.parts[index]
+        part = self.check_part(part)
         item = getattr(self, part)
-
         if not item:
             yield part, None
-
         yield part, item
+
+    def stats(self):
+        for _, item in self.items:
+            print('item', item)
+            if hasattr(item, 'effects'):
+                for effect, value in item.effects:
+                    yield effect, value
+
+    def stats_by_part(self, part):
+        _, item = next(self.item_by_part(part))
+        if hasattr(item, 'effects'):
+            for effect, value in item.effects:
+                yield effect, value
 
     def equip(self, part, item):
         if not getattr(self, part):
-            # self.inventory_remove(item)
             setattr(self, part, item)
             return True
-
         return False
 
     def unequip(self, part):
@@ -78,7 +89,6 @@ class Equipment:
         if item:
             setattr(self, part, None)
             yield item
-
         yield None
 
 class Inventory(list):
@@ -91,6 +101,13 @@ class Inventory(list):
         for item in self:
             if hasattr(item, 'placement') and part in item.placement:
                 yield item
+
+    def add(self, item):
+        if len(self) <= 25:
+            self.append(item)
+            return True
+        else:
+            return False
 
     @property
     def items(self):
@@ -117,7 +134,6 @@ class Player(Unit):
 
         self.equip_weapon_double = False
 
-        print('STATS: ', character.stats)
         self.base_stats = character.stats
         self.job_bonus = character.jbonus
         self.race_bonus = character.rbonus
@@ -132,8 +148,6 @@ class Player(Unit):
         self.inventory = Inventory(character.inventory)
 
         self.calculate_final_stats()
-        self.calculate_attack_variables()
-
         self.profile_save_path()
         
     def setup(self, home: str) -> None:
@@ -157,14 +171,15 @@ class Player(Unit):
             race=self.race,
             job=self.job), 
             profile[1].format(
-                dmg="(" + str(self.damage_lower) + ", " + str(self.damage_higher) + ")",
-                acc=self.damage_accuracy))
+                dmg="(" + str(self.dmg_lo) + ", " + str(self.dmg_hi) + ")",
+                acc=self.acc))
 
     def status(self):
-        return (self.name, self.gender, self.race, self.job, self.level,
+        return (self.name, self.gender[0], self.race[0], self.job[0], self.level,
             "{}/{}".format(self.exp, self.advexp),
             "{}/{}".format(self.cur_hp, self.tot_hp),
             "{}/{}".format(self.cur_mp, self.tot_mp),
+            "{}-{}".format(self.tot_dmg_lo, self.tot_dmg_hi),
             self.tot_str, self.tot_con, self.tot_dex, 
             self.tot_int, self.tot_wis, self.tot_cha,
             self.gold)
@@ -176,33 +191,30 @@ class Player(Unit):
 
     @equipment.setter
     def equipment(self, equipment):
-        equipment = [convert(item) for item in equipment]
         self.__equipment = Equipment(parts, equipment)
-
-        for item in equipment:
-            if item and hasattr(item, 'equip'):
-                item.equip(self)
-
-                for effect, _ in item.effects:
-                    self.update_stat(effect)
+        for attr, value in list(self.__equipment.stats()):
+            print('ces', attr, value)
+            self.stat_update(attr, value)
+            self.stat_update_final(attr)
 
     def equip(self, part, item):
+        self.__inventory.remove(item)
         if self.__equipment.equip(part, item):
-            self.__inventory.remove(item)
-            
-            if hasattr(item, 'effects'):
-                item.equip(self)
+            for attr, value in list(self.__equipment.stats_by_part(part)):
+                self.stat_update(attr, value)
+                self.stat_update_final(attr)
 
     def unequip(self, part):
-        item = next(self.__equipment.unequip(part))
-        if item:
-            self.__inventory.append(item)
+        for attr, value in list(self.__equipment.stats_by_part(part)):
+            print('UNEQ', attr, -value)
+            self.stat_update(attr, -value)
+            self.stat_update_final(attr)
 
-            if hasattr(item, 'effects'):
-                item.unequip(self)
+        item =  next(self.__equipment.unequip(part))
+        self.__inventory.add(item)
 
     def item_on(self, index):
-        yield next(self.__equipment.by_part(index))
+        yield next(self.__equipment.item_by_part(index))
 
     @property
     def inventory(self):
@@ -219,10 +231,10 @@ class Player(Unit):
             yield item
 
     def item_add(self, item):
-        self.__inventory.append(item)
+        return self.__inventory.append(item)
 
     def item_drop(self, item):
-        self.__inventory.remove(item)
+        return self.__inventory.remove(item)
 
     def initialize_base_stats(self) -> None:
         self.str, self.con, self.dex, self.int, self.wis, self.cha = \
@@ -238,62 +250,57 @@ class Player(Unit):
             setattr(self, modattr(stat), 0)
             setattr(self, totattr(stat), 0)
     
+        for stat in 'acc dmg_lo dmg_hi'.split():
+            for stat in (stat, modattr(stat), totattr(stat)):
+                setattr(self, stat, 0)
+
+        self.acc, self.dmg_hi, self.dmg_lo = 0, 1, 2
+
+    def stats_attributes(self):
+        return self.str, self.con, self.dex, self.int, self.wis, self.cha
+
+    def stat_update(self, stat, value):
+        current = getattr(self, stat)
+        setattr(self, stat, current + value)
+
+    def stat_update_final(self, stat):
+        base = getattr(self, stat)
+        mods = getattr(self, modattr(stat))
+        setattr(self, totattr(stat), base + mods)
+
+        if stat in ('hp mp'.split()):
+            setattr(self, curattr(stat), base + mods)
+
     def calculate_final_stats(self) -> None:
         for stat in ('str con dex int wis cha'.split()):
-            self.update_stat(stat)
+            self.stat_update_final(stat)
 
         self.calculate_health()
         self.calculate_mana()
         self.calculate_speed()
-
-    def update_stat(self, stat):
-        print(getattr(self, totattr(stat)))
-        base = getattr(self, stat)
-        mods = getattr(self, modattr(stat))
-        setattr(self, totattr(stat), base + mods)
-        if stat in ('hp mp'.split()):
-            setattr(self, curattr(stat), base + mods)
+        self.calculate_attack()
 
     def calculate_health(self):
         self.hp = self.str + self.con * 2
         self.cur_hp = self.tot_hp = self.hp + self.mod_hp
 
     def calculate_mana(self):
-        self.cur_mp = self.tot_mp = self.tot_int * self.tot_wis * 2
+        self.cur_mp = self.tot_mp = self.tot_int + self.tot_wis * 2
 
     def calculate_speed(self):
         self.sp = self.tot_dex // 2
+        
+    def calculate_attack(self):
+        for stat in ('acc dmg_lo dmg_hi'.split()):
+            self.stat_update_final(stat)
 
-    def stats_attributes(self):
-        return self.str, self.con, self.dex, self.int, self.wis, self.cha
-
-    def calculate_attack_variables(self):
-        self.damage_accuracy = 0
-        self.damage_lower = 0
-        self.damage_higher = 0
-
-        print(self.damage_accuracy, self.damage_lower, self.damage_higher)
-        for dmgattr in 'accuracy damage_lower damage_higher':
-            if hasattr(self.__equipment.hand_left, dmgattr):
-                value = getattr(self.__equipment.hand_left, dmgattr)
-                setattr(self, dmgattr, value)   
-
-        if not self.damage_accuracy:
-            self.damage_accuracy = 1
-        if not self.damage_lower:
-            self.damage_lower = 1
-        if not self.damage_higher:
-            self.damage_higher = 2
-
-        print(self.damage_accuracy, self.damage_lower, self.damage_higher)
-
-    def calculate_attack_chance(self) -> int:
+    def calculate_accuracy(self) -> int:
         '''Returns 0 for miss, 1 for regular hit, 2 for critical'''
-        for var in ('damage_accuracy', 'damage_lower', 'damage_higher'):
+        for var in ('acc', 'dmg_lo', 'dmg_hi'):
             if not hasattr(self, var):
                 raise AttributeError("Attack Variables not set")
 
-        chance = randint(0, 20) + self.damage_accuracy
+        chance = randint(0, 20) + self.acc
 
         if chance <= 1:
             return 0
@@ -305,7 +312,7 @@ class Player(Unit):
             return 1
 
     def calculate_attack_damage(self) -> int:
-        return randint(self.damage_lower, self.damage_higher) # + max(self.str, self.dex)
+        return randint(self.dmg_lo, self.dmg_hi) # + max(self.str, self.dex)
 
     def gain_exp(self, exp: int) -> None:
         self.exp += exp
@@ -349,7 +356,6 @@ class Player(Unit):
 
     def save_location(self) -> None:
         self.last_location = self.location
-        # print('saved {}'.format(self.last_location))
     
     def get_position_on_enter(self) -> Tuple[float, float]:
         def direction(x: float, y: float) -> Tuple[float, float]:

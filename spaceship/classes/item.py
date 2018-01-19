@@ -50,7 +50,7 @@ def totattr(effect):
 def modattr(effect):
     return "mod_" + effect
 
-def curattr(effects):
+def curattr(effect):
     return "cur_" + effect
     
 def sort(items):
@@ -86,32 +86,16 @@ def mark(value: int) -> str:
 def modify(value: str) -> str:
     return value.replace('', '')
 
+def convert(item):
+    try:
+        item = itemlist[item]
+    except KeyError:
+        pass
+    except TypeError:
+        pass    
+    return item
+
 class Item:
-    def __init__(self, name, char, color):
-        self.name = name
-        self.char = char
-        self.color = color
-
-    def __str__(self):
-        return self.name
-
-class Potion(Item):
-    inventory = "potions"
-    def __init__(self, name, char, color, heal=10):
-        super().__init__(name, char, color)
-        self.heal = heal
-
-    def __repr__(self):
-        return "[Potion] {:<15}: HEAL={}:".format(self.name, self.heal)
-
-    def use(self, unit):
-        if unit.cur_health == unit.max_health:
-            pass
-            
-        else:
-            unit.cur_health = min(unit.cur_health + self.heal, unit.max_health)
-
-class Wearable:
     def __init__(self, name, char, color, effects, slots=None):
         self.__name = name
         self.char = char
@@ -141,106 +125,80 @@ class Wearable:
             for effect, value in self.effects)
 
     def equip(self, unit):
-        for effect, value in self.effects:
-            if hasattr(unit, effect):
-                stat = getattr(unit, effect)
-                print(effect, stat)
-                setattr(unit, effect, stat + value)
-                print(effect, stat + value)
-                unit.update_stat(effect)
+        # for effect, value in self.effects:
+        #     if hasattr(unit, effect):
+        #         stat = getattr(unit, effect)
+        #         print(effect, stat)
+        #         setattr(unit, effect, stat + value)
+        #         print(effect, stat + value)
+        #         unit.stat_update_final(effect)
+        pass
 
     def unequip(self, unit):
-        for effect, value in self.effects:
-            if hasattr(unit, effect):
-                stat = getattr(unit, effect)
-                print(effect, stat)
-                setattr(unit, effect, stat - value)
-                print(effect, stat - value)
-                unit.update_stat(effect)
+        # for effect, value in self.effects:
+        #     if hasattr(unit, effect):
+        #         stat = getattr(unit, effect)
+        #         print(effect, stat)
+        #         if len(stat) > 2:
+        #             setattr(unit, effect, (s - v for s, v in zip(stat, value)))
+        #         else:
+        #             setattr(unit, effect, stat - value)
+        #         print(effect, stat - value)
+        #         unit.stat_update_final(effect)
+        pass
+        
+class Potion(Item):
+    inventory = "potions"
+    def __init__(self, name, char, color, heal=10):
+        super().__init__(name, char, color)
+        self.heal = heal
 
-class Shoes(Wearable):
+    def __repr__(self):
+        return "[Potion] {:<15}: HEAL={}:".format(self.name, self.heal)
+
+    def use(self, unit):
+        if unit.cur_health == unit.max_health:
+            pass
+            
+        else:
+            unit.cur_health = min(unit.cur_health + self.heal, unit.max_health)
+
+class Shoes(Item):
     inventory = "shoes"
     placement = {"feet"}
     def __init__(self, name, char, color, effects=None):
         super().__init__(name, char, color, effects)
 
-class Ring(Wearable):
+class Ring(Item):
     inventory = "rings"
     placement = {"ring_left", "ring_right"}
 
     def __init__(self, name, char, color, effects=None):
         super().__init__(name, char, color, effects)
-
-    # def wear(self, unit, part):
-    #     if not part in self.placement:
-    #         '''Cannot equip to current part slot'''
-    #         return False
-
-    #     if getattr(unit, part):
-    #         '''Check if slot is empty'''
-    #         return False
-
-    #     # remove from inventory and place it on the unit equipment
-    #     unit.inventory_remove(self)
-    #     setattr(unit, part, self)
-
-    #     # run through the effect modifiers
-    #     for effect, value in self.effects:
-    #         attribute = getattr(unit, effect)
-    #         setattr(unit, effect, attribute + value)
-            
-    #     unit.calculate_stats()
-    #     return True
         
 class Armor(Item):
-    def __init__(self, name, char, color, placement, me_h, mi_h, dv, pv):
-        super().__init__(name, char, color)
-
+    def __init__(self, name, char, color, effects, placement):
+        super().__init__(name, char, color, effects)
         self.placement = placement
-        self.melee_hit = me_h
-        self.missile_hit = mi_h
-        self.defensive_value = dv
-        self.protection_value = pv
-
-    def __repr__(self):
-        return "[{} ] {:<15}: HIT=({}, {}), DEF=(DV: {}, PV: {})".format(
-            self.__class__.__name__,
-            self.name,
-            mark(self.melee_hit),
-            mark(self.missile_hit),
-            mark(self.defensive_value),
-            mark(self.protection_value))
-
-    def __str__(self):
-        return "{} ({}, {})[[{}, {}]]".format(
-            self.name,
-            mark(self.melee_hit),
-            mark(self.missile_hit),
-            mark(self.defensive_value),
-            mark(self.protection_value))
 
 class Weapon(Item):
-    def __init__(self, name, char, color, hands, accuracy, damage):
-        super().__init__(name, char, color)
-
+    inventory = "weapons"
+    placement = {"hand_left", "hand_right"}
+    def __init__(self, name, char, color, effects, hands):
+        super().__init__(name, char, color, effects)
         self.hands = hands
-        self.accuracy = accuracy
-        self.damage_lower, self.damage_higher = damage
 
-    def __repr__(self):
-        return "[{}] {:<15}: ACC={}, DMG=({}, {})".format(
-            self.__class__.__name__,
-            self.name,
-            mark(self.accuracy),
-            mark(self.damage_lower),
-            mark(self.damage_higher))
+    @property
+    def effects(self):
+        for effect, value in super().effects:
+            print('item.effects: eff, value', effect, value) 
+            if effect == 'dmg':
+                for effect, val in zip('dmg_lo dmg_hi'.split(), value):
+                    yield effect, val
 
-    def __str__(self):
-        return "{} ({}, [[{}, {}]])".format(
-            self.name,
-            mark(self.accuracy),
-            mark(self.damage_lower),
-            mark(self.damage_higher))
+    def seperate(self):
+        return ", ".join(f"{modify(effect)}: {mark(value)}" 
+            for effect, value in super().effects)
 
 itemlist = {
     # TODO -- implement shields
@@ -282,8 +240,7 @@ itemlist = {
     #     "[", "grey", "body", 0, 0, 0, 0),
     # "leather gloves": Armor("leather gloves",
     #     "[", "grey", "body", 0, 0, 0, 0),
-    # "long spear": Weapon("long spear", 
-    #     "(", "grey", 2, 2, (2, 6)),
+    "long spear": Weapon("long spear", "(", "grey", (("acc", 2), ("dmg", (2, 6))), hands=2),
     # "silver sword": Weapon("silver sword", 
     #     "(", "grey", 1, 1, (3, 7)),
     # "battle axe": Weapon("battle axe", 
@@ -304,8 +261,7 @@ itemlist = {
     #     "(", "grey", 1, -1, (3, 9)),
     # "warhammer": Weapon("warhammer", 
     #     "(", "grey", 2, -3, (8, 15)),
-    # "wooden staff": Weapon("wooden staff", 
-    #     "(", "grey", 2, -1, (4, 9)),
+    "wooden staff": Weapon("wooden staff", "(", "grey", (("acc", 3), ("dmg", (3, 5))), hands=2),
     # "quarterstaff": Weapon("quarterstaff", 
     #     "(", "grey", 2, -1, (4, 9)),
     
@@ -347,15 +303,6 @@ def check_item(classifier, item):
         print(itemlist[classifier][item])
     except KeyError:
         raise KeyError("Classifier or item name is wrong")
-
-def convert(item):
-    try:
-        item = itemlist[item]
-    except KeyError:
-        pass
-    except TypeError:
-        pass    
-    return item
 
 if __name__ == "__main__":
     get_all_items()

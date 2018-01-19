@@ -567,68 +567,68 @@ class Map:
     ###########################################################################
     # Output and Display Functions                                            #
     ###########################################################################
-    def output_return(self, player_x, player_y):
-        shorten_x = self.map_display_width > 66
-        shorten_y = self.map_display_height > 44
+    # def output_return(self, player_x, player_y):
+    #     shorten_x = self.map_display_width > 66
+    #     shorten_y = self.map_display_height > 44
 
-        # get camera location for x coordinate
-        cam_x = scroll(
-            player_x, 
-            self.map_display_width + (-14 if shorten_x else 0), 
-            self.width)
-        ext_x = cam_x + self.map_display_width + (-14 if shorten_x else 0)
+    #     # get camera location for x coordinate
+    #     cam_x = scroll(
+    #         player_x, 
+    #         self.map_display_width + (-14 if shorten_x else 0), 
+    #         self.width)
+    #     ext_x = cam_x + self.map_display_width + (-14 if shorten_x else 0)
         
-        # get camera location for y coordinate
-        cam_y = scroll(
-            player_y, 
-            self.map_display_height + (-6 if shorten_y else 0), 
-            self.height)
-        ext_y = cam_y + self.map_display_height + (-6 if shorten_y else 0)
+    #     # get camera location for y coordinate
+    #     cam_y = scroll(
+    #         player_y, 
+    #         self.map_display_height + (-6 if shorten_y else 0), 
+    #         self.height)
+    #     ext_y = cam_y + self.map_display_height + (-6 if shorten_y else 0)
 
-        positions = {}
-        if hasattr(self, 'units') and self.__units:
-            for unit in self.__units:
-                positions[unit.position] = unit
+    #     positions = {}
+    #     if hasattr(self, 'units') and self.__units:
+    #         for unit in self.__units:
+    #             positions[unit.position] = unit
 
-        ret = []
-        # width should total 80 units
-        for x in range(cam_x, ext_x):
-            # height should total 24/25 units
-            for y in range(cam_y, ext_y):
-                light_level = self.check_light_level(x, y)
-                if (x, y) == (player_x, player_y):
-                    char, color =  "@", "white"
-                    ret.append((x - cam_x, y - cam_y, color, char))
+    #     ret = []
+    #     # width should total 80 units
+    #     for x in range(cam_x, ext_x):
+    #         # height should total 24/25 units
+    #         for y in range(cam_y, ext_y):
+    #             light_level = self.check_light_level(x, y)
+    #             if (x, y) == (player_x, player_y):
+    #                 char, color =  "@", "white"
+    #                 ret.append((x - cam_x, y - cam_y, color, char))
 
-                elif light_level == 2:
-                    # print(player_x, player_y)
-                    # if (x, y) == (player_x, player_y):
-                    #     char, color =  "@", "white"
-                    if (x, y) in positions.keys():
-                        unit = positions[(x, y)]
-                        char, color = unit.character, unit.foreground
+    #             elif light_level == 2:
+    #                 # print(player_x, player_y)
+    #                 # if (x, y) == (player_x, player_y):
+    #                 #     char, color =  "@", "white"
+    #                 if (x, y) in positions.keys():
+    #                     unit = positions[(x, y)]
+    #                     char, color = unit.character, unit.foreground
 
-                    elif self.square(x, y).items:
-                        item = self.square(x, y).items[0]
-                        char, color = item.char, item.color
+    #                 elif self.square(x, y).items:
+    #                     item = self.square(x, y).items[0]
+    #                     char, color = item.char, item.color
 
-                    else:
-                        square = self.square(x, y)
-                        char, color = square.char, square.color
+    #                 else:
+    #                     square = self.square(x, y)
+    #                     char, color = square.char, square.color
 
-                    ret.append((x - cam_x, y - cam_y, color, char))
+    #                 ret.append((x - cam_x, y - cam_y, color, char))
 
-                elif light_level == 1:
-                    square = self.square(x, y)
-                    char, color = square.char, "darkest grey"
-                    ret.append((x - cam_x, y - cam_y, color, char))
+    #             elif light_level == 1:
+    #                 square = self.square(x, y)
+    #                 char, color = square.char, "darkest grey"
+    #                 ret.append((x - cam_x, y - cam_y, color, char))
 
-                else:
-                    # yield (x - cam_x, y - cam_y, "black", " ")
-                    continue
+    #             else:
+    #                 # yield (x - cam_x, y - cam_y, "black", " ")
+    #                 continue
 
-        self.lit_reset()
-        return ret
+    #     self.lit_reset()
+    #     return ret
 
     def output(self, player_x, player_y):
         # detect if map is smaller than usual
@@ -663,7 +663,7 @@ class Map:
                         char, color = unit.character, unit.foreground
 
                     elif self.square(x, y).items:
-                        item = self.square(x, y).items[0]
+                        item = self.square(x, y).items[-1]
                         char, color = item.char, item.color
 
                     else:
