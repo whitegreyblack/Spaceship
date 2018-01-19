@@ -351,16 +351,17 @@ GAME_TITLE_SHORT ='''
      Act I: Bones of the Ancestors
 '''[1:]
 
-command_switch_eq = "Press 'v' to switch to inventory."
-command_switch_iv = "Press 'q' to switch to equipment."
-command_unequip_confirm = "Are you sure you want to unequip the {}?"
-command_unequip = "You unequip the {}."
-command_equip_none = "No items to equip for that slot."
-command_equip = "You equip the {}."
-command_drop = "Which item to drop?"
-command_use  = "Which item to use?"
-command_save = "Save and exit game? (Y/N)"
-command_save_folder = 'saved folder does not exist - creating folder: "./saves"'
+cmd_switch_eq = "Press 'v' to switch to inventory."
+cmd_switch_iv = "Press 'q' to switch to equipment."
+cmd_unequip_confirm = "Are you sure you want to unequip the {}?"
+cmd_unequip = "You unequip the {}."
+cmd_equip_none = "No items to equip for that slot."
+cmd_equip = "You equip the {}."
+cmd_drop = "Which item to drop?"
+cmd_use  = "Which item to use?"
+cmd_save = "Save and exit game? (Y/N)"
+cmd_save_folder = 'saved folder does not exist - creating folder: "./saves"'
+cmd_inv_funcs = "What to do with the {}?"
 movement_wait_local = "You rest for a while."
 movement_wait_world = "You wait in the area."
 movement_move_error = "You cannot travel there."
