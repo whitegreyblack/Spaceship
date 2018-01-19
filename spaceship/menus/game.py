@@ -12,7 +12,7 @@ from .scene import Scene
 from screen_functions import *
 from action import commands_player
 from gamelog import GameLogger
-from ..classes.item import Ring, Potion, Armor, Weapon
+from ..classes.item import Ring, Potion, Armor, Weapon, sort
 from ..classes.wild import wilderness
 from ..classes.player import Player
 from ..classes.world import World
@@ -1218,13 +1218,23 @@ class Start(Scene):
                     draw_item_row(element.__str__())
                 index_row += 1
 
+        def draw_player_pickup(items):
+            self.draw_screen_header('Pickup Items')
+            for group, items in sort(items).items():
+                if group not in 'food others'.split():
+                    group = list(group + 's')
+                    group[0] = group[0].upper()
+                    group = "".join(group)
+                draw_item_grouping(group, items)
+
         def pickup_item(item):
-            nonlocal log
+            nonlocal log, update_items
             if self.player.item_add(item):
                 self.location.item_remove(*self.player.position, item)
                 log = "You pick up {} and place it in your backpack.".format(
                                                                     item.name)
                 log += " Your backpack feels heavier."
+                update_items = True
             else:
                 log = "Backpack is full. Cannot pick up {}.".format(item)
 
@@ -1241,22 +1251,34 @@ class Start(Scene):
         else:
             index_row, item_row = 0, 0
             update_items = False
-
+            self.clear_main_display()
+            draw_player_pickup(items)
             while True:
-                self.clear_main_display()
-                self.draw_screen_header('Pickup Items')
 
                 if log:
                     self.draw_log(log)
                     log = ""
                 
                 if update_items:
+                    index_row, item_row = 0, 0
+                    self.clear_main_display()
                     items = self.location.items_at(*self.player.position)
+                    draw_player_pickup(items)
+
+                    print('update', index_row, item_row)
+                    if not items:
+                        break
+
+                    update_items = False
+
 
                 term.refresh()
                 code = term.read()
-                break
-
+                if code == term.TK_ESCAPE:
+                    break
+                
+                elif term.TK_A <= code < term.TK_A + len(items):
+                    pickup_item(items[code - 4])
     '''
     Notes :- Dropping Items:
         Dropping items will always be dropped from inventory
@@ -1356,7 +1378,7 @@ class Start(Scene):
             if code == term.TK_ESCAPE:
                 break
 
-            elif term.TK_A <= code <= term.TK_A + len(items) - 1:
+            elif term.TK_A <= code < term.TK_A + len(items):
                 use_item(items[code - 4])
                 update_items = True
 
