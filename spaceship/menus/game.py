@@ -71,10 +71,10 @@ class Start(Scene):
         self.row_spacing = 2 if self.height > 25 else 1
         self.screen_col, self.screen_row = 1, 3
         self.status_col, self.status_row = 0, 1
-        self.display_offset_x, self.display_offset_y = 14, 0
+        self.main_offset_x, self.main_offset_y = 14, 0
         self.log_width, self.log_height = self.width, 2
-        self.display_width = self.width - self.display_offset_x
-        self.display_height = self.height - self.log_height
+        self.main_width = self.width - self.main_offset_x
+        self.main_height = self.height - self.log_height
 
     def run(self):  
         # self.reset_size()
@@ -157,8 +157,8 @@ class Start(Scene):
 
         for x, y, col, ch in self.location.output(x, y):
             term.puts(
-                x=x + self.display_offset_x,
-                y=y + self.display_offset_y,
+                x=x + self.main_offset_x,
+                y=y + self.main_offset_y,
                 s="[c={}]{}[/c]".format(col, ch))
 
         # sets the location name at the bottom of the status bar
@@ -174,32 +174,29 @@ class Start(Scene):
             if location:
                 term.bkcolor('dark grey')
                 term.puts(
-                    x=self.display_offset_x, 
+                    x=self.main_offset_x, 
                     y=0, 
-                    s=' ' * (self.width - self.display_offset_x))
+                    s=' ' * (self.width - self.main_offset_x))
                     
                 term.bkcolor('black')
                 location_offset = center(
                                     text=surround(location), 
-                                    width=self.width - self.display_offset_x)
+                                    width=self.width - self.main_offset_x)
                 term.puts(
-                    x=self.display_offset_x + location_offset,
+                    x=self.main_offset_x + location_offset,
                     y=0, 
                     s=surround(location))
 
     def draw_screen_header(self, header=None):
         '''Draws a line across the top of the window'''
         term.bkcolor('dark grey')
-        for i in range(self.width - self.display_offset_x):
-            term.puts(self.display_offset_x + i, 0, ' ')
+        for i in range(self.width - self.main_offset_x):
+            term.puts(self.main_offset_x + i, 0, ' ')
         term.bkcolor('black')
         if header:
             string = surround(header)
             term.puts(
-                center(
-                    string, 
-                    self.width + self.display_offset_x), 
-                0, string)
+                center(string, self.width + self.main_offset_x), 0, string)
                 
     def draw_status(self):
         '''Handles player status screen'''
@@ -221,11 +218,11 @@ class Start(Scene):
                 y=self.screen_row, 
                 s=column)
 
-    def clear_main_display(self):
+    def clear_main(self):
         term.clear_area(
-            self.display_offset_x, 
+            self.main_offset_x, 
             0, 
-            self.width - self.display_offset_x,
+            self.width - self.main_offset_x,
             self.height - self.log_height - 1)
 
     def clear_item_box(self):
@@ -254,14 +251,14 @@ class Start(Scene):
 
             letter = chr(ord('a') + index)
             term.puts(
-                x=self.screen_col + self.display_offset_x,
+                x=self.screen_col + self.main_offset_x,
                 y=self.screen_row + index * self.row_spacing,
                 s=letter + body + item)
 
     def draw_item_header(self, item_header):
         '''Handles drawing of the item grouping header'''
         term.puts(
-            x=self.screen_col + self.display_offset_x,
+            x=self.screen_col + self.main_offset_x,
             y=self.screen_row + self.index_row * self.row_spacing,
             s=item_header)
         self.index_row += 1
@@ -270,7 +267,7 @@ class Start(Scene):
         '''Handles drawing the list of an item group to the screen'''
         letter = chr(ord('a') + self.item_row) + ". "
         term.puts(
-            x=self.screen_col + self.display_offset_x,
+            x=self.screen_col + self.main_offset_x,
             y=self.screen_row + self.index_row * self.row_spacing,
             s=letter + item_desc) 
         self.index_row += 1
@@ -299,8 +296,8 @@ class Start(Scene):
             term.puts(
                 x=center(
                     'Nothing in your inventory', 
-                    self.width - self.display_offset_x) + 
-                    self.display_offset_x,
+                    self.width - self.main_offset_x) + 
+                    self.main_offset_x,
                 y=3,
                 s='Nothing in your inventory')
 
@@ -332,15 +329,15 @@ class Start(Scene):
         term.puts(
             x=center(
                 log, 
-                self.width - self.display_offset_x) + self.display_offset_x, 
+                self.width - self.main_offset_x) + self.main_offset_x, 
                 y=self.height - 5, 
                 s=log)
 
     def clear_screen_log(self):
         term.clear_area(
-            self.display_offset_x, 
+            self.main_offset_x, 
             self.height - 5, 
-            self.width - self.display_offset_x, 
+            self.width - self.main_offset_x, 
             2)
 
     def draw_item_border(self):
@@ -389,7 +386,7 @@ class Start(Scene):
 
             else:
                 while True:
-                    self.clear_main_display()
+                    self.clear_main()
                     self.draw_inventory(items)
 
                     if log:
@@ -417,7 +414,7 @@ class Start(Scene):
         update_status = False
         items = [item for _, inv in self.player.inventory for item in inv]
 
-        self.clear_main_display()
+        self.clear_main()
         if current_screen == "q":
             self.draw_equipment()
             draw_eq_inv_switch()
@@ -432,7 +429,7 @@ class Start(Scene):
                 log = ""
 
             if update_status:
-                self.clear_main_display()
+                self.clear_main()
                 self.draw_status()
                 update_status = False
 
@@ -670,8 +667,8 @@ class Start(Scene):
                             unit.cur_hp -= damage
 
                             term.puts(
-                                x=tx + self.display_offset_x, 
-                                y=ty + self.display_offset_y, 
+                                x=tx + self.main_offset_x, 
+                                y=ty + self.main_offset_y, 
                                 s='[c=red]{}[/c]'.format(damage if damage <= 9 else '*'))
                             term.refresh()
 
@@ -767,8 +764,8 @@ class Start(Scene):
                                 unit.cur_hp -= damage
                                 
                                 term.puts(
-                                    x=tx + self.display_offset_x, 
-                                    y=ty + self.display_offset_y, 
+                                    x=tx + self.main_offset_x, 
+                                    y=ty + self.main_offset_y, 
                                     s='[c=red]{}[/c]'.format(damage if damage <= 9 else '*'))
                                 term.refresh()
 
@@ -1202,35 +1199,6 @@ class Start(Scene):
         pass
 
     def action_item_pickup(self):
-        # def draw_item_header(item_header):
-        #     '''Handles drawing of the item grouping header'''
-        #     nonlocal index_row
-        #     term.puts(
-        #         x=self.screen_col + self.display_offset_x,
-        #         y=self.screen_row + index_row * self.row_spacing,
-        #         s=item_header)
-        #     index_row += 1
-
-        # def draw_item_row(item_desc):
-        #     '''Handles drawing the list of an item group to the screen'''
-        #     nonlocal index_row, item_row
-        #     letter = chr(ord('a') + item_row) + ". "
-        #     term.puts(
-        #         x=self.screen_col + self.display_offset_x,
-        #         y=self.screen_row + index_row * self.row_spacing,
-        #         s=letter + item_desc) 
-        #     index_row += 1
-        #     item_row += 1
-
-        # def draw_item_grouping(header, container):
-        #     '''Handler to determine if we need to draw items or not'''
-        #     nonlocal index_row, item_row
-        #     if container:
-        #         draw_item_header("   __" + header + "__")
-        #         for element in container:
-        #             draw_item_row(element.__str__())
-        #         index_row += 1
-
         def pickup_item(item):
             nonlocal log, update_items
             if self.player.item_add(item):
@@ -1258,7 +1226,7 @@ class Start(Scene):
 
             else:
                 self.index_row, self.item_row = 0, 0
-                self.clear_main_display()
+                self.clear_main()
                 self.draw_pickup(items)
 
                 while True:
@@ -1275,7 +1243,7 @@ class Start(Scene):
                         if not items:
                             break
 
-                        self.clear_main_display()
+                        self.clear_main()
                         self.draw_pickup(items)
 
 
@@ -1298,7 +1266,7 @@ class Start(Scene):
             term.puts(
                 x=center(
                     strings.cmd_drop, 
-                    self.width - self.display_offset_x) + self.display_offset_x,
+                    self.width - self.main_offset_x) + self.main_offset_x,
                 y=self.height - 5,
                 s=strings.cmd_drop)
 
@@ -1322,7 +1290,7 @@ class Start(Scene):
                 items = [item for _, inv in self.player.inventory for item in inv]
                 update_items = False
 
-            self.clear_main_display()
+            self.clear_main()
             self.draw_inventory(items)
 
             if items:
@@ -1350,7 +1318,7 @@ class Start(Scene):
             term.puts(
                 x=center(
                     strings.cmd_use, 
-                    self.width - self.display_offset_x) + self.display_offset_x,
+                    self.width - self.main_offset_x) + self.main_offset_x,
                 y=self.height - 5,
                 s=strings.cmd_use)
 
@@ -1370,7 +1338,7 @@ class Start(Scene):
                 items = list(self.player.inventory)
                 update_items = False
 
-            self.clear_main_display()
+            self.clear_main()
             self.draw_inventory(items)
 
             if items:
