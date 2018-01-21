@@ -1200,13 +1200,12 @@ class Start(Scene):
 
     def action_item_pickup(self):
         def pickup_item(item):
-            nonlocal log, update_items
+            nonlocal log
             if self.player.item_add(item):
                 self.location.item_remove(*self.player.position, item)
                 log = "You pick up {} and place it in your backpack.".format(
                                                                     item.name)
                 log += " Your backpack feels heavier."
-                update_items = True
 
             else:
                 log = "Backpack is full. Cannot pick up {}.".format(item)
@@ -1262,17 +1261,9 @@ class Start(Scene):
         Then the player may drop the item from there
     '''
     def action_item_drop(self):
-        def draw_eq_drop():
-            term.puts(
-                x=center(
-                    strings.cmd_drop, 
-                    self.width - self.main_offset_x) + self.main_offset_x,
-                y=self.height - 5,
-                s=strings.cmd_drop)
-
         def drop_item(item):
             nonlocal log
-            self.player.item_drop(item)
+            self.player.item_remove(item)
             self.location.item_add(*self.player.position, item)
             if hasattr(item, 'name'):
                 item_name = item.name
@@ -1286,15 +1277,11 @@ class Start(Scene):
         items = [item for _, inv in self.player.inventory for item in inv]
 
         while True:
-            if update_items:
-                items = [item for _, inv in self.player.inventory for item in inv]
-                update_items = False
-
             self.clear_main()
             self.draw_inventory(items)
 
             if items:
-                draw_eq_drop()
+                self.draw_screen_log(strings.cmd_drop)
 
             if log:
                 self.draw_log(log)
@@ -1308,36 +1295,31 @@ class Start(Scene):
 
             elif term.TK_A <= code < term.TK_A + len(items):
                 drop_item(items.pop(code - 4))
-                update_items = True
+                items = [item for _, inv in self.player.inventory 
+                            for item in inv]
 
             else:
                 log = ""
 
     def action_item_use(self):
         def draw_eq_use():
-            term.puts(
-                x=center(
-                    strings.cmd_use, 
-                    self.width - self.main_offset_x) + self.main_offset_x,
-                y=self.height - 5,
-                s=strings.cmd_use)
+            self.draw_screen_log(strings.cmd_use)
 
         def use_item(item):
             nonlocal log
-            item = self.player.inventory_use(item)
-            item.use(self.player)
-            log = "You use the {}".format(item.name)
-            log += " Your backpack feels lighter."
+            print('ITEM', item)
+            self.player.item_use(item)
+            if hasattr(item, 'name'):
+                item_name = item.name
+            else:
+                item_name = item
+            log = "You use the {}.".format(item_name)
 
         log = ""
         update_items = False
         items = [item for _, inv in self.player.inventory for item in inv]
 
         while True:
-            if update_items:
-                items = list(self.player.inventory)
-                update_items = False
-
             self.clear_main()
             self.draw_inventory(items)
 
@@ -1355,7 +1337,8 @@ class Start(Scene):
 
             elif term.TK_A <= code < term.TK_A + len(items):
                 use_item(items[code - 4])
-                update_items = True
+                items = [item for _, inv in self.player.inventory 
+                            for item in inv]
 
             else:
                 log = ""

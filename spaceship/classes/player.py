@@ -165,7 +165,8 @@ class Player(Unit):
     def profile_save_path(self):
         name = self.name.replace(' ', '_')
         desc = name + " " + self.job
-        self.desc = name + "(" + str(abs(hash(desc))) + ")"
+        hash_desc = str(abs(hash(desc)))
+        self.desc = name + "(" + hash_desc + ")"
 
     def profile(self):
         return (profile[0].format(
@@ -234,8 +235,12 @@ class Player(Unit):
     def item_add(self, item):
         return self.__inventory.add(item)
 
-    def item_drop(self, item):
-        return self.__inventory.remove(item)
+    def item_remove(self, item):
+        self.__inventory.remove(item)
+
+    def item_use(self, item):
+        self.item_remove(item)
+        print('used item', {})
 
     def initialize_base_stats(self) -> None:
         self.str, self.con, self.dex, self.int, self.wis, self.cha = \
@@ -297,7 +302,7 @@ class Player(Unit):
 
     def calculate_accuracy(self) -> int:
         '''Returns 0 for miss, 1 for regular hit, 2 for critical'''
-        for var in ('acc', 'dmg_lo', 'dmg_hi'):
+        for var in ('acc dmg_lo dmg_hi'):
             if not hasattr(self, var):
                 raise AttributeError("Attack Variables not set")
 
