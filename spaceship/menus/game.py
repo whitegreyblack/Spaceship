@@ -1233,7 +1233,7 @@ class Start(Scene):
                         log = ""
                 
                     term.refresh()
-                    code = term.read()
+                    code = term.rfromead()
                     if code == term.TK_ESCAPE:
                         break
                     

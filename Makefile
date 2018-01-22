@@ -54,6 +54,9 @@ run:
 	# python -m spaceship.start
 	python -m spaceship.engine
 
+run-mem:
+	python -m memory_profiler spaceship\engine.py
+	
 check-classes:
 	python -m spaceship.classes.color
 	python -m spaceship.classes.tile

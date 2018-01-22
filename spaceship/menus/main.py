@@ -126,7 +126,8 @@ class Main(Scene):
         # key press on Q or enter on QUIT
         elif code == term.TK_Q or (code == term.TK_ENTER and self.index == 3):
             self.proceed = False
-
+            self.ret['scene'] = 'exit_desktop'
+            
         # KEYS (UP, DOWN)
         elif code in (term.TK_UP, term.TK_DOWN):
             if code == term.TK_UP:

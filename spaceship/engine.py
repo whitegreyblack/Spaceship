@@ -1,13 +1,13 @@
-import os
-import sys
+# import os
+# import sys
 from bearlibterminal import terminal as term
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
-from .menus.main import Main
-from .menus.options import Options
-from .menus.game import Start
-from .menus.load import Continue
-from .menus.make import Create
-from .menus.name import Name
+# sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
+from spaceship.menus.main import Main
+from spaceship.menus.options import Options
+from spaceship.menus.game import Start
+from spaceship.menus.load import Continue
+from spaceship.menus.make import Create
+from spaceship.menus.name import Name
 
 class GameEngine:
     def __init__(self):
@@ -24,6 +24,9 @@ class GameEngine:
         }
         
         self.scene = self.scenes['main_menu']
+
+    def __del__(self):
+        term.close()
 
     def setup(self):
         '''sets up instance of terminal'''
