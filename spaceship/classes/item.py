@@ -174,7 +174,7 @@ class Ring(Item):
         super().__init__(name, char, color, effects)
         
 class Armor(Item):
-    def __init__(self, name, char, color, effects, placement):
+    def __init__(self, name, char, color, placement, effects):
         super().__init__(name, char, color, effects)
         self.placement = placement
 
@@ -188,7 +188,6 @@ class Weapon(Item):
     @property
     def effects(self):
         for effect, value in super().effects:
-            print('item.effects: eff, value', effect, value) 
             if effect == 'dmg':
                 for effect, val in zip('dmg_lo dmg_hi'.split(), value):
                     yield effect, val
@@ -201,18 +200,15 @@ itemlist = {
     # TODO -- implement shields
     # TODO -- implement ranged weapons
     # TODO -- implement readable items: scrolls, tomes
-    # "horned helmet": Armor("horned helmet", 
+    "horned helmet": Armor("horned helmet", "[", "grey", "head", 
+        (("dv", 1), ("str", 1))),
+    # "metal helmet": Armor("metal helmet",
     #     "[", "grey", "head", 1, 0, 0, 1),
-    # "metal helmet": Armor("metal helmet", 
-    #     "[", "grey", "head", 1, 0, 0, 1),
-    # "leather cap": Armor("leather cap", 
-    #     "[", "grey", "head", 0, 0, 0, 0),
+    "leather cap": Armor("leather cap", "[", "grey", "head", (("dv", 1),)),
     # "cloth hood": Armor("cloth hood",
     #     "[", "grey", "head", 1, 0, 0, 1),
-    # "gold necklace": Armor("gold necklace", 
-    #     "'", "yellow", "neck", 0, 0, 0, 0),
-    # "holy symbol": Armor("holy_symbol", "'", 
-    #     "white", "neck", 0, 0, 0, 0),
+    "gold necklace": Armor("gold necklace", "'", "yellow", "neck", (("cha", 2),)),
+    "holy symbol": Armor("holy_symbol", "'", "white", "neck", (("wis", 2),)),
     # "whistle": Armor("whistle", "'", "grey", 
     #     "neck", 0, 0, 0, 0),
     # "amulet of power": Armor("amulet of power", 
@@ -221,16 +217,14 @@ itemlist = {
     #     "[", "blue", "body", 2, 1, 1, 1),
     # "metal armor": Armor("metal armor", 
     #     "[", "grey", "body", 1, 1, 0, 1),  
-    # "thick fur coat": Armor("thick fur coat", 
-    #     "[", "grey", "body", 0, 0, 0, 0),
+    "thick fur coat": Armor("thick fur coat", "[", "grey", "body", (("dv", 2),)),
     # "light robe": Armor("light robe", 
     #     "[", "grey", "body", 0, 0, 0, 0),
     # "heavy cloak":  Armor("heavy cloak", 
     #     "[", "grey", "body", 0, 0, 0, 0),
     # "leather armor": Armor("leather armor", 
     #     "[", "grey", "body", 0, 0, 0, 0),
-    # "thick fur bracers": Armor("thick fur bracers", 
-    #     "[", "grey", "body", 0, 0, 0, 0),
+    "thick fur bracers": Armor("thick fur bracers", "[", "grey", "body", (("dv", 1),)),
     # "leather bracers": Armor("leather bracers", 
     #     "[", "grey", "body", 0, 0, 0, 0),
     # "cloth gloves": Armor("cloth gloves",
@@ -277,11 +271,11 @@ itemlist = {
     # "ring of resistance": None,
     # "ring of darkness": None,
     # "storm ring": None,
-    # "leather belt": Armor("leather belt", "[", "green", "waist", 0, 0, 0, 1),
+    "leather belt": Armor("leather belt", "[", "green", "waist", (("dv", 1),)),
     # "rope belt": Armor("rope belt", "[", "green", "waist", 0, 0, 1, 0),
     # "common pants": Armor("common pants", "[", "green", "legs", 0, 0, 0, 0),
 
-    # "leather boots": Shoes("leather boots", "[", "green", (("sp", 10),)),
+    "leather boots": Shoes("leather boots", "[", "green", (("dv", 1),)),
     # "metal boots": Armor("metal boots", "[", "grey", "feet", 0, 0, 0, 0),
     # "sandals": Armor("sandals", "[", "green", "feet", 0, 0, 0, 0),
     # tome, spellbook, scrolls

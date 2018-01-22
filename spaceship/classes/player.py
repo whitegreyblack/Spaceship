@@ -251,8 +251,8 @@ class Player(Unit):
                                                             self.job_bonus))
 
         self.hp, self.mp, self.sp = 0, 0, 0
-
-        for stat in ('str con dex int wis cha hp mp sp'.split()):
+        self.dv = 0
+        for stat in ('str con dex int wis cha hp mp sp dv'.split()):
             setattr(self, modattr(stat), 0)
             setattr(self, totattr(stat), 0)
     

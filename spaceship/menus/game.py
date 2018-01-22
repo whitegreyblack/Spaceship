@@ -302,7 +302,7 @@ class Start(Scene):
                 s='Nothing in your inventory')
 
         else:
-            for header, items in list(self.player.inventory):
+            for header, items in list(sort(items).items()):
                 self.draw_item_grouping(header, items)
 
     def draw_pickup(self, items):
@@ -388,9 +388,11 @@ class Start(Scene):
                 while True:
                     self.clear_main()
                     self.draw_inventory(items)
-
+                    
                     if log:
-                        self.draw_log(log)
+                        self.draw_screen_log(log)
+                    else:
+                        self.draw_screen_log(strings.cmd_equip_query)
 
                     term.refresh()
 
@@ -399,8 +401,8 @@ class Start(Scene):
                         self.clear_screen_log()
                         break
 
-                    elif term.TK_1 <= selection < term.TK_1 + len(items):
-                        item = items[selection - term.TK_1]
+                    elif term.TK_A <= selection < term.TK_A + len(items):
+                        item = items[selection - term.TK_A]
                         self.player.equip(part, item)
                         log = strings.cmd_equip.format(item)
                         update_status = True
