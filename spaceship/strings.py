@@ -60,11 +60,11 @@ status = '''
  DMG: {:>6}
 
  STR: [c={}]{:>6}[/c]
- CON: {:>6}
- DEX: {:>6}
- INT: {:>6}
- WIS: {:>6}
- CHA: {:>6}
+ CON: [c={}]{:>6}[/c]
+ DEX: [c={}]{:>6}[/c]
+ INT: [c={}]{:>6}[/c]
+ WIS: [c={}]{:>6}[/c]
+ CHA: [c={}]{:>6}[/c]
 
  GOLD: {:>5}
  TURNS: {:>4}
@@ -363,6 +363,9 @@ cmd_drop_item = "You drop the {}."
 cmd_use_none = "You have no items in your inventory that are usable."
 cmd_use_query = "Which item to use?"
 cmd_use_item = "You use the {}."
+cmd_eat_query = "Which item to eat?"
+cmd_eat_none = "You do not have anything to eat."
+cmd_eat_item = "You eat the {}."
 cmd_save = "Save and exit game? (Y/N)"
 cmd_save_folder = 'saved folder does not exist - creating folder: "./saves"'
 cmd_inv_funcs = "What to do with the {}?"

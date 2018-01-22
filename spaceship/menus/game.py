@@ -63,6 +63,7 @@ class Start(Scene):
                 ',': self.action_item_pickup,
                 'd': self.action_item_drop,
                 'u': self.action_item_use,
+                'e': self.action_item_eat,
                 't': self.action_unit_talk,
             },
         }
@@ -1297,9 +1298,6 @@ class Start(Scene):
                 log = ""
 
     def action_item_use(self):
-        def draw_use():
-            self.draw_screen_log(strings.cmd_use_query)
-
         def use_item(item):
             nonlocal log
             self.player.item_use(item)
@@ -1308,17 +1306,18 @@ class Start(Scene):
             else:
                 item_name = item
             log = strings.cmd_use_item.format(item_name)
-
+        
         log = ""
-        update_items = False
-        items = [item for inv in self.player.inventory_use() for item in inv]
+        items = list(self.player.inventory_prop('use'))
 
         while True:
             self.clear_main()
             self.draw_inventory(items, strings.cmd_use_none)
 
             if items:
-                draw_use()
+                self.draw_screen_log(strings.cmd_use_query)
+            else:
+                self.draw_screen_log(strings.cmd_use_none)
 
             if log:
                 self.draw_log(log)
@@ -1331,16 +1330,50 @@ class Start(Scene):
 
             elif term.TK_A <= code < term.TK_A + len(items):
                 use_item(items[code - 4])
-                items = [item for _, inv in self.player.inventory 
-                            for item in inv]
+                items = list(self.player.inventory_prop('use'))
+                self.draw_status()
 
             else:
                 log = ""
 
     def action_item_eat(self):
-        def draw_eat():
-            self.draw_screen_log(strings.cmd_eat)
-        pass
+        def eat_item(item):
+            nonlocal log
+            self.player.item_eat(item)
+            if hasattr(item, 'name'):
+                item_name = item.name
+            else:
+                item_name = item
+            log = strings.cmd_eat_item.format(item_name)
+            
+        log = ""
+        items = list(self.player.inventory_prop('eat'))
+
+        while True:
+            self.clear_main()
+            self.draw_inventory(items, strings.cmd_use_none)
+
+            if items:
+                self.draw_screen_log(strings.cmd_eat_query)
+            else:
+                self.draw_screen_log(strings.cmd_eat_none)
+
+            if log:
+                self.draw_log(log)
+
+            term.refresh()
+
+            code = term.read()
+            if code == term.TK_ESCAPE:
+                break
+                
+            elif term.TK_A <= code < term.TK_A + len(items):
+                eat_item(items[code - 4])
+                items = list(self.player.inventory_prop('eat'))
+                self.draw_status()
+            
+            else:
+                log = ""
 
 if __name__ == "__main__":
     from .make import Create

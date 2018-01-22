@@ -9,11 +9,12 @@ class WildernessCharmap:
     HILLS=charmap(["~"], ("#994C00", "#9A8478"))
 
 class DungeonCharmap:
-    GRASS=charmap([",", ";"], ("#56ab2f", "#a8e063"))
+    # GRASS=charmap([",", ";"], ("#56ab2f", "#a8e063"))
+    GRASS=charmap([",", ";"], ("#008800", "#008800"))
     HOUSE=charmap(["="], ("#ffffff", "#ffffff"))
     TILES=charmap(["."], ("#C0C0C0", "#C0C0C0"))
     # TILES=charmap(["."], ("#404040", "#404040"))
-    WALLS=charmap(["#"], ("#656565", "#656565"))
+    WALLS=charmap(["#"], ("#444444", "#656565"))
     WATER=charmap(["~"], ("#43C6AC", "#191654"))
     DOORS=charmap(["+"], ("#994C00", "#994C00"))
     PLANT=charmap(["|"], ("#F3E347", "#24FE41"))

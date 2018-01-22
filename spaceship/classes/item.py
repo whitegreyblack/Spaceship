@@ -258,6 +258,7 @@ itemlist = {
     # "medium health potion": Potion("medium health potion", "!", "red", 20),
     # "large health potion": Potion("large health potion", "!", "red", 30),
     # "small shield potion": Potion("small shield potion", "!", "blue", 10),
+    "berry": Food("berry", "%", "blue", (("hp", 1), )),
 }
 
 def get_all_items():

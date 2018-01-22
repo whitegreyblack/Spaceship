@@ -96,15 +96,15 @@ class Inventory(list):
         super().__init__()
         self.extend([convert(item) for item in items])
 
-    # def by_type(self, part):
-    #     for item in self:
-    #         if hasattr(item, 'placement') and part in item.placement:
-    #             yield item
+    def by_type(self, part):
+        for item in self:
+            if hasattr(item, 'placement') and part in item.placement:
+                yield item
 
-    # def by_property(self, prop):
-    #     for item in self:
-    #         if hasattr(item, prop):
-    #             yield item
+    def by_prop(self, prop):
+        for item in self:
+            if hasattr(item, prop):
+                yield item
 
     def add(self, item):
         if len(self) <= 25:
@@ -121,12 +121,6 @@ class Inventory(list):
                 group[0] = group[0].upper()
                 group = "".join(group)
             yield group, items
-
-    # def food(self):
-    #     for group, items in self.items:
-    #         if group == "food":
-    #             return group, items
-    #     return None, None
 
 # Player should inherit from unit just so during main game loop
 # the player class can be accessed in the same way as other units
@@ -203,11 +197,11 @@ class Player(Unit):
             "{}/{}".format(self.cur_mp, self.tot_mp),
             "{}-{}".format(self.tot_dmg_lo, self.tot_dmg_hi),
             overloaded("str"), self.tot_str,
-            self.tot_con, 
-            self.tot_dex, 
-            self.tot_int, 
-            self.tot_wis, 
-            self.tot_cha,
+            overloaded("con"), self.tot_con, 
+            overloaded("dex"), self.tot_dex, 
+            overloaded("int"), self.tot_int, 
+            overloaded("wis"), self.tot_wis, 
+            overloaded("cha"), self.tot_cha,
             self.gold)
 
     @property
@@ -253,16 +247,9 @@ class Player(Unit):
         for item in self.__inventory.by_type(part):
             yield item
 
-    def inventory_use(self, prop='use'):
-        for _, items in self.inventory:
-            for item in items:
-                if hasattr(item, 'use'):
-                    yield item
-
-    def inventory_food(self):
-        for group, items in self.__inventory.food:
-            if group == "food":
-                yield items
+    def inventory_prop(self, prop):
+        for item in self.__inventory.by_prop(prop):
+            yield item
 
     def item_add(self, item):
         return self.__inventory.add(item)
@@ -273,6 +260,10 @@ class Player(Unit):
     def item_use(self, item):
         self.item_remove(item)
         print('used item', {})
+
+    def item_eat(self, item):
+        self.item_remove(item)
+        print('ate item', {})
 
     def initialize_base_stats(self) -> None:
         self.str, self.con, self.dex, self.int, self.wis, self.cha = \
@@ -290,7 +281,6 @@ class Player(Unit):
         for stat in 'acc dmg_lo dmg_hi'.split():
             for stat in (stat, modattr(stat), totattr(stat)):
                 setattr(self, stat, 0)
-                print(stat, getattr(self, stat))
 
         self.acc, self.dmg_lo, self.dmg_hi = 0, 1, 2
 
@@ -350,7 +340,6 @@ class Player(Unit):
             return 1
 
     def calculate_attack_damage(self) -> int:
-        print(self.tot_dmg_lo, self.tot_dmg_hi)
         return randint(self.tot_dmg_lo, self.tot_dmg_hi) # + max(self.str, self.dex)
 
     def gain_exp(self, exp: int) -> None:
