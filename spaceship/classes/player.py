@@ -101,6 +101,11 @@ class Inventory(list):
             if hasattr(item, 'placement') and part in item.placement:
                 yield item
 
+    def by_property(self, prop):
+        for item in self:
+            if hasattr(item, prop):
+                yield item
+
     def add(self, item):
         if len(self) <= 25:
             self.append(item)
@@ -116,6 +121,12 @@ class Inventory(list):
                 group[0] = group[0].upper()
                 group = "".join(group)
             yield group, items
+
+    def food(self):
+        for group, items in self.items:
+            if group == "food":
+                return group, items
+        return None, None
 
 # Player should inherit from unit just so during main game loop
 # the player class can be accessed in the same way as other units
@@ -230,6 +241,14 @@ class Player(Unit):
 
     def inventory_type(self, part):
         for item in self.__inventory.by_type(part):
+            yield item
+
+    def inventory_use(self, part):
+        for item in self.__inventory.by_property('use'):
+            yield item
+
+    def inventory_food(self):
+        for item in self.__inventory.food:
             yield item
 
     def item_add(self, item):

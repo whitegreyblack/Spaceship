@@ -99,13 +99,13 @@ class Create(Scene):
                               "leather boots")),
 
             classes("Cleric", strings.CLERIC,
-                    equipment("hood", "holy symbol", "light robe", "", "",
+                    equipment("cloth hood", "holy symbol", "light robe", "", "",
                               "mace", "small shield", "ring of power",
                               "ring of light", "rope belt", "",
                               "leather sandals")),
 
             classes("Archer", strings.ARCHER,
-                    equipment("hood", "whistle", "heavy cloak",
+                    equipment("cloth hood", "whistle", "heavy cloak",
                               "leather bracers", "cloth gloves", "short bow",
                               "", "", "", "leather belt", "common pants",
                               "leather boots")),

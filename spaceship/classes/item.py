@@ -54,11 +54,11 @@ def curattr(effect):
     return "cur_" + effect
     
 def sort(items):
+    # weapons, armors, potions, rings, food, others = [], [], [], [], []
+    # seperate each item into its own grouping
     groups = {
         g: [] for g in "weapon armor potion ring food others".split()
     }
-    # weapons, armors, potions, rings, food, others = [], [], [], [], []
-    # seperate each item into its own grouping
     for item in items:
         try:
             group = groups[item.__class__.__name__.lower()]
@@ -77,6 +77,9 @@ def mark(value: int) -> str:
 
 def modify(value: str) -> str:
     return value.replace('', '')
+
+def seperate(effects):
+    return ", ".join(f"{modify(e)}: {mark(v)}" for e, v in effects)
 
 def convert(item):
     try:
@@ -98,10 +101,10 @@ class Item:
             self.inventory, self.placement = slots
 
     def __str__(self):
-        return f"{self.name} ({self.seperate()})"
+        return f"{self.name} ({seperate(self.effects)})"
 
     def __repr__(self):
-        return f"{self.name} ({self.seperate()})"
+        return f"{self.name} ({seperate(self.effects)})"
 
     @property
     def name(self):
@@ -112,35 +115,9 @@ class Item:
         for effect, value in self.__effects:
             yield effect, value
 
-    def seperate(self):
-        return ", ".join(f"{modify(effect)}: {mark(value)}" 
-            for effect, value in self.effects)
-
-    def equip(self, unit):
-        # for effect, value in self.effects:
-        #     if hasattr(unit, effect):
-        #         stat = getattr(unit, effect)
-        #         print(effect, stat)
-        #         setattr(unit, effect, stat + value)
-        #         print(effect, stat + value)
-        #         unit.stat_update_final(effect)
-        pass
-
-    def unequip(self, unit):
-        # for effect, value in self.effects:
-        #     if hasattr(unit, effect):
-        #         stat = getattr(unit, effect)
-        #         print(effect, stat)
-        #         if len(stat) > 2:
-        #             setattr(unit, effect, (s - v for s, v in zip(stat, value)))
-        #         else:
-        #             setattr(unit, effect, stat - value)
-        #         print(effect, stat - value)
-        #         unit.stat_update_final(effect)
-        pass
-
 class Food(Item):
-    inventory = "foods"
+    inventory = "food"
+    placement = None
     def __init__(self, name, char, color, effects=None):
         super().__init__(name, char, color, effects)
 
@@ -154,11 +131,8 @@ class Potion(Item):
         return "[Potion] {:<15}: HEAL={}:".format(self.name, self.heal)
 
     def use(self, unit):
-        if unit.cur_health == unit.max_health:
-            pass
-            
-        else:
-            unit.cur_health = min(unit.cur_health + self.heal, unit.max_health)
+        for effect, value in self.effects:
+            yield effect, value
 
 class Shoes(Item):
     inventory = "shoes"
@@ -205,8 +179,7 @@ itemlist = {
     # "metal helmet": Armor("metal helmet",
     #     "[", "grey", "head", 1, 0, 0, 1),
     "leather cap": Armor("leather cap", "[", "grey", "head", (("dv", 1),)),
-    # "cloth hood": Armor("cloth hood",
-    #     "[", "grey", "head", 1, 0, 0, 1),
+    "cloth hood": Armor("cloth hood", "[", "grey", "head", (("dv", 1), )),
     "gold necklace": Armor("gold necklace", "'", "yellow", "neck", (("cha", 2),)),
     "holy symbol": Armor("holy_symbol", "'", "white", "neck", (("wis", 2),)),
     # "whistle": Armor("whistle", "'", "grey", 
@@ -218,8 +191,7 @@ itemlist = {
     # "metal armor": Armor("metal armor", 
     #     "[", "grey", "body", 1, 1, 0, 1),  
     "thick fur coat": Armor("thick fur coat", "[", "grey", "body", (("dv", 2),)),
-    # "light robe": Armor("light robe", 
-    #     "[", "grey", "body", 0, 0, 0, 0),
+    "light robe": Armor("light robe", "[", "grey", "body", (("dv", 1),)),
     # "heavy cloak":  Armor("heavy cloak", 
     #     "[", "grey", "body", 0, 0, 0, 0),
     # "leather armor": Armor("leather armor", 

@@ -354,20 +354,11 @@ class Start(Scene):
         term.bkcolor('black')
         
     def draw_screens(self, key):
-        def draw_eq_inv_switch():
-            '''Draws message to switch to inventory'''
-            self.draw_screen_log(strings.cmd_switch_eq)
-
-        def draw_inv_eq_switch():
-            '''Draws message to switch to equipment'''
-            self.draw_screen_log(strings.cmd_switch_iv)
-
-        def draw_inv_item_funcs(item):
-            self.draw_screen_log(strings.cmd_inv_funcs.format(item))
 
         def unequip_item(code):
             nonlocal log, update_status
-            self.draw_unequip_confirm(item)
+            string = strings.cmd_unequip_confirm.format(item)
+            term.puts(x=center(string, self.width), y=self.height - 5, s=string)
             term.refresh()
 
             confirm = term.read()
@@ -380,7 +371,7 @@ class Start(Scene):
         def equip_item(part):
             nonlocal log, update_status
             items = list(self.player.inventory_type(part))
-
+            
             if not items:
                 log = strings.cmd_equip_none
 
@@ -419,11 +410,11 @@ class Start(Scene):
         self.clear_main()
         if current_screen == "q":
             self.draw_equipment()
-            draw_eq_inv_switch()
+            self.draw_screen_log(strings.cmd_switch_eq)
 
         elif current_screen == "v":
             self.draw_inventory(items)
-            draw_inv_eq_switch()
+            self.draw_screen_log(strings.cmd_switch_iv)
 
         while True:
             if log:
@@ -437,13 +428,13 @@ class Start(Scene):
 
                 if current_screen == "q":
                     self.draw_equipment()
-                    draw_eq_inv_switch()
+                    self.draw_screen_log(strings.cmd_switch_eq)
 
                 elif current_screen == "v":
                     items = [item for _, inv in self.player.inventory 
                                         for item in inv]
                     self.draw_inventory(items)
-                    draw_inv_eq_switch()
+                    self.draw_screen_log(strings.cmd_switch_iv)
 
             term.refresh()
             
@@ -473,7 +464,8 @@ class Start(Scene):
             elif current_screen == 'v':
                 if term.TK_A <= code < term.TK_A + len(items):
                     item = items[code - 4]
-                    draw_inv_item_funcs(item)
+                    self.draw_screen_log(strings.cmd_inv_funcs.format(item))
+
             else:
                 log = ""
 
@@ -1283,7 +1275,7 @@ class Start(Scene):
             self.draw_inventory(items)
 
             if items:
-                self.draw_screen_log(strings.cmd_drop)
+                self.draw_screen_log(strings.cmd_drop_query)
 
             if log:
                 self.draw_log(log)
@@ -1304,29 +1296,28 @@ class Start(Scene):
                 log = ""
 
     def action_item_use(self):
-        def draw_eq_use():
-            self.draw_screen_log(strings.cmd_use)
+        def draw_use():
+            self.draw_screen_log(strings.cmd_use_query)
 
         def use_item(item):
             nonlocal log
-            print('ITEM', item)
             self.player.item_use(item)
             if hasattr(item, 'name'):
                 item_name = item.name
             else:
                 item_name = item
-            log = "You use the {}.".format(item_name)
+            log = strings.cmd_use_item.format(item_name)
 
         log = ""
         update_items = False
-        items = [item for _, inv in self.player.inventory for item in inv]
+        items = [item for _, inv in self.player.inventory_use for item in inv]
 
         while True:
             self.clear_main()
             self.draw_inventory(items)
 
             if items:
-                draw_eq_use()
+                draw_use()
 
             if log:
                 self.draw_log(log)
@@ -1344,6 +1335,11 @@ class Start(Scene):
 
             else:
                 log = ""
+
+    def action_item_eat(self):
+        def draw_eat():
+            self.draw_screen_log(strings.cmd_eat)
+        pass
 
 if __name__ == "__main__":
     from .make import Create
