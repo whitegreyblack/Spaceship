@@ -466,7 +466,33 @@ class Start(Scene):
                 if term.TK_A <= code < term.TK_A + len(items):
                     item = items[code - 4]
                     self.draw_screen_log(strings.cmd_inv_funcs.format(item))
-
+                    
+                    # while True:
+                    #     term.refresh()
+                    #     selection = term.read()
+                    #     if selection == term.TK_U:
+                    #         if self.player.item_eat(item):
+                    #             self.draw_screen_log(
+                    #                 strings.cmd_use_item.format(item))
+                    #             break
+                    #         else:
+                    #             self.draw_screen_log(
+                    #                 strings.cmd_cannot_use_item)
+                    #     elif selection == term.TK_E:
+                    #         if self.player.item_eat(item):
+                    #             self.draw_screen_log(
+                    #                 strings.cmd_eat_item.format(item))
+                    #             break
+                    #         else:
+                    #             self.draw_screen_log(
+                    #                 strings.cmd_cannot_eat_item)
+                    #     elif selection == term.TK_Q:
+                    #         self.draw_screen_log('Equip it using the other way')
+                    #     else:
+                    #         self.draw_screen_log("Invalid instruction.")
+                    #         term.refresh()
+                    #         break
+                    # self.draw_screen_log(strings.cmd_switch_iv)
             else:
                 log = ""
 
@@ -1041,7 +1067,7 @@ class Start(Scene):
             self.player.position = (0, 0)
 
         # check if parent location is a city, wilderness or dungeon map
-        elif isinstance(self.location.parent, (City, Wild, Cave)):
+        elif isinstance(self.location.parent, (Cave, City, wilderness.keys())):
             move_upstairs()
             # reset position to the downstairs in the dungeon
             self.player.position = self.location.stairs_down

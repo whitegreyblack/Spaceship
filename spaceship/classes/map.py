@@ -92,6 +92,7 @@ class Map:
         self.map_display_width = min(66, width)
         self.map_display_height = min(22, height)
         self.__units = []
+        self.__items = {}
 
     def build(self) -> None:
         raise NotImplementedError("cannot build the base map class -- use a child map object")
@@ -120,7 +121,7 @@ class Map:
         self.check_data()
         self.check_chars()
 
-        rows = []   
+        self.tilemap = []   
         for row in self.data:
             cols = []
             for char in row:
@@ -141,8 +142,7 @@ class Map:
                     light=0)
 
                 cols.append(tile)
-            rows.append(cols)
-        self.tilemap = rows        
+            self.tilemap.append(cols)
 
     def check_data(self) -> None:
         if not hasattr(self, 'data'):

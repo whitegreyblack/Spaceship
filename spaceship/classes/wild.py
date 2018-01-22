@@ -17,6 +17,7 @@ class Desert(Map):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
+        
         if generate:
             self.generate_units()
 

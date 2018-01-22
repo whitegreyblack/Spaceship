@@ -258,13 +258,18 @@ class Player(Unit):
         self.__inventory.remove(item)
 
     def item_use(self, item):
-        self.item_remove(item)
-        print('used item', {})
+        if hasattr(item, 'use'):
+            self.item_remove(item)
+            print('used item', {})  
+            return True
+        return True
 
     def item_eat(self, item):
-        self.item_remove(item)
-        print('ate item', {})
-
+        if hasattr(item, 'eat'):
+            self.item_remove(item)
+            return True
+        return False
+    
     def initialize_base_stats(self) -> None:
         self.str, self.con, self.dex, self.int, self.wis, self.cha = \
                                     tuple(s + g + r + c for s, g, r, c in zip(
