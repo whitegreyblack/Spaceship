@@ -1,15 +1,15 @@
-import os
-import sys
+# import os
+# import sys
 import shelve
 import random
 from collections import namedtuple
 from bearlibterminal import terminal as term
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
-import strings as strings
-from screen_functions import *
-from .options import Options
-from .scene import Scene
-from .game import Start
+# sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
+import spaceship.strings as strings
+from spaceship.screen_functions import *
+from spaceship.menus.options import Options
+from spaceship.menus.scene import Scene
+from spaceship.menus.game import Start
 
 '''
 Notes: Propagating Game Variables Through Scenes
@@ -48,8 +48,8 @@ class Main(Scene):
         self.reset_size()
         self.title_height = 1 if self.height <= 25 else self.height // 5
         self.title = self.calc_title()
-        options_header_offset = self.title_height + len(self.title.split('\n'))
-        self.options_height = self.calc_options_heights(options_header_offset, 3)
+        header = self.title_height + len(self.title.split('\n'))
+        self.options_height = self.calc_options_heights(header, 3)
 
     def calc_title(self):
         if self.height <= 25:
@@ -57,22 +57,22 @@ class Main(Scene):
         else:
             return strings.GAME_TITLE
 
-    def calc_options_heights(self, header_offset:int, footer_offset:int) -> list:
+    def calc_options_heights(self, header:int, footer:int) -> list:
         '''Returns the height values for the options based on screen height'''
         def calculate(option):
             half_height = total_height // 2
             quarter_height = total_height // 4
 
-            return header_offset + half_height - quarter_height + option
+            return header + half_height - quarter_height + option
 
-        total_height = self.height - header_offset - footer_offset
+        total_height = self.height - header - footer
 
         return [calculate(option * 2) for option in range(4)]
 
     def draw(self):
         term.clear()
 
-        # title header -- multiplying space with title length to center title
+        # title -- multiplying space with title length to center title
         term.puts(
             center(' ' * (len(self.title.split('\n')[0])), self.width), 
             self.title_height, 
@@ -102,24 +102,16 @@ class Main(Scene):
 
         # key (CNOQ, ENTER)
         if code == term.TK_C or (code == term.TK_ENTER and self.index == 0):
-            # proceed = continue_game()
-            # self.ret = self.scene_child('continue_menu')
             self.ret['scene'] = 'continue_menu'
             self.proceed = False
 
         # key press on N or enter on NEW GAME
         elif code == term.TK_N or (code == term.TK_ENTER and self.index == 1):
-            # proceed = start_new_game()
-            # self.ret = self.scene_child('create_menu')
             self.ret['scene'] = 'create_menu'
             self.proceed = False
 
         # key press on O or enter on OPTIONS
         elif code == term.TK_O or (code == term.TK_ENTER and self.index == 2):
-            # options()
-            # height = update_start_screen() + len(self.title.split('\n'))
-            # self.options_height = calc_option_heights(height, 3)
-            # self.ret = self.scene_child('options_menu')
             self.ret['scene'] = 'options_menu'
             self.proceed = False
 
@@ -127,7 +119,7 @@ class Main(Scene):
         elif code == term.TK_Q or (code == term.TK_ENTER and self.index == 3):
             self.proceed = False
             self.ret['scene'] = 'exit_desktop'
-            
+
         # KEYS (UP, DOWN)
         elif code in (term.TK_UP, term.TK_DOWN):
             if code == term.TK_UP:

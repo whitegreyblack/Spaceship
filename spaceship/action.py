@@ -10,7 +10,6 @@ TODO: Might combine the movement keys into one dictionary
 """
 from collections import namedtuple
 from bearlibterminal import terminal as term
-
 """
     Movement:
         <,^,v,>: Movement keys -> (x,y)

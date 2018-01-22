@@ -7,17 +7,17 @@ from time import sleep, time
 from collections import namedtuple
 from bearlibterminal import terminal as term
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
-import strings
-from .scene import Scene
-from screen_functions import *
-from action import commands_player
-from gamelog import GameLogger
-from ..classes.item import Ring, Potion, Armor, Weapon, sort
-from ..classes.wild import wilderness
-from ..classes.player import Player
-from ..classes.world import World
-from ..classes.city import City
-from ..classes.cave import Cave
+import spaceship.strings as strings
+from spaceship.menus.scene import Scene
+from spaceship.screen_functions import *
+from spaceship.action import commands_player
+from spaceship.gamelog import GameLogger
+from spaceship.classes.item import Ring, Potion, Armor, Weapon, sort
+from spaceship.classes.wild import wilderness
+from spaceship.classes.player import Player
+from spaceship.classes.world import World
+from spaceship.classes.city import City
+from spaceship.classes.cave import Cave
 
 def single_element(container):
     return len(container) == 1

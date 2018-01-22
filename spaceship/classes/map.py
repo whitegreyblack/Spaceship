@@ -1,21 +1,15 @@
  # -*- coding=utf-8 -*-
-import os
-import sys
-from math import hypot
-from copy import deepcopy
-from textwrap import wrap
 from typing import Tuple, Union
 from namedlist import namedlist
 from functools import lru_cache
-from PIL import Image, ImageDraw
 from collections import namedtuple
 from random import randint, choice, shuffle
 from bearlibterminal import terminal as term
-from ..tools import scroll, distance, bresenhams
-from .charmap import WildernessCharmap as wcm
-from .charmap import DungeonCharmap as dcm
-from .monsters import Rat
-from .bat import Bat
+from spaceship.classes.charmap import WildernessCharmap as wcm
+from spaceship.classes.charmap import DungeonCharmap as dcm
+from spaceship.classes.monsters import Rat
+from spaceship.classes.bat import Bat
+from spaceship.tools import scroll
 
 '''
 The largest difference between World and City map tiles is that you can
