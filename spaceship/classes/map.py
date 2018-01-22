@@ -487,23 +487,19 @@ class Map:
     ###########################################################################
     # Item object Functions                                                   #
     ###########################################################################
-    def item_add(self, x, y, i) -> None:
+    def item_add(self, x, y, item) -> None:
         '''Adds an item object to the list of items at position (x, y)
         on the map
         '''
-        self.square(x, y).items.append(i)
-
-    def item_remove(self, x, y, i) -> None:
+        self.items_at(x, y).append(item)
+        
+    def item_remove(self, x, y, item) -> None:
         '''Removes the item object from the list of items at position (x, y)
         on the map
         '''
-        try:
-            self.square(x, y).items.remove(i)
+        self.items_at(x, y).remove(item)
 
-        except ValueError:
-            print('no item with that value')
-
-    def items_at(self, x, y) -> object:
+    def items_at(self, x, y) -> list:
         '''Returns a list of item objects at position (x, y) on the map.
         If no items are on the square then the list will return empty
         '''

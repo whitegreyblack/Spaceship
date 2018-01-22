@@ -59,7 +59,7 @@ status = '''
 
  DMG: {:>6}
 
- STR: {:>6}
+ STR: [c={}]{:>6}[/c]
  CON: {:>6}
  DEX: {:>6}
  INT: {:>6}
@@ -360,11 +360,13 @@ cmd_equip_query = "Which item to equip?"
 cmd_equip = "You equip the {}."
 cmd_drop_query = "Which item to drop?"
 cmd_drop_item = "You drop the {}."
+cmd_use_none = "You have no items in your inventory that are usable."
 cmd_use_query = "Which item to use?"
 cmd_use_item = "You use the {}."
 cmd_save = "Save and exit game? (Y/N)"
 cmd_save_folder = 'saved folder does not exist - creating folder: "./saves"'
 cmd_inv_funcs = "What to do with the {}?"
+cmd_inv_none = "You have nothing in your inventory."
 movement_wait_local = "You rest for a while."
 movement_wait_world = "You wait in the area."
 movement_move_error = "You cannot travel there."

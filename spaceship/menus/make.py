@@ -529,7 +529,7 @@ class Create(Scene):
             inv.append(get_eq(r) + get_eq(c))
 
         eqp = [ i.pop(0) if len(i) > 0 else [] for i in inv ]
-        return eqp, flatten(inv)
+        return eqp, flatten(inv) + ['small health potion']
 
 def test_hero():
     c = Create()

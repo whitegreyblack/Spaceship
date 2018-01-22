@@ -96,15 +96,15 @@ class Inventory(list):
         super().__init__()
         self.extend([convert(item) for item in items])
 
-    def by_type(self, part):
-        for item in self:
-            if hasattr(item, 'placement') and part in item.placement:
-                yield item
+    # def by_type(self, part):
+    #     for item in self:
+    #         if hasattr(item, 'placement') and part in item.placement:
+    #             yield item
 
-    def by_property(self, prop):
-        for item in self:
-            if hasattr(item, prop):
-                yield item
+    # def by_property(self, prop):
+    #     for item in self:
+    #         if hasattr(item, prop):
+    #             yield item
 
     def add(self, item):
         if len(self) <= 25:
@@ -122,11 +122,11 @@ class Inventory(list):
                 group = "".join(group)
             yield group, items
 
-    def food(self):
-        for group, items in self.items:
-            if group == "food":
-                return group, items
-        return None, None
+    # def food(self):
+    #     for group, items in self.items:
+    #         if group == "food":
+    #             return group, items
+    #     return None, None
 
 # Player should inherit from unit just so during main game loop
 # the player class can be accessed in the same way as other units
@@ -191,13 +191,23 @@ class Player(Unit):
                 acc=self.acc))
 
     def status(self):
+        def overloaded(attr):
+            if getattr(self, totattr(attr)) > getattr(self, attr):
+                return "green"
+            elif getattr(self, totattr(attr)) < getattr(self, attr):
+                return "red"
+            return "white"
         return (self.name, self.gender[0], self.race[0], self.job[0], self.level,
             "{}/{}".format(self.exp, self.advexp),
             "{}/{}".format(self.cur_hp, self.tot_hp),
             "{}/{}".format(self.cur_mp, self.tot_mp),
             "{}-{}".format(self.tot_dmg_lo, self.tot_dmg_hi),
-            self.tot_str, self.tot_con, self.tot_dex, 
-            self.tot_int, self.tot_wis, self.tot_cha,
+            overloaded("str"), self.tot_str,
+            self.tot_con, 
+            self.tot_dex, 
+            self.tot_int, 
+            self.tot_wis, 
+            self.tot_cha,
             self.gold)
 
     @property
@@ -243,13 +253,16 @@ class Player(Unit):
         for item in self.__inventory.by_type(part):
             yield item
 
-    def inventory_use(self, part):
-        for item in self.__inventory.by_property('use'):
-            yield item
+    def inventory_use(self, prop='use'):
+        for _, items in self.inventory:
+            for item in items:
+                if hasattr(item, 'use'):
+                    yield item
 
     def inventory_food(self):
-        for item in self.__inventory.food:
-            yield item
+        for group, items in self.__inventory.food:
+            if group == "food":
+                yield items
 
     def item_add(self, item):
         return self.__inventory.add(item)
@@ -268,7 +281,6 @@ class Player(Unit):
                                                             self.gender_bonus,
                                                             self.race_bonus,
                                                             self.job_bonus))
-
         self.hp, self.mp, self.sp = 0, 0, 0
         self.dv = 0
         for stat in ('str con dex int wis cha hp mp sp dv'.split()):
@@ -278,15 +290,16 @@ class Player(Unit):
         for stat in 'acc dmg_lo dmg_hi'.split():
             for stat in (stat, modattr(stat), totattr(stat)):
                 setattr(self, stat, 0)
+                print(stat, getattr(self, stat))
 
-        self.acc, self.dmg_hi, self.dmg_lo = 0, 1, 2
+        self.acc, self.dmg_lo, self.dmg_hi = 0, 1, 2
 
     def stats_attributes(self):
         return self.str, self.con, self.dex, self.int, self.wis, self.cha
 
     def stat_update(self, stat, value):
-        current = getattr(self, stat)
-        setattr(self, stat, current + value)
+        current = getattr(self, modattr(stat))
+        setattr(self, modattr(stat), current + value)
 
     def stat_update_final(self, stat):
         base = getattr(self, stat)
@@ -337,7 +350,8 @@ class Player(Unit):
             return 1
 
     def calculate_attack_damage(self) -> int:
-        return randint(self.dmg_lo, self.dmg_hi) # + max(self.str, self.dex)
+        print(self.tot_dmg_lo, self.tot_dmg_hi)
+        return randint(self.tot_dmg_lo, self.tot_dmg_hi) # + max(self.str, self.dex)
 
     def gain_exp(self, exp: int) -> None:
         self.exp += exp
@@ -437,15 +451,6 @@ class Player(Unit):
             self.job,
             self.level,
             self.exp)
-'''
-class Character(Object):
-    def __init__(self, n, x, y, i, c='white', r='human', m=10, s=10, b=6, l=5):
-        super().__init__(n, x, y, i, c, r)
-        self.m=m
-        self.s=s
-        self.l=l
-        self.inventory = Inventory(b)
-        self.backpack = Backpack()
-'''
+
 if __name__ == "__main__":
     pass

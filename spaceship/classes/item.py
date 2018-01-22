@@ -121,11 +121,14 @@ class Food(Item):
     def __init__(self, name, char, color, effects=None):
         super().__init__(name, char, color, effects)
 
+    def eat(self):
+        for effect, value in self.effects:
+            yield effect, value
+
 class Potion(Item):
     inventory = "potions"
-    def __init__(self, name, char, color, heal=10):
-        super().__init__(name, char, color)
-        self.heal = heal
+    def __init__(self, name, char, color, effects=None):
+        super().__init__(name, char, color, effects)
 
     def __repr__(self):
         return "[Potion] {:<15}: HEAL={}:".format(self.name, self.heal)
@@ -234,7 +237,7 @@ itemlist = {
     "ring of power": Ring("ring of power", "=", "red", (("str", 2), ("dex", 1))),
     # "ring of regen": None,
     # "ring of protection": None,
-    # "ring of light": None,
+    "ring of light": Ring("ring of light", '=', "white", (("wis", 1),)),
     # "ring of chaos": None,
     "ring of ice": Ring("ring of ice", "=", "light blue", (("hp", 10),)),
     "ring of fire": Ring("ring of fire", "=", "dark red", (("dmg", 3),)),
@@ -251,7 +254,7 @@ itemlist = {
     # "metal boots": Armor("metal boots", "[", "grey", "feet", 0, 0, 0, 0),
     # "sandals": Armor("sandals", "[", "green", "feet", 0, 0, 0, 0),
     # tome, spellbook, scrolls
-    # "small health potion": Potion("small health potion", "!", "red", 10),
+    "small health potion": Potion("small health potion", "!", "red", (('hp', 5),)),
     # "medium health potion": Potion("medium health potion", "!", "red", 20),
     # "large health potion": Potion("large health potion", "!", "red", 30),
     # "small shield potion": Potion("small shield potion", "!", "blue", 10),

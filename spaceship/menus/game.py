@@ -71,9 +71,9 @@ class Start(Scene):
         self.row_spacing = 2 if self.height > 25 else 1
         self.screen_col, self.screen_row = 1, 3
         self.status_col, self.status_row = 0, 1
-        self.main_offset_x, self.main_offset_y = 14, 0
+        self.main_x, self.main_y = 14, 0
         self.log_width, self.log_height = self.width, 2
-        self.main_width = self.width - self.main_offset_x
+        self.main_width = self.width - self.main_x
         self.main_height = self.height - self.log_height
 
     def run(self):  
@@ -115,15 +115,18 @@ class Start(Scene):
         self.draw_world()
         term.refresh()
 
-    def draw_log(self, log=None, color="white", refresh=True):
-        if log:
-            self.gamelog.add(log, color=color)
-
+    def clear_log(self):
         term.clear_area(
             0, 
             self.height - self.log_height - 1, 
             self.width, 
-            self.log_height)
+            self.log_height + 1)
+
+    def draw_log(self, log=None, color="white", refresh=True):
+        if log:
+            self.gamelog.add(log, color=color)
+
+        self.clear_log()
         
         messages = self.gamelog.write()
 
@@ -157,8 +160,8 @@ class Start(Scene):
 
         for x, y, col, ch in self.location.output(x, y):
             term.puts(
-                x=x + self.main_offset_x,
-                y=y + self.main_offset_y,
+                x=x + self.main_x,
+                y=y + self.main_y,
                 s="[c={}]{}[/c]".format(col, ch))
 
         # sets the location name at the bottom of the status bar
@@ -174,29 +177,29 @@ class Start(Scene):
             if location:
                 term.bkcolor('dark grey')
                 term.puts(
-                    x=self.main_offset_x, 
+                    x=self.main_x, 
                     y=0, 
-                    s=' ' * (self.width - self.main_offset_x))
+                    s=' ' * (self.width - self.main_x))
                     
                 term.bkcolor('black')
                 location_offset = center(
                                     text=surround(location), 
-                                    width=self.width - self.main_offset_x)
+                                    width=self.width - self.main_x)
                 term.puts(
-                    x=self.main_offset_x + location_offset,
+                    x=self.main_x + location_offset,
                     y=0, 
                     s=surround(location))
 
     def draw_screen_header(self, header=None):
         '''Draws a line across the top of the window'''
         term.bkcolor('dark grey')
-        for i in range(self.width - self.main_offset_x):
-            term.puts(self.main_offset_x + i, 0, ' ')
+        for i in range(self.width - self.main_x):
+            term.puts(self.main_x + i, 0, ' ')
         term.bkcolor('black')
         if header:
             string = surround(header)
             term.puts(
-                center(string, self.width + self.main_offset_x), 0, string)
+                center(string, self.width + self.main_x), 0, string)
                 
     def draw_status(self):
         '''Handles player status screen'''
@@ -220,9 +223,9 @@ class Start(Scene):
 
     def clear_main(self):
         term.clear_area(
-            self.main_offset_x, 
+            self.main_x, 
             0, 
-            self.width - self.main_offset_x,
+            self.width - self.main_x,
             self.height - self.log_height - 1)
 
     def clear_item_box(self):
@@ -251,14 +254,14 @@ class Start(Scene):
 
             letter = chr(ord('a') + index)
             term.puts(
-                x=self.screen_col + self.main_offset_x,
+                x=self.screen_col + self.main_x,
                 y=self.screen_row + index * self.row_spacing,
                 s=letter + body + item)
 
     def draw_item_header(self, item_header):
         '''Handles drawing of the item grouping header'''
         term.puts(
-            x=self.screen_col + self.main_offset_x,
+            x=self.screen_col + self.main_x,
             y=self.screen_row + self.index_row * self.row_spacing,
             s=item_header)
         self.index_row += 1
@@ -267,7 +270,7 @@ class Start(Scene):
         '''Handles drawing the list of an item group to the screen'''
         letter = chr(ord('a') + self.item_row) + ". "
         term.puts(
-            x=self.screen_col + self.main_offset_x,
+            x=self.screen_col + self.main_x,
             y=self.screen_row + self.index_row * self.row_spacing,
             s=letter + item_desc) 
         self.index_row += 1
@@ -281,7 +284,7 @@ class Start(Scene):
                 self.draw_item_row(element.__str__())
             self.index_row += 1
 
-    def draw_inventory(self, items):
+    def draw_inventory(self, items, string=strings.cmd_inv_none):
         '''Handles drawing of the inventory screen along with the specific 
         groupings of each item type and their modification effects
         '''
@@ -294,12 +297,9 @@ class Start(Scene):
 
         if not items:
             term.puts(
-                x=center(
-                    'Nothing in your inventory', 
-                    self.width - self.main_offset_x) + 
-                    self.main_offset_x,
+                x=center(string, self.width - self.main_x) + self.main_x,
                 y=3,
-                s='Nothing in your inventory')
+                s=string)
 
         else:
             for header, items in list(sort(items).items()):
@@ -329,15 +329,15 @@ class Start(Scene):
         term.puts(
             x=center(
                 log, 
-                self.width - self.main_offset_x) + self.main_offset_x, 
+                self.width - self.main_x) + self.main_x, 
                 y=self.height - 5, 
                 s=log)
 
     def clear_screen_log(self):
         term.clear_area(
-            self.main_offset_x, 
+            self.main_x, 
             self.height - 5, 
-            self.width - self.main_offset_x, 
+            self.width - self.main_x, 
             2)
 
     def draw_item_border(self):
@@ -661,8 +661,8 @@ class Start(Scene):
                             unit.cur_hp -= damage
 
                             term.puts(
-                                x=tx + self.main_offset_x, 
-                                y=ty + self.main_offset_y, 
+                                x=tx + self.main_x, 
+                                y=ty + self.main_y, 
                                 s='[c=red]{}[/c]'.format(damage if damage <= 9 else '*'))
                             term.refresh()
 
@@ -672,6 +672,7 @@ class Start(Scene):
                                 damage)
 
                             self.draw_log(log)
+                            self.draw_status()
 
                             if not unit.is_alive:
                                 log = "The {} has killed {}!".format(
@@ -758,8 +759,8 @@ class Start(Scene):
                                 unit.cur_hp -= damage
                                 
                                 term.puts(
-                                    x=tx + self.main_offset_x, 
-                                    y=ty + self.main_offset_y, 
+                                    x=tx + self.main_x, 
+                                    y=ty + self.main_y, 
                                     s='[c=red]{}[/c]'.format(damage if damage <= 9 else '*'))
                                 term.refresh()
 
@@ -1204,7 +1205,7 @@ class Start(Scene):
             else:
                 log = "Backpack is full. Cannot pick up {}.".format(item)
 
-        items = self.location.items_at(*self.player.position)
+        items = [item for item in self.location.items_at(*self.player.position)]
 
         log = ""
         if not items:
@@ -1310,11 +1311,11 @@ class Start(Scene):
 
         log = ""
         update_items = False
-        items = [item for _, inv in self.player.inventory_use for item in inv]
+        items = [item for inv in self.player.inventory_use() for item in inv]
 
         while True:
             self.clear_main()
-            self.draw_inventory(items)
+            self.draw_inventory(items, strings.cmd_use_none)
 
             if items:
                 draw_use()
