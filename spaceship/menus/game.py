@@ -1196,6 +1196,9 @@ class Start(Scene):
 
     def action_item_pickup(self):
         def pickup_item(item):
+            '''Pickup item can fail if the inventory is full.
+            Check to see if action succeeded before choosing log message
+            '''
             nonlocal log
             if self.player.item_add(item):
                 self.location.item_remove(*self.player.position, item)
@@ -1214,7 +1217,6 @@ class Start(Scene):
 
         else:
             log = ""
-            update_items = False
             if single_element(items):
                 pickup_item(items.pop())
                 self.draw_log(log)
@@ -1229,11 +1231,17 @@ class Start(Scene):
                     if log:
                         self.draw_log(log)
                         log = ""
+                
+                    term.refresh()
+                    code = term.read()
+                    if code == term.TK_ESCAPE:
+                        break
                     
-                    if update_items:
-                        update_items = False
+                    elif term.TK_A <= code < term.TK_A + len(items):
+                        pickup_item(items[code - 4])
                         self.index_row, self.item_row = 0, 0
-                        items = self.location.items_at(*self.player.position)
+                        items = [item for item 
+                            in self.location.items_at(*self.player.position)]
 
                         if not items:
                             break
@@ -1242,13 +1250,6 @@ class Start(Scene):
                         self.draw_pickup(items)
 
 
-                    term.refresh()
-                    code = term.read()
-                    if code == term.TK_ESCAPE:
-                        break
-                    
-                    elif term.TK_A <= code < term.TK_A + len(items):
-                        pickup_item(items[code - 4])
     '''
     Notes :- Dropping Items:
         Dropping items will always be dropped from inventory
@@ -1269,15 +1270,14 @@ class Start(Scene):
             log += " Your backpack feels lighter."
         
         log = ""
-        update_items = False
         items = [item for _, inv in self.player.inventory for item in inv]
+        self.clear_main()
+        self.draw_inventory(items)
 
         while True:
-            self.clear_main()
-            self.draw_inventory(items)
-
             if items:
                 self.draw_screen_log(strings.cmd_drop_query)
+                log = ""
 
             if log:
                 self.draw_log(log)
@@ -1293,9 +1293,8 @@ class Start(Scene):
                 drop_item(items.pop(code - 4))
                 items = [item for _, inv in self.player.inventory 
                             for item in inv]
-
-            else:
-                log = ""
+                self.clear_main()
+                self.draw_inventory(items)
 
     def action_item_use(self):
         def use_item(item):
@@ -1321,6 +1320,7 @@ class Start(Scene):
 
             if log:
                 self.draw_log(log)
+                log = ""
 
             term.refresh()
 
@@ -1332,9 +1332,6 @@ class Start(Scene):
                 use_item(items[code - 4])
                 items = list(self.player.inventory_prop('use'))
                 self.draw_status()
-
-            else:
-                log = ""
 
     def action_item_eat(self):
         def eat_item(item):
@@ -1360,6 +1357,7 @@ class Start(Scene):
 
             if log:
                 self.draw_log(log)
+                log = ""
 
             term.refresh()
 
@@ -1371,9 +1369,6 @@ class Start(Scene):
                 eat_item(items[code - 4])
                 items = list(self.player.inventory_prop('eat'))
                 self.draw_status()
-            
-            else:
-                log = ""
 
 if __name__ == "__main__":
     from .make import Create
