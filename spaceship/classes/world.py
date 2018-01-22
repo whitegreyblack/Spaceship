@@ -4,12 +4,13 @@ from typing import Tuple, Union
 from PIL import Image, ImageDraw
 from collections import namedtuple
 from random import shuffle, choice, randint
-from .charmap import WildernessCharmap as wcm
-from .charmap import DungeonCharmap as dcm
-from .charmap import WorldCharmap as ccm
-from .utils import splitter, blender
-from ..tools import toInt, scroll
-from .map import Map
+from spaceship.classes.charmap import WildernessCharmap as wcm
+from spaceship.classes.charmap import DungeonCharmap as dcm
+from spaceship.classes.charmap import WorldCharmap as ccm
+from spaceship.classes.utils import splitter, blender
+from spaceship.tools import toInt, scroll
+from spaceship.classes.map import Map
+from namedlist import namedlist
 
 '''
 Calabaston : Roguelike
@@ -108,8 +109,8 @@ class World(Map):
     chars = {
         "&": (["&"], "#FF8844"),
     }
-    chars_block_move = ["=", "-", 'A', '^']
-    chars_block_light = ["T", "^", "~", "A", "^"]
+    chars_block_move = {"A", "^", "=", "-"}
+    chars_block_light = {"A", "^", "T", "~"}
 
     enterable_legend = {
         (5, 28): "Northshore",
@@ -193,29 +194,23 @@ class World(Map):
         (22, 50): "Small Dungeon",
     }
     # class WorldTile(Map.Tile):
-    class WorldTile:
-        def __init__(self, char, color, block_mov, block_lit, tile_type, tile_name=None):
-            '''Inherits from Map.Tile to create a tile specific for a world map'''
-            # super().__init__(char, color, block_mov, block_lit)
-            self.char = char
-            self.color = color
-            self.block_mov = block_mov
-            self.block_lit = block_lit
-            self.tile_type = tile_type
-            self.light = 0
-            if tile_name:
-                self.name = tile_name
+    # class WorldTile:
+    #     def __init__(self, char, color, block_mov, block_lit, tile_type, tile_name=None):
+    #         '''Inherits from Map.Tile to create a tile specific for a world map'''
+    #         # super().__init__(char, color, block_mov, block_lit)
+    #         self.char = char
+    #         self.color = color
+    #         self.block_mov = block_mov
+    #         self.block_lit = block_lit
+    #         self.tile_type = tile_type
+    #         self.light = 0
+            
+    #         if tile_name:
+    #             self.name = tile_name
 
-        def __repr__(self):
-            return self.char
-
-        def __str__(self):
-            return "{}, {}, {}, {}, {}".format(
-                self.char,
-                self.color,
-                self.block_mov,
-                self.block_lit,
-                self.light)
+    WorldTile = namedlist("WorldTile", "char color block_mov block_lit light tile_type tile_name")
+    
+    __slots__ = ('map_name',)
 
     def __init__(self, map_name, map_link):
         self.map_name = map_name
@@ -233,15 +228,16 @@ class World(Map):
 
     @staticmethod
     def capitals(capital: str) -> str:
-        city = {
-            "Tiphmore": (42, 62),
-            "Dun Badur": (83, 9),
-            "Aurundel": (41, 20),
-            "Renmar": (16, 46),
-            "Lok Gurrah": (72, 51),            
-        }
+        # city = {
+        #     "Tiphmore": (42, 62),
+        #     "Dun Badur": (83, 9),
+        #     "Aurundel": (41, 20),
+        #     "Renmar": (16, 46),
+        #     "Lok Gurrah": (72, 51),            
+        # }
 
-        return city[capital]
+        # return city[capital]
+        return (16, 46)
 
     @property
     def tilemap(self):
@@ -306,6 +302,7 @@ class World(Map):
                     color=hexcode,
                     block_mov=block_mov,
                     block_lit=block_lit, 
+                    light=0,
                     tile_type=tile_type,
                     tile_name=tile_name)
                 # print(tile)

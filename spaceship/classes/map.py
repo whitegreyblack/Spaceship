@@ -56,18 +56,10 @@ TODO: seperate map and dungeon
             it has a chance to hold a dungeon i guess
 '''
 
-MapType = {T: V for V, T in enumerate(('City', 'Cave', 'Wild', 'World'))}
+MapType = { mt: i for i, mt in enumerate(('City', 'Cave', 'Wild', 'World')) }
 
 class Map:
     '''The "ABSTRACT CLASS" that should hold the functions shared across all map class types'''
-    # class Tile:
-    #     def __init__(self, char, color, block_mov, block_lit):
-    #         self.char = char
-    #         self.color = color
-    #         self.block_mov = block_mov
-    #         self.block_lit = block_lit
-    #         self.items = []
-    #         self.light = 0
     Tile = namedlist("Tile", 'char color block_mov, block_lit items light')
     mult = [
                 [1,  0,  0, -1, -1,  0,  0,  1],
@@ -76,7 +68,6 @@ class Map:
                 [1,  0,  0,  1, -1,  0,  0, -1]
             ]
 
-    # tile = namedlist("Tile", "char color bkgd light block_mov block_lit items")
     chars_block_move = {"#", "+", "o", "x", "~", "%", "Y", "T"}
     chars_block_light = {"#", "+", "o", "%", "Y", "T"}
 
