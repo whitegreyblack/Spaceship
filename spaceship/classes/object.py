@@ -17,7 +17,7 @@ class Point:
 
     @property
     def position(self):
-        yield self.x, self.y
+        return self.x, self.y
 
     def __add__(self, other):
         try:
@@ -53,8 +53,7 @@ class Point:
 
     def distance(self, other):
         return math.sqrt(
-            math.pow(other.x - self.x, 2) + \
-            math.pow(other.y - self.y, 2))
+            math.pow(other.x - self.x, 2) + math.pow(other.y - self.y, 2))
 
 class Tile:
     __slots__ = ('character', 'foreground', 'background')
@@ -63,8 +62,9 @@ class Tile:
         self.foreground = foreground 
         self.background = background
     
+    @property
     def color(self):
-        yield self.foreground, self.background
+        return self.foreground, self.background
 
 class Object:
     '''Base object class used in the following subclasses:
@@ -91,21 +91,25 @@ class Object:
     def __str__(self) -> str:
         return "{}: (x={}, y={}, ch={}, fg={}, bg={})".format(
             self.__class__.__name__, 
-            *self.local.position(),
-            self.tile.char,
-            *self.color())
+            *self.local.position,
+            self.tile.character,
+            *self.tile.color)
 
     def output(self):
         return (*self.local.position, self.tile.char, *self.color())
+
+    def distance(self, other):
+        return self.local.distance(other.local)
 
 if __name__ == "__main__":
     # unit tests?
     obj = Object(5, 5, 'o', "#ffffff", "#000000")
     print(obj)
-    print(obj.position)
+    print(obj.local.position)
 
     a = Object(0, 0, "a", "#000000", "#ffffff")
     b = Object(9, 9, "b", "#000000", "#ffffff")
+    
     print(a.distance(b))
-
+    print(a.local.distance(b.local))
     print(Object.object_id)
