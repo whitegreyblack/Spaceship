@@ -1,4 +1,5 @@
 from typing import Tuple
+from namedlist import namedlist
 from re import search
 import math
 
@@ -16,66 +17,56 @@ class Point:
 
     @property
     def position(self):
-        return self.x, self.y
+        yield self.x, self.y
+
+    def __add__(self, other):
+        try:
+            x, y = self.x + other.x, self.y + other.y
+        except AttributeError:
+            x, y = self.x + other[0], self.y + other[1]
+        finally:
+            return Point(x, y)
 
     def __iadd__(self, other):
         try:
             x, y = self.x + other.x, self.y + other.y
-
         except AttributeError:
             x, y = self.x + other[0], self.y + other[1]
-
         finally:
             return Point(x, y)
 
     def __isub__(self, other):
         try:
             x, y = self.x - other.x, self.y - other.y
-
         except AttributeError:
             x, y = self.x - other[0], self.y - other[1]
-
         finally:
             return Point(x, y)
 
     def __eq__(self, other):
         try:        
             equal = self.x == other.x and self.y == other.y
-
         except AttributeError:
             equal = self.x == other[0] and self.y == other[1]
-
         finally:
             return equal
 
+    def distance(self, other):
+        return math.sqrt(
+            math.pow(other.x - self.x, 2) + \
+            math.pow(other.y - self.y, 2))
+
 class Tile:
-    def __init__(self, ch, fg, bg):
-        self.character = ch
-        self.foreground = fg
-        self.background = bg
-
-    def draw(self):
-        return self.character, self.foreground, self.background
-
-class WorldTile(Tile):
-    def __init__(self, ch, fg, bg, land, enterable):
-        super().__init__(ch, fg, bg)
-        self.land = land
-        self.enterable = enterable
-
-    def draw(self):
-        return (*super().draw(), self.land, self.enterable)
+    __slots__ = ('character', 'foreground', 'background')
+    def __init__(self, character, foreground="white", background="black"):
+        self.character = character
+        self.foreground = foreground 
+        self.background = background
     
-class MapTile(Tile):
-    def __init__(self, ch, fg, block, light):
-        super().__init__(ch, fg, bg)
-        self.block = block
-        self.light = light
+    def color(self):
+        yield self.foreground, self.background
 
-    def draw(self):
-        return (*super().draw(), self.block, self.light)
-
-class Object(Tile):
+class Object:
     '''Base object class used in the following subclasses:
         
     Tiles :- WorldTiles, MapTiles
@@ -92,38 +83,20 @@ class Object(Tile):
     '''
     object_id = 0
     
-    def __init__(self, x: int, y: int, ch: chr, fg: str, bg: str):
-        super().__init__(ch, fg, bg)
-        self.x, self.y = x, y
+    def __init__(self, x: int, y: int, ch: chr, fg: str, bg: str) -> None:
         Object.object_id += 1
+        self.tile = Tile(ch, fg, bg)
+        self.local = Point(x, y)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "{}: (x={}, y={}, ch={}, fg={}, bg={})".format(
             self.__class__.__name__, 
-            self.x, 
-            self.y, 
-            self.character,
-            self.foreground,
-            self.background
-        )
-
-    @property
-    def position(self) -> Tuple[int, int]:
-        '''returns local position within a non-global map'''
-        return self.x, self.y
-
-    @position.setter
-    def position(self, position: Tuple[int, int]) -> None:
-        '''sets local position given a tuple(x,y)'''
-        self.x, self.y = position
-
-    def distance(self, other):
-        return math.sqrt(
-            math.pow(other.x - self.x, 2) + \
-            math.pow(other.y - self.y, 2))
+            *self.local.position(),
+            self.tile.char,
+            *self.color())
 
     def output(self):
-        return (*super().draw(), self.x, self.y)
+        return (*self.local.position, self.tile.char, *self.color())
 
 if __name__ == "__main__":
     # unit tests?

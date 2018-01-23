@@ -1,6 +1,6 @@
 from typing import Tuple
 from random import randint
-
+from .object import Point
 from .color import Color
 from .unit import Unit
 from .world import World
@@ -170,7 +170,8 @@ class Player(Unit):
     def setup(self, home: str) -> None:
         self.home, self.hpointer = home, World.capitals(home)
         self.wx, self.wy = self.hpointer
-        self.wz = 0
+        self.world = Point(*self.hpointer)
+        self.__height = 0
 
     def __str__(self):
         return self.name
@@ -345,6 +346,7 @@ class Player(Unit):
         self.sp = self.tot_dex // 2
         
     def calculate_attack(self):
+        '''Damage: (Physical | Magical | Pure)'''
         for stat in ('acc dmg_lo dmg_hi'.split()):
             self.stat_update_final(stat)
 
@@ -382,23 +384,23 @@ class Player(Unit):
 
     @property
     def height(self) -> int:
-        return self.wz
+        return self.__height
         
     def move_height(self, move: int) -> None:
         def check_height(move: int) -> int:
-            return max(self.wz + move, -1)
-        self.wz = check_height(move)
+            return max(self.__height + move, -1)
+        self.__height = check_height(move)
     
     def ascend(self) -> None:
-        self.wz = max(self.wz + 1, -1)
+        self.__height = max(self.__height + 1, -1)
     
     def descend(self) -> None:
-        self.wz = max(self.wz - 1, -1)
+        self.__height = max(self.__height - 1, -1)
 
     @property
     def location(self) -> Tuple[int, int]:
         '''returns global position on the world map'''
-        return self.wx, self.wy
+        return self.world.position
 
     @location.setter
     def location(self, location: Tuple[int, int]) -> None:

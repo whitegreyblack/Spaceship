@@ -9,7 +9,6 @@ itemlist = {
     # $1\n\t\t\tname=$2\n\t\t\tchar=$3\n\t\t\tcolor=$4\n\t\t\teffects=$5
     # -------------------------------------------------
 
-
     "horned helmet": 
         Armor(
             name="horned helmet", 
@@ -328,8 +327,16 @@ itemlist = {
             ), 
             hands=2),
 
-    # "quarterstaff": Weapon("quarterstaff", 
-    #     "(", "grey", 2, -1, (4, 9)),
+    "quarterstaff": 
+        Weapon(
+            name="quarterstaff", 
+            char="(", 
+            color="grey", 
+            effects=(
+                ("acc", 2), ("dmg", (4, 7))
+            ),
+            hands=2),
+
     # short bow,
 
     # -- RINGS --

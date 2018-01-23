@@ -723,6 +723,8 @@ class Start(Scene):
                 turn_inc = True
 
             else:
+                print(self.player.world + (x, y))
+
                 tx = self.player.wx + x
                 ty = self.player.wy + y
 
@@ -910,7 +912,7 @@ class Start(Scene):
         # prepare strings for file writing
         # hash used for same name / different character saves
         desc = self.player.desc
-        file_path = './saves/{}'.format(desc)
+        file_path = './spaceship/saves/{}'.format(desc)
         
         with shelve.open(file_path, 'n') as save_file:
             save_file['desc'] = desc
