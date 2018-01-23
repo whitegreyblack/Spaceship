@@ -16,6 +16,7 @@ error is raised.
         Readable -> books
         Throwable -> missles
         Viewable -> All? (descriptions)
+        Castable -> wands
 
 Item Classifiers: (-- Based on ADOM item classifiers)
     [  Armor, shields, cloaks, boots, girdles, gauntlets and helmets

@@ -4,13 +4,21 @@ itemlist = {
     # TODO -- implement shields
     # TODO -- implement ranged weapons
     # TODO -- implement readable items: scrolls, tomes
+    # "rope belt": Armor("rope belt", "[", "green", "waist", 0, 0, 1, 0),
+    # "common pants": Armor("common pants", "[", "green", "legs", 0, 0, 0, 0),
+    # "metal boots": Armor("metal boots", "[", "grey", "feet", 0, 0, 0, 0),
+    # "sandals": Armor("sandals", "[", "green", "feet", 0, 0, 0, 0),
+    # (Armor\()(\"[a-z ]*\", )(\"[\[\']\", )(\"[a-z]*\", )(\"[a-z]*\", )(\()
+    # $1\n\t\t\tname=$2\n\t\t\tchar=$3\n\t\t\tcolor=$4\n\t\t\teffects=$5
     "horned helmet": 
         Armor(
             name="horned helmet", 
             char="[", 
             color="grey", 
             placement="head", 
-            effects=(("dv", 1), ("str", 1),)),
+            effects=(
+                ("dv", 1), ("str", 1),
+            )),
 
     "metal helmet": 
         Armor(
@@ -18,146 +26,287 @@ itemlist = {
             char="[", 
             color="grey", 
             placement="head", 
-            effects=(("dv", 2), ("str", 1),)),
+            effects=(
+                ("dv", 2), ("str", 1),
+            )),
 
     "leather cap": 
-        Armor("leather cap", "[", "grey", "head", (
-            ("dv", 1),
-        )),
+        Armor(
+            name="leather cap", 
+            char="[", 
+            color="grey", 
+            placement="head", 
+            effects=(
+                ("dv", 1),
+            )),
 
     "cloth hood": 
-        Armor("cloth hood", "[", "grey", "head", (
-            ("dv", 1),
-        )),
+        Armor(
+			name="cloth hood", 
+			char="[", 
+			color="grey", 
+			placement="head", 
+            effects=(
+                ("dv", 1),
+            )),
 
     "gold necklace": 
-        Armor("gold necklace", "'", "yellow", "neck", (
-            ("cha", 2),
-        )),
+        Armor(
+			name="gold necklace", 
+			char="'", 
+			color="yellow", 
+			placement="neck", 
+            effects=(
+                ("cha", 2),
+            )),
 
     "holy symbol": 
-        Armor("holy_symbol", "'", "white", "neck", (
-            ("wis", 2),
-        )),
+        Armor(
+			name="holy symbol", 
+			char="'", 
+			color="white", 
+			placement="neck",             
+            effects=(
+                ("wis", 2),
+            )),
 
     "whistle": 
-        Armor("whistle", "'", "grey", "neck", None),
+        Armor(
+            name="whistle", 
+            char="'", 
+            color="grey", 
+            placement="neck", 
+            effects=None),
 
     "amulet of power": 
-        Armor("amulet of power", "'", "red", "neck", (
-            ("str", 2),
-        )),
+        Armor(
+			name="amulet of power", 
+			char="'", 
+			color="red", 
+			placement="neck", 
+            effects=(
+                ("str", 2),
+            )),
 
     "elven chainmail": 
-        Armor("elven chainmail", "[", "blue", "body", (
-            ("dv", 4), ("mr", -3),
-        )),
+        Armor(
+			name="elven chainmail", 
+			char="[", 
+			color="blue", 
+			placement="body", 
+            effects=(
+                ("dv", 4), ("mr", -3),
+            )),
 
     "metal armor": 
-        Armor("metal armor", "[", "grey", "body", (
-            ("dv", 3), ("mr", -3),
-        )),  
+        Armor(
+			name="metal armor", 
+			char="[", 
+			color="grey", 
+			placement="body", 
+            effects=(
+                ("dv", 3), ("mr", -3),
+            )),  
 
     "thick fur coat": 
-        Armor("thick fur coat", "[", "grey", "body", (
-            ("dv", 2),
-        )),
+        Armor(
+			name="thick fur coat", 
+			char="[", 
+			color="grey", 
+			placement="body", 
+            effects=(
+                ("dv", 2),
+            )),
 
     "light robe": 
-        Armor("light robe", "[", "grey", "body", (
-            ("dv", 1),
-        )),
-        
+        Armor(
+			name="light robe", 
+			char="[", 
+			color="grey", 
+			placement="body", 
+            effects=(
+                ("dv", 1),
+            )),
+            
     "heavy cloak":  
-        Armor("heavy cloak", "[", "grey", "body", (
-            ("dv", 1), ("mr", 2),
-        )),
+        Armor(
+			name="heavy cloak", 
+			char="[", 
+			color="grey", 
+			placement="body", 
+            effects=(
+                ("dv", 1), ("mr", 2),
+            )),
 
     "leather armor": 
-        Armor("leather armor", "[", "grey", "body", (
-            ("dv", 1), ("mr", 2),
-        )),
+        Armor(
+			name="leather armor", 
+			char="[", 
+			color="grey", 
+			placement="body", 
+            effects=(
+                ("dv", 1), ("mr", 2),
+            )),
 
     "thick fur bracers": 
-        Armor("thick fur bracers", "~", "grey", "body", (
-            ("dv", 1),
-        )),
+        Armor(
+			name="thick fur bracers", 
+			char="~", 
+			color="grey", 
+			placement="body", 
+            effects=(
+                ("dv", 1),
+            )),
 
     "leather bracers": 
-        Armor("leather bracers", "[", "grey", "body", (
-            ("dv", 2), ("mr", 1),
-        )),
+        Armor(
+			name="leather bracers", 
+			char="[", 
+			color="grey", 
+			placement="body", 
+            effects=(
+                ("dv", 2), ("mr", 1),
+            )),
 
     "cloth gloves": 
-        Armor("cloth gloves", "[", "grey", "body", (
-            ("mr", 1),
-        )),
+        Armor(
+			name="cloth gloves", 
+			char="[", 
+			color="grey", 
+			placement="body", 
+            effects=(
+                ("mr", 1),
+            )),
 
     "leather gloves": 
-        Armor("leather gloves", "[", "grey", "body", (
-            ("dv", 1), ("mr", 2),
-        )),
+        Armor(
+			name="leather gloves", 
+			char="[", 
+			color="grey", 
+			placement="body", 
+            effects=(
+                ("dv", 1), ("mr", 2),
+            )),
     
     # -- WEAPONS -- 
     "long spear": 
-        Weapon("long spear", "(", "grey", (
-            ("acc", 2), ("dmg", (2, 9)),
-        ), hands=2),
+        Weapon(
+			name="long spear", 
+            char="(", 
+            color="grey", 
+            effects=(
+                ("acc", 2), ("dmg", (2, 9)),
+            ), 
+            hands=2),
 
     "silver sword": 
-        Weapon("silver sword", "(", "grey", (
-            ("acc", 2), ("dmg", (3, 7)),
-        ), hands=1),
+        Weapon(
+			name="silver sword", 
+            char="(", 
+            color="grey", 
+            effects=(
+                ("acc", 2), ("dmg", (3, 7)),
+            ), 
+            hands=1),
 
     "battle axe": 
-        Weapon("battle axe", "(", "grey", (
-            ("acc", -1), ("dmg",  (6, 10)),
-        ), hands=2),
+        Weapon(
+			name="battle axe", 
+            char="(", 
+            color="grey", 
+            effects=(
+                ("acc", -1), ("dmg",  (6, 10)),
+            ), 
+            hands=2),
 
     "copper pick": 
-        Weapon("copper pick", "(", "grey", (
-            ("acc", -2), ("dmg",  (3, 5)),
-        ), hands=2),
+        Weapon(
+			name="copper pick", 
+            char="(", 
+            color="grey", 
+            effects=(
+                ("acc", -2), ("dmg",  (3, 5)),
+            ), 
+            hands=2),
 
     "mithril dagger": 
-        Weapon("mithril dagger", "(", "grey", (
-            ("acc", 1), ("dmg", (2, 4)),
-        ), hands=1),
+        Weapon(
+			name="mithril dagger", 
+            char="(", 
+            color="grey", 
+            effects=(
+                ("acc", 1), ("dmg", (2, 4)),
+            ), 
+            hands=1),
 
     "broadsword": 
-        Weapon("broadsword", "(", "grey", (
-            ("acc", 0), ("dmg", (4, 8)),
-        ), hands=2),
+        Weapon(
+			name="broadsword", 
+            char="(", 
+            color="grey", 
+            effects=(
+                ("acc", 0), ("dmg", (4, 8)),
+            ), 
+            hands=2),
 
     "long sword": 
-        Weapon("long sword", "(", "grey", (
-            ("acc", 1), ("dmg", (5, 7)),
-        ), hands=2),
+        Weapon(
+			name="long sword", 
+            char="(", 
+            color="grey", effects=(
+                ("acc", 1), ("dmg", (5, 7)),
+            ), 
+            hands=2),
 
     "medium shield": 
-        Weapon("medium shield", "[", "grey", (
-            ("dv", 2),
-        ), hands=1),
+        Weapon(
+			name="medium shield", 
+            char="[", 
+            color="grey", 
+            effects=(
+                ("dv", 2),
+            ), 
+            hands=1),
 
     "small shield": 
-        Weapon("small shield", "[", "grey", (
-            ("dv", 1),
-        ), hands=1),
+        Weapon(
+			name="small shield", 
+            char="[", 
+            color="grey", 
+            effects=(
+                ("dv", 1),
+            ), 
+            hands=1),
 
     "mace": 
-        Weapon("mace", "(", "grey", (
-            ("acc", -2), ("dmg", (3, 6))
-        ), hands=1),
+        Weapon(
+			name="mace", 
+            char="(", 
+            color="grey", 
+            effects=(
+                ("acc", -2), ("dmg", (3, 6))
+            ), 
+            hands=1),
 
     "warhammer": 
-        Weapon("warhammer", "(", "dark green", (
-            ("acc", -3), ("dmg", (8, 15)),
-        ), hands=2),
+        Weapon(
+			name="warhammer", 
+            char="(", 
+            color="dark green", 
+            effects=(
+                ("acc", -3), ("dmg", (8, 15)),
+            ), 
+            hands=2),
 
     "wooden staff": 
-        Weapon("wooden staff", "(", "grey", (
-            ("acc", 3), ("dmg", (3, 5)),
-        ), hands=2),
+        Weapon(
+			name="wooden staff", 
+            char="(", 
+            color="grey", 
+            effects=(
+                ("acc", 3), ("dmg", (3, 5)),
+            ), 
+            hands=2),
 
     # "quarterstaff": Weapon("quarterstaff", 
     #     "(", "grey", 2, -1, (4, 9)),
@@ -172,60 +321,96 @@ itemlist = {
     # "storm ring": None,
 
     "ring of light": 
-        Ring("ring of light", '=', "white", (
-            ("wis", 1),
-        )),
+        Ring(
+            name="ring of light", 
+            char="=", 
+            color="white", 
+            effects=(("wis", 1),)),
 
     "ring of chaos": 
-        Ring("ring of chaos", "=", "dark red", (
-            ("str", 3), ("con", 3), ("dex", 3), 
-            ("int", 3), ("wis", 3), ("cha", 3),
-        )),
+        Ring(
+            name="ring of chaos", 
+            char="=", 
+            color="dark red", 
+            effects=(
+                ("str", 3), ("con", 3), ("dex", 3), 
+                ("int", 3), ("wis", 3), ("cha", 3),
+            )),
 
     "ring of ice": 
-        Ring("ring of ice", "=", "light blue", (
-            ("hp", 10),
-        )),
+        Ring(
+            name="ring of ice", 
+            char="=", 
+            color="light blue", 
+            effects=(
+                ("hp", 10),
+            )),
 
     "ring of fire": 
-        Ring("ring of fire", "=", "dark red", (
-            ("dmg", 3),
-        )),
+        Ring(
+            name="ring of fire", 
+            char="=", 
+            color="dark red", 
+            effects=(
+                ("dmg", 3),
+            )),
 
     "ring of water": 
-        Ring("ring of water", "=", "dark blue", (
-            ("sp", 10),
-        )),
+        Ring(
+            name="ring of water", 
+            char="=", 
+            color="dark blue", 
+            effects=(
+                ("sp", 10),
+            )),
 
     "ring of lightning": 
-        Ring("ring of lightning", "=", "yellow", (
-            ("wis", 2),
-        )),
+        Ring(
+            name="ring of lightning", 
+            char="=", 
+            color="yellow", 
+            effects=(
+                ("wis", 2),
+            )),
 
     "ring of earth": 
-        Ring("ring of earth", "=", "dark green", (
-            ("str", 1),
-        )),
+        Ring(
+            name="ring of earth", 
+            char="=", 
+            color="dark green", 
+            effects=(
+                ("str", 1),
+            )),
 
     "ring of nature": 
-        Ring("ring of nature", "=", "green", (
-            ("wis", 1),
-        )),
+        Ring(
+            name="ring of nature", 
+            char="=", 
+            color="green", 
+            effects=(
+                ("wis", 1),
+            )),
 
     "ring of power": 
-        Ring("ring of power", "=", "red", (
-            ("str", 2), 
-            ("dex", 1),
-        )),
+        Ring(
+            name="ring of power", 
+            char="=", 
+            color="red", 
+            effects=(
+                ("str", 2), ("dex", 1),
+            )),
     
     # -- PANTS --
     "leather belt": 
-        Armor("leather belt", "[", "green", "waist", (
-            ("dv", 1),
-        )),
+        Armor(
+            name="leather belt", 
+            char="[", 
+            color="green", 
+            placement="waist", 
+            effects=(
+                ("dv", 1),
+            )),
 
-    # "rope belt": Armor("rope belt", "[", "green", "waist", 0, 0, 1, 0),
-    # "common pants": Armor("common pants", "[", "green", "legs", 0, 0, 0, 0),
 
     # -- Shoes --
     "leather boots": 
@@ -233,10 +418,11 @@ itemlist = {
             name="leather boots", 
             char="[", 
             color="green", 
-            effects=(("dv", 1),)),
+            effects=(
+                ("dv", 1),
+            )),
 
-    # "metal boots": Armor("metal boots", "[", "grey", "feet", 0, 0, 0, 0),
-    # "sandals": Armor("sandals", "[", "green", "feet", 0, 0, 0, 0),
+
     # tome, spellbook, scrolls
 
     # -- Consumables --
@@ -245,14 +431,18 @@ itemlist = {
             name="small health potion", 
             char="!", 
             color="light red", 
-            effects=(('heal', 5),)),
+            effects=(
+                ('heal', 5),
+            )),
 
     "small mana potion": 
         Potion(
             name="small mana potion", 
             char="!", 
             color="light blue", 
-            effects=(("gain", 5),)),
+            effects=(
+                ("gain", 5),
+            )),
 
     # "medium health potion": Potion("medium health potion", "!", "red", 20),
     # "large health potion": Potion("large health potion", "!", "red", 30),
@@ -263,7 +453,10 @@ itemlist = {
             name="berry", 
             char="%", 
             color="blue", 
-            effects=(("hr", 1),), turns=3),
+            effects=(
+                ("hr", 1),
+            ), 
+            turns=3),
 }
 
 def convert(item):
@@ -280,12 +473,7 @@ def get_all_items():
         print(itemlist[key])
         print(itemlist[key].__repr__())
         print()
-        
-def check_item(classifier, item):
-    try:
-        print(itemlist[classifier][item])
-    except KeyError:
-        raise KeyError("Classifier or item name is wrong")
+    print(len(itemlist))
 
 if __name__ == "__main__":
     get_all_items()
