@@ -8,7 +8,8 @@ and placed into the item to make a valid item object. If not then a value
 error is raised.
 
     Item:
-        Holdable -> weapons
+        # Holdable -> weapons
+        attackable = weapons
         Usable -> tools
         Consumable -> food
         Drinkable -> potions

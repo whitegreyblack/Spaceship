@@ -1,15 +1,15 @@
 from spaceship.classes.item import Item, Weapon, Armor, Ring, Food, Shoes, Potion
 
 itemlist = {
-    # TODO -- implement shields
     # TODO -- implement ranged weapons
     # TODO -- implement readable items: scrolls, tomes
-    # "rope belt": Armor("rope belt", "[", "green", "waist", 0, 0, 1, 0),
-    # "common pants": Armor("common pants", "[", "green", "legs", 0, 0, 0, 0),
-    # "metal boots": Armor("metal boots", "[", "grey", "feet", 0, 0, 0, 0),
-    # "sandals": Armor("sandals", "[", "green", "feet", 0, 0, 0, 0),
+
+    # -------------------------------------------------
     # (Armor\()(\"[a-z ]*\", )(\"[\[\']\", )(\"[a-z]*\", )(\"[a-z]*\", )(\()
     # $1\n\t\t\tname=$2\n\t\t\tchar=$3\n\t\t\tcolor=$4\n\t\t\teffects=$5
+    # -------------------------------------------------
+
+
     "horned helmet": 
         Armor(
             name="horned helmet", 
@@ -188,6 +188,26 @@ itemlist = {
                 ("dv", 1), ("mr", 2),
             )),
     
+    "rope belt": 
+        Armor(
+			name="rope belt", 
+			char="[", 
+			color="green", 
+            placement="waist",
+			effects=(
+                ("dv", 0), ("mr", 1),
+            )),
+
+    "common pants": 
+        Armor(
+			name="common pants", 
+			char="[", 
+			color="green", 
+            placement="legs",
+			effects=(
+                ("dv", 0), ("mr", 1),
+            )),
+
     # -- WEAPONS -- 
     "long spear": 
         Weapon(
@@ -422,7 +442,23 @@ itemlist = {
                 ("dv", 1),
             )),
 
+    "metal boots": 
+        Shoes(
+			name="metal boots", 
+			char="[", 
+			color="grey", 
+			effects=(
+                ("str", 1), ("dv", 0), ("mr", -2),
+            )),
 
+    "sandals": 
+        Shoes(
+			name="sandals", 
+			char="[", 
+			color="green", 
+			effects=(
+                ("dv", 0), ("mr", 0),
+            )),
     # tome, spellbook, scrolls
 
     # -- Consumables --
