@@ -4,8 +4,9 @@ from typing import Tuple
 
 from ..tools import distance
 from .color import Color
-from .item import Armor, Weapon, Item, itemlist, item_chars
+from .item import Armor, Weapon, Item, item_chars
 from .unit import Unit, unit_chars
+from .items import itemlist
 
 class VillagerChild(Unit):
     def __init__(self, x, y, ch="v", fg=Color.white, bg=Color.black, 

@@ -1,12 +1,21 @@
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from collections import namedtuple
+from spaceship.classes.die import Die
+
 '''
 Item class is used in two areas, new character creation screen and new_game 
 Each item passed in should hold certain item properties that can be copied
 and placed into the item to make a valid item object. If not then a value
 error is raised.
+
+    Item:
+        Holdable -> weapons
+        Usable -> tools
+        Consumable -> food
+        Drinkable -> potions
+        Wearable -> armor
+        Readable -> books
+        Throwable -> missles
+        Viewable -> All? (descriptions)
 
 Item Classifiers: (-- Based on ADOM item classifiers)
     [  Armor, shields, cloaks, boots, girdles, gauntlets and helmets
@@ -79,41 +88,37 @@ def modify(value: str) -> str:
     return value.replace('', '')
 
 def seperate(effects):
-    return ", ".join(f"{modify(e)}:{mark(v)}" for e, v in effects)
-
-def convert(item):
-    try:
-        item = itemlist[item]
-    except KeyError:
-        pass
-    except TypeError:
-        pass    
-    return item
+    string = ", ".join(f"{modify(e)}:{mark(v)}" for e, v in effects)
+    if string:
+        return "(" + string + ")"
+    else:
+        return ""
 
 class Item:
-    def __init__(self, name, char, color, effects, slots=None):
+    def __init__(self, name, char, color, effects):
         self.name = name
         self.char = char
         self.color = color
         self.__effects = effects
 
     def __str__(self):
-        return f"{self.name} ({seperate(self.effects)})"
+        return f"{self.name} {seperate(self.effects)}"
 
     def __repr__(self):
-        return f"{self.name} ({seperate(self.effects)})"
+        return f"[{self.__class__.__name__}] {self.name} {seperate(self.effects)}"
 
     @property
     def effects(self):
-        for effect, value in self.__effects:
-            if effect == 'dmg':
-                if not isinstance(value, tuple):
-                    value = (value, value)
+        if self.__effects:
+            for effect, value in self.__effects:
+                if effect == 'dmg':
+                    if not isinstance(value, tuple):
+                        value = (value, value)
 
-                for effect, val in zip('dmg_lo dmg_hi'.split(), value):
-                    yield effect, val
-            else:
-                yield effect, value
+                    for effect, val in zip('dmg_lo dmg_hi'.split(), value):
+                        yield effect, val
+                else:
+                    yield effect, value
 
 class Food(Item):
     inventory = "food"
@@ -129,9 +134,6 @@ class Potion(Item):
     inventory = "potions"
     def __init__(self, name, char, color, effects=None):
         super().__init__(name, char, color, effects)
-
-    def __repr__(self):
-        return "[Potion] {:<15}: HEAL={}:".format(self.name, self.heal)
 
     def use(self, unit):
         for effect, value in self.effects:
@@ -162,126 +164,7 @@ class Weapon(Item):
         super().__init__(name, char, color, effects)
         self.hands = hands
 
-itemlist = {
-    # TODO -- implement shields
-    # TODO -- implement ranged weapons
-    # TODO -- implement readable items: scrolls, tomes
-    "horned helmet": Armor("horned helmet", "[", "grey", "head", 
-        (("dv", 1), ("str", 1))),
-    "metal helmet": Armor("metal helmet", "[", "grey", "head",
-        (("dv", 2), ("str", 1))),
-    "leather cap": Armor("leather cap", "[", "grey", "head", 
-        (("dv", 1),)),
-    "cloth hood": Armor("cloth hood", "[", "grey", "head", 
-        (("dv", 1), )),
-    "gold necklace": Armor("gold necklace", "'", "yellow", "neck", 
-        (("cha", 2),)),
-    "holy symbol": Armor("holy_symbol", "'", "white", "neck", 
-        (("wis", 2),)),
-    # "whistle": Armor("whistle", "'", "grey", 
-    #     "neck", 0, 0, 0, 0),
-    # "amulet of power": Armor("amulet of power", 
-    #     "'", "red", "neck", 0, 0, 0, 0),
-    "elven chainmail": Armor("elven chainmail", "[", "blue", "body",
-        (("dv", 4), ("mr", -3))),
-    # "metal armor": Armor("metal armor", 
-    #     "[", "grey", "body", 1, 1, 0, 1),  
-    "thick fur coat": Armor("thick fur coat", "[", "grey", "body", 
-        (("dv", 2),)),
-    "light robe": Armor("light robe", "[", "grey", "body", 
-        (("dv", 1),)),
-    # "heavy cloak":  Armor("heavy cloak", 
-    #     "[", "grey", "body", 0, 0, 0, 0),
-    # "leather armor": Armor("leather armor", 
-    #     "[", "grey", "body", 0, 0, 0, 0),
-    "thick fur bracers": Armor("thick fur bracers", "[", "grey", "body", 
-        (("dv", 1),)),
-    # "leather bracers": Armor("leather bracers", 
-    #     "[", "grey", "body", 0, 0, 0, 0),
-    # "cloth gloves": Armor("cloth gloves",
-    #     "[", "grey", "body", 0, 0, 0, 0),
-    # "leather gloves": Armor("leather gloves",
-    #     "[", "grey", "body", 0, 0, 0, 0),
-    "long spear": Weapon("long spear", "(", "grey", 
-        (("acc", 2), ("dmg", (2, 6))), hands=2),
-    # "silver sword": Weapon("silver sword", 
-    #     "(", "grey", 1, 1, (3, 7)),
-    "battle axe": Weapon("battle axe", "(", "grey",
-        (("acc", -1), ("dmg",  (6, 10))), hands=2),
-    "copper pick": Weapon("copper pick", "(", "grey",
-        (("acc", -2), ("dmg",  (3, 5))), hands=2),
-    # "mithril dagger": Weapon("mithril dagger", 
-    #     "(", "grey", 1, 3, (2, 5)),
-    "broadsword": Weapon("broadsword", "(", "grey", 
-        (("acc", 0), ("dmg", (4, 8))), hands=2),
-    "long sword": Weapon("long sword", "(", "grey",
-        (("acc", 1), ("dmg", (5, 7))), hands=2),
-    "medium shield": Weapon("medium shield", "[", "grey",
-        (("dv", 2),), hands=1),
-    "small shield": Weapon("small shield", "[", "grey", 
-        (("dv", 1),), hands=1),
-    # "mace": Weapon("mace", 
-    #     "(", "grey", 1, -1, (3, 9)),
-    # "warhammer": Weapon("warhammer", 
-    #     "(", "grey", 2, -3, (8, 15)),
-    "wooden staff": Weapon("wooden staff", "(", "grey", 
-        (("acc", 3), ("dmg", (3, 5))), hands=2),
-    # "quarterstaff": Weapon("quarterstaff", 
-    #     "(", "grey", 2, -1, (4, 9)),
-    # short bow,
-    "ring of earth": Ring("ring of earth", "=", "dark green", 
-        (("str", 1),)),
-    "ring of nature": Ring("ring of nature", "=", "green", 
-        (("wis", 1),)),
-    "ring of power": Ring("ring of power", "=", "red", 
-        (("str", 2), ("dex", 1))),
-    # "ring of regen": None,
-    # "ring of protection": None,
-    "ring of light": Ring("ring of light", '=', "white", 
-        (("wis", 1),)),
-    # "ring of chaos": None,
-    "ring of ice": Ring("ring of ice", "=", "light blue", 
-        (("hp", 10),)),
-    "ring of fire": Ring("ring of fire", "=", "dark red", 
-        (("dmg", 3),)),
-    "ring of water": Ring("ring of water", "=", "dark blue", 
-        (("sp", 10),)),
-    "ring of lightning": Ring("ring of lightning", "=", "yellow", 
-        (("wis", 2),)),
-    # "ring of resistance": None,
-    # "ring of darkness": None,
-    # "storm ring": None,
-    "leather belt": Armor("leather belt", "[", "green", "waist", 
-        (("dv", 1),)),
-    # "rope belt": Armor("rope belt", "[", "green", "waist", 0, 0, 1, 0),
-    # "common pants": Armor("common pants", "[", "green", "legs", 0, 0, 0, 0),
-
-    "leather boots": Shoes("leather boots", "[", "green", 
-        (("dv", 1),)),
-    # "metal boots": Armor("metal boots", "[", "grey", "feet", 0, 0, 0, 0),
-    # "sandals": Armor("sandals", "[", "green", "feet", 0, 0, 0, 0),
-    # tome, spellbook, scrolls
-    "small health potion": Potion("small health potion", "!", "red", 
-        (('hp', 5),)),
-    # "medium health potion": Potion("medium health potion", "!", "red", 20),
-    # "large health potion": Potion("large health potion", "!", "red", 30),
-    # "small shield potion": Potion("small shield potion", "!", "blue", 10),
-    "berry": Food("berry", "%", "blue", 
-        (("hr", 1),), turns=3),
-}
-
-def get_all_items():
-    for key in items.keys():
-        print(itemlist[key].__repr__())
-
-def check_item(classifier, item):
-    try:
-        print(itemlist[classifier][item])
-    except KeyError:
-        raise KeyError("Classifier or item name is wrong")
-
-if __name__ == "__main__":
-    get_all_items()
+attrs = "str con dex wis int cha hp mp hr mr sp dv mr".split()
 
 '''
 Attacking

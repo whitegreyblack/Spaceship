@@ -5,7 +5,8 @@ from .color import Color
 from .unit import Unit
 from .world import World
 from .item import Ring, Weapon
-from .item import itemlist, convert, totattr, modattr, sort, curattr
+from .item import totattr, modattr, sort, curattr
+from .items import itemlist, convert
 
 parts=("head", "neck", "body", "arms", "hands", 
         "hand_left", "hand_right", "ring_left", 
