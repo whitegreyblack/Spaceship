@@ -4,7 +4,8 @@ from random import randint
 from .color import Color
 from .unit import Unit
 from .world import World
-from .item import Ring, itemlist, convert, totattr, modattr, sort, curattr
+from .item import Ring, Weapon
+from .item import itemlist, convert, totattr, modattr, sort, curattr
 
 parts=("head", "neck", "body", "arms", "hands", 
         "hand_left", "hand_right", "ring_left", 
@@ -33,6 +34,7 @@ class Equipment:
     def __init__(self, parts, equipment=None):
         self.parts = parts
         self.initialize_parts()
+        self.weapon_slots = None
         if equipment:
             self.items = equipment
 
@@ -80,6 +82,10 @@ class Equipment:
     def equip(self, part, item):
         if not getattr(self, part):
             setattr(self, part, item)
+            if isinstance(item, Weapon):
+                if hasattr(item, 'hands'):
+                    print('hands', item.hands)
+                    self.weapon_slots = item.hands
             return True
         return False
 
@@ -98,8 +104,9 @@ class Inventory(list):
 
     def by_type(self, part):
         for item in self:
-            if hasattr(item, 'placement') and part in item.placement:
-                yield item
+            if hasattr(item, 'placement'):
+                if part in item.placement:
+                    yield item
 
     def by_prop(self, prop):
         for item in self:
@@ -185,17 +192,26 @@ class Player(Unit):
                 acc=self.acc))
 
     def status(self):
+        '''
+        Returns the string formatted status drawn onto the game screen
+        each loop
+        '''
         def overloaded(attr):
+            '''
+            Returns a color value given the total attr value vs current value
+            '''
             if getattr(self, totattr(attr)) > getattr(self, attr):
                 return "green"
             elif getattr(self, totattr(attr)) < getattr(self, attr):
                 return "red"
             return "white"
+
         return (self.name, self.gender[0], self.race[0], self.job[0], self.level,
             "{}/{}".format(self.exp, self.advexp),
             "{}/{}".format(self.cur_hp, self.tot_hp),
             "{}/{}".format(self.cur_mp, self.tot_mp),
             "{}-{}".format(self.tot_dmg_lo, self.tot_dmg_hi),
+            "{}/{}".format(self.tot_dv, self.tot_mr),
             overloaded("str"), self.tot_str,
             overloaded("con"), self.tot_con, 
             overloaded("dex"), self.tot_dex, 
@@ -234,6 +250,9 @@ class Player(Unit):
     def item_on(self, index):
         yield next(self.__equipment.item_by_part(index))
 
+    def holding_two_handed_weapon(self):
+        return self.__equipment.weapon_slots == 2
+
     @property
     def inventory(self):
         for group, items in self.__inventory.items:
@@ -271,17 +290,18 @@ class Player(Unit):
         return False
     
     def initialize_base_stats(self) -> None:
+        '''Sets the stats used in determining final statuses'''
+        for stat in ('str con dex int wis cha hp mp sp dv mr'.split()):
+            setattr(self, stat, 0)
+            setattr(self, modattr(stat), 0)
+            setattr(self, totattr(stat), 0)
+
         self.str, self.con, self.dex, self.int, self.wis, self.cha = \
                                     tuple(s + g + r + c for s, g, r, c in zip(
                                                             self.base_stats,
                                                             self.gender_bonus,
                                                             self.race_bonus,
                                                             self.job_bonus))
-        self.hp, self.mp, self.sp = 0, 0, 0
-        self.dv = 0
-        for stat in ('str con dex int wis cha hp mp sp dv'.split()):
-            setattr(self, modattr(stat), 0)
-            setattr(self, totattr(stat), 0)
     
         for stat in 'acc dmg_lo dmg_hi'.split():
             for stat in (stat, modattr(stat), totattr(stat)):

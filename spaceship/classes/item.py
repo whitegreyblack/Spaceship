@@ -79,7 +79,7 @@ def modify(value: str) -> str:
     return value.replace('', '')
 
 def seperate(effects):
-    return ", ".join(f"{modify(e)}: {mark(v)}" for e, v in effects)
+    return ", ".join(f"{modify(e)}:{mark(v)}" for e, v in effects)
 
 def convert(item):
     try:
@@ -92,13 +92,10 @@ def convert(item):
 
 class Item:
     def __init__(self, name, char, color, effects, slots=None):
-        self.__name = name
+        self.name = name
         self.char = char
         self.color = color
         self.__effects = effects
-
-        if slots:
-            self.inventory, self.placement = slots
 
     def __str__(self):
         return f"{self.name} ({seperate(self.effects)})"
@@ -107,17 +104,19 @@ class Item:
         return f"{self.name} ({seperate(self.effects)})"
 
     @property
-    def name(self):
-        return self.__name
-
-    @property
     def effects(self):
         for effect, value in self.__effects:
-            yield effect, value
+            if effect == 'dmg':
+                if not isinstance(value, tuple):
+                    value = (value, value)
+
+                for effect, val in zip('dmg_lo dmg_hi'.split(), value):
+                    yield effect, val
+            else:
+                yield effect, value
 
 class Food(Item):
     inventory = "food"
-    placement = None
     def __init__(self, name, char, color, effects=None):
         super().__init__(name, char, color, effects)
 
@@ -162,17 +161,6 @@ class Weapon(Item):
         super().__init__(name, char, color, effects)
         self.hands = hands
 
-    @property
-    def effects(self):
-        for effect, value in super().effects:
-            if effect == 'dmg':
-                for effect, val in zip('dmg_lo dmg_hi'.split(), value):
-                    yield effect, val
-
-    def seperate(self):
-        return ", ".join(f"{modify(effect)}: {mark(value)}" 
-            for effect, value in super().effects)
-
 itemlist = {
     # TODO -- implement shields
     # TODO -- implement ranged weapons
@@ -215,8 +203,7 @@ itemlist = {
     #     "(", "grey", 1, 1, (1, 4)),
     # "mithril dagger": Weapon("mithril dagger", 
     #     "(", "grey", 1, 3, (2, 5)),
-    # "broadsword": Weapon("broadsword", 
-    #     "(", "grey", 1, -1, (4, 8)),
+    "broadsword": Weapon("broadsword", "(", "grey", (("acc", -1), ("dmg", (4, 8))), hands=2),
     # "long sword": Weapon("long sword", 
     #     "(", "grey", 1, -1, (4, 8)),
     # "medium shield": Weapon("medium shield", 

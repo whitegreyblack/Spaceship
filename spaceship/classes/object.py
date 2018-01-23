@@ -1,6 +1,79 @@
 from typing import Tuple
+from re import search
 import math
-from .tile import Tile
+
+class Color:
+    def __init__(self, color):
+        if search(r'^#(?:[0-9a-fA-F]{3}){1,2}$', color):
+            self.color = color
+        else:
+            raise ValueError("Hexcode is an invalid color")
+
+class Point:
+    __slots__ = ('x', 'y')
+    def __init__(self, x, y):
+        self.x, self.y = x, y
+
+    @property
+    def position(self):
+        return self.x, self.y
+
+    def __iadd__(self, other):
+        try:
+            x, y = self.x + other.x, self.y + other.y
+
+        except AttributeError:
+            x, y = self.x + other[0], self.y + other[1]
+
+        finally:
+            return Point(x, y)
+
+    def __isub__(self, other):
+        try:
+            x, y = self.x - other.x, self.y - other.y
+
+        except AttributeError:
+            x, y = self.x - other[0], self.y - other[1]
+
+        finally:
+            return Point(x, y)
+
+    def __eq__(self, other):
+        try:        
+            equal = self.x == other.x and self.y == other.y
+
+        except AttributeError:
+            equal = self.x == other[0] and self.y == other[1]
+
+        finally:
+            return equal
+
+class Tile:
+    def __init__(self, ch, fg, bg):
+        self.character = ch
+        self.foreground = fg
+        self.background = bg
+
+    def draw(self):
+        return self.character, self.foreground, self.background
+
+class WorldTile(Tile):
+    def __init__(self, ch, fg, bg, land, enterable):
+        super().__init__(ch, fg, bg)
+        self.land = land
+        self.enterable = enterable
+
+    def draw(self):
+        return (*super().draw(), self.land, self.enterable)
+    
+class MapTile(Tile):
+    def __init__(self, ch, fg, block, light):
+        super().__init__(ch, fg, bg)
+        self.block = block
+        self.light = light
+
+    def draw(self):
+        return (*super().draw(), self.block, self.light)
 
 class Object(Tile):
     '''Base object class used in the following subclasses:

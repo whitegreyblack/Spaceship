@@ -95,7 +95,7 @@ class Start(Scene):
             self.world.units_add([self.player])
 
         self.gamelog = GameLogger(
-            width=self.width,
+            width=self.main_width,
             screenlinelimit=3 if self.height <= 25 else 4,
             footer="_" + self.player.name + "_" + self.player.job)
 
@@ -133,7 +133,7 @@ class Start(Scene):
 
         for index, msg in enumerate(messages):
             term.puts(
-                x=1,
+                x=self.main_x,
                 y=self.height + index - self.log_height - 1,
                 s="[c={}]{}[/c]".format(msg.color, msg.message))
         
@@ -315,31 +315,17 @@ class Start(Scene):
                 group = "".join(group)
             self.draw_item_grouping(group, items)
 
-    def draw_inventory_by_group(self, items, part):
-        '''Handles drawing of the inventory screen along with the specific 
-        item type and their modification effects
-        '''
-        pass
-
-    def draw_unequip_confirm(self, item):
-        string = strings.cmd_unequip_confirm.format(item)
-        term.puts(x=center(string, self.width), y=self.height - 5, s=string)
-# 
     def draw_screen_log(self, log):
         self.clear_screen_log()
-        term.puts(
-            x=center(
-                log, 
-                self.width - self.main_x) + self.main_x, 
-                y=self.height - 5, 
-                s=log)
+        strings = wrap(log, self.main_width)
+        for index, string in enumerate(strings):
+            term.puts(
+                x=center(string, self.main_width) + self.main_x, 
+                y=self.height + index - 5, 
+                s=string)
 
     def clear_screen_log(self):
-        term.clear_area(
-            self.main_x, 
-            self.height - 5, 
-            self.width - self.main_x, 
-            2)
+        term.clear_area(self.main_x, self.height - 5, self.main_width, 2)
 
     def draw_item_border(self):
         term.bkcolor('dark grey')
@@ -359,7 +345,7 @@ class Start(Scene):
         def unequip_item(code):
             nonlocal log, update_status
             string = strings.cmd_unequip_confirm.format(item)
-            term.puts(x=center(string, self.width), y=self.height - 5, s=string)
+            self.draw_screen_log(string)
             term.refresh()
 
             confirm = term.read()
@@ -369,8 +355,20 @@ class Start(Scene):
                 log = strings.cmd_unequip.format(item)
                 update_status = True
 
+            else:
+                self.clear_screen_log()
+
         def equip_item(part):
             nonlocal log, update_status
+            if part in ('hand_left', 'hand_right'):
+                if self.player.holding_two_handed_weapon():
+                    log = "Cannot equip to {}. ".format(part)
+                    lp, li = next(self.player.item_on('hand_left'))
+                    rp, ri = next(self.player.item_on('hand_right'))
+                    log += "You are already wielding the {} on your {}.".format(
+                        li if li else ri, lp if li else rp)
+                    return 
+
             items = list(self.player.inventory_type(part))
             
             if not items:
