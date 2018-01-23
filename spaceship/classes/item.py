@@ -97,7 +97,8 @@ def seperate(effects):
         return ""
 
 class Item:
-    def __init__(self, name, char, color, effects):
+    def __init__(self, name, char, color, 
+                 inventory=None, placement=None, effects=None):
         self.name = name
         self.char = char
         self.color = color
