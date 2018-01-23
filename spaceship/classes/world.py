@@ -150,7 +150,6 @@ class World(Map):
     }
 
     capitals = {
-
     }
 
     geo_legend = {

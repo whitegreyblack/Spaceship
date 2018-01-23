@@ -1,12 +1,9 @@
-import os
-import sys
 import shelve
 import random
 import textwrap
 from time import sleep, time
 from collections import namedtuple
 from bearlibterminal import terminal as term
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
 import spaceship.strings as strings
 from spaceship.menus.scene import Scene
 from spaceship.screen_functions import *

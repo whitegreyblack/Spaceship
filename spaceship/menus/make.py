@@ -131,6 +131,7 @@ class Create(Scene):
                 strings.class_archer, strings.class_squire,]]
 
     def draw(self):
+
         term.clear()
         self.cc_border()
         self.draw_title()
@@ -313,14 +314,16 @@ class Create(Scene):
                 # name = "Random name"
                 self.gender_index = random.randint(0, 1)
                 gender = self.gender_row(draw=False)
+
                 self.race_index = random.randint(0, 4)
                 race = self.race_row(draw=False)
+
                 self.class_index = random.randint(0, 4)
                 job = self.class_row(draw=False)
+
                 eq, inv = self.form_equipment(race.eq, job.equipment)
                 self.ret['kwargs'] = {
                     'player': player(
-                        # name,
                         race.location,
                         race.gold,
                         race.stats,
@@ -348,7 +351,6 @@ class Create(Scene):
 
                 self.ret['kwargs'] = {
                     'player': player(
-                    # name,
                     race.location,
                     race.gold,
                     race.stats,

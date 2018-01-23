@@ -21,7 +21,7 @@ SP      : [c=#00ffff]{:>10}[/c]{delim}
 """[1:]
 
 _col2 = """
-SKILLS  : {delim}\n  {}{delim}\n  {}{delim}{delim}\n
+SKILLS  : {delim}\n{}{delim}\n{}{delim}{delim}\n
 
      TOT GB RB CB IB{delim}
 STR : [c=#00ffff]{:>2}[/c]{delim}
