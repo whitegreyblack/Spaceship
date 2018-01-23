@@ -352,13 +352,17 @@ GAME_TITLE_SHORT ='''
      Act I: Bones of the Ancestors
 '''[1:]
 
+cmd_invalid = "'{}' is not a valid command"
 cmd_switch_eq = "Press 'v' to switch to inventory."
 cmd_switch_iv = "Press 'q' to switch to equipment."
 cmd_unequip_confirm = "Are you sure you want to unequip the {}?"
 cmd_unequip = "You unequip the {}."
 cmd_equip_none = "No items to equip for that slot."
+cmd_equip_two_hand = "You cannot equip a weapon to your {}. \
+You are already wielding the {} on your {}."
 cmd_equip_query = "Which item to equip?"
 cmd_equip = "You equip the {}."
+cmd_equip_invalid = "Invalid selection."
 cmd_drop_query = "Which item to drop?"
 cmd_drop_item = "You drop the {}."
 cmd_use_none = "You have no items in your inventory that are usable."
@@ -379,6 +383,7 @@ movement_move_error = "You cannot travel there."
 movement_move_oob = "You reached the edge of the map."
 movement_move_swim = "You cannot swim."
 movement_move_block = "You walk into {}."
+movement_unit_displace = "The {} switches places with the {}."
 
 movement_move_chars = {
     "=": "furniture",

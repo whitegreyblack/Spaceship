@@ -344,7 +344,7 @@ class Start(Scene):
 
         def unequip_item(code):
             nonlocal log, update_status
-            string = strings.cmd_unequip_confirm.format(item)
+            string = strings.cmd_unequip_confirm.format(item.name)
             self.draw_screen_log(string)
             term.refresh()
 
@@ -352,7 +352,7 @@ class Start(Scene):
 
             if confirm in (term.TK_Y, term.TK_ENTER, code):
                 self.player.unequip(part)
-                log = strings.cmd_unequip.format(item)
+                log = strings.cmd_unequip.format(item.name)
                 update_status = True
 
             else:
@@ -360,13 +360,15 @@ class Start(Scene):
 
         def equip_item(part):
             nonlocal log, update_status
+
             if part in ('hand_left', 'hand_right'):
                 if self.player.holding_two_handed_weapon():
-                    log = "Cannot equip to {}. ".format(part)
-                    lp, li = next(self.player.item_on('hand_left'))
-                    rp, ri = next(self.player.item_on('hand_right'))
-                    log += "You are already wielding the {} on your {}.".format(
-                        li if li else ri, lp if li else rp)
+                    _, li = next(self.player.item_on('hand_left'))
+                    _, ri = next(self.player.item_on('hand_right'))
+                
+                    log = strings.cmd_equip_two_hand.format(
+                        part, li.name if li else ri.name, 
+                        'left hand' if li else 'right hand',)
                     return 
 
             items = list(self.player.inventory_type(part))
@@ -399,7 +401,7 @@ class Start(Scene):
                         break 
 
                     else:
-                        log = 'Invalid selection'
+                        log = strings.cmd_equip_invalid
 
         log = ""
         current_screen = key
@@ -620,11 +622,11 @@ class Start(Scene):
             except TypeError:
                 divided[action](action)
             except KeyError:
-                invalid_command = "'{}' is not a valid command".format(action)
+                invalid_command = strings.cmd_invalid.format(action)
                 self.draw_log(invalid_command)        
 
         except KeyError:
-            invalid_command = "'{}' is not a valid command".format(action)
+            invalid_command = strings.cmd_invalid.format(action)
             self.draw_log(invalid_command)
 
     def process_move_unit_to_empty(self, tx, ty):
@@ -663,7 +665,7 @@ class Start(Scene):
                     if isinstance(self.location, City):
                         self.unit.displace(unit)
                         unit.energy.reset()
-                        log = "The {} switches places with the {}.".format(
+                        log = strings.movement_unit_displace.format(
                             self.unit.__class__.__name__, 
                             unit.race if not player else "you")
                         self.draw_log(log) 
