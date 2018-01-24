@@ -19,6 +19,15 @@ class Point:
     def position(self):
         return self.x, self.y
 
+    @position.setter
+    def position(self, xy):
+        dx, dy = xy
+        self.x += dx
+        self.y += dy
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}: ({self.x}, {self.y})"
+
     def __add__(self, other):
         try:
             x, y = self.x + other.x, self.y + other.y
@@ -87,6 +96,7 @@ class Object:
         Object.object_id += 1
         self.tile = Tile(ch, fg, bg)
         self.local = Point(x, y)
+        print(self.local.position)
 
     def __str__(self) -> str:
         return "{}: (x={}, y={}, ch={}, fg={}, bg={})".format(

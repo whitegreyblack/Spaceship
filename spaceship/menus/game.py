@@ -626,13 +626,12 @@ class Start(Scene):
             invalid_command = strings.cmd_invalid.format(action)
             self.draw_log(invalid_command)
 
-    def process_move_unit_to_empty(self, tx, ty):
-        occupied_player = self.player.position == (tx, ty)
-        occupied_unit = self.location.occupied(tx, ty)
+    def process_move_unit_to_empty(self, x, y):
+        occupied_player = self.player.local.position == (x, y)
+        occupied_unit = self.location.occupied(x, y)
 
         if not occupied_player and not occupied_unit:
-            # self.unit.move(tx, ty)
-            self.unit.position = (tx, ty)
+            self.unit.local.position = (x, y)
             return None
 
         return occupied_player, occupied_unit
@@ -721,7 +720,6 @@ class Start(Scene):
         if  self.player.height == Level.WORLD:
             if (x, y) == (0, 0):
                 self.draw_log(strings.movement_wait_world)
-                turn_inc = True
 
             else:
                 point = self.player.world + (x, y)
@@ -729,7 +727,7 @@ class Start(Scene):
                 if self.location.walkable(*point.position):
                     self.player.save_location()
                     self.player.travel(x, y)
-                    turn_inc = True
+                    
                 else:
                     self.draw_log(strings.movement_move_error)
 
@@ -741,12 +739,13 @@ class Start(Scene):
 
             else:
                 point = self.player.local + (x, y)
+                print(self.player.local.position, x, y, point.position)
                 if self.location.walkable(*point.position):
                     if not self.location.occupied(*point.position):
                         self.player.move(x, y)
                         msg_chance = random.randint(0, 5)
 
-                        if self.location.items_at(tx, ty) and msg_chance:
+                        if self.location.items_at(*point.position) and msg_chance:
                             item_message = random.randint(
                                 a=0, 
                                 b=len(strings.pass_by_item) - 1)
@@ -825,11 +824,11 @@ class Start(Scene):
 
                         turn_inc = True
                 else:
-                    if self.location.out_of_bounds(tx, ty):
+                    if self.location.out_of_bounds(*point.position):
                         self.draw_log(strings.movement_move_oob)
 
                     else:
-                        ch = self.location.square(tx, ty).char
+                        ch = self.location.square(*point.position).char
 
                         if ch == "~":
                             log = strings.movement_move_swim
@@ -972,8 +971,8 @@ class Start(Scene):
                     height=self.height)
 
                 # on cities enter map in the middle
-                self.player.position = location.width // 2, location.height // 2
-            
+                self.player.local.position = location.width // 2, location.height // 2
+
             elif self.player.location in self.world.dungeon_legend.keys():
                 # map type should be a cave
                 location = Cave(

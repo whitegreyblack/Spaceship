@@ -81,8 +81,9 @@ class Unit(Object):
 
     def move(self, dx: int, dy: int) -> None:
         '''Adds a vector to current position to change positions'''
-        self.x += dx
-        self.y += dy
+        print(self.local)
+        self.local += (dx, dy)
+        print(self.local)
         
     def reply(self):
         return "Hello there!"
