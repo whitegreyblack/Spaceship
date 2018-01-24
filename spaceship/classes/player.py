@@ -331,33 +331,6 @@ class Player(Unit):
 
     def dump(self) -> str:
         '''Return player information to output to terminal'''
-
-        dump_template="""
-            [Character Sheet -- Spaceship]
-            ======== Player Stats ========
-            Name     : {}
-            Sex      : {}
-            Race     : {}
-            Class    : {}
-
-            Level    : {}
-            Exp      : {}
-            ========   Equipment  ========
-            He       :
-            Neck     :
-            Torso    : Peasant garb
-            Ring(L)  :
-            Hand(L)  : Sword
-            Ring(R)  :
-            Hand(R)  :
-            Waist    : Thin rope
-            Legs     : Common pants
-            Feet     : Sandals
-            ======== Player Items ========
-            ========  Alignments  ========
-            ========  Relations   ========
-            """[1:]
-
         return dump_template.format(
             self.name,
             self.gender,
@@ -365,6 +338,9 @@ class Player(Unit):
             self.job,
             self.level,
             self.exp)
+
+def dump(hero):
+    pass
 
 if __name__ == "__main__":
     pass

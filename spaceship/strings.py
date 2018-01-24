@@ -4,10 +4,68 @@ from collections import namedtuple
 # Holds the multiline columns used in create character
 # Placed here since keeping them in cc is messy
 '''
+
+'''Constants used in main and other modules -- equivalent to globals'''
 FONT_PATH = "./spaceship/assets/fonts/"
 IMG_PATH = "./spaceship/assets/"
-_world = "Calabaston"
+MENU_SCREEN_WIDTH, MENU_SCREEN_HEIGHT = 80, 25
+MENU_FONT_WIDTH, MENU_FONT_HEIGHT = 8, 16
 
+GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT = 80, 50
+GAME_FONT_WIDTH, GAME_FONT_HEIGHT = 8, 8
+
+FOV_RADIUS = 25
+
+# CHARACTER MENU GLOBALS
+CM_TITLE = 1
+CM_SUBTITLE = 2
+CM_BORDER_WIDTH = 80
+CM_BORDER_HEIGHT = ()
+CM_COLUMN_WIDTH = 12
+CM_COLUMN_START = 1, 15, 27
+CM_FOOTER_HEIGHT = 22
+
+# OPTION MENU GLOBALS
+OPT_TITLE = 1
+OPT_BORDER_WIDTH = 80
+OPT_BORDER_HEIGHT = (3, 24)
+
+# ITEM CONSTANTS
+ITEM_DROP_RATE=0 # drop rate from monsters in dungeons
+ITEM_FIND_RATE=0 # chances item spawns in dungeon
+ITEM_PREREVEAL=0 # basically pre identification rate 
+
+# ROOM CONSTANTS
+ROOM_MIN_PLACE=0
+ROOM_MAX_PLACE=0
+ROOM_HALL_SIZE=2
+ROOM_DOOR_RATE=0
+
+GAME_TITLE_VERSION="v 0.0.4"
+GAME_TITLE_WIDTH=46
+GAME_TITLE_HEIGHT=6
+GAME_TITLE=''' \
+ ___                           _     _       
+/  _\_ __   __ _  ___ ___  ___| |__ (_)_ __  
+\  \| '_ \ / _` |/ __/ _ \/ __| '_ \| | '_ \ 
+_\  \ |_) | (_| | (_|  __/\__ \ | | | | |_) |
+\___/ .__/ \__,_|\___\___||___/_| |_|_| .__/ 
+    |_|                               |_|    
+'''[1:]
+
+GAME_TITLE_SHORT ='''
+ ██████╗ █████╗ ██████╗  █████╗ ██╗    
+██╔════╝██╔══██╗██╔══██╗██╔══██╗██║    
+██║     ███████║██████╔╝███████║██║    
+██║     ██╔══██║██╔══██╗██╔══██║██║    
+╚██████╗██║  ██║██████╔╝██║  ██║██████╗
+ ╚═════╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚═════╝
+     Act I: Bones of the Ancestors
+'''[1:]
+
+#------------------------------------------------------------------------------
+# SCENE :- MAKE 
+#------------------------------------------------------------------------------
 _col1 = """
 Gender  : {:>10}{delim}
 Race    : {:>10}{delim}
@@ -48,49 +106,16 @@ Rhand : {:<5}{delim}\nRing1 : {:<5}\nRing2 : {:<5}{delim}
 Waist : {:<5}{delim}\nLegs  : {:<5}{delim}\nFeet  : {:<5}\n
 """[1:]
 
-status = '''
- {:13}
- {:1}{:1}{:1}
-
- LVL: {:>6}
- EXP: {:>6}
-
- HP : {:>6}
- MP : {:>6}
-
- DMG: {:>6}
- D/M: {:>6}
-
- STR: [c={}]{:>6}[/c]
- CON: [c={}]{:>6}[/c]
- DEX: [c={}]{:>6}[/c]
- INT: [c={}]{:>6}[/c]
- WIS: [c={}]{:>6}[/c]
- CHA: [c={}]{:>6}[/c]
-
- GOLD: {:>5}
- TURNS: {:>4}
-'''[1:]
-
-profile = [
-'''
-Name     : {name:>6}
-Gender   : {sex:>6}
-Race     : {race:>6} 
-Class    : {job:>6}
-
-STR      : {:>6}
-CON      : {:>6}
-DEX      : {:>6}
-WIS      : {:>6}
-INT      : {:>6}
-CHA      : {:>6}
-'''[1:],
-'''
-Damage   : {dmg:>6}
-Accuracy : {acc:>5}
-'''[1:],
-]
+bonuses = {
+    "STR": "+{} to Strength",
+    "CON": "+{} to Constitution",
+    "WIS": "+{} to Wisdom",
+    "DEX": "+{} to Dexterity",
+    "CHA": "+{} to Charisma",
+    "WIL": "+{} to Willpower",
+    "PER": "+{} to Perception",
+    "LUC": "+{} to Luck"
+}
 
 # Some formulas to use when developing a character
 stats = namedtuple("stats", "str con dex int wis cha")
@@ -286,72 +311,78 @@ subrace_descriptions=[
 
 ]
 
-bonuses = {
-    "STR": "+{} to Strength",
-    "CON": "+{} to Constitution",
-    "WIS": "+{} to Wisdom",
-    "DEX": "+{} to Dexterity",
-    "CHA": "+{} to Charisma",
-    "WIL": "+{} to Willpower",
-    "PER": "+{} to Perception",
-    "LUC": "+{} to Luck"
-}
+#------------------------------------------------------------------------------
+# SCENE :- GAME
+#------------------------------------------------------------------------------
+status = '''
+ {:13}
+ {:1}{:1}{:1}
 
-'''Constants used in main and other modules -- equivalent to globals'''
-MENU_SCREEN_WIDTH, MENU_SCREEN_HEIGHT = 80, 25
-MENU_FONT_WIDTH, MENU_FONT_HEIGHT = 8, 16
+ LVL: {:>6}
+ EXP: {:>6}
 
-GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT = 80, 50
-GAME_FONT_WIDTH, GAME_FONT_HEIGHT = 8, 8
+ HP : {:>6}
+ MP : {:>6}
 
-FOV_RADIUS = 25
+ DMG: {:>6}
+ D/M: {:>6}
 
-# CHARACTER MENU GLOBALS
-CM_TITLE = 1
-CM_SUBTITLE = 2
-CM_BORDER_WIDTH = 80
-CM_BORDER_HEIGHT = ()
-CM_COLUMN_WIDTH = 12
-CM_COLUMN_START = 1, 15, 27
-CM_FOOTER_HEIGHT = 22
+ STR: [c={}]{:>6}[/c]
+ CON: [c={}]{:>6}[/c]
+ DEX: [c={}]{:>6}[/c]
+ INT: [c={}]{:>6}[/c]
+ WIS: [c={}]{:>6}[/c]
+ CHA: [c={}]{:>6}[/c]
 
-# OPTION MENU GLOBALS
-OPT_TITLE = 1
-OPT_BORDER_WIDTH = 80
-OPT_BORDER_HEIGHT = (3, 24)
-
-# ITEM CONSTANTS
-ITEM_DROP_RATE=0 # drop rate from monsters in dungeons
-ITEM_FIND_RATE=0 # chances item spawns in dungeon
-ITEM_PREREVEAL=0 # basically pre identification rate 
-
-# ROOM CONSTANTS
-ROOM_MIN_PLACE=0
-ROOM_MAX_PLACE=0
-ROOM_HALL_SIZE=2
-ROOM_DOOR_RATE=0
-
-GAME_TITLE_VERSION="v 0.0.4"
-GAME_TITLE_WIDTH=46
-GAME_TITLE_HEIGHT=6
-GAME_TITLE=''' \
- ___                           _     _       
-/  _\_ __   __ _  ___ ___  ___| |__ (_)_ __  
-\  \| '_ \ / _` |/ __/ _ \/ __| '_ \| | '_ \ 
-_\  \ |_) | (_| | (_|  __/\__ \ | | | | |_) |
-\___/ .__/ \__,_|\___\___||___/_| |_|_| .__/ 
-    |_|                               |_|    
+ GOLD: {:>5}
+ TURNS: {:>4}
 '''[1:]
 
-GAME_TITLE_SHORT ='''
- ██████╗ █████╗ ██████╗  █████╗ ██╗    
-██╔════╝██╔══██╗██╔══██╗██╔══██╗██║    
-██║     ███████║██████╔╝███████║██║    
-██║     ██╔══██║██╔══██╗██╔══██║██║    
-╚██████╗██║  ██║██████╔╝██║  ██║██████╗
- ╚═════╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚═════╝
-     Act I: Bones of the Ancestors
-'''[1:]
+profile = [
+'''
+Name     : {name:>6}
+Gender   : {sex:>6}
+Race     : {race:>6} 
+Class    : {job:>6}
+
+STR      : {:>6}
+CON      : {:>6}
+DEX      : {:>6}
+WIS      : {:>6}
+INT      : {:>6}
+CHA      : {:>6}
+'''[1:],
+'''
+Damage   : {dmg:>6}
+Accuracy : {acc:>5}
+'''[1:],
+]
+
+dump_template="""
+[Character Sheet -- Spaceship]
+======== Player Stats ========
+Name     : {}
+Sex      : {}
+Race     : {}
+Class    : {}
+
+Level    : {}
+Exp      : {}
+========   Equipment  ========
+He       :
+Neck     :
+Torso    : Peasant garb
+Ring(L)  :
+Hand(L)  : Sword
+Ring(R)  :
+Hand(R)  :
+Waist    : Thin rope
+Legs     : Common pants
+Feet     : Sandals
+======== Player Items ========
+========  Alignments  ========
+========  Relations   ========
+"""[1:]
 
 cmd_invalid = "'{}' is not a valid command"
 cmd_switch_eq = "Press 'v' to switch to inventory."

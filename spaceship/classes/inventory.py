@@ -1,4 +1,5 @@
 # inventory.py
+from .item import sort
 from .items import convert
 
 class Inventory(list):

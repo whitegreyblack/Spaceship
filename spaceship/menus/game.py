@@ -74,6 +74,7 @@ class Start(Scene):
         self.main_width = self.width - self.main_x
         self.main_height = self.height - self.log_height
 
+
     def run(self):  
         # self.reset_size()
         self.reset()
@@ -1254,7 +1255,7 @@ class Start(Scene):
                         log = ""
                 
                     term.refresh()
-                    code = term.rfromead()
+                    code = term.read()
                     if code == term.TK_ESCAPE:
                         break
                     
