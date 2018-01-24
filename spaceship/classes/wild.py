@@ -2,9 +2,16 @@ import os
 import sys
 from .map import Map
 from .utils import blender
-from .charmap import DungeonCharmap as dcm
-from .charmap import WildernessCharmap as wcm
+from collections import namedtuple
 from random import randint, choice, choices
+
+charmap = namedtuple("Charmap", "chars hexcode")
+class WildernessCharmap:
+    GRASS=charmap([",", ";", "`","\'", "\""], ("#56ab2f", "#a8e063"))
+    PLAIN=charmap([".", "\"", ","], ("#F3E347", "#56ab2f"))
+    TREES=charmap(["Y", "T", "f"], ("#994C00", "#994C00"))
+    HILLS=charmap(["~"], ("#994C00", "#9A8478"))
+wcm = WildernessCharmap
 
 class Desert(Map):
     chars = {

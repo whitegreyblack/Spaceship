@@ -70,5 +70,5 @@ class Engine:
         term.close()
         
 if __name__ == "__main__":
-    e = GameEngine()
+    e = Engine()
     e.run()

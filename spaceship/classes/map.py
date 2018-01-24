@@ -5,8 +5,6 @@ from functools import lru_cache
 from collections import namedtuple
 from random import randint, choice, shuffle
 from bearlibterminal import terminal as term
-from spaceship.classes.charmap import WildernessCharmap as wcm
-from spaceship.classes.charmap import DungeonCharmap as dcm
 from spaceship.classes.monsters import Rat
 from spaceship.classes.bat import Bat
 from spaceship.tools import scroll

@@ -4,9 +4,6 @@ from typing import Tuple, Union
 from PIL import Image, ImageDraw
 from collections import namedtuple
 from random import shuffle, choice, randint
-from spaceship.classes.charmap import WildernessCharmap as wcm
-from spaceship.classes.charmap import DungeonCharmap as dcm
-from spaceship.classes.charmap import WorldCharmap as ccm
 from spaceship.classes.utils import splitter, blender
 from spaceship.tools import toInt, scroll
 from spaceship.classes.map import Map

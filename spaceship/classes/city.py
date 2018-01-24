@@ -1,11 +1,9 @@
 from random import shuffle, choice, randint
 from collections import namedtuple
 from PIL import Image
-
+from collections import namedtuple
 from .map import Map
 from .utils import blender
-from .charmap import DungeonCharmap as dcm
-from .charmap import WildernessCharmap as wcm
 from .unit import Unit
 from .neutrals import neutrals
 from strings import IMG_PATH
@@ -52,6 +50,33 @@ Corpse -> animatable -> Zombie
 # Leather
 # 
 '''
+charmap = namedtuple("Charmap", "chars hexcode")
+class DungeonCharmap:
+    # GRASS=charmap([",", ";"], ("#56ab2f", "#a8e063"))
+    GRASS=charmap([",", ";"], ("#008800", "#008800"))
+    HOUSE=charmap(["="], ("#ffffff", "#ffffff"))
+    TILES=charmap(["."], ("#C0C0C0", "#C0C0C0"))
+    # TILES=charmap(["."], ("#404040", "#404040"))
+    WALLS=charmap(["#"], ("#444444", "#656565"))
+    # WATER=charmap(["~"], ("#43C6AC", "#191654"))
+    WATER=charmap(["~"], ("#191654", "#191654"))
+    # WATER=charmap(["~"], ("#43C6AC", "#43C6AC"))
+
+    DOORS=charmap(["+"], ("#994C00", "#994C00"))
+    # PLANT=charmap(["|"], ("#F3E347", "#24FE41"))
+    PLANT=charmap(["'"], ("#ffc90e", "#ffc90e"))
+
+    LAMPS=charmap(["o"], ("#ffffff", "#ffffff"))
+    BRICK=charmap(["%"], ("#a73737", "#7a2828"))
+    # ROADS=charmap([":"], ("#808080", "#994C00"))
+    ROADS=charmap([":"], ("#994C00", "#994C00"))
+    POSTS=charmap(["x"], ("#9a8478", "#9a8478"))
+    BLOCK=charmap(["#", "+", "o", "x"],("#000000", "#ffffff"))
+    LTHAN=charmap(["<"], ("#c0c0c0", "#c0c0c0"))
+    GTHAN=charmap([">"], ("#c0c0c0", "#c0c0c0"))
+    TRAPS=charmap(["^"], ("#c0c0c0", "#c0c0c0"))
+
+dcm = DungeonCharmap
 
 class City(Map):
     chars = {
