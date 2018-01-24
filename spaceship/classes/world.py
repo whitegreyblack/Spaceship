@@ -256,10 +256,10 @@ class World(Map):
             (127, 127, 127): ("mountains", "A", ("#808080",)),
             (185, 122, 87): ("hills", "~", ("#826644",)),
             (181, 230, 29): ("forest", "T", ("#006400",)),
-            (34, 177, 76): ("dark woods", "T", ("#006400",)),
-            (255, 201, 14):("plains", ".", ("#568203",)),
-            (255, 127, 39): ("plains", ".", ("#FFBD22",)),
-            (255, 242, 0): ("fields", "X", ("#FFBF00",)),
+            (34, 177, 76): ("dark woods", "&", ("#006400",)),
+            (255, 201, 14):("grassland", ".", ("#568203",)),
+            # (255, 127, 39): ("plains", "\"", ("#FFBD22",)),
+            (255, 242, 0): ("plains", ".", ("#FFBF00",)),
             (255, 174, 201): ("desert", "~", ("#F0AC82",)),
             (112, 146, 190): ("river", "~", ("#30FFFF",)),
             (63, 72, 204): ("lake", "-", ("#3088FF",)),
@@ -309,25 +309,26 @@ class World(Map):
             self.__tile_map.append(col)
 
     def save_map_check(self):
-        maps_path = "./spaceship/assets/maps/world/"
+        maps_path = "./spaceship/assets/world/"
         if not os.path.isdir(maps_path):
             print("Picturfy folder does not exist -- Creating 'world' folder")
             os.makedirs(maps_path)
+        return maps_path
 
     def save_img(self):
-        self.save_map_check()
+        path = self.save_map_check()
         file_name = "world.png"
         img = Image.new('RGB', (self.width, self.height))
         draw = ImageDraw.Draw(img)
         for j, row in enumerate(self.tilemap):
             for i, tile in enumerate(row):
                 img.load()[i, j] = tuple(toInt(color) for color in splitter(tile.color))
-        img.save("./spaceship/assets/maps/world/" + file_name)
+        img.save(path + file_name)
                 
     def save_map(self):
-        self.save_map_check()
+        path = self.save_map_check()
         file_name = "world.txt"
-        with open("./spaceship/assets/maps/world/" + file_name, 'w') as text:
+        with open(path + file_name, 'w') as text:
             text.write(str(self))
 
     def legend(self) -> Tuple[str, str, str, int]:
@@ -351,57 +352,6 @@ class World(Map):
     def location(self, x, y):
         return self.locations[(x, y)]
 
-    def sight(self, cx, cy, row, start, end, radius, xx, xy, yx, yy, id):
-        '''Calculates all visible tiles on the map using recursive line of
-        sight. All calculations are based on linear slopes and light blocking
-        values found in every tile square in the map array
-        '''
-        if start < end:
-            return
-
-        radius_squared = radius * radius
-
-        for j in range(row, radius + 1):
-
-            dx, dy = -j - 1, -j
-            blocked = False
-
-            while dx <= 0:
-                dx += 1
-                X, Y = cx + dx * xx + dy * xy, cy + dx * yx + dy * yy
-                # l_slope and r_slope store the slopes of the left and right
-                # extremities of the square we're considering:
-                l_slope, r_slope = (dx - 0.5) / (dy + 0.5), (dx + 0.5) / (dy - 0.5)
-                
-                if start < r_slope:
-                    continue
-
-                elif end > l_slope:
-                    break
-
-                else:
-                    # Our light beam is touching this square; light it:
-                    if dx * dx + dy * dy < radius_squared:
-                        self.set_light_level(X, Y, 2)
-
-                    if blocked:
-                        if self.blocked(X, Y) and not self.viewable(X, Y):
-                            new_start = r_slope
-
-                        else:
-                            blocked = False
-                            start = new_start
-                    else:
-                        if self.blocked(X, Y) and not self.viewable(X, Y) and j < radius:
-                            # This is a blocking square, start a child scan:
-                            blocked = True
-                            self.sight(cx, cy, j + 1, start, l_slope,
-                                        radius, xx, xy, yx, yy, id + 1)
-                            new_start = r_slope
-
-            # Row is scanned; do next row unless last square was blocked:
-            if blocked:
-                break
     def landtype(self, x, y):
         return self.square(x, y).tile_type
 
@@ -464,8 +414,5 @@ if __name__ == "__main__":
     w = World(
         map_name="Calabaston",
         map_link="./spaceship/assets/worldmap.png")
-    print(w.__repr__())
-    # w.create_tile_map()
-    print(w)
     w.save_map()
     w.save_img()

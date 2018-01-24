@@ -97,7 +97,7 @@ class Unit(Object):
 
     def calculate_attack_chance(self):
         '''Returns the chance to hit'''
-        return choice([0, 1, 2])
+        return 1
 
     def direction(self, unit):
         '''Returns a point indicating the vector towards target'''

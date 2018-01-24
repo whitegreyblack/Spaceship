@@ -1017,7 +1017,8 @@ class Start(Scene):
                     y=y, 
                     location=location)
                 
-        self.player.move_height(1)
+        # self.player.move_height(1)
+        self.player.descend()
         self.map_change = True
 
     def action_stairs_down(self):
@@ -1035,7 +1036,8 @@ class Start(Scene):
                 self.location.sublevel = location
                 location.parent = self.location
 
-            self.player.move_height(1)
+            # self.player.move_height(1)
+            self.player.descend()
             self.location.unit_remove(self.player)
             self.location = self.location.sublevel
             self.location.units_add([self.player])
@@ -1053,7 +1055,8 @@ class Start(Scene):
         def move_upstairs():
             self.location.unit_remove(self.player)
             self.location = self.location.parent
-            self.player.move_height(-1)
+            # self.player.move_height(-1)
+            self.player.ascend()
             self.location.units_add([self.player])
 
         # check if parent of this location is the World Map

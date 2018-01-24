@@ -441,6 +441,7 @@ interact_door_open_none = "No closed doors next to you."
 interact_door_open_many = "There is more than one closed door near you. Which door?"
 interact_door_open_invalid = "Invalid direction. Canceled opening door."
 interact_door_open_error = "Direction has no door. Canceled closing door."
+
 pass_by_item = [
     "You pass by an item.",
     "There is something here."

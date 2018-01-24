@@ -289,10 +289,10 @@ class Player(Unit):
         self.__height = check_height(move)
     
     def ascend(self) -> None:
-        self.__height = max(self.__height + 1, -1)
+        self.__height = max(self.__height - 1, 0)
     
     def descend(self) -> None:
-        self.__height = max(self.__height - 1, -1)
+        self.__height = max(self.__height + 1, 0)
 
     @property
     def location(self) -> Tuple[int, int]:
