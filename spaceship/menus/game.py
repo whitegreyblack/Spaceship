@@ -9,7 +9,7 @@ from spaceship.menus.scene import Scene
 from spaceship.screen_functions import *
 from spaceship.action import commands_player
 from spaceship.gamelog import GameLogger
-from spaceship.classes.item import Ring, Potion, Armor, Weapon, sort
+from spaceship.classes.item import Ring, Potion, sort
 from spaceship.classes.wild import wilderness
 from spaceship.classes.player import Player
 from spaceship.classes.world import World

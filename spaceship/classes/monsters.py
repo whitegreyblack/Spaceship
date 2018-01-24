@@ -2,7 +2,7 @@ from random import randint, choice
 from typing import Tuple
 from ..tools import distance
 from .color import Color
-from .item import Armor, Weapon, Item, item_chars
+from .item import Item, item_chars
 from .items import itemlist
 from ..action import commands_ai
 from .unit import Unit, unit_chars

@@ -98,11 +98,22 @@ def seperate(effects):
 
 class Item:
     def __init__(self, name, char, color, 
-                 inventory=None, placement=None, effects=None):
+                 item_type=None, placement=None, effects=None, hands=None):
         self.name = name
         self.char = char
         self.color = color
         self.__effects = effects
+        
+        # used in sorting items by type
+        self.item_type = item_type
+
+        # equipable
+        if placement:
+            self.placement = placement
+
+        # holdable
+        if hands:
+            self.hands = hands
 
     def __str__(self):
         return f"{self.name} {seperate(self.effects)}"
@@ -155,18 +166,6 @@ class Ring(Item):
     def __init__(self, name, char, color, effects=None):
         super().__init__(name, char, color, effects)
         
-class Armor(Item):
-    def __init__(self, name, char, color, placement, effects):
-        super().__init__(name, char, color, effects)
-        self.placement = placement
-
-class Weapon(Item):
-    inventory = "weapons"
-    placement = {"hand_left", "hand_right"}
-    def __init__(self, name, char, color, effects, hands):
-        super().__init__(name, char, color, effects)
-        self.hands = hands
-
 attrs = "str con dex wis int cha hp mp hr mr sp dv mr".split()
 
 '''

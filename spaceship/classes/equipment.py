@@ -1,7 +1,5 @@
 # equipment.py
 from .items import convert
-from .item import Weapon
-
 parts=("head", "neck", "body", "arms", "hands", 
         "hand_left", "hand_right", "ring_left", 
         "ring_right", "waist", "legs", "feet")
@@ -59,10 +57,9 @@ class Equipment:
     def equip(self, part, item):
         if not getattr(self, part):
             setattr(self, part, item)
-            if isinstance(item, Weapon):
-                if hasattr(item, 'hands'):
-                    print('hands', item.hands)
-                    self.weapon_slots = item.hands
+            if hasattr(item, 'hands'):
+                print('hands', item.hands)
+                self.weapon_slots = item.hands
             return True
         return False
 

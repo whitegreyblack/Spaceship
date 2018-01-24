@@ -257,12 +257,12 @@ def blender(hexes, n=10):
     def mash(color, saturation=False):
         '''Returns a 3 hex tuple as a hex color string without pound sign'''
         def append(string):
-            if len(str(x)) < 2:
-                return "0" + str(x)
+            if len(str(string)) < 2:
+                return "0" + str(string)
             else:
-                return str(x)
+                return str(string)
 
-        hex_color = "".join(map(append(x) for x in color))
+        hex_color = "".join(map(lambda x: append(x), color))
 
         # adds pound and saturation if indicated
         if saturation:
