@@ -56,7 +56,7 @@ TODO: seperate map and dungeon
             it has a chance to hold a dungeon i guess
 '''
 
-MapType = { mt: i for i, mt in enumerate(('City', 'Cave', 'Wild', 'World')) }
+MapType = { mt: i for i, mt in enumerate('City Cave Wild World'.split()) }
 
 class Map:
     '''The "ABSTRACT CLASS" that should hold the functions shared across all map class types'''
