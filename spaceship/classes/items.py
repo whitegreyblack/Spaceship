@@ -342,7 +342,13 @@ itemlist = {
     # -- RINGS --
 
     # "ring of regen": None,
-    # "ring of protection": None,
+    "ring of protection":         
+        Ring(
+            name="ring of protection", 
+            char="grey", 
+            color="white", 
+            effects=(("dv", 2),)),
+
     # "ring of resistance": None,
     # "ring of darkness": None,
     # "storm ring": None,

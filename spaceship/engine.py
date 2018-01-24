@@ -10,7 +10,7 @@ from spaceship.menus.make import Create
 from spaceship.menus.name import Name
 from strings import FONT_PATH
 
-class GameEngine:
+class Engine:
     def __init__(self):
         # initialize the terminal first or else windows cannot initialize size
         self.setup()
@@ -67,6 +67,8 @@ class GameEngine:
                 else:
                     self.scene.reset()
 
+        term.close()
+        
 if __name__ == "__main__":
     e = GameEngine()
     e.run()

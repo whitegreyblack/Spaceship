@@ -1,9 +1,6 @@
-import os
-import sys
 import cProfile
 import pstats
 from bearlibterminal import terminal as term
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
 
 from spaceship.main_menu import GameEngine
 

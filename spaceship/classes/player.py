@@ -9,6 +9,7 @@ from .item import totattr, modattr, sort, curattr
 from .items import itemlist, convert
 from .equipment import Equipment, parts
 from .inventory import Inventory
+from spaceship.strings import dump_template
 
 attrs=('str con dex wis int cha hp sp mp acc att_lo att_hi')
 
@@ -329,18 +330,14 @@ class Player(Unit):
     def save_position_local(self) -> None:
         self.last_position_local = self.x, self.y
 
-    def dump(self) -> str:
-        '''Return player information to output to terminal'''
-        return dump_template.format(
-            self.name,
-            self.gender,
-            self.race,
-            self.job,
-            self.level,
-            self.exp)
-
 def dump(hero):
-    pass
+    print(dump_template.format(
+        hero.name,
+        hero.gender,
+        hero.race,
+        hero.job,
+        hero.level,
+        hero.exp))
 
 if __name__ == "__main__":
     pass

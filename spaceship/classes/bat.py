@@ -12,7 +12,7 @@ class Bat(Unit):
         self.character = "b"
         self.job = "bat"
         self.race = "monster"
-        self.color = "brown"
+        # self.color = "brown"
 
     def talk(self):
         return "Screech"
