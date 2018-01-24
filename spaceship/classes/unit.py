@@ -81,9 +81,7 @@ class Unit(Object):
 
     def move(self, dx: int, dy: int) -> None:
         '''Adds a vector to current position to change positions'''
-        print(self.local)
         self.local += (dx, dy)
-        print(self.local)
         
     def reply(self):
         return "Hello there!"
@@ -111,24 +109,19 @@ class Unit(Object):
 
     def translate_sight(self, x, y):
         '''Offsets input point by current position and sight radius'''
-        sx = self.x - x + self.sight_norm
-        sy = self.y - y + self.sight_norm
-
-        return sx, sy
+        sight_point = self.local - (x + self.sight_norm, y + self.sight_norm)
+        return sight_point.position
 
     def moving_torwards(self, point):
         '''Returns the closest 1:1 point torwards input point'''
+        dt = self.local.distance(point)
         try:
-            dx, dy = point.x - self.x, point.y - self.y
-            dt = distance(*self.position, *point.position)
-
-        except:
-            dx, dy = point[0] - self.x, point[1] - self.y
-            dt = distance(*self.position, *point)
+            dx, dy = point - self.local
+        except TypeError:
+            dx, dy = point[0] - self.local.x, point[1] - self.local.y
 
         x = int(round(dx / dt))
         y = int(round(dy / dt))
-
         return commands_ai['move'][(x, y)]
 
     def wander(self, tiles, sight):

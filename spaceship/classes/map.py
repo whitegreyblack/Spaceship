@@ -503,13 +503,13 @@ class Map:
     def unit_positions(self) -> Tuple[int, int]:
         '''Yields all unit positions for units in the unit list'''
         for unit in self.units:
-            yield unit.position
+            yield unit.local.position
     
     def unit_at(self, x, y) -> object:
         '''Returns a unit at the given position. If the unit exists then the
         unit is returned else an empty value is returned'''
         for u in self.__units:
-            if (x, y) == u.position:
+            if (x, y) == u.local:
                 return u
 
     def units_add(self, units) -> None:

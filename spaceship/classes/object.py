@@ -21,7 +21,7 @@ class Point:
 
     @position.setter
     def position(self, point):
-        self = point
+        self.x, self.y = point[0], point[1]
 
     def move(self, other):
         try:
@@ -73,8 +73,10 @@ class Point:
             return equal
 
     def distance(self, other):
-        return math.sqrt(
-            math.pow(other.x - self.x, 2) + math.pow(other.y - self.y, 2))
+        if isinstance(other, tuple):
+            other = Point(*other)
+        midpoint = other - self
+        return math.sqrt(math.pow(midpoint.x, 2) + math.pow(midpoint.y, 2))
 
 class Object:
     '''Base object class used in the following subclasses:

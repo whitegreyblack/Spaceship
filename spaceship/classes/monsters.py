@@ -96,7 +96,6 @@ class Rat(Unit):
         build_sight_map()
 
         # monster is wounded/damaged -- try preserving its life
-        # print('Waiting and resting')
         if self.cur_hp <= self.tot_hp * .10:
             return commands_ai['wait']
 
