@@ -4,7 +4,8 @@ from collections import namedtuple
 # Holds the multiline columns used in create character
 # Placed here since keeping them in cc is messy
 '''
-
+FONT_PATH = "./spaceship/assets/fonts/"
+IMG_PATH = "./spaceship/assets/"
 _world = "Calabaston"
 
 _col1 = """

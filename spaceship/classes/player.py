@@ -7,10 +7,8 @@ from .world import World
 from .item import Ring, Weapon
 from .item import totattr, modattr, sort, curattr
 from .items import itemlist, convert
-
-parts=("head", "neck", "body", "arms", "hands", 
-        "hand_left", "hand_right", "ring_left", 
-        "ring_right", "waist", "legs", "feet")
+from .equipment import Equipment, parts
+from .inventory import Inventory
 
 attrs=('str con dex wis int cha hp sp mp acc att_lo att_hi')
 
@@ -29,106 +27,6 @@ class Stats:
                                                     self.gender_bonus,
                                                     self.race_bonus,
                                                     self.job_bonus))
-
-class Equipment:
-    '''Tied to body parts'''
-    def __init__(self, parts, equipment=None):
-        self.parts = parts
-        self.initialize_parts()
-        self.weapon_slots = None
-        if equipment:
-            self.items = equipment
-
-    def initialize_parts(self):
-        for part in self.parts:
-            setattr(self, part, None)
-
-    @property
-    def items(self):
-        for part in self.parts:
-            yield part, getattr(self, part)
-
-    @items.setter
-    def items(self, equipment):
-        equipment = [convert(item) for item in equipment]
-        for p, part in enumerate(self.parts):
-            if equipment[p]:
-                self.equip(part, equipment[p])
-
-    def check_part(self, part):
-        if isinstance(part, int):
-            return self.parts[part]
-        return part
-
-    def item_by_part(self, part):
-        '''Returns the item at the given body part'''
-        part = self.check_part(part)
-        item = getattr(self, part)
-        if not item:
-            yield part, None
-        yield part, item
-
-    def stats(self):
-        for _, item in self.items:
-            if hasattr(item, 'effects'):
-                for effect, value in item.effects:
-                    yield effect, value
-
-    def stats_by_part(self, part):
-        _, item = next(self.item_by_part(part))
-        if hasattr(item, 'effects'):
-            for effect, value in item.effects:
-                yield effect, value
-
-    def equip(self, part, item):
-        if not getattr(self, part):
-            setattr(self, part, item)
-            if isinstance(item, Weapon):
-                if hasattr(item, 'hands'):
-                    print('hands', item.hands)
-                    self.weapon_slots = item.hands
-            return True
-        return False
-
-    def unequip(self, part):
-        item = getattr(self, part)
-        if item:
-            setattr(self, part, None)
-            yield item
-        yield None
-
-class Inventory(list):
-    '''Regular list'''
-    def __init__(self, items):
-        super().__init__()
-        self.extend([convert(item) for item in items])
-
-    def by_type(self, part):
-        for item in self:
-            if hasattr(item, 'placement'):
-                if part in item.placement:
-                    yield item
-
-    def by_prop(self, prop):
-        for item in self:
-            if hasattr(item, prop):
-                yield item
-
-    def add(self, item):
-        if len(self) <= 25:
-            self.append(item)
-            return True
-        else:
-            return False
-
-    @property
-    def items(self):
-        for group, items in sort(self).items():
-            if group not in 'food others'.split():
-                group = list(group + 's')
-                group[0] = group[0].upper()
-                group = "".join(group)
-            yield group, items
 
 # Player should inherit from unit just so during main game loop
 # the player class can be accessed in the same way as other units
@@ -169,7 +67,6 @@ class Player(Unit):
         
     def setup(self, home: str) -> None:
         self.home, self.hpointer = home, World.capitals(home)
-        self.wx, self.wy = self.hpointer
         self.world = Point(*self.hpointer)
         self.__height = 0
 
@@ -405,10 +302,10 @@ class Player(Unit):
     @location.setter
     def location(self, location: Tuple[int, int]) -> None:
         '''sets global position given a tuple(x,y)'''
-        self.wx, self.wy = location    
+        self.world = location    
 
     def travel(self, dx: int, dy: int) -> None:
-        self.location = (self.wx + dx, self.wy + dy)
+        self.location = self.world + (dx, dy)
 
     def save_location(self) -> None:
         self.last_location = self.location

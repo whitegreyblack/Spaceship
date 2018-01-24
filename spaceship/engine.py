@@ -8,6 +8,7 @@ from spaceship.menus.game import Start
 from spaceship.menus.load import Continue
 from spaceship.menus.make import Create
 from spaceship.menus.name import Name
+from strings import FONT_PATH
 
 class GameEngine:
     def __init__(self):
@@ -41,9 +42,8 @@ class GameEngine:
 
         else:
             term.set("window: cellsize=8x8")
-            cy = 'x'+str(cy) if cy else ''
-            term.set("font: ./spaceship/fonts/{}.ttf, size={}{}".format(
-                font, cx, cy))
+            cy = 'x' + str(cy) if cy else ''
+            term.set(f"font: {FONT_PATH}{font}.ttf, size={cx}{cy}")
 
     def run(self):
         '''Goes through the scenes until exit'''

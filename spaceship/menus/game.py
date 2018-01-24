@@ -15,7 +15,7 @@ from spaceship.classes.player import Player
 from spaceship.classes.world import World
 from spaceship.classes.city import City
 from spaceship.classes.cave import Cave
-
+from spaceship.classes.object import Point
 def single_element(container):
     return len(container) == 1
 
@@ -717,34 +717,32 @@ class Start(Scene):
                             
     def process_movement(self, x, y):
         turn_inc = 0
+        # moving on world map
         if  self.player.height == Level.WORLD:
             if (x, y) == (0, 0):
                 self.draw_log(strings.movement_wait_world)
                 turn_inc = True
 
             else:
-                print(self.player.world + (x, y))
+                point = self.player.world + (x, y)
 
-                tx = self.player.wx + x
-                ty = self.player.wy + y
-
-                if self.location.walkable(tx, ty):
+                if self.location.walkable(*point.position):
                     self.player.save_location()
                     self.player.travel(x, y)
                     turn_inc = True
                 else:
                     self.draw_log(strings.movement_move_error)
+
+        # moving on local map    
         else:
             if (x, y) == (0, 0):
                 self.draw_log(strings.movement_wait_local)
                 turn_inc = True
 
             else:
-                tx = self.player.x + x
-                ty = self.player.y + y
-
-                if self.location.walkable(tx, ty):
-                    if not self.location.occupied(tx, ty):
+                point = self.player.local + (x, y)
+                if self.location.walkable(*point.position):
+                    if not self.location.occupied(*point.position):
                         self.player.move(x, y)
                         msg_chance = random.randint(0, 5)
 
@@ -963,8 +961,8 @@ class Start(Scene):
             if self.player.location in self.world.enterable_legend.keys():
                 fileloc = self.world.enterable_legend[self.player.location]
                 fileloc = fileloc.replace(' ', '_').lower()
-                img_name = "./spaceship/assets/maps/" + fileloc + ".png"
-                cfg_name = "./spaceship/assets/maps/" + fileloc + ".cfg"
+                img_name = strings.IMG_PATH + fileloc + ".png"
+                cfg_name = strings.IMG_PATH + fileloc + ".cfg"
 
                 location = City(
                     map_id=fileloc,
