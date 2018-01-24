@@ -47,3 +47,9 @@ def test_point_isub_point():
     a = Point(1, 2)
     a -= Point(2, 1)
     assert a.position == (-1, 1)
+
+def test_point_equality_point():
+    assert Point(1, 2) == Point(1, 2)
+
+def test_point_equality_tuple():
+    assert Point(1, 2) == (1, 2)
