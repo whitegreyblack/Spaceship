@@ -140,8 +140,8 @@ def picturfy(string, filename="picturfy-img.png", folder="./", debug=False):
     """Takes in a list of string lists and three positional parameters.
     Filename and folder are used to determine the output path after 
     function execution. Debug is used to print testing and terminal
-    output. The inverse function to stringify and asciify"""
-
+    output. The inverse function to stringify and asciify
+    """
     mapping = string.split('\n')
     h, w = len(mapping), len(mapping[0])
     img_to_save = Image.new('RGB', (w, h))
@@ -161,7 +161,8 @@ def picturfy(string, filename="picturfy-img.png", folder="./", debug=False):
 def asciify(string, debug=False):
     """Takes in a file location string and a debug parameter
     to determine output. Sister function to stringify. Uses
-    unicode characters provided they are available in blt."""
+    unicode characters provided they are available in blt.
+    """
     array = []
     colors = set()
     with Image.open(string) as img:
@@ -200,8 +201,9 @@ def asciify(string, debug=False):
 
 def evaluate_blocks(data, w, h, array=False):
     """Helper function for asciify which returns the same sized map
-    but with the indices holding unicode character codes"""
-    def evalValue(x, y):
+    but with the indices holding unicode character codes
+    """
+    def eval_value(x, y):
         bit_value=0
         increment=1
         debug=11
@@ -221,7 +223,7 @@ def evaluate_blocks(data, w, h, array=False):
     for i in range(h):
         for j in range(w):
             if data[i][j] == "#":
-                unicodes[i][j] = toInt(unicode_blocks_thin[evalValue(j, i)])
+                unicodes[i][j] = toInt(unicode_blocks_thin[eval_value(j, i)])
     return unicodes
 
 def table(ch, val, x, y):
@@ -238,7 +240,8 @@ def splitter(c):
 def blender(hexes, n=10):
     """blender holds color transformation functions
     TODO: probably should move this to another file
-    Up to user to decide whether color is valid"""
+    Up to user to decide whether color is valid
+    """
     hex1, hex2 = hexes
     
     def transform(c):
@@ -246,18 +249,22 @@ def blender(hexes, n=10):
         #   integer = int(i, 16)
         return [int(i, 16) for i in c]
 
-    def blend(ca, cb, n, i):
-        value = ca - cb
-        value /= n
-        value *= i
-        value = round(value)
-        value = hex(cb + value)
-        value = value.replace("0x", "")
-        #value = hex(((abs(ca-cb)//n))*i).replace("0x", "")
-        return value
+    def blend(color_a, color_b, number, step):
+        '''Returns a new color value given two colors and a step parameter'''
+        value = hex(round(((color_a - color_b) / number) * step) + color_b)
+        return value.replace("0x", "")
 
     def mash(color, saturation=False):
-        hex_color = "".join(map(lambda x: "0" + str(x) if len(str(x)) < 2 else str(x), color))
+        '''Returns a 3 hex tuple as a hex color string without pound sign'''
+        def append(string):
+            if len(str(x)) < 2:
+                return "0" + str(x)
+            else:
+                return str(x)
+
+        hex_color = "".join(map(append(x) for x in color))
+
+        # adds pound and saturation if indicated
         if saturation:
             return "#ff" + hex_color
         else:
