@@ -15,13 +15,19 @@ class Point:
     def __init__(self, x, y):
         self.x, self.y = x, y
 
+    def __iter__(self):
+        return iter((self.x, self.y))
+
     @property
     def position(self):
         return self.x, self.y
 
     @position.setter
     def position(self, point):
-        self.x, self.y = point[0], point[1]
+        try:
+            self.x, self.y = point.x, point.y
+        except AttributeError:
+            self.x, self.y = point[0], point[1]
 
     def move(self, other):
         try:

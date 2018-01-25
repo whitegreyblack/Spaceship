@@ -296,6 +296,16 @@ class Player(Unit):
         self.__height = max(self.__height + 1, 0)
 
     @property
+    def position(self) -> Tuple[int, int]:
+        '''returns local position on the local map'''
+        return self.local.position
+
+    @position.setter
+    def position(self, position: Tuple[int, int]) -> None:
+        '''sets local position given a tuple(x,y)'''
+        self.local.position = position    
+
+    @property
     def location(self) -> Tuple[int, int]:
         '''returns global position on the world map'''
         return self.world.position
@@ -303,7 +313,7 @@ class Player(Unit):
     @location.setter
     def location(self, location: Tuple[int, int]) -> None:
         '''sets global position given a tuple(x,y)'''
-        self.world = location    
+        self.world.position = location    
 
     def travel(self, dx: int, dy: int) -> None:
         self.location = self.world + (dx, dy)
@@ -320,15 +330,9 @@ class Player(Unit):
             raise AttributeError("No last location variable")
 
         try:
-            return direction(
-                self.last_location[0] - self.wx, 
-                self.last_location[1] - self.wy)
-        
+            return direction(self.last_location - self.position)
         except KeyError:
             raise KeyError("Error in -directions-")
-
-    def save_position_local(self) -> None:
-        self.last_position_local = self.x, self.y
 
 def dump(hero):
     print(dump_template.format(

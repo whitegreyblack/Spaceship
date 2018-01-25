@@ -595,7 +595,7 @@ itemlist = {
 #             "turns": 3),
 }
 
-def build(self, item_name):
+def build(item_name):
     if isinstance(item_name, str) and item_name in itemlist.keys():
         return Item(item_name, *itemlist[item_name])
     else:

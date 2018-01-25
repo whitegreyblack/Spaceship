@@ -140,8 +140,8 @@ class Start(Scene):
 
     def draw_world(self):
         '''Handles drawing of world features and map'''
-        point = self.player.local if self.player.height >= 1 \
-            else self.player.world
+        point = self.player.position if self.player.height >= 1 \
+            else self.player.location
 
         g0 = isinstance(self.location, World)
 
@@ -154,10 +154,10 @@ class Start(Scene):
         else:
             sight = self.player.sight_norm
 
-        self.location.fov_calc([(*point.position, sight)])
+        self.location.fov_calc([(*point, sight)])
         # self.location.fov_calc([(x, y, sight), (5, 5, sight)])
 
-        for x, y, col, ch in self.location.output(*point.position):
+        for x, y, col, ch in self.location.output(*point):
             term.puts(
                 x=x + self.main_x,
                 y=y + self.main_y,
@@ -482,6 +482,8 @@ class Start(Scene):
                     #         else:
                     #             self.draw_screen_log(
                     #                 strings.cmd_cannot_use_item)
+                    # 
+                    #     elif selection == term.TK_D:
                     #     elif selection == term.TK_E:
                     #         if self.player.item_eat(item):
                     #             self.draw_screen_log(
@@ -490,12 +492,14 @@ class Start(Scene):
                     #         else:
                     #             self.draw_screen_log(
                     #                 strings.cmd_cannot_eat_item)
+                    # 
                     #     elif selection == term.TK_Q:
                     #         self.draw_screen_log('Equip it using the other way')
                     #     else:
                     #         self.draw_screen_log("Invalid instruction.")
                     #         term.refresh()
                     #         break
+                    # 
                     # self.draw_screen_log(strings.cmd_switch_iv)
             else:
                 log = ""
@@ -633,7 +637,7 @@ class Start(Scene):
             self.draw_log(invalid_command)
 
     def process_move_unit_to_empty(self, x, y):
-        occupied_player = self.player.local.position == (x, y)
+        occupied_player = self.player.position == (x, y)
         occupied_unit = self.location.occupied(x, y)
 
         if not occupied_player and not occupied_unit:
@@ -646,8 +650,8 @@ class Start(Scene):
         if (x, y) != (0, 0):
             point = self.unit.local + (x, y)
 
-            if self.location.walkable(*point.position):
-                unit_bools = self.process_move_unit_to_empty(*point.position)
+            if self.location.walkable(*point):
+                unit_bools = self.process_move_unit_to_empty(*point)
 
                 if not unit_bools:
                     return
@@ -727,8 +731,7 @@ class Start(Scene):
 
             else:
                 point = self.player.world + (x, y)
-
-                if self.location.walkable(*point.position):
+                if self.location.walkable(*point):
                     self.player.save_location()
                     self.player.travel(x, y)
                     
@@ -742,13 +745,14 @@ class Start(Scene):
                 turn_inc = True
 
             else:
-                point = self.player.local + (x, y)
-                if self.location.walkable(*point.position):
-                    if not self.location.occupied(*point.position):
+                point = self.player.position + (x, y)
+                print(point)
+                if self.location.walkable(*point):
+                    if not self.location.occupied(*point):
                         self.player.move(x, y)
                         msg_chance = random.randint(0, 5)
 
-                        if self.location.items_at(*point.position) and msg_chance:
+                        if self.location.items_at(*point) and msg_chance:
                             item_message = random.randint(
                                 a=0, 
                                 b=len(strings.pass_by_item) - 1)
@@ -827,11 +831,11 @@ class Start(Scene):
 
                         turn_inc = True
                 else:
-                    if self.location.out_of_bounds(*point.position):
+                    if self.location.out_of_bounds(*point):
                         self.draw_log(strings.movement_move_oob)
 
                     else:
-                        ch = self.location.square(*point.position).char
+                        ch = self.location.square(*point).char
 
                         if ch == "~":
                             log = strings.movement_move_swim
@@ -951,7 +955,7 @@ class Start(Scene):
 
     def determine_map_enterance(self, x, y, location):
         '''Helper function to determine start position when entering wild'''
-        return Point(max(int(location.width * x - 1), 0), 
+        return (max(int(location.width * x - 1), 0), 
                 max(int(location.height * y - 1), 0))
 
     def action_enter_map(self):
@@ -974,7 +978,7 @@ class Start(Scene):
                     height=self.height)
 
                 # on cities enter map in the middle
-                self.player.local.position = location.width // 2, location.height // 2
+                self.player.position = location.width // 2, location.height // 2
 
             elif self.player.location in self.world.dungeon_legend.keys():
                 # map type should be a cave
@@ -983,7 +987,7 @@ class Start(Scene):
                     height=self.height,
                     max_rooms=random.randint(15, 20))
 
-                self.player.local.position = Point(*location.stairs_up)
+                self.player.position = location.stairs_up
 
             else:
                 # map type should be in the wilderness
@@ -995,7 +999,7 @@ class Start(Scene):
                     generate=True)
 
                 x, y = self.player.get_position_on_enter()
-                self.player.local.position = self.determine_map_enterance(
+                self.player.position = self.determine_map_enterance(
                     x=x, 
                     y=y, 
                     location=location)
@@ -1009,16 +1013,16 @@ class Start(Scene):
             location = self.world.location(*self.player.location)
             if self.player.location in self.world.enterable_legend.keys():
                 # re-enter a city
-                self.player.local.position = location.width // 2, location.height // 2
+                self.player.position = location.width // 2, location.height // 2
 
             elif self.player.location in self.world.dungeon_legend.keys():
                 # re-enter dungeon
-                self.player.local.position = location.stairs_up
+                self.player.position = location.stairs_up
 
             else:
                 # reenter a wilderness
                 x, y = self.player.get_position_on_enter()
-                self.player.local.position = self.determine_map_enterance(
+                self.player.position = self.determine_map_enterance(
                     x=x, 
                     y=y, 
                     location=location)
@@ -1032,7 +1036,7 @@ class Start(Scene):
         in the current location. If they match then create a dungeon with the
         player starting position at the upstairs of the new location
         '''
-        if self.player.local.position == self.location.stairs_down:
+        if self.player.position == self.location.stairs_down:
             if not self.location.sublevel:
                 location = Cave(
                     width=self.width,
@@ -1047,7 +1051,7 @@ class Start(Scene):
             self.location.unit_remove(self.player)
             self.location = self.location.sublevel
             self.location.units_add([self.player])
-            self.player.local.position = self.location.stairs_up
+            self.player.position = self.location.stairs_up
 
 
         else:
@@ -1069,13 +1073,13 @@ class Start(Scene):
         if isinstance(self.location.parent, World):
             move_upstairs()
             # reset position since re-entering world map
-            self.player.local.position = (0, 0)
+            self.player.position = (0, 0)
 
         # check if parent location is a city, wilderness or dungeon map
         elif isinstance(self.location.parent, (Cave, City, wilderness.keys())):
             move_upstairs()
             # reset position to the downstairs in the dungeon
-            self.player.local.position = self.location.stairs_down
+            self.player.position = self.location.stairs_down
 
         else:
             self.draw_log("You cannot go upstairs without stairs.")
@@ -1090,8 +1094,8 @@ class Start(Scene):
             self.location.close_door(x, y)
 
         doors = []
-        for pos in self.spaces(*self.player.local.position):
-            if pos != self.player.local.position:
+        for pos in self.spaces(*self.player.position):
+            if pos != self.player.position:
                 try:
                     if self.location.square(*pos).char == '/':
                         doors.append(pos)
@@ -1106,7 +1110,7 @@ class Start(Scene):
             close_door(*doors.pop())
 
         else:
-            px, py = self.player.local.position
+            px, py = self.player.position
             self.draw_log(strings.interact_door_close_many)
 
             code = term.read()
@@ -1135,8 +1139,8 @@ class Start(Scene):
             self.location.open_door(x, y)
 
         doors = []
-        px, py = self.player.local.position
-        for x, y in self.spaces(*self.player.local.position):
+        px, py = self.player.position
+        for x, y in self.spaces(*self.player.position):
             if (x, y) != (px, py):
                 try:
                     if self.location.square(x, y).char == "+":
@@ -1175,10 +1179,10 @@ class Start(Scene):
             self.draw_log(self.location.unit_at(x, y).talk())
 
         units = []
-        px, py = self.player.local.position
+        px, py = self.player.position
 
-        for pos in self.spaces(*self.player.local.position):
-            if pos != self.player.local.position:
+        for pos in self.spaces(*self.player.position):
+            if pos != self.player.position:
                 try:
                     if self.location.unit_at(*pos):
                         units.append(pos)
@@ -1193,7 +1197,7 @@ class Start(Scene):
             talk_to(*units.pop())
     
         else:
-            px, py = self.player.local.position
+            px, py = self.player.position
             log = "There is more than one character near you. Which direction?"
             self.draw_log(log)
             
@@ -1232,7 +1236,7 @@ class Start(Scene):
             '''
             nonlocal log
             if self.player.item_add(item):
-                self.location.item_remove(*self.player.local.position, item)
+                self.location.item_remove(*self.player.position, item)
                 log = "You pick up {} and place it in your backpack.".format(
                                                                     item.name)
                 log += " Your backpack feels heavier."
@@ -1240,7 +1244,7 @@ class Start(Scene):
             else:
                 log = "Backpack is full. Cannot pick up {}.".format(item)
 
-        items = [item for item in self.location.items_at(*self.player.local.position)]
+        items = [item for item in self.location.items_at(*self.player.position)]
 
         log = ""
         if not items:
@@ -1272,7 +1276,7 @@ class Start(Scene):
                         pickup_item(items[code - 4])
                         self.index_row, self.item_row = 0, 0
                         items = [item for item 
-                            in self.location.items_at(*self.player.local.position)]
+                            in self.location.items_at(*self.player.position)]
 
                         if not items:
                             break
@@ -1292,7 +1296,7 @@ class Start(Scene):
         def drop_item(item):
             nonlocal log
             self.player.item_remove(item)
-            self.location.item_add(*self.player.local.position, item)
+            self.location.item_add(*self.player.position, item)
             if hasattr(item, 'name'):
                 item_name = item.name
             else:

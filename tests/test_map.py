@@ -11,7 +11,7 @@ layouts
 '''
 test_map_path = "./assets/maps/test_map.png"
 
-def test_map_output_speed_with_yield():
+def run_map_output_speed_with_yield():
     def run():
         cave.fov_calc([(*bat.local.position, bat.sight_norm)])
         for _ in cave.output(*bat.local.position):
@@ -24,7 +24,7 @@ def test_map_output_speed_with_yield():
     t = timeit.timeit(run, number=1000)
     return t
 
-def test_map_output_speed_with_return():
+def run_map_output_speed_with_return():
     def run():
         cave.fov_calc([(*bat.local.position, bat.sight_norm)])
         for _ in cave.output(*bat.local.position):
