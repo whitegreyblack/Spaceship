@@ -404,7 +404,7 @@ class Map:
         '''    
         for unit in units:
             for o in range(8):
-                self.sight(*unit.position, 1, 1.0, 0.0, unit.sight,
+                self.sight(*unit.local, 1, 1.0, 0.0, unit.sight,
                         self.mult[0][o], 
                         self.mult[1][o], 
                         self.mult[2][o], 
@@ -501,7 +501,7 @@ class Map:
     def unit_positions(self) -> Tuple[int, int]:
         '''Yields all unit positions for units in the unit list'''
         for unit in self.units:
-            yield unit.local.position
+            yield unit.local
     
     def unit_at(self, x, y) -> object:
         '''Returns a unit at the given position. If the unit exists then the

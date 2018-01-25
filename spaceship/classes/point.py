@@ -10,9 +10,6 @@ class Point:
     def __iter__(self):
         return iter(tuple(getattr(self, var) for var in self.__slots__))
 
-    def move(self, other):
-        self.x, self.y = self + other
-
     def __add__(self, other):
         try:
             x, y = self.x + other.x, self.y + other.y
@@ -31,6 +28,12 @@ class Point:
 
     def __eq__(self, other):
         return (self.x, self.y) == other
+
+    def __hash__(self):
+        return hash((self.x, self.y))
+
+    def move(self, other):
+        self.x, self.y = self + other
 
     def distance(self, other):
         if isinstance(other, tuple):

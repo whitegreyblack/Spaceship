@@ -1,5 +1,6 @@
 from typing import Tuple
 from namedlist import namedlist
+from .point import Point
 from re import search
 import math
 

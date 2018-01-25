@@ -1,6 +1,6 @@
 from typing import Tuple
 from random import randint
-from .object import Point
+from .point import Point
 from .color import Color
 from .unit import Unit
 from .world import World
@@ -69,7 +69,7 @@ class Player(Unit):
     def setup(self, home: str) -> None:
         self.home, self.hpointer = home, World.capitals(home)
         self.world = Point(*self.hpointer)
-        self.__height = 0
+        self.height = 0
 
     def __str__(self):
         return self.name
@@ -279,47 +279,18 @@ class Player(Unit):
             return True
 
         return False
-
-    @property
-    def height(self) -> int:
-        return self.__height
         
-    def move_height(self, move: int) -> None:
-        def check_height(move: int) -> int:
-            return max(self.__height + move, -1)
-        self.__height = check_height(move)
-    
     def ascend(self) -> None:
-        self.__height = max(self.__height - 1, 0)
+        self.height = max(self.height - 1, 0)
     
     def descend(self) -> None:
-        self.__height = max(self.__height + 1, 0)
-
-    @property
-    def position(self) -> Tuple[int, int]:
-        '''returns local position on the local map'''
-        return self.local.position
-
-    @position.setter
-    def position(self, position: Tuple[int, int]) -> None:
-        '''sets local position given a tuple(x,y)'''
-        self.local.position = position    
-
-    @property
-    def location(self) -> Tuple[int, int]:
-        '''returns global position on the world map'''
-        return self.world.position
-
-    @location.setter
-    def location(self, location: Tuple[int, int]) -> None:
-        '''sets global position given a tuple(x,y)'''
-        self.world.position = location    
+        self.height = max(self.height + 1, 0)
 
     def travel(self, dx: int, dy: int) -> None:
-        self.location = self.world + (dx, dy)
+        self.world.move((dx, dy))
 
     def save_location(self) -> None:
-        self.last_location = self.location
+        self.last_location = self.world
     
     def get_position_on_enter(self) -> Tuple[float, float]:
         def direction(x: float, y: float) -> Tuple[float, float]:
@@ -330,7 +301,7 @@ class Player(Unit):
             raise AttributeError("No last location variable")
 
         try:
-            return direction(self.last_location - self.position)
+            return direction(self.last_location - self.location)
         except KeyError:
             raise KeyError("Error in -directions-")
 
