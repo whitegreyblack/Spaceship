@@ -533,6 +533,10 @@ class Start(Scene):
                     self.unit.energy.reset()
                     self.process_turn()      
 
+        if self.turn_inc:
+            self.turns += 1
+            self.turn_inc = False
+
         # if isinstance(self.location, World):
         #     self.process_turn_player()
         # else:
@@ -743,7 +747,7 @@ class Start(Scene):
         else:
             if (x, y) == (0, 0):
                 self.draw_log(strings.movement_wait_local)
-                turn_inc = True
+                self.turn_inc = True
 
             else:
                 point = self.player.local + (x, y)
@@ -759,8 +763,6 @@ class Start(Scene):
                             self.draw_log(
                                 strings.pass_by_item[item_message])
                             
-                        turn_inc = True
-
                     else:
                         unit = self.location.unit_at(tx, ty)
 
@@ -828,8 +830,8 @@ class Start(Scene):
                                         max(0, unit.cur_hp))
 
                                     self.draw_log(log, color="red")
-
-                        turn_inc = True
+                    self.turn_inc = True
+                    
                 else:
                     if self.location.out_of_bounds(*point):
                         self.draw_log(strings.movement_move_oob)
@@ -1238,8 +1240,12 @@ class Start(Scene):
             nonlocal log
             if self.player.item_add(item):
                 self.location.item_remove(*self.player.local, item)
-                log = "You pick up {} and place it in your backpack.".format(
-                                                                    item.name)
+                try:
+                    log = "You pick up {} and place it in your backpack.".format(
+                        item.name)
+                except AttributeError:
+                    log = "You pick up {} and place it in your backpack.".format(
+                        item)
                 log += " Your backpack feels heavier."
 
             else:
