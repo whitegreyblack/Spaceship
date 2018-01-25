@@ -66,6 +66,7 @@ class Start(Scene):
                 'e': self.action_item_eat,
                 't': self.action_unit_talk,
                 'T': self.action_throw,
+                'z': self.action_zap,
             },
         }
 
@@ -1498,7 +1499,6 @@ class Start(Scene):
         def throw():
             nonlocal position
             points = tools.bresenhams(self.player.local, position)
-            print(term.state(term.TK_LAYER))
             term.layer(2)
             for point in points:
                 translate = Point(self.main_x, self.main_y) + point
@@ -1514,7 +1514,7 @@ class Start(Scene):
             term.layer(0)
 
         log = ""
-        code = shifted = None, None
+        code, shifted = None, None
         position = self.player.local
 
         if (self.location, City):
@@ -1545,6 +1545,76 @@ class Start(Scene):
             elif code == term.TK_ENTER or code == term.TK_T: 
                 throw()
                 break
+
+    def action_zap(self):
+        def look():
+            nonlocal position, code, shifted
+
+            action = commands_player[(code, shifted)]
+            new_pos = position + (action.x, action.y)
+
+            in_bounds = self.player.local.distance(new_pos) < sight
+            lighted = self.location.check_light_level(*new_pos) > 0
+
+            if in_bounds and lighted:
+                if position == self.player.local:
+                    char, color = '@', 'white'
+
+                else:
+                    square = self.location.square(*position)
+                    char, color = square.char, square.color
+
+                term.puts(*(position + (self.main_x, self.main_y)),
+                    "[c={}]{}[/c]".format(color, char))
+
+                position = new_pos 
+
+        def zap():
+            nonlocal position
+            points = tools.bresenhams(self.player.local, position)
+            term.layer(2)
+            for point in points:
+                translate = Point(self.main_x, self.main_y) + point
+                symbol = term.pick(*translate)
+                color = term.pick_color(*translate)
+                term.composition(False)
+                term.puts(*translate, "[c=yellow]-[/c]")
+                term.composition(True)
+                term.refresh()
+                # term.clear_area(*translate, 1, 1)
+                term.refresh()
+            term.composition(False)
+            term.layer(0)
+
+        log = ""
+        code, shifted = None, None
+        position = self.player.local
+
+        if (self.location, City):
+            sight = self.player.sight_city
+        else:
+            sight = self.player.sight_norm
+
+        while True:
+            term.puts(*(position + (self.main_x, self.main_y)),
+                '[c=yellow]X[/c]')
+            term.refresh()
+
+            code = term.read()
+            shifted = term.state(term.TK_SHIFT)
+            if code == term.TK_ESCAPE:
+                break
+
+            elif term.TK_RIGHT <= code <= term.TK_UP:
+                look()
+
+            elif term.TK_KP_1 <= code <= term.TK_KP_9:
+                look()
+
+            elif code == term.TK_ENTER or code == term.TK_T: 
+                zap()
+                break     
+
 
 if __name__ == "__main__":
     from .make import Create
