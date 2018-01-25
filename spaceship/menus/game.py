@@ -7,6 +7,7 @@ from bearlibterminal import terminal as term
 import spaceship.strings as strings
 from spaceship.menus.scene import Scene
 from spaceship.screen_functions import *
+import spaceship.tools as tools
 from spaceship.action import commands_player
 from spaceship.gamelog import GameLogger
 from spaceship.classes.item import Item, Potion, sort
@@ -64,6 +65,7 @@ class Start(Scene):
                 'u': self.action_item_use,
                 'e': self.action_item_eat,
                 't': self.action_unit_talk,
+                'T': self.action_throw,
             },
         }
 
@@ -1437,6 +1439,7 @@ class Start(Scene):
                 position = new_pos 
 
         log = ""
+        square = None
         code, shifted = None, None
         position = self.player.local
 
@@ -1456,19 +1459,93 @@ class Start(Scene):
 
             code = term.read()
             shifted = term.state(term.TK_SHIFT)
-            
+
             if code == term.TK_ESCAPE:
                 break
 
             elif term.TK_RIGHT <= code <= term.TK_UP:
                 look()
 
-            elif term.TK_KP_1 <= term.TK_KP_9:
+            elif term.TK_KP_1 <= code <= term.TK_KP_9:
                 look()
 
             elif code == term.TK_ENTER:
                 log = 'something'
             
+    def action_throw(self):
+        def look():
+            nonlocal position, code, shifted
+
+            action = commands_player[(code, shifted)]
+            new_pos = position + (action.x, action.y)
+
+            in_bounds = self.player.local.distance(new_pos) < sight
+            lighted = self.location.check_light_level(*new_pos) > 0
+
+            if in_bounds and lighted:
+                if position == self.player.local:
+                    char, color = '@', 'white'
+
+                else:
+                    square = self.location.square(*position)
+                    char, color = square.char, square.color
+
+                term.puts(*(position + (self.main_x, self.main_y)),
+                    "[c={}]{}[/c]".format(color, char))
+
+                position = new_pos 
+
+        def throw():
+            nonlocal position
+            points = tools.bresenhams(self.player.local, position)
+            term.layer(2)
+            for point in points:
+                translate = Point(self.main_x, self.main_y) + point
+                print(translate)
+                symbol = term.pick(*translate)
+                color = term.pick_color(*translate)
+                self.draw_world()
+                self.draw_status()
+                self.draw_log()
+                term.puts(*translate, "[c=red]/[/c]")
+                term.refresh()
+                term.clear(*translate, 1, 1)
+                term.puts(*translate,  f"[c={color}]{symbol}[/c]")
+
+        log = ""
+        code = shifted = None, None
+        position = self.player.local
+
+        if (self.location, City):
+            sight = self.player.sight_city
+        else:
+            sight = self.player.sight_norm
+
+        while True:
+            if log:
+                self.draw_log(log)
+                log = ""
+                
+            term.puts(*(position + (self.main_x, self.main_y)), 
+                '[c=red]X[/c]')
+            term.refresh()
+
+            code = term.read()
+            print(code)
+            shifted = term.state(term.TK_SHIFT)
+            if code == term.TK_ESCAPE:
+                break
+
+            elif term.TK_RIGHT <= code <= term.TK_UP:
+                look()
+
+            elif term.TK_KP_1 <= code <= term.TK_KP_9:
+                look()
+
+            elif code == term.TK_ENTER or code == term.TK_T: 
+                throw()
+                break
+
 if __name__ == "__main__":
     from .make import Create
     term.open()
