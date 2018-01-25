@@ -26,13 +26,11 @@ class Engine:
         
         self.scene = self.scenes['main_menu']
 
-    def __del__(self):
-        term.close()
-
     def setup(self):
         '''sets up instance of terminal'''
         term.open()
         self.setup_font('Ibm_cga', cx=8, cy=8)
+        # self.setup_font("Andux_cp866ish", cx=8, cy=8)
         term.set('window: size=80x25, cellsize=auto, title="Spaceship", fullscreen=false')
 
     def setup_font(self, font, cx=8, cy=None):
