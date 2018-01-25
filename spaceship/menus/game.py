@@ -53,7 +53,6 @@ class Start(Scene):
             },
             1: {
                 # '@': self.draw_screens,
-                'l': self.action_look,
                 'q': self.draw_screens,
                 'v': self.draw_screens,
                 '<': self.action_stairs_up,
@@ -65,8 +64,9 @@ class Start(Scene):
                 'u': self.action_item_use,
                 'e': self.action_item_eat,
                 't': self.action_unit_talk,
-                'T': self.action_throw,
-                'z': self.action_zap,
+                'T': self.actions_ranged,
+                'z': self.actions_ranged,
+                'l': self.actions_ranged,
             },
         }
 
@@ -1615,6 +1615,117 @@ class Start(Scene):
                 zap()
                 break     
 
+    def actions_ranged(self, key):
+        def look():
+            nonlocal position, code, shifted
+
+            action = commands_player[(code, shifted)]
+            new_pos = position + (action.x, action.y)
+
+            in_bounds = self.player.local.distance(new_pos) < sight
+            lighted = self.location.check_light_level(*new_pos) > 0
+
+            if in_bounds and lighted:
+                if position == self.player.local:
+                    char, color = '@', 'white'
+
+                else:
+                    square = self.location.square(*position)
+                    char, color = square.char, square.color
+
+                term.puts(*(position + (self.main_x, self.main_y)),
+                    "[c={}]{}[/c]".format(color, char))
+
+                position = new_pos 
+
+        def throw():
+            nonlocal position
+            points = tools.bresenhams(self.player.local, position)
+            term.layer(2)
+            for point in points:
+                translate = Point(self.main_x, self.main_y) + point
+                symbol = term.pick(*translate)
+                color = term.pick_color(*translate)
+                term.composition(False)
+                term.puts(*translate, "[c=red]/[/c]")
+                term.composition(True)
+                term.refresh()
+                term.clear_area(*translate, 1, 1)
+                term.refresh()
+            term.composition(False)
+            term.layer(0)
+
+        def zap():
+            nonlocal position
+            points = tools.bresenhams(self.player.local, position)
+            term.layer(2)
+            for point in points:
+                translate = Point(self.main_x, self.main_y) + point
+                symbol = term.pick(*translate)
+                color = term.pick_color(*translate)
+                term.composition(False)
+                term.puts(*translate, "[c=yellow]-[/c]")
+                term.composition(True)
+                term.refresh()
+                # term.clear_area(*translate, 1, 1)
+                term.refresh()
+            term.composition(False)
+            term.layer(0)    
+
+        log = ""
+        code, shifted = None, None
+        position = self.player.local
+        proceed = True
+        color = "white"
+        if key == "T":
+            color = "red"
+        elif key == "z":
+            color = "yellow"
+        
+        if (self.location, City):
+            sight = self.player.sight_city
+        else:
+            sight = self.player.sight_norm
+
+        while proceed:
+            term.puts(*(position + (self.main_x, self.main_y)), 
+                f'[c={color}]X[/c]')
+            term.refresh()
+
+            code = term.read()
+            shifted = term.state(term.TK_SHIFT)
+            if code == term.TK_ESCAPE:
+                proceed = False
+
+            elif term.TK_RIGHT <= code <= term.TK_UP:
+                look()
+
+            elif term.TK_KP_1 <= code <= term.TK_KP_9:
+                look()
+
+            elif code == term.TK_ENTER:
+                if key == "l":
+                    self.draw_log("You look at the spot")
+                    
+                elif key == "T":
+                    throw()
+                    self.draw_log("You throw something")
+                    proceed = False
+
+                else:
+                    zap()
+                    self.draw_log("You try zapping with your wand")
+                    proceed = False
+
+            elif code == term.TK_T and key == "T":
+                throw()
+                self.draw_log("You throw something")
+                proceed = False
+
+            elif code == term.TK_Z and key == "z":
+                zap()
+                self.draw_log("You zap something")
+                proceed = False
 
 if __name__ == "__main__":
     from .make import Create
