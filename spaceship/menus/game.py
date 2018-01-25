@@ -102,7 +102,9 @@ class Start(Scene):
             footer="_" + self.player.name + "_" + self.player.job)
 
         while self.proceed and self.player.is_alive:
+            term.clear()
             self.draw()
+            term.refresh()
             self.process_units()
             if self.map_change:
                 self.determine_map_location()
@@ -112,11 +114,9 @@ class Start(Scene):
             return self.ret
 
     def draw(self):
-        term.clear()
         self.draw_log(refresh=False)
         self.draw_status()
         self.draw_world()
-        term.refresh()
 
     def clear_log(self):
         term.clear_area(
@@ -1498,19 +1498,20 @@ class Start(Scene):
         def throw():
             nonlocal position
             points = tools.bresenhams(self.player.local, position)
+            print(term.state(term.TK_LAYER))
             term.layer(2)
             for point in points:
                 translate = Point(self.main_x, self.main_y) + point
-                print(translate)
                 symbol = term.pick(*translate)
                 color = term.pick_color(*translate)
-                self.draw_world()
-                self.draw_status()
-                self.draw_log()
+                term.composition(False)
                 term.puts(*translate, "[c=red]/[/c]")
+                term.composition(True)
                 term.refresh()
-                term.clear(*translate, 1, 1)
-                term.puts(*translate,  f"[c={color}]{symbol}[/c]")
+                term.clear_area(*translate, 1, 1)
+                term.refresh()
+            term.composition(False)
+            term.layer(0)
 
         log = ""
         code = shifted = None, None
@@ -1531,7 +1532,6 @@ class Start(Scene):
             term.refresh()
 
             code = term.read()
-            print(code)
             shifted = term.state(term.TK_SHIFT)
             if code == term.TK_ESCAPE:
                 break
