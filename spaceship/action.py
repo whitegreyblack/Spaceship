@@ -48,6 +48,7 @@ commands_player = {
     (term.TK_D, 0): keypress(None, None, "d", "drop"),
     (term.TK_U, 0): keypress(None, None, "u", "use"),
     (term.TK_E, 0): keypress(None, None, "e", "eat"),
+    (term.TK_L, 0): keypress(None, None, "l", "look"),
     (term.TK_COMMA, 0): keypress(None, None, ",", "pickup"),
     (term.TK_I, 0): keypress(None, None, "i", "equipment"),
     (term.TK_V, 0): keypress(None, None, "v", "inventory"),

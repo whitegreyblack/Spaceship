@@ -52,6 +52,7 @@ class Start(Scene):
             },
             1: {
                 # '@': self.draw_screens,
+                'l': self.action_look,
                 'q': self.draw_screens,
                 'v': self.draw_screens,
                 '<': self.action_stairs_up,
@@ -831,7 +832,7 @@ class Start(Scene):
 
                                     self.draw_log(log, color="red")
                     self.turn_inc = True
-                    
+
                 else:
                     if self.location.out_of_bounds(*point):
                         self.draw_log(strings.movement_move_oob)
@@ -1412,6 +1413,62 @@ class Start(Scene):
                 items = list(self.player.inventory_prop('eat'))
                 self.draw_status()
 
+    def action_look(self):
+        def look():
+            nonlocal position, code, shifted
+
+            action = commands_player[(code, shifted)]
+            new_pos = position + (action.x, action.y)
+
+            in_bounds = self.player.local.distance(new_pos) < sight
+            lighted = self.location.check_light_level(*new_pos) > 0
+
+            if in_bounds and lighted:
+                if position == self.player.local:
+                    char, color = '@', 'white'
+
+                else:
+                    square = self.location.square(*position)
+                    char, color = square.char, square.color
+
+                term.puts(*(position + (self.main_x, self.main_y)),
+                    "[c={}]{}[/c]".format(color, char))
+
+                position = new_pos 
+
+        log = ""
+        code, shifted = None, None
+        position = self.player.local
+
+        if (self.location, City):
+            sight = self.player.sight_city
+        else:
+            sight = self.player.sight_norm
+
+        while True:
+            if log:
+                self.draw_log(log)
+                log = ""
+                
+            term.puts(*(position + (self.main_x, self.main_y)), 
+                '[c=red]X[/c]')
+            term.refresh()
+
+            code = term.read()
+            shifted = term.state(term.TK_SHIFT)
+            
+            if code == term.TK_ESCAPE:
+                break
+
+            elif term.TK_RIGHT <= code <= term.TK_UP:
+                look()
+
+            elif term.TK_KP_1 <= term.TK_KP_9:
+                look()
+
+            elif code == term.TK_ENTER:
+                log = 'something'
+            
 if __name__ == "__main__":
     from .make import Create
     term.open()
