@@ -1,11 +1,11 @@
 # equipment.py
 from .item import Item
-from .items import Container
+from .items import build
 parts=("head", "neck", "body", "arms", "hands", 
         "hand_left", "hand_right", "ring_left", 
         "ring_right", "waist", "legs", "feet")
 
-class Equipment(Container):
+class Equipment:
     '''Tied to body parts'''
     def __init__(self, parts, equipment=None):
         super().__init__()
@@ -26,7 +26,7 @@ class Equipment(Container):
 
     @items.setter
     def items(self, equipment):
-        equipment = [self.build(item) for item in equipment]
+        equipment = [build(item) for item in equipment]
         for p, part in enumerate(self.parts):
             if equipment[p]:
                 self.equip(part, equipment[p])

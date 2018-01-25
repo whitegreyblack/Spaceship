@@ -6,7 +6,7 @@ from .unit import Unit
 from .world import World
 from .item import Item
 from .item import totattr, modattr, sort, curattr
-from .items import itemlist, convert
+from .items import itemlist
 from .equipment import Equipment, parts
 from .inventory import Inventory
 from spaceship.strings import dump_template

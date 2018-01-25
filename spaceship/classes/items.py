@@ -1,13 +1,6 @@
 from spaceship.classes.item import Item, Food, Potion
 from collections import namedtuple
 
-class Container:
-    def build(self, item_name):
-        if isinstance(item_name, str) and item_name in itemlist.keys():
-            return Item(item_name, *itemlist[item_name])
-        else:
-            return item_name
-
 item = namedtuple('Item', 'char color item_type placement effects hands')
 
 itemlist = {
@@ -602,23 +595,12 @@ itemlist = {
 #             "turns": 3),
 }
 
-
-def build_item(item_name):
-    if item_name in itemlist.keys():
-        item = Item(*itemlist[item_name])
+def build(self, item_name):
+    if isinstance(item_name, str) and item_name in itemlist.keys():
+        return Item(item_name, *itemlist[item_name])
     else:
-        item = item_name
-    return item
-
-def convert(item):
-    try:
-        item:  itemlist[item]
-    except KeyError:
-        pass
-    except TypeError:
-        pass    
-    return item
-
+        return item_name
+    
 def get_all_items():
     for key in itemlist.keys():
         print(itemlist[key].__repr__())
