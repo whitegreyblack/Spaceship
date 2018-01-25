@@ -103,7 +103,7 @@ class Item:
         self.char = char
         self.color = color
         self.__effects = effects
-        
+
         # used in sorting items by type
         self.item_type = item_type
 
@@ -153,19 +153,6 @@ class Potion(Item):
         for effect, value in self.effects:
             yield effect, value
 
-class Shoes(Item):
-    inventory = "shoes"
-    placement = {"feet"}
-    def __init__(self, name, char, color, effects=None):
-        super().__init__(name, char, color, effects)
-
-class Ring(Item):
-    inventory = "rings"
-    placement = {"ring_left", "ring_right"}
-
-    def __init__(self, name, char, color, effects=None):
-        super().__init__(name, char, color, effects)
-        
 attrs = "str con dex wis int cha hp mp hr mr sp dv mr".split()
 
 '''

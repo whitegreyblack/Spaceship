@@ -3,7 +3,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
 from spaceship.menus.make import test_hero
 from spaceship.strings import stats
-from spaceship.classes.item import Ring, Potion
+from spaceship.classes.item import Item, Potion
 from spaceship.classes.items import itemlist
 from spaceship.classes.player import Player
 
@@ -42,7 +42,7 @@ def test_ring_protection_ring_right():
 
 def test_ring_earth():
     hero = test_hero()
-    item = Ring("ring of earth", "=", "green", (("mod_str", 1),))
+    item = itemlist['ring of protection']
     player = Player(*hero.values())
 
     # player.inventory_add(item)
@@ -62,7 +62,7 @@ def test_ring_earth():
 
 def test_ring_power():
     hero = test_hero()
-    item = Ring("ring of power", "=", "green", (("mod_str", 1), ("mod_dex", 1),))
+    item = itemlist['ring of protection']
     player = Player(*hero.values())
 
     # player.inventory_add(item)
@@ -113,7 +113,10 @@ def test_ring_power_two():
     # assert player.mod_dex == 2
     # assert player.mod_dex + player.dex == player.tot_dex
 
+def run_items():
+    for _, item in itemlist.items():
+        # print(item)
+        print(Item(*item))
+
 if __name__ == "__main__":
-    print(*test_hero())
-    print(test_hero())
-    print(RingProtection())
+    run_items()

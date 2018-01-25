@@ -4,7 +4,7 @@ from .object import Point
 from .color import Color
 from .unit import Unit
 from .world import World
-from .item import Ring
+from .item import Item
 from .item import totattr, modattr, sort, curattr
 from .items import itemlist, convert
 from .equipment import Equipment, parts
