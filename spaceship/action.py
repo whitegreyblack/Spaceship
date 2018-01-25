@@ -71,7 +71,3 @@ commands_ai = {
         ( -1, 0): keypress(-1, 0, None, "move"),
     }
 }
-
-if __name__ == "__main__":
-    for i in keys:
-        print(keys)

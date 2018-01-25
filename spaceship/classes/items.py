@@ -1,6 +1,15 @@
-from spaceship.classes.item import item, Food, Potion
+from spaceship.classes.item import Item, Food, Potion
 from collections import namedtuple
+
+class Container:
+    def build(self, item_name):
+        if isinstance(item_name, str) and item_name in itemlist.keys():
+            return Item(item_name, *itemlist[item_name])
+        else:
+            return item_name
+
 item = namedtuple('Item', 'char color item_type placement effects hands')
+
 itemlist = {
     # TODO -- implement ranged weapons
     # TODO -- implement readable "items": scrolls, tomes
@@ -419,7 +428,6 @@ itemlist = {
 #     # "ring of regen": None,
     "ring of protection": 
         item(
-            name="ring of protection", 
             char="=", 
             color="white", 
             item_type="ring",
@@ -505,14 +513,16 @@ itemlist = {
 #                 ("str", 1),
 #             )
 
-#     "ring of nature": 
-#             char=": ", 
-#             color="green", 
-#             item_type="ring",
-#             placement={"ring_left", "ring_right"},
-#             effects=(
-#                 ("wis", 1),
-#             )
+    "ring of nature": 
+        item(
+            char=": ", 
+            color="green", 
+            item_type="ring",
+            placement={"ring_left", "ring_right"},
+            effects=(
+                ("wis", 1),
+            ),
+            hands=1)
 
 #     "ring of power": 
 #         
@@ -591,6 +601,14 @@ itemlist = {
 #             ), 
 #             "turns": 3),
 }
+
+
+def build_item(item_name):
+    if item_name in itemlist.keys():
+        item = Item(*itemlist[item_name])
+    else:
+        item = item_name
+    return item
 
 def convert(item):
     try:

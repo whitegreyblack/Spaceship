@@ -1,12 +1,12 @@
 # inventory.py
 from .item import sort
-from .items import convert
+from .items import Container
 
-class Inventory(list):
+class Inventory(Container, list):
     '''Regular list'''
     def __init__(self, items):
         super().__init__()
-        self.extend([convert(item) for item in items])
+        self.extend([self.build(item) for item in items])
 
     def by_type(self, part):
         for item in self:

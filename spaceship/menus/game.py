@@ -9,7 +9,7 @@ from spaceship.menus.scene import Scene
 from spaceship.screen_functions import *
 from spaceship.action import commands_player
 from spaceship.gamelog import GameLogger
-from spaceship.classes.item import Ring, Potion, sort
+from spaceship.classes.item import Item, Potion, sort
 from spaceship.classes.wild import wilderness
 from spaceship.classes.player import Player
 from spaceship.classes.world import World
@@ -342,7 +342,10 @@ class Start(Scene):
 
         def unequip_item(code):
             nonlocal log, update_status
-            string = strings.cmd_unequip_confirm.format(item.name)
+            try:
+                string = strings.cmd_unequip_confirm.format(item.name)
+            except AttributeError:
+                string = strings.cmd_unequip_confirm.format(item)
             self.draw_screen_log(string)
             term.refresh()
 
@@ -350,7 +353,10 @@ class Start(Scene):
 
             if confirm in (term.TK_Y, term.TK_ENTER, code):
                 self.player.unequip(part)
-                log = strings.cmd_unequip.format(item.name)
+                try:
+                    log = strings.cmd_unequip.format(item.name)
+                except AttributeError:
+                    log = strings.cmd_unequip.format(item)
                 update_status = True
 
             else:
