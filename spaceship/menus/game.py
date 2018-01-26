@@ -619,12 +619,12 @@ class Start(Scene):
 
     def process_turn_unit(self):
         if hasattr(self.unit, 'acts'):
-            units = { u.local.position: u for u in self.location.units 
+            units = { u.local: u for u in self.location.units 
                                                         if u != self.unit }
 
             # subset of positions possible that can be seen due to sight
             positions = self.location.fov_calc_blocks(
-                                                *self.unit.local.position,
+                                                *self.unit.local,
                                                 self.unit.sight_norm)
 
             # units = { self.location.unit_at(*position).position: self.location.unit_at(*position) 
@@ -695,7 +695,7 @@ class Start(Scene):
         occupied_unit = self.location.occupied(x, y)
 
         if not occupied_player and not occupied_unit:
-            self.unit.local.position = (x, y)
+            self.unit.local = Point(x, y)
             return None
 
         return occupied_player, occupied_unit
@@ -714,7 +714,7 @@ class Start(Scene):
                     occupied_player, occupied_unit = unit_bools
 
                     if occupied_unit:
-                        unit = self.location.unit_at(tx, ty)
+                        unit = self.location.unit_at(*point)
 
                     else:
                         unit = self.player
@@ -745,13 +745,17 @@ class Start(Scene):
                                 damage *= 2
 
                             unit.cur_hp -= damage
+                            
+                            if self.location.check_light_level(*point):
+                                term.layer(1)
+                                term.puts(
+                                    *(point + (self.main_x, self.main_y)),
+                                    '[c=red]*[/c]')
 
-                            term.puts(
-                                x=tx + self.main_x, 
-                                y=ty + self.main_y, 
-                                s='[c=red]{}[/c]'.format(damage if damage <= 9 else '*'))
                             term.refresh()
-
+                            term.clear_area(*(point + (self.main_x, self.main_y)),
+                                1, 1)
+                            term.layer(0)
                             log = "The {} attacks {} for {} damage".format(
                                 self.unit.race,
                                 "you" if player else "the " + unit.race,
@@ -813,7 +817,7 @@ class Start(Scene):
                                 strings.pass_by_item[item_message])
                             
                     else:
-                        unit = self.location.unit_at(tx, ty)
+                        unit = self.location.unit_at(*point)
 
                         if isinstance(self.location, City):
                             self.player.displace(unit)
@@ -839,11 +843,11 @@ class Start(Scene):
 
                                 unit.cur_hp -= damage
                                 
-                                term.puts(
-                                    x=tx + self.main_x, 
-                                    y=ty + self.main_y, 
-                                    s='[c=red]{}[/c]'.format(damage if damage <= 9 else '*'))
-                                term.refresh()
+                                if self.location.check_light_level(*point):
+                                    term.puts(
+                                        *(point + (self.main_x, self.main_y)),
+                                        '[c=red]*[/c]')
+                                    term.refresh()
 
                                 log = "You{}attack the {} for {} damage. ".format(
                                     " crit and " if chance == 2 else " ", 
@@ -866,7 +870,7 @@ class Start(Scene):
                                     item = unit.drops()
 
                                     if item:
-                                        self.location.item_add(*unit.position, item)
+                                        self.location.item_add(*unit.local, item)
                                         self.draw_log("The {} has dropped {}.".format(
                                             unit.race, 
                                             item.name))
@@ -1039,7 +1043,7 @@ class Start(Scene):
                     height=self.height,
                     max_rooms=random.randint(15, 20))
 
-                self.player.local = location.stairs_up
+                self.player.local = Point(*location.stairs_up)
 
             else:
                 # map type should be in the wilderness
@@ -1051,10 +1055,11 @@ class Start(Scene):
                     generate=True)
 
                 x, y = self.player.get_position_on_enter()
-                self.player.local = self.determine_map_enterance(
-                    x=x, 
-                    y=y, 
-                    location=location)
+                self.player.local = Point(
+                    self.determine_map_enterance(
+                        x=x, 
+                        y=y, 
+                        location=location))
 
             location.parent = self.world
             self.world.location_create(*self.player.world, location)

@@ -88,8 +88,12 @@ class Unit(Object):
 
     def displace(self, other):
         '''Switches positions of target with self, vice versa'''
-        self.position, other.position = other.position, self.position
+        self.local, other.local = other.local, self.local
         # other.energy.reset()
+
+    def direction(self, unit):
+        '''Returns a point indicating the vector towards target'''
+        return unit.local - self.local
 
     def calculate_attack_damage(self):
         '''Returns the damage amount of a single hit'''
@@ -99,10 +103,6 @@ class Unit(Object):
         '''Returns the chance to hit'''
         return 1
 
-    def direction(self, unit):
-        '''Returns a point indicating the vector towards target'''
-        return unit.x - self.x, unit.y - self.y
-
     def friendly():
         '''Returns a boolean indicating if unit is friendly'''
         self.relationship >= 0
@@ -110,7 +110,7 @@ class Unit(Object):
     def translate_sight(self, x, y):
         '''Offsets input point by current position and sight radius'''
         sight_point = self.local - (x + self.sight_norm, y + self.sight_norm)
-        return sight_point.position
+        return sight_point
 
     def moving_torwards(self, point):
         '''Returns the closest 1:1 point torwards input point'''
@@ -173,15 +173,14 @@ class Unit(Object):
         openlist = set()
         closelist = []
         openlist.add(node(0, 0, 0, None, p1))
-
         while openlist:
-            nodeq = min(sorted(openlist))
+            nodeq = min(openlist, key=lambda x: x.df)
             openlist.remove(nodeq)
             
             for i in range(-1, 2):
                 for j in range(-1, 2):
                     if (i, j) != (0, 0):
-                        neighbor = nodeq.node[0] + i, nodeq.node[1] + j
+                        neighbor = nodeq.node + (i, j)
 
                         if neighbor == p2:
                             closelist.append(nodeq)

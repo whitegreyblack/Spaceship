@@ -66,7 +66,7 @@ class Rat(Unit):
                     spotted = True
                     # different racial unit
                     if self.character != char:
-                        paths.append((100, unit, self.path(self.position, unit.position, tiles)))
+                        paths.append((100, unit, self.path(self.local, unit.local, tiles)))
 
                 # check for items on the square
                 elif tiles[tile].items:
@@ -126,7 +126,7 @@ class Rat(Unit):
 
                     else:
                         # must be an adventurer -- go for the juggular
-                        dt = distance(*self.position, *interest.position)
+                        dt = distance(*self.local, *interest.local)
                         if dt < 2:
                             return commands_ai['move'][self.direction(interest)]
                         # too far -- follow it
