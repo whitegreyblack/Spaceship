@@ -54,6 +54,7 @@ commands_player = {
     (term.TK_V, 0): keypress(None, None, "v", "inventory"),
     (term.TK_T, 1): keypress(None, None, "T", "throw"),
     (term.TK_Z, 0): keypress(None, None, "z", "zap"),
+    (term.TK_S, 0): keypress(None, None, "s", "spells"),
     # (term.TK_2, 1): keypress(None, None, "@", "profile"),
     (term.TK_S, 1): keypress(None, None, "S", "save"),
     (term.TK_COMMA, 1): keypress(None, None, "<", "exit"),

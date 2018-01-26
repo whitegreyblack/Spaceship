@@ -37,6 +37,7 @@ class Create(Scene):
         self.col1, self.col2, self.col3 = 3, 26, 49
 
         self.inv_screen = -1
+        self.abilities = -1
         self.race_index = 0
         self.class_index = 0
         self.gender_index = 0
@@ -301,7 +302,11 @@ class Create(Scene):
                 index=self.character_index, 
                 options=4)
 
-        # Toggles V Key
+        # Toggles Skills <-> Spells
+        elif code == term.TK_S and self.character_index > 1:
+            self.abilitites *= -1
+
+        # Toggles Inventory <-> Equipment
         elif code == term.TK_V and self.character_index > 1:
             self.inv_screen *= -1
 
@@ -389,6 +394,7 @@ class Create(Scene):
                 self.character_index -= 1
                 if self.character_index <= 1:
                     self.inv_screen = -1
+                    self.abilitites = -1
 
     def cc_border(self):
         '''Border for Create Character Screen'''

@@ -67,6 +67,7 @@ class Start(Scene):
                 'T': self.actions_ranged,
                 'z': self.actions_ranged,
                 'l': self.actions_ranged,
+                's': self.draw_spells,
             },
         }
 
@@ -239,6 +240,8 @@ class Start(Scene):
             self.width // 2, 
             self.height - 5)
 
+
+
     def draw_equipment(self):
         '''Handles equipment screen'''
 
@@ -343,6 +346,48 @@ class Start(Scene):
                 term.puts(x, y + 2, ' ')
         term.bkcolor('black')
         
+    def draw_spells(self):
+        def cast():
+            self.draw_log("You cast {}".format(spells[selected][0]))     
+
+        spells = [
+            ('Fireball', "Cast a fireball at target area and deal aoe damage?"),
+            ('Frost Bolt', "Cast a freezing missile at target and hit all enemies in its path?"),
+            ('Lightning', "Cast a lightning bolt at target area and deal aoe damage?"),
+        ]
+
+        log = ""
+        selected = None
+        update_status = False
+        spell_index = 0
+        self.clear_main()
+        self.draw_screen_header('Spells')
+        self.draw_screen_log("What would you like to do?")
+        while True:
+            print("SELECTED", selected)
+            if log:
+                self.draw_screen_log(log)
+                log = ""
+            
+            for index, spell in enumerate(spells):
+                letter = chr(ord('a') + index) + '. '
+                term.puts(
+                    x=self.screen_col + self.main_x,
+                    y=self.screen_row + index * self.row_spacing,
+                    s=letter + spell[0]
+                )
+            term.refresh()
+
+            code = term.read()
+            if code == term.TK_ESCAPE:
+                break
+            elif term.TK_A <= code < term.TK_A + len(spells):
+                selected = code - term.TK_A
+                log = spells[selected][1]
+            elif selected is not None and code in (term.TK_Y, term.TK_ENTER, selected + term.TK_A):
+                cast()
+                break
+
     def draw_screens(self, key):
 
         def unequip_item(code):
