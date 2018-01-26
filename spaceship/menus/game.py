@@ -217,6 +217,9 @@ class Start(Scene):
             strings.status.format(
                 *self.player.status(), self.turns))
 
+    def clear_status(self):
+        term.clear_area(0, 0, self.width - self.main_width, self.height)
+
     def draw_profile(self):
         '''Handles player profile screen'''
 
@@ -244,8 +247,6 @@ class Start(Scene):
             2, 
             self.width // 2, 
             self.height - 5)
-
-
 
     def draw_equipment(self):
         '''Handles equipment screen'''
@@ -482,6 +483,7 @@ class Start(Scene):
 
             if update_status:
                 self.clear_main()
+                self.clear_status()
                 self.draw_status()
                 update_status = False
 

@@ -317,7 +317,8 @@ subrace_descriptions=[
 status = '''
  {:13}
  {:1}{:1}{:1}
-
+ {}
+ 
  LVL: {:>6}
  EXP: {:>6}
 

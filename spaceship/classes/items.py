@@ -508,7 +508,7 @@ itemlist = {
 
     "ring of nature": 
         item(
-            char=": ", 
+            char="=", 
             color="green", 
             item_type="ring",
             placement={"ring_left", "ring_right"},

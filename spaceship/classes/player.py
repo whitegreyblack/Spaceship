@@ -106,7 +106,15 @@ class Player(Unit):
                 return "red"
             return "white"
 
-        return (self.name, self.gender[0], self.race[0], self.job[0], self.level,
+        def color(item):
+            if hasattr(item, 'char') and hasattr(item, 'color'):
+                return f"[c={item.color}]{item.char}[/c]"
+            return ""
+
+        equipment = [color(i) for _, i in self.equipment]
+        return (self.name, self.gender[0], self.race[0], self.job[0], 
+            "".join(equipment),
+            self.level,
             "{}/{}".format(self.exp, self.advexp),
             "{}/{}".format(self.cur_hp, self.tot_hp),
             "{}/{}".format(self.cur_mp, self.tot_mp),
