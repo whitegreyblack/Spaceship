@@ -141,27 +141,27 @@ def close_door(unit, area, logger):
             doors.append(point)
 
     if not doors:
-        log = strings.interact_door_close_none
+        log = strings.close_door_none
     elif len(doors) == 1:
         door = doors.pop()
     else:
-        logger(strings.interact_door_close_many)
+        logger(strings.close_door_many)
         code = term.read()
         shifted = term.state(term.TK_SHIFT)
 
         try:
             dx, dy, _, act = commands_player[(code, shifted)]
         except KeyError:
-            log = strings.interact_door_close_invalid
+            log = strings.close_door_invalid
         else:
             if act == "move" and unit.local + Point(dx, dy) in doors:
                 door = unit.local + Point(dx, dy)
             else:
-                log = strings.interact_door_close_error
+                log = strings.close_door_error
         
     if door:
         area.close_door(*door)
-        log = strings.interact_door_close_act
+        log = strings.close_door_act
 
     return area, log
 
@@ -179,31 +179,35 @@ def open_door(unit, area, logger):
             doors.append(point)    
     
     if not doors:
-        log = strings.interact_door_close_none
+        log = strings.open_door_none
     elif len(doors) == 1:
         door = doors.pop()
     else:
-        logger(strings.interact_door_open_many)
+        logger(strings.open_door_many)
         code = term.read()
         shifted = term.state(term.TK_SHIFT)
 
         try:
             dx, dy, _, act = commands_player[(code, shifted)]
         except KeyError:
-            log = strings.interact_door_open_invalid
+            log = strings.open_door_invalid
         else:
             if act == "move" and unit.local + Point(dx, dy) in doors:
                 door = unit.local + Point(dx, dy)
             else:
-                log = strings.interact_door_open_error
+                log = strings.open_door_error
         
     if door:
         area.open_door(*door)
-        log = strings.interact_door_open_act      
+        log = strings.open_door_act      
     
     return area, log
 
 def converse(unit, area, logger):
+    '''Converse action: handles finding units surrounding the given unit and 
+    talks to them. Cases can range from no units, a single unit, and multiple
+    units, with multiple units asking for input direction.
+    '''
     log = ""
     units = []
     other = None

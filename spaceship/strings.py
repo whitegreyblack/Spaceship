@@ -432,16 +432,18 @@ movement_move_chars = {
     "%": "a wall",
 }
 
-interact_door_close_act = "Closing door."
-interact_door_close_none = "No open doors next to you."
-interact_door_close_many = "There is more than one open door near you. Which door?"
-interact_door_close_invalid = "Invalid direction. Canceled closing door."
-interact_door_close_error = "Direction has no door. Canceled closing door."
-interact_door_open_act = "Opening door."
-interact_door_open_none = "No closed doors next to you."
-interact_door_open_many = "There is more than one closed door near you. Which door?"
-interact_door_open_invalid = "Invalid direction. Canceled opening door."
-interact_door_open_error = "Direction has no door. Canceled closing door."
+close_door_act = "Closing door."
+close_door_none = "No open doors next to you."
+close_door_many = "There is more than one open door near you. Which door?"
+close_door_invalid = "Invalid direction. Canceled closing door."
+close_door_error = "Direction has no door. Canceled closing door."
+
+open_door_act = "Opening door."
+open_door_none = "No closed doors next to you."
+open_door_many = "There is more than one closed door near you. Which door?"
+open_door_invalid = "Invalid direction. Canceled opening door."
+open_door_error = "Direction has no door. Canceled closing door."
+
 converse_none = "No one to talk to."
 converse_many = "Who do you want to talk to?"
 converse_invalid = "Invalid direction. Stopped looking for someone to talk to."

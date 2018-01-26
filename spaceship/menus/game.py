@@ -18,9 +18,6 @@ from spaceship.classes.city import City
 from spaceship.classes.cave import Cave
 from spaceship.classes.point import Point, spaces
 
-def single_element(container):
-    return len(container) == 1
-
 class Level: GLOBAL, WORLD, LOCAL = -1, 0, 1
 class Maps: CITY, CAVE, WILD, WORLD = range(4)
 
@@ -81,7 +78,6 @@ class Start(Scene):
         self.main_width = self.width - self.main_x
         self.main_height = self.height - self.log_height
 
-
     def run(self):  
         # self.reset_size()
         self.reset()
@@ -93,10 +89,11 @@ class Start(Scene):
         else:
             player = self.ret['kwargs']['player']
             name = self.ret['kwargs']['name']
+            world_map_path = strings.IMG_PATH + "worldmap.png"
+
             self.player = Player(player, name)
-            self.location = self.world = World(
-                map_name="Calabston", 
-                map_link="./spaceship/assets/worldmap.png")
+            self.location = self.world = World(map_name="Calabston", 
+                                               map_link=world_map_path)
             self.world.units_add([self.player])
 
         self.gamelog = GameLogger(
@@ -121,33 +118,10 @@ class Start(Scene):
         self.draw_status()
         self.draw_world()
 
-    def clear_log(self):
-        term.clear_area(
-            0, 
-            self.height - self.log_height - 1, 
-            self.width, 
-            self.log_height + 1)
-
     def draw_log(self, log=None, color="white", refresh=True):
-        if log:
-            self.gamelog.add(log, color=color)
-
-        elif self.log:
-            self.gamelog.add(self.log, color=color)
+        self.gamelog.draw(log if log else self.log, color, refresh)
+        if self.log:
             self.log = ""
-
-        self.clear_log()
-        
-        messages = self.gamelog.write()
-
-        for index, msg in enumerate(messages):
-            term.puts(
-                x=self.main_x,
-                y=self.height + index - self.log_height - 1,
-                s="[c={}]{}[/c]".format(msg.color, msg.message))
-        
-        if refresh:
-            term.refresh()
 
     def draw_world(self):
         '''Handles drawing of world features and map'''
@@ -894,6 +868,11 @@ class Start(Scene):
                     self.turn_inc = True
 
                 else:
+                    '''
+                    moving outside of current map
+                        moving on top level (one level below world) then
+                        try to move into the new map if it is not water
+                    '''
                     if self.location.out_of_bounds(*point):
                         self.draw_log(strings.movement_move_oob)
 
@@ -1080,28 +1059,30 @@ class Start(Scene):
     def action_stairs_down(self):
         if self.location.stairs_down:
             self.player, self.location, self.log = actions.go_down_stairs(self.player, 
-                                                                         self.location, 
-                                                                         Cave)
+                                                                          self.location, 
+                                                                          Cave)
         else:
             self.log = "You cannot go downstairs without stairs."
 
     def action_stairs_up(self):
         self.player, self.location, self.log = actions.go_up_stairs(self.player, 
-                                                                   self.location,
-                                                                   Maps)
+                                                                    self.location,
+                                                                    Maps)
 
     def action_door_close(self):
         self.location, self.log = actions.close_door(self.player,
-                                                    self.location,
-                                                    self.draw_log)
+                                                     self.location,
+                                                     self.draw_log)
                     
     def action_door_open(self):
         self.location, self.log = actions.open_door(self.player,
-                                                   self.location,
-                                                   self.draw_log)
+                                                    self.location,
+                                                    self.draw_log)
 
     def action_unit_talk(self):
-        self.log = actions.converse(self.player, self.location, self.draw_log)
+        self.log = actions.converse(self.player, 
+                                    self.location, 
+                                    self.draw_log)
 
     # more actions
         # def action_unit_attack_melee(self):
@@ -1140,7 +1121,7 @@ class Start(Scene):
 
         else:
             log = ""
-            if single_element(items):
+            if len(items) == 1:
                 pickup_item(items.pop())
                 self.draw_log(log)
 
@@ -1171,7 +1152,6 @@ class Start(Scene):
 
                         self.clear_main()
                         self.draw_pickup(items)
-
 
     '''
     Notes :- Dropping Items:
