@@ -117,7 +117,7 @@ def go_up_stairs(unit, area, maptypes):
 
     return unit, area, log
 
-def close_opened_door(unit, area):
+def close_door(unit, area, logger):
     log = ""
     doors = []
     door = None
@@ -130,6 +130,7 @@ def close_opened_door(unit, area):
     elif len(doors) == 1:
         door = doors.pop()
     else:
+        logger(strings.interact_door_close_many)
         code = term.read()
         shifted = term.state(term.TK_SHIFT)
         try:
@@ -148,7 +149,7 @@ def close_opened_door(unit, area):
 
     return area, log
 
-def open_closed_door(unit, area):
+def open_door(unit, area, logger):
     log = ""
     doors = []
     door = None
@@ -162,4 +163,21 @@ def open_closed_door(unit, area):
     elif len(doors) == 1:
         door = doors.pop()
     else:
+        logger(strings.interact_door_open_many)
         code = term.read()
+        shifted = term.state(term.TK_SHIFT)
+        try:
+            dx, dy, _, act = commands_player[(code, shifted)]
+        except KeyError:
+            log = strings.interact_door_open_invalid
+        else:
+            if act == "move" and unit.local + Point(dx, dy) in doors:
+                door = unit.local + Point(dx, dy)
+            else:
+                log = strings.interact_door_open_error
+        
+    if door:
+        area.open_door(*door)
+        log = strings.interact_door_open_act      
+    
+    return area, log

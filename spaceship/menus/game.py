@@ -8,7 +8,7 @@ import spaceship.strings as strings
 from spaceship.menus.scene import Scene
 from spaceship.screen_functions import *
 import spaceship.tools as tools
-from spaceship.action import commands_player, go_down_stairs, go_up_stairs
+import spaceship.action as actions
 from spaceship.gamelog import GameLogger
 from spaceship.classes.item import Item, Potion, sort
 from spaceship.classes.wild import wilderness
@@ -942,7 +942,7 @@ class Start(Scene):
 
         try:
             # discover the command and set as current action
-            action = commands_player[(key, shifted)]
+            action = actions.commands_player[(key, shifted)]
         except KeyError:
             pass
             
@@ -1083,9 +1083,9 @@ class Start(Scene):
         player starting position at the upstairs of the new location
         '''
         if self.location.stairs_down:
-            self.player, self.location, self.log = go_down_stairs(self.player, 
-                                                                  self.location, 
-                                                                  Cave)
+            self.player, self.location, self.log = actions.go_down_stairs(self.player, 
+                                                                         self.location, 
+                                                                         Cave)
 
         else:
             self.log = "You cannot go downstairs without stairs."
@@ -1095,99 +1095,67 @@ class Start(Scene):
         in the current location. Then determine the parent location 
         and reset position according to the type of parent
         '''
-        self.player, self.location, self.log = go_up_stairs(self.player, 
-                                                            self.location,
-                                                            Maps)
+        self.player, self.location, self.log = actions.go_up_stairs(self.player, 
+                                                                   self.location,
+                                                                   Maps)
 
     def action_door_close(self):
         '''Close door command: handles closing doors in a one unit distance
         from the player. Cases can range from no doors, single door, multiple 
         doors, with multiple doors asking for input direction
         '''
-        def close_door(x, y):
-            self.draw_log(strings.interact_door_close_act)
-            self.location.close_door(x, y)
-
-        doors = []
-        for pos in spaces(self.player.local):
-            if pos != self.player.local:
-                try:
-                    if self.location.square(*pos).char == '/':
-                        doors.append(pos)
-
-                except IndexError:
-                    self.draw_log('Out of bounds ({}, {})'.format(*pos))
-
-        if not doors:
-            self.draw_log(strings.interact_door_close_none)
-
-        elif single_element(doors):
-            close_door(*doors.pop())
-
-        else:
-            px, py = self.player.local
-            self.draw_log(strings.interact_door_close_many)
-
-            code = term.read()
-            shifted = term.state(term.TK_SHIFT)
-
-            try:
-                dx, dy, _, act = commands_player[(code, shifted)]
-
-            except:
-                self.draw_log(strings.interact_door_close_invalid)
-
-            else:
-                if act == "move" and (px + dx, py + dy) in doors:
-                    close_door(px + dx, py + dy)
-
-                else:
-                    self.draw_log(strings.interact_door_close_error)
+        self.location, self.log = actions.close_door(self.player,
+                                                    self.location,
+                                                    self.draw_log)
                     
     def action_door_open(self):
         '''Open door command: handles opening doors in a one unit distance from
         the player. Cases can range from no doors, single door, multiple 
         doors, with multiple doors asking for input direction
         '''
-        def open_door(x, y):
-            self.draw_log(strings.interact_door_open_act)
-            self.location.open_door(x, y)
-
-        doors = []
-        px, py = self.player.local
-        for x, y in spaces(self.player.local):
-            if (x, y) != (px, py):
-                try:
-                    if self.location.square(x, y).char == "+":
-                        doors.append((x, y))
-                        
-                except IndexError:
-                    self.draw_log('Out of bounds ({}, {})'.format(x, y))
-        
-        if not doors:
-            self.draw_log(strings.interact_door_open_none)
-
-        elif single_element(doors):
-            open_door(*doors.pop())
-
-        else:
-            self.draw_log(strings.interact_door_open_many)
-
-            code = term.read()
-            shifted = term.state(term.TK_SHIFT)
-
-            try:
-                dx, dy, _, act = commands_player[(code, shifted)]
+        self.location, self.log = actions.open_door(self.player,
+                                                   self.location,
+                                                   self.draw_log)
                     
-            except:
-                self.draw_log(strings.interact_door_open_invalid)
+        # def open_door(x, y):
+        #     self.draw_log(strings.interact_door_open_act)
+        #     self.location.open_door(x, y)
 
-            else:
-                if act == "move" and (px + dx, py + dy) in doors:
-                    open_door(px + dx, py + dy)
+        # doors = []
+        # px, py = self.player.local
+        # for x, y in spaces(self.player.local):
+        #     if (x, y) != (px, py):
+        #         try:
+        #             if self.location.square(x, y).char == "+":
+        #                 doors.append((x, y))
+                        
+        #         except IndexError:
+        #             self.draw_log('Out of bounds ({}, {})'.format(x, y))
+        
+        # if not doors:
+        #     self.draw_log(strings.interact_door_open_none)
 
-                else:
-                    self.draw_log(strings.interact_door_open_error)
+        # elif single_element(doors):
+        #     open_door(*doors.pop())
+
+        # else:
+        #     self.draw_log(strings.interact_door_open_many)
+
+        #     code = term.read()
+        #     shifted = term.state(term.TK_SHIFT)
+
+        #     try:
+        #         dx, dy, _, act = commands_player[(code, shifted)]
+                    
+        #     except:
+        #         self.draw_log(strings.interact_door_open_invalid)
+
+        #     else:
+        #         if act == "move" and (px + dx, py + dy) in doors:
+        #             open_door(px + dx, py + dy)
+
+        #         else:
+        #             self.draw_log(strings.interact_door_open_error)
 
     def action_unit_talk(self):
         def talk_to(x, y):
@@ -1220,7 +1188,7 @@ class Start(Scene):
             shifted = term.state(term.TK_SHIFT)
 
             try:
-                dx, dy, _, act = commands_player[(code, shifted)]
+                dx, dy, _, act = actions.commands_player[(code, shifted)]
 
             except:
                 log = "Invalid direction. Canceled talking to character."
@@ -1428,7 +1396,7 @@ class Start(Scene):
         def look():
             nonlocal position, code, shifted
 
-            action = commands_player[(code, shifted)]
+            action = actions.commands_player[(code, shifted)]
             new_pos = position + (action.x, action.y)
 
             in_bounds = self.player.local.distance(new_pos) < sight
