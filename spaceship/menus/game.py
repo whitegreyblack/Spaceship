@@ -8,7 +8,7 @@ import spaceship.strings as strings
 from spaceship.menus.scene import Scene
 from spaceship.screen_functions import *
 import spaceship.tools as tools
-from spaceship.action import commands_player
+from spaceship.action import commands_player, go_down_stairs, go_up_stairs
 from spaceship.gamelog import GameLogger
 from spaceship.classes.item import Item, Potion, sort
 from spaceship.classes.wild import wilderness
@@ -777,7 +777,7 @@ class Start(Scene):
                                 item = unit.drops()
                                 
                                 if item:
-                                    self.location.item_add(*unit.position, item)
+                                    self.location.item_add(*unit.local, item)
                                     self.draw_log("The {} has dropped {}".format(
                                         unit.race, item.name))
 
@@ -806,6 +806,7 @@ class Start(Scene):
 
             else:
                 point = self.player.local + (x, y)
+                print(point)
                 if self.location.walkable(*point):
                     if not self.location.occupied(*point):
                         self.player.move(x, y)
@@ -1089,26 +1090,12 @@ class Start(Scene):
         in the current location. If they match then create a dungeon with the
         player starting position at the upstairs of the new location
         '''
-        if self.player.local == self.location.stairs_down:
-            if not self.location.sublevel:
-                location = Cave(
-                    width=self.width,
-                    height=self.height,
-                    max_rooms=random.randint(15, 20))
-                
-                self.location.sublevel = location
-                location.parent = self.location
+        self.player, self.location, log = go_down_stairs(self.player, 
+                                                         self.location, 
+                                                         Cave)
 
-            # self.player.move_height(1)
-            self.player.descend()
-            self.location.unit_remove(self.player)
-            self.location = self.location.sublevel
-            self.location.units_add([self.player])
-            self.player.local = self.location.stairs_up
-
-
-        else:
-            self.draw_log("You cannot go downstairs without stairs.")
+        self.player.local = Point(*self.location.stairs_up)
+        self.draw_log(log)
 
     def action_stairs_up(self):
         '''Go Up command: Checks player position to the upstairs position
@@ -1122,6 +1109,7 @@ class Start(Scene):
             self.player.ascend()
             self.location.units_add([self.player])
 
+        go_up_stairs(self.player, self.location, Maps)
         # check if parent of this location is the World Map
         if isinstance(self.location.parent, World):
             move_upstairs()

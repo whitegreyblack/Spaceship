@@ -75,3 +75,31 @@ commands_ai = {
         ( -1, 0): keypress(-1, 0, None, "move"),
     }
 }
+
+def go_down_stairs(unit, area, area_constructor):
+    if unit.local == area.stairs_down:
+        if not area.sublevel:
+            area.sublevel = area_constructor(width=area.width,
+                                             height=area.height,
+                                             max_rooms=18)
+            area.sublevel.parent = area
+
+        area.unit_remove(unit)
+        area = area.sublevel
+        area.units_add([unit])
+        unit.descend()
+
+        log = "You go downstairs."
+    else:
+        log = "You cannot go downstairs without stairs."
+    
+    return unit, area, log
+
+def go_up_stairs(unit, area, maptypes):
+    if area.map_type == maptypes.CITY:
+        area.unit_remove(unit)
+        area = area.parent
+        area.units_add([unit])
+        unit.ascend()
+
+    # elif if area.map_type in (maptyp)
