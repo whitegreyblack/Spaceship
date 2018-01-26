@@ -318,7 +318,7 @@ status = '''
  {:13}
  {:1}{:1}{:1}
  {}
- 
+
  LVL: {:>6}
  EXP: {:>6}
 
@@ -442,6 +442,10 @@ interact_door_open_none = "No closed doors next to you."
 interact_door_open_many = "There is more than one closed door near you. Which door?"
 interact_door_open_invalid = "Invalid direction. Canceled opening door."
 interact_door_open_error = "Direction has no door. Canceled closing door."
+converse_none = "No one to talk to."
+converse_many = "Who do you want to talk to?"
+converse_invalid = "Invalid direction. Stopped looking for someone to talk to."
+converse_error = "There is no one there."
 
 pass_by_item = [
     "You pass by an item.",

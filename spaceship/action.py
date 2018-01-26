@@ -79,6 +79,10 @@ commands_ai = {
 }
 
 def go_down_stairs(unit, area, area_constructor):
+    '''Go Down command: Checks player position to the downstairs position
+    in the current location. If they match then create a dungeon with the
+    player starting position at the upstairs of the new location
+    '''
     log = "You cannot go downstairs without stairs."
 
     if unit.local == area.stairs_down:
@@ -94,11 +98,17 @@ def go_down_stairs(unit, area, area_constructor):
         unit.descend()
         unit.local = Point(area.stairs_up)
         log = "You go down the stairs."
+
     return unit, area, log
 
 def go_up_stairs(unit, area, maptypes):
+    '''Go Up command: Checks player position to the upstairs position
+    in the current location. Then determine the parent location 
+    and reset position according to the type of parent
+    '''
     log = "You cannot go upstairs without stairs."
     ascend = False
+
     if area.map_type == maptypes.CAVE:
         # Every child map has a parent map
         if unit.local == area.stairs_up:
@@ -118,9 +128,14 @@ def go_up_stairs(unit, area, maptypes):
     return unit, area, log
 
 def close_door(unit, area, logger):
+    '''Close door command: handles closing doors in a one unit distance
+    from the player. Cases can range from no doors, single door, multiple 
+    doors, with multiple doors asking for input direction
+    '''
     log = ""
     doors = []
     door = None
+
     for point in spaces(unit.local):
         if point != unit.local and area.square(*point).char == '/':
             doors.append(point)
@@ -133,6 +148,7 @@ def close_door(unit, area, logger):
         logger(strings.interact_door_close_many)
         code = term.read()
         shifted = term.state(term.TK_SHIFT)
+
         try:
             dx, dy, _, act = commands_player[(code, shifted)]
         except KeyError:
@@ -150,6 +166,10 @@ def close_door(unit, area, logger):
     return area, log
 
 def open_door(unit, area, logger):
+    '''Open door command: handles opening doors in a one unit distance from
+    the player. Cases can range from no doors, single door, multiple 
+    doors, with multiple doors asking for input direction
+    '''
     log = ""
     doors = []
     door = None
@@ -166,6 +186,7 @@ def open_door(unit, area, logger):
         logger(strings.interact_door_open_many)
         code = term.read()
         shifted = term.state(term.TK_SHIFT)
+
         try:
             dx, dy, _, act = commands_player[(code, shifted)]
         except KeyError:
@@ -181,3 +202,36 @@ def open_door(unit, area, logger):
         log = strings.interact_door_open_act      
     
     return area, log
+
+def converse(unit, area, logger):
+    log = ""
+    units = []
+    other = None
+
+    for point in spaces(unit.local):
+        if point != unit.local and area.unit_at(*point):
+            units.append(point)
+
+    if not units:
+        log = strings.converse_none
+    elif len(units) == 1:
+        other = units.pop()
+    else:
+        logger(strings.converse_many)
+        code = term.read()
+        shifted = term.state(term.TK_SHIFT)
+
+        try:
+            dx, dy, _, act = commands_player[(code, shifted)]
+        except KeyError:
+            log = strings.converse_invalid
+        else:
+            if act == "move" and unit.local + Point(dx, dy) in doors:
+                other = unit.local + Point(dx, dy)
+            else:
+                log = strings.converse_error
+    
+    if unit:
+        log = area.unit_at(*other).talk()
+    
+    return log

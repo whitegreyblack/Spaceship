@@ -1078,139 +1078,40 @@ class Start(Scene):
         self.map_change = True
 
     def action_stairs_down(self):
-        '''Go Down command: Checks player position to the downstairs position
-        in the current location. If they match then create a dungeon with the
-        player starting position at the upstairs of the new location
-        '''
         if self.location.stairs_down:
             self.player, self.location, self.log = actions.go_down_stairs(self.player, 
                                                                          self.location, 
                                                                          Cave)
-
         else:
             self.log = "You cannot go downstairs without stairs."
 
     def action_stairs_up(self):
-        '''Go Up command: Checks player position to the upstairs position
-        in the current location. Then determine the parent location 
-        and reset position according to the type of parent
-        '''
         self.player, self.location, self.log = actions.go_up_stairs(self.player, 
                                                                    self.location,
                                                                    Maps)
 
     def action_door_close(self):
-        '''Close door command: handles closing doors in a one unit distance
-        from the player. Cases can range from no doors, single door, multiple 
-        doors, with multiple doors asking for input direction
-        '''
         self.location, self.log = actions.close_door(self.player,
                                                     self.location,
                                                     self.draw_log)
                     
     def action_door_open(self):
-        '''Open door command: handles opening doors in a one unit distance from
-        the player. Cases can range from no doors, single door, multiple 
-        doors, with multiple doors asking for input direction
-        '''
         self.location, self.log = actions.open_door(self.player,
                                                    self.location,
                                                    self.draw_log)
-                    
-        # def open_door(x, y):
-        #     self.draw_log(strings.interact_door_open_act)
-        #     self.location.open_door(x, y)
-
-        # doors = []
-        # px, py = self.player.local
-        # for x, y in spaces(self.player.local):
-        #     if (x, y) != (px, py):
-        #         try:
-        #             if self.location.square(x, y).char == "+":
-        #                 doors.append((x, y))
-                        
-        #         except IndexError:
-        #             self.draw_log('Out of bounds ({}, {})'.format(x, y))
-        
-        # if not doors:
-        #     self.draw_log(strings.interact_door_open_none)
-
-        # elif single_element(doors):
-        #     open_door(*doors.pop())
-
-        # else:
-        #     self.draw_log(strings.interact_door_open_many)
-
-        #     code = term.read()
-        #     shifted = term.state(term.TK_SHIFT)
-
-        #     try:
-        #         dx, dy, _, act = commands_player[(code, shifted)]
-                    
-        #     except:
-        #         self.draw_log(strings.interact_door_open_invalid)
-
-        #     else:
-        #         if act == "move" and (px + dx, py + dy) in doors:
-        #             open_door(px + dx, py + dy)
-
-        #         else:
-        #             self.draw_log(strings.interact_door_open_error)
 
     def action_unit_talk(self):
-        def talk_to(x, y):
-            self.draw_log(self.location.unit_at(x, y).talk())
+        self.log = actions.converse(self.player, self.location, self.draw_log)
 
-        units = []
-        px, py = self.player.local
+    # more actions
+        # def action_unit_attack_melee(self):
+        #     pass
 
-        for pos in spaces(self.player.local):
-            if pos != self.player.local:
-                try:
-                    if self.location.unit_at(*pos):
-                        units.append(pos)
+        # def action_unit_attack_ranged(self):
+        #     pass
 
-                except IndexError:
-                    self.draw_log('Out of bounds ({}, {})'.format(*pos))
-        
-        if not units:
-            self.draw_log('No one to talk to')
-        
-        elif single_element(units):
-            talk_to(*units.pop())
-    
-        else:
-            px, py = self.player.local
-            log = "There is more than one character near you. Which direction?"
-            self.draw_log(log)
-            
-            code = term.read()
-            shifted = term.state(term.TK_SHIFT)
-
-            try:
-                dx, dy, _, act = actions.commands_player[(code, shifted)]
-
-            except:
-                log = "Invalid direction. Canceled talking to character."
-                self.draw_log(log)
-            
-            else:
-                if act == "move" and (px + dx, py + dy) in units:
-                    talk_to(px + dx, py + dy)
-                
-                else:
-                    log = "Direction has no unit. "
-                    log += "Canceled talking to character"
-                    self.draw_log(log)
-
-    def action_unit_attack_melee(self):
-        pass
-
-    def action_unit_attack_ranged(self):
-        pass
-
-    def action_unit_displace(self):
-        pass
+        # def action_unit_displace(self):
+        #     pass
 
     def action_item_pickup(self):
         def pickup_item(item):
