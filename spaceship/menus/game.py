@@ -16,7 +16,7 @@ from spaceship.classes.player import Player
 from spaceship.classes.world import World
 from spaceship.classes.city import City
 from spaceship.classes.cave import Cave
-from spaceship.classes.point import Point
+from spaceship.classes.point import Point, spaces
 
 def single_element(container):
     return len(container) == 1
@@ -946,19 +946,6 @@ class Start(Scene):
             
         return action
 
-    def spaces(self, x, y, exclusive=True):
-        '''Returns a list of spaces in a 8 space grid with the center (pos 5)
-        returned if exclusive is set as false
-        '''
-        space = namedtuple("Space", ("x","y"))
-        for dy in range(-1, 2):
-            for dx in range(-1, 2):
-                if (dx, dy) == (0, 0) and exclusive:
-                    continue
-
-                else:
-                    yield space(x + dx, y + dy)
-
     def action_save(self):
         '''Save command: checks save folder and saves the current game objects
         to file before going back to the main menu
@@ -1098,8 +1085,6 @@ class Start(Scene):
                                                                   self.location, 
                                                                   Cave)
 
-            self.player.local = Point(*self.location.stairs_up)
-
         else:
             self.log = "You cannot go downstairs without stairs."
 
@@ -1109,8 +1094,8 @@ class Start(Scene):
         and reset position according to the type of parent
         '''
         self.player, self.location, self.log = go_up_stairs(self.player, 
-                                                        self.location,
-                                                        Maps)
+                                                            self.location,
+                                                            Maps)
 
     def action_door_close(self):
         '''Close door command: handles closing doors in a one unit distance
@@ -1122,7 +1107,7 @@ class Start(Scene):
             self.location.close_door(x, y)
 
         doors = []
-        for pos in self.spaces(*self.player.local):
+        for pos in spaces(self.player.local):
             if pos != self.player.local:
                 try:
                     if self.location.square(*pos).char == '/':
@@ -1168,7 +1153,7 @@ class Start(Scene):
 
         doors = []
         px, py = self.player.local
-        for x, y in self.spaces(*self.player.local):
+        for x, y in spaces(self.player.local):
             if (x, y) != (px, py):
                 try:
                     if self.location.square(x, y).char == "+":
@@ -1209,7 +1194,7 @@ class Start(Scene):
         units = []
         px, py = self.player.local
 
-        for pos in self.spaces(*self.player.local):
+        for pos in spaces(self.player.local):
             if pos != self.player.local:
                 try:
                     if self.location.unit_at(*pos):

@@ -10,6 +10,8 @@ TODO: Might combine the movement keys into one dictionary
 """
 from collections import namedtuple
 from bearlibterminal import terminal as term
+from spaceship.classes.point import spaces, Point
+import spaceship.strings as strings
 """
     Movement:
         <,^,v,>: Movement keys -> (x,y)
@@ -90,7 +92,7 @@ def go_down_stairs(unit, area, area_constructor):
         area = area.sublevel
         area.units_add([unit])
         unit.descend()
-
+        unit.local = Point(area.stairs_up)
         log = "You go down the stairs."
     return unit, area, log
 
@@ -115,4 +117,49 @@ def go_up_stairs(unit, area, maptypes):
 
     return unit, area, log
 
+def close_opened_door(unit, area):
+    log = ""
+    doors = []
+    door = None
+    for point in spaces(unit.local):
+        if point != unit.local and area.square(*point).char == '/':
+            doors.append(point)
+
+    if not doors:
+        log = strings.interact_door_close_none
+    elif len(doors) == 1:
+        door = doors.pop()
+    else:
+        code = term.read()
+        shifted = term.state(term.TK_SHIFT)
+        try:
+            dx, dy, _, act = commands_player[(code, shifted)]
+        except KeyError:
+            log = strings.interact_door_close_invalid
+        else:
+            if act == "move" and unit.local + Point(dx, dy) in doors:
+                door = unit.local + Point(dx, dy)
+            else:
+                log = strings.interact_door_close_error
+        
+    if door:
+        area.close_door(*door)
+        log = strings.interact_door_close_act
+
+    return area, log
+
+def open_closed_door(unit, area):
+    log = ""
+    doors = []
+    door = None
+
+    for point in spaces(unit.local):
+        if point != unit.local and area.square(*point).char == '+':
+            doors.append(point)    
     
+    if not doors:
+        log = strings.interact_door_close_none
+    elif len(doors) == 1:
+        door = doors.pop()
+    else:
+        code = term.read()

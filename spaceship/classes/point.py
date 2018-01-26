@@ -40,3 +40,14 @@ class Point:
             other = Point(*other)
         midpoint = other - self
         return math.sqrt(math.pow(midpoint.x, 2) + math.pow(midpoint.y, 2))
+
+def spaces(point, exclusive=True):
+    '''Returns a list of spaces in a 8 space grid with the center (pos 5)
+    returned if exclusive is set as false or excluded if set as true.
+    '''
+    for dy in range(-1, 2):
+        for dx in range(-1, 2):
+            if (dx, dy) == (0, 0) and exclusive:
+                continue
+            else:
+                yield point + Point(dx, dy)
