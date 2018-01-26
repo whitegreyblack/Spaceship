@@ -301,7 +301,7 @@ class Player(Unit):
             raise AttributeError("No last location variable")
 
         try:
-            return direction(self.last_location - self.location)
+            return direction(*(self.last_location - self.world))
         except KeyError:
             raise KeyError("Error in -directions-")
 

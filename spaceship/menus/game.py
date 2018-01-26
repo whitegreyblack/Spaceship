@@ -768,6 +768,7 @@ class Start(Scene):
                                 log = "The {} has killed {}!".format(
                                     self.unit.race,
                                     "you" if player else "the " + unit.race)
+
                                 self.draw_log(log, color="red")
 
                                 if player:
@@ -779,6 +780,7 @@ class Start(Scene):
                                     self.location.item_add(*unit.position, item)
                                     self.draw_log("The {} has dropped {}".format(
                                         unit.race, item.name))
+
                                 self.location.unit_remove(unit)
                             
     def process_movement(self, x, y):
@@ -1010,7 +1012,7 @@ class Start(Scene):
 
     def determine_map_enterance(self, x, y, location):
         '''Helper function to determine start position when entering wild'''
-        return (max(int(location.width * x - 1), 0), 
+        return Point(max(int(location.width * x - 1), 0), 
                 max(int(location.height * y - 1), 0))
 
     def action_enter_map(self):
@@ -1019,6 +1021,7 @@ class Start(Scene):
         If world is already created just load world as current location
         '''
         if not self.world.location_exists(*self.player.world):
+            # map type should be a city
             if self.player.world in self.world.enterable_legend.keys():
                 fileloc = self.world.enterable_legend[self.player.world]
                 fileloc = fileloc.replace(' ', '_').lower()
@@ -1036,8 +1039,8 @@ class Start(Scene):
                 self.player.local = Point(location.width // 2, 
                                           location.height // 2)
 
+            # map type should be a cave
             elif self.player.world in self.world.dungeon_legend.keys():
-                # map type should be a cave
                 location = Cave(
                     width=self.width,
                     height=self.height,
@@ -1045,21 +1048,16 @@ class Start(Scene):
 
                 self.player.local = Point(*location.stairs_up)
 
+            # map type should be in the wilderness
             else:
-                # map type should be in the wilderness
                 tile = self.world.square(*self.player.world)
-                # neighbors = world.access_neighbors(*player.location)
                 location = self.determine_map_on_enter(tile.tile_type)(
                     width=self.width,
                     height=self.height,
                     generate=True)
 
                 x, y = self.player.get_position_on_enter()
-                self.player.local = Point(
-                    self.determine_map_enterance(
-                        x=x, 
-                        y=y, 
-                        location=location))
+                self.player.local = self.determine_map_enterance(x, y, location)
 
             location.parent = self.world
             self.world.location_create(*self.player.world, location)
@@ -1068,23 +1066,21 @@ class Start(Scene):
             # location already been built -- retrieve from world map_data
             # player position is different on map enter depending on map location
             location = self.world.location(*self.player.world)
+            
+            # re-enter a city
             if self.player.world in self.world.enterable_legend.keys():
-                # re-enter a city
-                self.player.local = location.width // 2, location.height // 2
+                self.player.local = Point(x=location.width // 2, 
+                                          y=location.height // 2)
 
+            # re-enter dungeon
             elif self.player.world in self.world.dungeon_legend.keys():
-                # re-enter dungeon
-                self.player.local = location.stairs_up
+                self.player.local = Point(*location.stairs_up)
 
+            # reenter a wilderness
             else:
-                # reenter a wilderness
                 x, y = self.player.get_position_on_enter()
-                self.player.local = self.determine_map_enterance(
-                    x=x, 
-                    y=y, 
-                    location=location)
+                self.player.local = self.determine_map_enterance(x, y, location)
                 
-        # self.player.move_height(1)
         self.player.descend()
         self.map_change = True
 
