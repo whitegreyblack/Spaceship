@@ -29,6 +29,7 @@ class Start(Scene):
         super().__init__(scene_id=sid)
 
     def reset(self):
+        self.log = ""
         self.turns = 0
         self.world = None
         self.player = None
@@ -130,6 +131,10 @@ class Start(Scene):
     def draw_log(self, log=None, color="white", refresh=True):
         if log:
             self.gamelog.add(log, color=color)
+
+        elif self.log:
+            self.gamelog.add(self.log, color=color)
+            self.log = ""
 
         self.clear_log()
         
@@ -364,7 +369,6 @@ class Start(Scene):
         self.draw_screen_header('Spells')
         self.draw_screen_log("What would you like to do?")
         while True:
-            print("SELECTED", selected)
             if log:
                 self.draw_screen_log(log)
                 log = ""
@@ -806,7 +810,6 @@ class Start(Scene):
 
             else:
                 point = self.player.local + (x, y)
-                print(point)
                 if self.location.walkable(*point):
                     if not self.location.occupied(*point):
                         self.player.move(x, y)
@@ -1090,40 +1093,24 @@ class Start(Scene):
         in the current location. If they match then create a dungeon with the
         player starting position at the upstairs of the new location
         '''
-        self.player, self.location, log = go_down_stairs(self.player, 
-                                                         self.location, 
-                                                         Cave)
+        if self.location.stairs_down:
+            self.player, self.location, self.log = go_down_stairs(self.player, 
+                                                                  self.location, 
+                                                                  Cave)
 
-        self.player.local = Point(*self.location.stairs_up)
-        self.draw_log(log)
+            self.player.local = Point(*self.location.stairs_up)
+
+        else:
+            self.log = "You cannot go downstairs without stairs."
 
     def action_stairs_up(self):
         '''Go Up command: Checks player position to the upstairs position
         in the current location. Then determine the parent location 
         and reset position according to the type of parent
         '''
-        def move_upstairs():
-            self.location.unit_remove(self.player)
-            self.location = self.location.parent
-            # self.player.move_height(-1)
-            self.player.ascend()
-            self.location.units_add([self.player])
-
-        go_up_stairs(self.player, self.location, Maps)
-        # check if parent of this location is the World Map
-        if isinstance(self.location.parent, World):
-            move_upstairs()
-            # reset position since re-entering world map
-            self.player.local = (0, 0)
-
-        # check if parent location is a city, wilderness or dungeon map
-        elif isinstance(self.location.parent, (Cave, City, wilderness.keys())):
-            move_upstairs()
-            # reset position to the downstairs in the dungeon
-            self.player.local = self.location.stairs_down
-
-        else:
-            self.draw_log("You cannot go upstairs without stairs.")
+        self.player, self.location, self.log = go_up_stairs(self.player, 
+                                                        self.location,
+                                                        Maps)
 
     def action_door_close(self):
         '''Close door command: handles closing doors in a one unit distance

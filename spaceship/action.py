@@ -77,6 +77,8 @@ commands_ai = {
 }
 
 def go_down_stairs(unit, area, area_constructor):
+    log = "You cannot go downstairs without stairs."
+
     if unit.local == area.stairs_down:
         if not area.sublevel:
             area.sublevel = area_constructor(width=area.width,
@@ -89,17 +91,28 @@ def go_down_stairs(unit, area, area_constructor):
         area.units_add([unit])
         unit.descend()
 
-        log = "You go downstairs."
-    else:
-        log = "You cannot go downstairs without stairs."
-    
+        log = "You go down the stairs."
     return unit, area, log
 
 def go_up_stairs(unit, area, maptypes):
-    if area.map_type == maptypes.CITY:
+    log = "You cannot go upstairs without stairs."
+    ascend = False
+    if area.map_type == maptypes.CAVE:
+        # Every child map has a parent map
+        if unit.local == area.stairs_up:
+            ascend = True
+            log = "You go up the stairs."
+
+    elif area.map_type in (maptypes.CITY, maptypes.WILD):
+        ascend = True
+        log = "You begin travelling."
+
+    if ascend:
         area.unit_remove(unit)
         area = area.parent
         area.units_add([unit])
-        unit.ascend()
+        unit.ascend()  
 
-    # elif if area.map_type in (maptyp)
+    return unit, area, log
+
+    
