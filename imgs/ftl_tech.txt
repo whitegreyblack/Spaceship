@@ -1,1 +1,0 @@
-FTL: It's C++. They used SDL, DeVIL, FreeType, RapidXML, and zlib (to name the ones in the licenses [sic] folder).
