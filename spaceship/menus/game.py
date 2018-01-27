@@ -586,8 +586,8 @@ class Start(Scene):
         if isinstance(self.unit, Player):
             self.process_turn_player()
 
-        else:
-            self.process_turn_unit()
+        # else:
+        #     self.process_turn_unit()
 
     def process_turn_player(self):
         action = self.key_input()
@@ -606,7 +606,6 @@ class Start(Scene):
             positions = self.location.fov_calc_blocks(
                                                 *self.unit.local,
                                                 self.unit.sight_norm)
-
             # units = { self.location.unit_at(*position).position: self.location.unit_at(*position) 
             #             for position in positions if self.location.unit_at(*position) }
 
@@ -906,7 +905,9 @@ class Start(Scene):
             Else return invalid action tuple with continue value
         '''
         action = tuple(None for _ in range(4))
+
         key, shifted = self.get_input()
+        
         if key in (term.TK_ESCAPE, term.TK_CLOSE):
             # exit command -- maybe need a back to menu screen?
             if shifted:

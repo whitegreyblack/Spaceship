@@ -142,7 +142,7 @@ class Bishop(Unit):
 
             for tile in tiles:
                 if tile in units.keys():
-                    # check if unit is on the square
+                    # check if unit is on the space
                     unit = units[tile]
                     char = unit.character
                     spotted = True
@@ -150,11 +150,11 @@ class Bishop(Unit):
                         paths.append((100, unit, self.path(self.position, unit.position, tiles)))
 
                 elif tiles[tile].items:
-                    # check for items on the square
+                    # check for items on the space
                     char = tiles[tile].items[0].char
 
                 else:
-                    # empty square
+                    # empty space
                     char = tiles[tile].char
 
                 # offset the location based on unit position and sight range

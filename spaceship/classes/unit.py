@@ -51,8 +51,8 @@ class Unit(Object):
     def __init__(self, x, y, ch="@", fg=Color.white, bg=Color.black, 
                  race="human", rs=0, speed=10):
         super().__init__(x, y, ch, fg, bg)
-        self.sight_city = 14
-        self.sight_norm = 7
+        self.sight_city = 6
+        self.sight_norm = 6
         self.race = race
         self.cur_hp = self.tot_hp = 5
         self.relationship = rs

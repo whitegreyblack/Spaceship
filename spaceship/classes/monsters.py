@@ -59,7 +59,7 @@ class Rat(Unit):
             spotted = False
 
             for tile in tiles:
-                # check if unit is on the square
+                # check if unit is on the space
                 if tile in units.keys():
                     unit = units[tile]
                     char = unit.character
@@ -68,11 +68,11 @@ class Rat(Unit):
                     if self.character != char:
                         paths.append((100, unit, self.path(self.local, unit.local, tiles)))
 
-                # check for items on the square
+                # check for items on the space
                 elif tiles[tile].items:
                     char = tiles[tile].items[0].char
 
-                # empty square
+                # empty spce
                 else:
                     char = tiles[tile].char
 
