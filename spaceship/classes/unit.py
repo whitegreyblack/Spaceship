@@ -49,7 +49,7 @@ class Unit(Object):
     unit_id = 0
     # relation = 100
     def __init__(self, x, y, ch="@", fg=Color.white, bg=Color.black, 
-                 race="human", rs=0, speed=10):
+                 race="human", rs=0, speed=3):
         super().__init__(x, y, ch, fg, bg)
         self.sight_city = 6
         self.sight_norm = 6

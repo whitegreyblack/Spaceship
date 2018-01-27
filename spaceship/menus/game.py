@@ -549,23 +549,26 @@ class Start(Scene):
         term.clear()
 
     def process_units(self):
-        if isinstance(self.location, World):
-            for unit in self.location.units:
-                self.unit = unit
-                self.process_turn()
+        # if isinstance(self.location, World):
+        #     for unit in self.location.units:
+        #         self.unit = unit
+        #         self.process_turn()
 
-        elif len(list(self.location.units)) == 1:
-                self.unit = self.player
-                self.process_turn()
+        # elif len(list(self.location.units)) == 1:
+        #         self.unit = self.player
+        #         self.process_turn()
 
-        else:
-            for unit in self.location.units:
-                # unit.energy.gain()
-                self.unit = unit
-                # while unit.energy.ready():
-                    # self.unit.energy.reset()
-                self.process_turn()      
-
+        # else:
+        #     for unit in self.location.units:
+        #         # unit.energy.gain()
+        #         self.unit = unit
+        #         # while unit.energy.ready():
+        #             # self.unit.energy.reset()
+        #         self.process_turn()      
+        for unit in self.location.units:
+            self.unit = unit
+            self.process_turn()
+            
         if self.turn_inc:
             self.turns += 1
             self.turn_inc = False

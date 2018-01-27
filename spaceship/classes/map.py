@@ -526,11 +526,7 @@ class Map:
             print('No unit with that value')
 
     def generate_units(self):
-        if self.height <= 25:
-            max_units = 1
-        else:
-            max_units = 1
-
+        max_units = 25
         if hasattr(self, 'spaces'):
             shuffle(self.spaces)
             for i in range(max_units):
@@ -568,12 +564,11 @@ class Map:
             # width should total 80 units
             for x in range(cam_x, ext_x):
                 light_level = self.check_light_level(x, y)
-                if light_level > 0:
+                if (x, y) == (player_x, player_y):
+                    yield (x - cam_x, y - cam_y, "white", "@")
 
-                    if (x, y) == (player_x, player_y):
-                        yield (x - cam_x, y - cam_y, "white", "@")
-
-                    elif light_level == 2:
+                elif light_level > 0:
+                    if light_level == 2:
                         if (x, y) in self.unit_positions:
                             unit = self.unit_at(x, y)
                             char, color = unit.character, unit.foreground
@@ -594,7 +589,6 @@ class Map:
                         yield (x - cam_x, y - cam_y, color, char)
 
                     else:
-                        # yield (x - cam_x, y - cam_y, "black", " ")
                         continue
                         
         self.lit_reset()
