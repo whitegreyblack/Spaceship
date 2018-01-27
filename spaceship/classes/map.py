@@ -449,15 +449,18 @@ class Map:
                         # if self.blocked and not self.viewable     - wall
                         # if not self.blocked and self.viewable     - floor
                         # if not self.blocked and not self.viewable - empty space
-                        if self.blocked(X, Y) and not self.viewable(X, Y):
+                        # if self.blocked(X, Y) and not self.viewable(X, Y):
+                        if self.blocked(X, Y):
                             new_start = r_slope
 
                         else:
                             blocked = False
                             start = new_start
                     else:
-                        if self.blocked(X, Y) and not self.viewable(X, Y) and j < radius:
+                        # if self.blocked(X, Y) and not self.viewable(X, Y) and j < radius:
+                        if self.blocked(X, Y) and j < radius:
                             # This is a blocking square, start a child scan:
+
                             blocked = True
                             self.sight(cx, cy, j + 1, start, l_slope,
                                         radius, xx, xy, yx, yy, id + 1)
@@ -534,17 +537,9 @@ class Map:
                 i, j = self.spaces[randint(0, len(self.spaces)-1)]
                 unit = choice([Rat, Rat])(x=i, y=j, speed=choice([5, 10, 15]))
                 self.__units.append(unit)
-                # self.square(i, j).units = units
                 
         else:
             raise AttributeError("Spaces has not yet been initialized")
-
-    def reduce_unit_relationships(self, reduce):
-        self.relationship = min(-100, max(self.relationship - reduce, 100))
-
-    def increase_unit_relationships(self, increase):
-        self.relationship = min(-100, max(self.relationship - increase, 100))
-        return "Your relationship with {} has decreased by {}".format(self.map_id)
 
     ###########################################################################
     # Output and Display Functions                                            #
@@ -573,32 +568,35 @@ class Map:
             # width should total 80 units
             for x in range(cam_x, ext_x):
                 light_level = self.check_light_level(x, y)
-                if (x, y) == (player_x, player_y):
-                    yield (x - cam_x, y - cam_y, "white", "@")
+                if light_level > 0:
 
-                elif light_level == 2:
-                    if (x, y) in self.unit_positions:
-                        unit = self.unit_at(x, y)
-                        char, color = unit.character, unit.foreground
+                    if (x, y) == (player_x, player_y):
+                        yield (x - cam_x, y - cam_y, "white", "@")
 
-                    elif self.square(x, y).items:
-                        item = self.square(x, y).items[-1]
-                        char, color = item.char, item.color
+                    elif light_level == 2:
+                        if (x, y) in self.unit_positions:
+                            unit = self.unit_at(x, y)
+                            char, color = unit.character, unit.foreground
+
+                        elif self.square(x, y).items:
+                            item = self.square(x, y).items[-1]
+                            char, color = item.char, item.color
+
+                        else:
+                            square = self.square(x, y)
+                            char, color = square.char, square.color
+
+                        yield (x - cam_x, y - cam_y, color, char)
+
+                    elif light_level == 1:
+                        square = self.square(x, y)
+                        char, color = square.char, "darkest grey"
+                        yield (x - cam_x, y - cam_y, color, char)
 
                     else:
-                        square = self.square(x, y)
-                        char, color = square.char, square.color
-
-                    yield (x - cam_x, y - cam_y, color, char)
-
-                elif light_level == 1:
-                    square = self.square(x, y)
-                    char, color = square.char, "darkest grey"
-                    yield (x - cam_x, y - cam_y, color, char)
-
-                else:
-                    # yield (x - cam_x, y - cam_y, "black", " ")
-                    continue
+                        # yield (x - cam_x, y - cam_y, "black", " ")
+                        continue
+                        
         self.lit_reset()
 
         # stuff

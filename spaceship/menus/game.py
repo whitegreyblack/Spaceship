@@ -109,13 +109,17 @@ class Start(Scene):
             if self.map_change:
                 self.determine_map_location()
 
+            term.delay (1000 // 75)
+
         self.proceed = True
         if hasattr(self, 'ret'):
             return self.ret
 
     def draw(self):
         self.draw_log(refresh=False)
+
         self.draw_status()
+
         self.draw_world()
 
     def draw_log(self, log=None, color="white", refresh=True):
@@ -556,11 +560,11 @@ class Start(Scene):
 
         else:
             for unit in self.location.units:
-                unit.energy.gain()
+                # unit.energy.gain()
                 self.unit = unit
-                while unit.energy.ready():
-                    self.unit.energy.reset()
-                    self.process_turn()      
+                # while unit.energy.ready():
+                    # self.unit.energy.reset()
+                self.process_turn()      
 
         if self.turn_inc:
             self.turns += 1
@@ -586,8 +590,8 @@ class Start(Scene):
         if isinstance(self.unit, Player):
             self.process_turn_player()
 
-        # else:
-        #     self.process_turn_unit()
+        else:
+            self.process_turn_unit()
 
     def process_turn_player(self):
         action = self.key_input()
