@@ -26,7 +26,7 @@ class Start(Scene):
         super().__init__(scene_id=sid)
 
     def reset(self):
-        self.log = ""
+        self.log = []
         self.turns = 0
         self.world = None
         self.player = None
@@ -174,17 +174,20 @@ class Start(Scene):
                 self.process_turn()
 
         else:
-            for self.unit in self.location.units:
-                self.unit.energy.gain()
-
-            if any(u.energy.ready() for u in self.location.units):
+            for unit in self.location.units:
+                self.unit = unit
+                self.process_turn()
             # for self.unit in self.location.units:
-            #     if self.unit == self.player and not self.unit.energy.ready():
-            #         break
-                for self.unit in self.location.units:
-                    while self.unit.energy.ready():
-                        self.unit.energy.reset()
-                        self.process_turn()   
+            #     self.unit.energy.gain()
+
+            # if any(u.energy.ready() for u in self.location.units):
+            # # for self.unit in self.location.units:
+            # #     if self.unit == self.player and not self.unit.energy.ready():
+            # #         break
+            #     for self.unit in self.location.units:
+            #         while self.unit.energy.ready():
+            #             self.unit.energy.reset()
+            #             self.process_turn()   
         # else:   
         #     for unit in self.location.units:
         #         unit.energy.gain()
@@ -421,7 +424,7 @@ class Start(Scene):
         # moving on world map
         if self.player.height == Level.WORLD:
             if (x, y) == (0, 0):
-                self.draw_log(strings.movement_wait_world)
+                self.log.append(strings.movement_wait_world)
 
             else:
                 point = self.player.world + (x, y)
@@ -430,12 +433,12 @@ class Start(Scene):
                     self.player.travel(x, y)
                     
                 else:
-                    self.draw_log(strings.movement_move_error)
+                    self.log.append(strings.movement_move_error)
 
         # moving on local map    
         else:
             if (x, y) == (0, 0):
-                self.draw_log(strings.movement_wait_local)
+                self.log.append(strings.movement_wait_local)
                 self.turn_inc = True
 
             else:
@@ -446,31 +449,26 @@ class Start(Scene):
                         msg_chance = random.randint(0, 5)
 
                         if self.location.items_at(*point) and msg_chance:
-                            pass
-                            # item_message = random.randint(
-                            #     a=0, 
-                            #     b=len(strings.pass_by_item) - 1)
-                            # self.draw_log(
-                            #     strings.pass_by_item[item_message])
-                            
+                            item_message = random.randint(
+                                a=0, 
+                                b=len(strings.pass_by_item) - 1)
+                            self.log.append(strings.pass_by_item[item_message])
                     else:
                         unit = self.location.unit_at(*point)
 
                         if isinstance(self.location, City):
                             self.player.displace(unit)
                             unit.energy.reset()
-                            # log = "You switch places with the {}.".format(
-                            #                     unit.__class__.__name__.lower())
-                            # self.draw_log(log)
+                            switch = "You switch places with the {}.".format(
+                                                unit.__class__.__name__.lower())
+                            self.log.append(switch)
 
                         else:
                             chance = self.player.calculate_attack_chance()
 
                             if chance == 0:
-                                pass
-                                # log = "You try attacking the {} but miss.".format(
-                                #     unit.race)
-                                # self.draw_log(log)
+                                log = f"You miss the {unit.race}."
+                                self.log.append(log)
 
                             else:
                                 damage = self.player.calculate_attack_damage()
@@ -487,10 +485,11 @@ class Start(Scene):
                                 #         '[c=red]*[/c]')
                                 #     term.refresh()
 
-                                # log = "You{}attack the {} for {} damage. ".format(
-                                #     " crit and " if chance == 2 else " ", 
-                                #     unit.race, 
-                                #     damage)
+                                log = "You{}attack the {} for {} damage. ".format(
+                                    " crit and " if chance == 2 else " ", 
+                                    unit.race, 
+                                    damage)
+                                self.log.append(log)
 
                                 if unit.cur_hp < 1:
                                     # log += "You have killed the {}! ".format(
@@ -551,9 +550,9 @@ class Start(Scene):
         self.draw_world()
 
     def draw_log(self, log=None, color="white", refresh=False):
-        self.gamelog.draw(log if log else self.log, color, refresh)
+        self.gamelog.draw(log if log else " ".join(self.log), color, refresh)
         if self.log:
-            self.log = ""
+            self.log = []
 
     def draw_world(self):
         '''Handles drawing of world features and map'''
@@ -966,7 +965,7 @@ class Start(Scene):
             # elif code == term.TK_DOWN:
             #     if current_range < 10: current_range += 1
 
-        term.clear()
+        # term.clear()
 
     
 
@@ -1326,23 +1325,32 @@ class Start(Scene):
             in_bounds = self.player.local.distance(new_pos) < sight
             lighted = self.location.check_light_level(*new_pos) > 0
 
+            char, color = '', 'white'
+
             if in_bounds and lighted:
                 if position == self.player.local:
                     char, color = '@', 'white'
-
                 else:
+                    unit = self.location.unit_at(*position)
+                    if unit:    
+                        char, color = unit.character, unit.foreground
+
                     square = self.location.square(*position)
-                    char, color = square.char, square.color
 
-                term.puts(*(position + (self.main_x, self.main_y)),
-                    "[c={}]{}[/c]".format(color, char))
+                    if not char and square.items:
+                        item = square.items[-1]
+                        char, color = item.char, item.color
+                    
+                    if not char and not square.items:
+                        char, color = square.char, square.color
 
+                term.clear_area(*(position + (self.main_x, self.main_y)), 1, 1)
                 position = new_pos 
 
         def throw():
             nonlocal position
             points = tools.bresenhams(self.player.local, position)
-            term.layer(2)
+            term.layer(1)
             for point in points:
                 translate = Point(self.main_x, self.main_y) + point
                 symbol = term.pick(*translate)
@@ -1353,31 +1361,32 @@ class Start(Scene):
                 term.refresh()
                 term.clear_area(*translate, 1, 1)
                 term.refresh()
-            term.composition(False)
-            term.layer(0)
 
         def zap():
             nonlocal position
             points = tools.bresenhams(self.player.local, position)
-            term.layer(2)
-            for point in points:
-                translate = Point(self.main_x, self.main_y) + point
-                symbol = term.pick(*translate)
-                color = term.pick_color(*translate)
-                term.composition(False)
-                term.puts(*translate, "[c=yellow]-[/c]")
-                term.composition(True)
-                term.refresh()
-                # term.clear_area(*translate, 1, 1)
-                term.refresh()
-            term.composition(False)
-            term.layer(0)    
+            for point in points[1:]:
+                unit = self.location.unit_at(*point)
+                if unit:
+                    unit.cur_hp -= 10
+                    self.log.append(f"You zap the {unit.race} with lightning.")
+                    if not unit.is_alive:
+                        item = unit.drops()
+                        self.location.unit_remove(unit)
+                        self.log.append(f"The {unit.race} dies from shock.")
+                        if item:
+                            self.location.item_add(*point, item)
+                            item_name = item.name if hasattr(item, "name") else item
+                            self.log.append(f"The {unit.race} drops {item_name}.")
 
-        log = ""
+                translate = Point(self.main_x, self.main_y) + point
+                term.puts(*translate, "[c=yellow]-[/c]")
+                term.refresh()
+
         code, shifted = None, None
-        position = self.player.local
+        position, color, char = self.player.local, 'white', 'x'
         proceed = True
-        color = "white"
+        
         if key == "T":
             color = "red"
         elif key == "z":
@@ -1388,9 +1397,11 @@ class Start(Scene):
         else:
             sight = self.player.sight_norm
 
+        term.layer(1)
+        # term.composition(False)
         while proceed:
             term.puts(*(position + (self.main_x, self.main_y)), 
-                f'[c={color}]X[/c]')
+                f'[c={color}]x[/c]')
             term.refresh()
 
             code = term.read()
@@ -1415,7 +1426,6 @@ class Start(Scene):
 
                 else:
                     zap()
-                    self.draw_log("You try zapping with your wand")
                     proceed = False
 
             elif code == term.TK_T and key == "T":
@@ -1427,6 +1437,9 @@ class Start(Scene):
                 zap()
                 self.draw_log("You zap something")
                 proceed = False
+        # term.composition(True)
+        term.layer(0)
+        print(self.log)
 
 if __name__ == "__main__":
     from .make import Create
