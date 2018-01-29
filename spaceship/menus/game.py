@@ -118,6 +118,426 @@ class Start(Scene):
         if hasattr(self, 'ret'):
             return self.ret
 
+    def get_input(self):     
+        '''Handles input reading and parsing unrecognized keys'''
+        key = term.read()
+        if key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
+            # skip any non-action keys
+            key = term.read()
+          
+        shifted = term.state(term.TK_SHIFT)
+        return key, shifted
+
+    def key_input(self):
+        '''Handles keyboard input and keypress transformation
+        Cases:
+            Skips any pre-inputs and non-read keys
+            if key read is a close command -- close early or set proceed to false
+            Elif key is valid command return the command from command list with continue
+            Else return invalid action tuple with continue value
+        '''
+        action = tuple(None for _ in range(4))
+
+        key, shifted = self.get_input()
+        
+        if key in (term.TK_ESCAPE, term.TK_CLOSE):
+            # exit command -- maybe need a back to menu screen?
+            if shifted:
+                exit('Early Exit')
+
+            elif self.player.height >= Level.WORLD:
+                self.draw_log('Escape key disabled.')
+
+            else:
+                self.ret['scene'] = 'main_menu'
+                self.proceed = False
+
+        try:
+            # discover the command and set as current action
+            action = actions.commands_player[(key, shifted)]
+        except KeyError:
+            pass
+            
+        return action
+
+    def process_units(self):
+        for unit in self.location.units:
+            self.unit = unit
+            self.process_turn()
+        # if isinstance(self.location, World):
+        #     for unit in self.location.units:
+        #         self.unit = unit
+        #         self.process_turn()
+
+        # elif len(list(self.location.units)) == 1:
+        #         self.unit = self.player
+        #         self.process_turn()
+
+        # else:
+        #     for unit in self.location.units:
+        #         # unit.energy.gain()
+        #         self.unit = unit
+        #         # while unit.energy.ready():
+        #             # self.unit.energy.reset()
+        #         self.process_turn()   
+        # else:   
+        #     for unit in self.location.units:
+        #         unit.energy.gain()
+
+        #     for unit in self.location.units:
+        #         self.unit = unit
+        #         for turn in range(self.unit.energy.turns):
+        #             self.unit.energy.reset()
+        #             self.process_turn()
+
+        if self.turn_inc:
+            self.turns += 1
+            self.turn_inc = False
+
+        # if isinstance(self.location, World):
+        #     self.process_turn_player()
+        # else:
+        #     for unit in self.location.units:
+        #         self.unit = unit
+        #         if self.unit.energy.ready():
+        #             self.unit.energy.reset()
+        #             self.process_turn_unit()
+        #         else:
+        #             self.unit.energy.gain()
+
+        #     if self.player.energy.ready():
+        #         self.process_turn_player()
+        #     else:
+        #         self.player.energy.gain()
+
+    def process_turn(self):
+        if isinstance(self.unit, Player):
+            self.process_turn_player()
+
+        else:
+            self.process_turn_unit()
+
+    def process(self):
+        action = None
+        if isinstance(self.unit, player):
+            action = self.key_input()
+        else:
+            if hasattr(self.unit, 'acts'):
+                units = {u.local: u for u in self.location.units if u != self.units}
+                positions = self.location.fov_calc_blocks(*self.unit.local, 
+                                                          self.unit.sight_norm)
+                tiles = {position: self.location.square(*position) for position in positions}
+                action = self.unit.acts(units, tiles)
+
+        if not self.player.is_alive:
+            self.proceed = False
+            return
+    
+        if not self.proceed:
+            return
+
+    def process_turn_player(self):
+        action = self.key_input()
+
+        if not self.proceed:
+            return
+
+        self.process_handler(*action)
+
+    def process_turn_unit(self):
+        if hasattr(self.unit, 'acts'):
+            units = { u.local: u for u in self.location.units 
+                                                        if u != self.unit }
+
+            # subset of positions possible that can be seen due to sight
+            positions = self.location.fov_calc_blocks(
+                                                *self.unit.local,
+                                                self.unit.sight_norm)
+            # units = { self.location.unit_at(*position).position: self.location.unit_at(*position) 
+            #             for position in positions if self.location.unit_at(*position) }
+
+            # if self.player not in units.values():
+            #     return
+
+            # tile info for every position that can be seen
+            tiles = { position: self.location.square(*position) 
+                                                for position in positions }
+
+            # get the action variable after putting in all the info into unit.act
+            action = self.unit.acts(units, tiles)
+            if action:
+                self.process_handler_unit(*action)
+
+            if not self.player.is_alive:
+                self.process = False
+                return
+            
+    def process_handler_unit(self, x, y, k, key):
+        if k is not None:
+            pass
+        elif all(z is not None for z in [x, y]):
+            self.process_movement_unit(x, y)
+        else:
+            return 'skipped-turn'
+
+    def process_handler(self, x, y, k, key,):
+        '''Checks actions linearly by case:
+        (1) processes non-movement action
+            Actions not in movement groupings
+        (2) processes movement action
+            Keyboard shortcut action grouping
+        (3) If action teplate is empty:
+            Return skip-action command
+        '''
+        if k is not None:
+            self.process_action(k)
+        elif all(z is not None for z in [x, y]):
+            self.process_movement(x, y)
+        else:
+            return 'skipped-turn'
+
+    def process_action(self, action):
+        ''' 
+        Player class should return a height method and position method
+        Position method should return position based on height
+        So height would be independent and position would be depenedent on height
+        '''
+        try:
+            divided = self.actions[max(0, min(self.player.height, 1))]
+            try:
+                divided[action]()
+            except TypeError:
+                divided[action](action)
+            except KeyError:
+                invalid_command = strings.cmd_invalid.format(action)
+                self.draw_log(invalid_command)        
+
+        except KeyError:
+            invalid_command = strings.cmd_invalid.format(action)
+            self.draw_log(invalid_command)
+
+    def process_move_unit_to_empty(self, x, y):
+        occupied_player = self.player.local == (x, y)
+        occupied_unit = self.location.occupied(x, y)
+
+        if not occupied_player and not occupied_unit:
+            self.unit.local = Point(x, y)
+            return None
+
+        return occupied_player, occupied_unit
+
+    def process_movement_unit(self, x, y):
+        if (x, y) != (0, 0):
+            point = self.unit.local + (x, y)
+
+            if self.location.walkable(*point):
+                unit_bools = self.process_move_unit_to_empty(*point)
+
+                if not unit_bools:
+                    return
+
+                else:
+                    occupied_player, occupied_unit = unit_bools
+
+                    if occupied_unit:
+                        unit = self.location.unit_at(*point)
+
+                    else:
+                        unit = self.player
+
+                    player = isinstance(unit, Player)
+
+                    if isinstance(self.location, City):
+                        self.unit.displace(unit)
+                        unit.energy.reset()
+                        # log = strings.movement_unit_displace.format(
+                        #     self.unit.__class__.__name__, 
+                        #     unit.race if not player else "you")
+                        # self.draw_log(log) 
+
+                    else:
+                        chance = self.unit.calculate_attack_chance()
+
+                        if chance == 0:
+                            pass
+                            # log = "The {} tries attacking {} but misses".format(
+                            #     self.unit.race, 
+                            #     "you" if player else "the " + unit.race)
+                            # self.draw_log(log)
+
+                        else:
+                            damage = self.unit.calculate_attack_damage()
+
+                            if chance == 2:
+                                damage *= 2
+
+                            unit.cur_hp -= damage
+                            
+                            # if self.location.check_light_level(*point):
+                            #     term.layer(1)
+                            #     term.puts(
+                            #         *(point + (self.main_x, self.main_y)),
+                            #         '[c=red]*[/c]')
+
+                            #     term.refresh()
+
+                            #     term.clear_area(*(point + (self.main_x, self.main_y)),
+                            #         1, 1)
+                            #     term.layer(0)
+                                
+                            # log = "The {} attacks {} for {} damage".format(
+                            #     self.unit.race,
+                            #     "you" if player else "the " + unit.race,
+                            #     damage)
+
+                            # self.draw_log(log)
+                            # self.draw_status()
+
+                            if not unit.is_alive:
+                                # log = "The {} has killed {}!".format(
+                                #     self.unit.race,
+                                #     "you" if player else "the " + unit.race)
+
+                                # self.draw_log(log, color="red")
+
+                                if player:
+                                    exit('DEAD')
+
+                                item = unit.drops()
+                                
+                                if item:
+                                    self.location.item_add(*unit.local, item)
+                                    # self.draw_log("The {} has dropped {}".format(
+                                    #     unit.race, item.name))
+
+                                self.location.unit_remove(unit)
+                            
+    def process_movement(self, x, y):
+        # moving on world map
+        if self.player.height == Level.WORLD:
+            if (x, y) == (0, 0):
+                self.draw_log(strings.movement_wait_world)
+
+            else:
+                point = self.player.world + (x, y)
+                if self.location.walkable(*point):
+                    self.player.save_location()
+                    self.player.travel(x, y)
+                    
+                else:
+                    self.draw_log(strings.movement_move_error)
+
+        # moving on local map    
+        else:
+            if (x, y) == (0, 0):
+                self.draw_log(strings.movement_wait_local)
+                self.turn_inc = True
+
+            else:
+                point = self.player.local + (x, y)
+                if self.location.walkable(*point):
+                    if not self.location.occupied(*point):
+                        self.player.move(x, y)
+                        msg_chance = random.randint(0, 5)
+
+                        if self.location.items_at(*point) and msg_chance:
+                            pass
+                            # item_message = random.randint(
+                            #     a=0, 
+                            #     b=len(strings.pass_by_item) - 1)
+                            # self.draw_log(
+                            #     strings.pass_by_item[item_message])
+                            
+                    else:
+                        unit = self.location.unit_at(*point)
+
+                        if isinstance(self.location, City):
+                            self.player.displace(unit)
+                            unit.energy.reset()
+                            # log = "You switch places with the {}.".format(
+                            #                     unit.__class__.__name__.lower())
+                            # self.draw_log(log)
+
+                        else:
+                            chance = self.player.calculate_attack_chance()
+
+                            if chance == 0:
+                                pass
+                                # log = "You try attacking the {} but miss.".format(
+                                #     unit.race)
+                                # self.draw_log(log)
+
+                            else:
+                                damage = self.player.calculate_attack_damage()
+                                # if chance returns crit ie. a value of 2 
+                                # then multiply damage by 2
+                                if chance == 2:
+                                    damage *= 2
+
+                                unit.cur_hp -= damage
+                                
+                                # if self.location.check_light_level(*point):
+                                #     term.puts(
+                                #         *(point + (self.main_x, self.main_y)),
+                                #         '[c=red]*[/c]')
+                                #     term.refresh()
+
+                                # log = "You{}attack the {} for {} damage. ".format(
+                                #     " crit and " if chance == 2 else " ", 
+                                #     unit.race, 
+                                #     damage)
+
+                                if unit.cur_hp < 1:
+                                    # log += "You have killed the {}! ".format(
+                                    #     unit.race)
+                                    # log += "You gain {} exp.".format(unit.xp)
+                                    # self.draw_log(log)
+                                    self.player.gain_exp(unit.xp)
+
+                                    # if self.player.check_exp():
+                                    #     log = "You level up. You are now level {}.".format(
+                                    #         self.player.level)
+                                    #     log += " You feel much stronger now."
+                                    #     self.draw_log(log)
+
+                                    item = unit.drops()
+
+                                    # if item:
+                                    #     self.location.item_add(*unit.local, item)
+                                    #     self.draw_log("The {} has dropped {}.".format(
+                                    #         unit.race, 
+                                    #         item.name))
+
+                                    self.location.unit_remove(unit)
+
+                                # else:
+                                #     log += "The {} has {} health left.".format(
+                                #         unit.race, 
+                                #         max(0, unit.cur_hp))
+
+                                #     self.draw_log(log, color="red")
+                    self.turn_inc = True
+
+                else:
+                    '''
+                    moving outside of current map
+                        moving on top level (one level below world) then
+                        try to move into the new map if it is not water
+                    '''
+                    if self.location.out_of_bounds(*point):
+                        self.draw_log(strings.movement_move_oob)
+
+                    else:
+                        ch = self.location.square(*point).char
+
+                        if ch == "~":
+                            log = strings.movement_move_swim
+                        else:
+                            log = strings.movement_move_block.format(
+                                strings.movement_move_chars[ch])
+
+                        self.draw_log(log)
+
     def draw(self):
         self.draw_log(refresh=False)
 
@@ -125,7 +545,7 @@ class Start(Scene):
 
         self.draw_world()
 
-    def draw_log(self, log=None, color="white", refresh=True):
+    def draw_log(self, log=None, color="white", refresh=False):
         self.gamelog.draw(log if log else self.log, color, refresh)
         if self.log:
             self.log = ""
@@ -553,406 +973,7 @@ class Start(Scene):
 
         term.clear()
 
-    def process_units(self):
-        for unit in self.location.units:
-            self.unit = unit
-            self.process_turn()
-        # if isinstance(self.location, World):
-        #     for unit in self.location.units:
-        #         self.unit = unit
-        #         self.process_turn()
-
-        # elif len(list(self.location.units)) == 1:
-        #         self.unit = self.player
-        #         self.process_turn()
-
-        # else:
-        #     for unit in self.location.units:
-        #         # unit.energy.gain()
-        #         self.unit = unit
-        #         # while unit.energy.ready():
-        #             # self.unit.energy.reset()
-        #         self.process_turn()   
-        # else:   
-        #     for unit in self.location.units:
-        #         unit.energy.gain()
-
-        #     for unit in self.location.units:
-        #         self.unit = unit
-        #         for turn in range(self.unit.energy.turns):
-        #             self.unit.energy.reset()
-        #             self.process_turn()
-
-        if self.turn_inc:
-            self.turns += 1
-            self.turn_inc = False
-
-        # if isinstance(self.location, World):
-        #     self.process_turn_player()
-        # else:
-        #     for unit in self.location.units:
-        #         self.unit = unit
-        #         if self.unit.energy.ready():
-        #             self.unit.energy.reset()
-        #             self.process_turn_unit()
-        #         else:
-        #             self.unit.energy.gain()
-
-        #     if self.player.energy.ready():
-        #         self.process_turn_player()
-        #     else:
-        #         self.player.energy.gain()
-
-    def process_turn(self):
-        if isinstance(self.unit, Player):
-            self.process_turn_player()
-
-        else:
-            self.process_turn_unit()
-
-    def process_turn_player(self):
-        action = self.key_input()
-
-        if not self.proceed:
-            return
-
-        self.process_handler(*action)
-
-    def process_turn_unit(self):
-        if hasattr(self.unit, 'acts'):
-            units = { u.local: u for u in self.location.units 
-                                                        if u != self.unit }
-
-            # subset of positions possible that can be seen due to sight
-            positions = self.location.fov_calc_blocks(
-                                                *self.unit.local,
-                                                self.unit.sight_norm)
-            # units = { self.location.unit_at(*position).position: self.location.unit_at(*position) 
-            #             for position in positions if self.location.unit_at(*position) }
-
-            # if self.player not in units.values():
-            #     return
-
-            # tile info for every position that can be seen
-            tiles = { position: self.location.square(*position) 
-                                                for position in positions }
-
-            # get the action variable after putting in all the info into unit.act
-            action = self.unit.acts(units, tiles)
-            if action:
-                self.process_handler_unit(*action)
-
-            if not self.player.is_alive:
-                self.process = False
-                return
-            
-    def process_handler_unit(self, x, y, k, key):
-        if k is not None:
-            pass
-        elif all(z is not None for z in [x, y]):
-            self.process_movement_unit(x, y)
-        else:
-            return 'skipped-turn'
-
-    def process_handler(self, x, y, k, key,):
-        '''Checks actions linearly by case:
-        (1) processes non-movement action
-            Actions not in movement groupings
-        (2) processes movement action
-            Keyboard shortcut action grouping
-        (3) If action teplate is empty:
-            Return skip-action command
-        '''
-        if k is not None:
-            self.process_action(k)
-        elif all(z is not None for z in [x, y]):
-            self.process_movement(x, y)
-        else:
-            return 'skipped-turn'
-
-    def process_action(self, action):
-        ''' 
-        Player class should return a height method and position method
-        Position method should return position based on height
-        So height would be independent and position would be depenedent on height
-        '''
-        try:
-            divided = self.actions[max(0, min(self.player.height, 1))]
-            try:
-                divided[action]()
-            except TypeError:
-                divided[action](action)
-            except KeyError:
-                invalid_command = strings.cmd_invalid.format(action)
-                self.draw_log(invalid_command)        
-
-        except KeyError:
-            invalid_command = strings.cmd_invalid.format(action)
-            self.draw_log(invalid_command)
-
-    def process_move_unit_to_empty(self, x, y):
-        occupied_player = self.player.local == (x, y)
-        occupied_unit = self.location.occupied(x, y)
-
-        if not occupied_player and not occupied_unit:
-            self.unit.local = Point(x, y)
-            return None
-
-        return occupied_player, occupied_unit
-
-    def process_movement_unit(self, x, y):
-        if (x, y) != (0, 0):
-            point = self.unit.local + (x, y)
-
-            if self.location.walkable(*point):
-                unit_bools = self.process_move_unit_to_empty(*point)
-
-                if not unit_bools:
-                    return
-
-                else:
-                    occupied_player, occupied_unit = unit_bools
-
-                    if occupied_unit:
-                        unit = self.location.unit_at(*point)
-
-                    else:
-                        unit = self.player
-
-                    player = isinstance(unit, Player)
-
-                    if isinstance(self.location, City):
-                        self.unit.displace(unit)
-                        unit.energy.reset()
-                        # log = strings.movement_unit_displace.format(
-                        #     self.unit.__class__.__name__, 
-                        #     unit.race if not player else "you")
-                        # self.draw_log(log) 
-
-                    else:
-                        chance = self.unit.calculate_attack_chance()
-
-                        if chance == 0:
-                            pass
-                            # log = "The {} tries attacking {} but misses".format(
-                            #     self.unit.race, 
-                            #     "you" if player else "the " + unit.race)
-                            # self.draw_log(log)
-
-                        else:
-                            damage = self.unit.calculate_attack_damage()
-
-                            if chance == 2:
-                                damage *= 2
-
-                            unit.cur_hp -= damage
-                            
-                            # if self.location.check_light_level(*point):
-                            #     term.layer(1)
-                            #     term.puts(
-                            #         *(point + (self.main_x, self.main_y)),
-                            #         '[c=red]*[/c]')
-
-                            #     term.refresh()
-
-                            #     term.clear_area(*(point + (self.main_x, self.main_y)),
-                            #         1, 1)
-                            #     term.layer(0)
-                                
-                            # log = "The {} attacks {} for {} damage".format(
-                            #     self.unit.race,
-                            #     "you" if player else "the " + unit.race,
-                            #     damage)
-
-                            # self.draw_log(log)
-                            # self.draw_status()
-
-                            if not unit.is_alive:
-                                # log = "The {} has killed {}!".format(
-                                #     self.unit.race,
-                                #     "you" if player else "the " + unit.race)
-
-                                # self.draw_log(log, color="red")
-
-                                if player:
-                                    exit('DEAD')
-
-                                item = unit.drops()
-                                
-                                if item:
-                                    self.location.item_add(*unit.local, item)
-                                    # self.draw_log("The {} has dropped {}".format(
-                                    #     unit.race, item.name))
-
-                                self.location.unit_remove(unit)
-                            
-    def process_movement(self, x, y):
-        # moving on world map
-        if self.player.height == Level.WORLD:
-            if (x, y) == (0, 0):
-                self.draw_log(strings.movement_wait_world)
-
-            else:
-                point = self.player.world + (x, y)
-                if self.location.walkable(*point):
-                    self.player.save_location()
-                    self.player.travel(x, y)
-                    
-                else:
-                    self.draw_log(strings.movement_move_error)
-
-        # moving on local map    
-        else:
-            if (x, y) == (0, 0):
-                self.draw_log(strings.movement_wait_local)
-                self.turn_inc = True
-
-            else:
-                point = self.player.local + (x, y)
-                if self.location.walkable(*point):
-                    if not self.location.occupied(*point):
-                        self.player.move(x, y)
-                        msg_chance = random.randint(0, 5)
-
-                        if self.location.items_at(*point) and msg_chance:
-                            pass
-                            # item_message = random.randint(
-                            #     a=0, 
-                            #     b=len(strings.pass_by_item) - 1)
-                            # self.draw_log(
-                            #     strings.pass_by_item[item_message])
-                            
-                    else:
-                        unit = self.location.unit_at(*point)
-
-                        if isinstance(self.location, City):
-                            self.player.displace(unit)
-                            unit.energy.reset()
-                            # log = "You switch places with the {}.".format(
-                            #                     unit.__class__.__name__.lower())
-                            # self.draw_log(log)
-
-                        else:
-                            chance = self.player.calculate_attack_chance()
-
-                            if chance == 0:
-                                pass
-                                # log = "You try attacking the {} but miss.".format(
-                                #     unit.race)
-                                # self.draw_log(log)
-
-                            else:
-                                damage = self.player.calculate_attack_damage()
-                                # if chance returns crit ie. a value of 2 
-                                # then multiply damage by 2
-                                if chance == 2:
-                                    damage *= 2
-
-                                unit.cur_hp -= damage
-                                
-                                # if self.location.check_light_level(*point):
-                                #     term.puts(
-                                #         *(point + (self.main_x, self.main_y)),
-                                #         '[c=red]*[/c]')
-                                #     term.refresh()
-
-                                # log = "You{}attack the {} for {} damage. ".format(
-                                #     " crit and " if chance == 2 else " ", 
-                                #     unit.race, 
-                                #     damage)
-
-                                if unit.cur_hp < 1:
-                                    # log += "You have killed the {}! ".format(
-                                    #     unit.race)
-                                    # log += "You gain {} exp.".format(unit.xp)
-                                    # self.draw_log(log)
-                                    self.player.gain_exp(unit.xp)
-
-                                    # if self.player.check_exp():
-                                    #     log = "You level up. You are now level {}.".format(
-                                    #         self.player.level)
-                                    #     log += " You feel much stronger now."
-                                    #     self.draw_log(log)
-
-                                    item = unit.drops()
-
-                                    # if item:
-                                    #     self.location.item_add(*unit.local, item)
-                                    #     self.draw_log("The {} has dropped {}.".format(
-                                    #         unit.race, 
-                                    #         item.name))
-
-                                    self.location.unit_remove(unit)
-
-                                # else:
-                                #     log += "The {} has {} health left.".format(
-                                #         unit.race, 
-                                #         max(0, unit.cur_hp))
-
-                                #     self.draw_log(log, color="red")
-                    self.turn_inc = True
-
-                else:
-                    '''
-                    moving outside of current map
-                        moving on top level (one level below world) then
-                        try to move into the new map if it is not water
-                    '''
-                    if self.location.out_of_bounds(*point):
-                        self.draw_log(strings.movement_move_oob)
-
-                    else:
-                        ch = self.location.square(*point).char
-
-                        if ch == "~":
-                            log = strings.movement_move_swim
-                        else:
-                            log = strings.movement_move_block.format(
-                                strings.movement_move_chars[ch])
-
-                        self.draw_log(log)
-
-    def get_input(self):     
-        '''Handles input reading and parsing unrecognized keys'''
-        key = term.read()
-        if key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
-            # skip any non-action keys
-            key = term.read()
-          
-        shifted = term.state(term.TK_SHIFT)
-        return key, shifted
-
-    def key_input(self):
-        '''Handles keyboard input and keypress transformation
-        Cases:
-            Skips any pre-inputs and non-read keys
-            if key read is a close command -- close early or set proceed to false
-            Elif key is valid command return the command from command list with continue
-            Else return invalid action tuple with continue value
-        '''
-        action = tuple(None for _ in range(4))
-
-        key, shifted = self.get_input()
-        
-        if key in (term.TK_ESCAPE, term.TK_CLOSE):
-            # exit command -- maybe need a back to menu screen?
-            if shifted:
-                exit('Early Exit')
-
-            elif self.player.height >= Level.WORLD:
-                self.draw_log('Escape key disabled.')
-
-            else:
-                self.ret['scene'] = 'main_menu'
-                self.proceed = False
-
-        try:
-            # discover the command and set as current action
-            action = actions.commands_player[(key, shifted)]
-        except KeyError:
-            pass
-            
-        return action
+    
 
     def action_save(self):
         '''Save command: checks save folder and saves the current game objects
