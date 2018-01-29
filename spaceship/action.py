@@ -98,7 +98,7 @@ def go_down_stairs(unit, area, area_constructor):
         unit.descend()
         unit.local = Point(area.stairs_up)
         log = "You go down the stairs."
-
+        
     return unit, area, [log]
 
 def go_up_stairs(unit, area, maptypes):
@@ -235,7 +235,7 @@ def converse(unit, area, logger):
             else:
                 log = strings.converse_error
     
-    if unit:
+    if other:
         log = area.unit_at(*other).talk()
     
     return [log]

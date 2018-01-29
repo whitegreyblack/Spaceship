@@ -1104,7 +1104,7 @@ class Start(Scene):
                                                                           self.location, 
                                                                           Cave)
         else:
-            self.log = "You cannot go downstairs without stairs."
+            self.log = ["You cannot go downstairs without stairs."]
 
     def action_stairs_up(self):
         self.player, self.location, self.log = actions.go_up_stairs(self.player, 
