@@ -29,6 +29,10 @@ class Energy:
     def gain(self):
         self.cur_energy += self.speed
     
+    @property
+    def turns(self):
+        return self.cur_energy // self.tot_energy
+
     def ready(self):
         return self.cur_energy >= self.tot_energy
 

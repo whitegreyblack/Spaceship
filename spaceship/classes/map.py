@@ -506,6 +506,12 @@ class Map:
         for unit in self.units:
             yield unit.local
     
+    def unit_ready(self) -> object:
+        for unit in self.__units:
+            while unit.energy.ready():
+                unit.reset()
+                yield unit
+
     def unit_at(self, x, y) -> object:
         '''Returns a unit at the given position. If the unit exists then the
         unit is returned else an empty value is returned'''
@@ -527,9 +533,9 @@ class Map:
 
     def generate_units(self):
         if self.height <= 25:
-            max_units = 1
+            max_units = 10
         else:
-            max_units = 1
+            max_units = 10
 
         if hasattr(self, 'spaces'):
             shuffle(self.spaces)

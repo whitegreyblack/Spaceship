@@ -105,6 +105,9 @@ class Start(Scene):
             term.clear()
             self.draw()
             term.refresh()
+
+            # self.location.process()
+
             self.process_units()
             if self.map_change:
                 self.determine_map_location()
@@ -306,7 +309,6 @@ class Start(Scene):
             self.draw_item_grouping(group, items)
 
     def draw_screen_log(self, log):
-        self.clear_screen_log()
         strings = wrap(log, self.main_width)
         for index, string in enumerate(strings):
             term.puts(
@@ -331,9 +333,6 @@ class Start(Scene):
         term.bkcolor('black')
         
     def draw_spells(self):
-        def cast():
-            self.draw_log("You cast {}".format(spells[selected][0]))     
-
         spells = [
             ('Fireball', "Cast a fireball at target area and deal aoe damage?"),
             ('Frost Bolt', "Cast a freezing missile at target and hit all enemies in its path?"),
@@ -346,9 +345,11 @@ class Start(Scene):
         spell_index = 0
         self.clear_main()
         self.draw_screen_header('Spells')
+        self.clear_screen_log()
         self.draw_screen_log("What would you like to do?")
         while True:
             if log:
+                self.clear_screen_log()
                 self.draw_screen_log(log)
                 log = ""
             
@@ -368,7 +369,7 @@ class Start(Scene):
                 selected = code - term.TK_A
                 log = spells[selected][1]
             elif selected is not None and code in (term.TK_Y, term.TK_ENTER, selected + term.TK_A):
-                cast()
+                self.draw_log("You cast {}".format(spells[selected][0]))     
                 break
 
     def draw_screens(self, key):
@@ -379,6 +380,8 @@ class Start(Scene):
                 string = strings.cmd_unequip_confirm.format(item.name)
             except AttributeError:
                 string = strings.cmd_unequip_confirm.format(item)
+            
+            self.clear_screen_log()
             self.draw_screen_log(string)
             term.refresh()
 
@@ -417,7 +420,7 @@ class Start(Scene):
                 while True:
                     self.clear_main()
                     self.draw_inventory(items)
-                    
+                    self.clear_screen_log()
                     if log:
                         self.draw_screen_log(log)
                     else:
@@ -452,6 +455,7 @@ class Start(Scene):
 
         elif current_screen == "v":
             self.draw_inventory(items)
+            self.clear_screen_log()
             self.draw_screen_log(strings.cmd_switch_iv)
 
         while True:
@@ -503,6 +507,7 @@ class Start(Scene):
             elif current_screen == 'v':
                 if term.TK_A <= code < term.TK_A + len(items):
                     item = items[code - 4]
+                    self.clear_screen_log()
                     self.draw_screen_log(strings.cmd_inv_funcs.format(item))
                     
                     # while True:
@@ -549,22 +554,34 @@ class Start(Scene):
         term.clear()
 
     def process_units(self):
-        if isinstance(self.location, World):
-            for unit in self.location.units:
-                self.unit = unit
-                self.process_turn()
+        for unit in self.location.units:
+            self.unit = unit
+            self.process_turn()
+        # if isinstance(self.location, World):
+        #     for unit in self.location.units:
+        #         self.unit = unit
+        #         self.process_turn()
 
-        elif len(list(self.location.units)) == 1:
-                self.unit = self.player
-                self.process_turn()
+        # elif len(list(self.location.units)) == 1:
+        #         self.unit = self.player
+        #         self.process_turn()
 
-        else:
-            for unit in self.location.units:
-                # unit.energy.gain()
-                self.unit = unit
-                # while unit.energy.ready():
-                    # self.unit.energy.reset()
-                self.process_turn()      
+        # else:
+        #     for unit in self.location.units:
+        #         # unit.energy.gain()
+        #         self.unit = unit
+        #         # while unit.energy.ready():
+        #             # self.unit.energy.reset()
+        #         self.process_turn()   
+        # else:   
+        #     for unit in self.location.units:
+        #         unit.energy.gain()
+
+        #     for unit in self.location.units:
+        #         self.unit = unit
+        #         for turn in range(self.unit.energy.turns):
+        #             self.unit.energy.reset()
+        #             self.process_turn()
 
         if self.turn_inc:
             self.turns += 1
@@ -707,19 +724,20 @@ class Start(Scene):
                     if isinstance(self.location, City):
                         self.unit.displace(unit)
                         unit.energy.reset()
-                        log = strings.movement_unit_displace.format(
-                            self.unit.__class__.__name__, 
-                            unit.race if not player else "you")
-                        self.draw_log(log) 
+                        # log = strings.movement_unit_displace.format(
+                        #     self.unit.__class__.__name__, 
+                        #     unit.race if not player else "you")
+                        # self.draw_log(log) 
 
                     else:
                         chance = self.unit.calculate_attack_chance()
 
                         if chance == 0:
-                            log = "The {} tries attacking {} but misses".format(
-                                self.unit.race, 
-                                "you" if player else "the " + unit.race)
-                            self.draw_log(log)
+                            pass
+                            # log = "The {} tries attacking {} but misses".format(
+                            #     self.unit.race, 
+                            #     "you" if player else "the " + unit.race)
+                            # self.draw_log(log)
 
                         else:
                             damage = self.unit.calculate_attack_damage()
@@ -729,30 +747,32 @@ class Start(Scene):
 
                             unit.cur_hp -= damage
                             
-                            if self.location.check_light_level(*point):
-                                term.layer(1)
-                                term.puts(
-                                    *(point + (self.main_x, self.main_y)),
-                                    '[c=red]*[/c]')
+                            # if self.location.check_light_level(*point):
+                            #     term.layer(1)
+                            #     term.puts(
+                            #         *(point + (self.main_x, self.main_y)),
+                            #         '[c=red]*[/c]')
 
-                            term.refresh()
-                            term.clear_area(*(point + (self.main_x, self.main_y)),
-                                1, 1)
-                            term.layer(0)
-                            log = "The {} attacks {} for {} damage".format(
-                                self.unit.race,
-                                "you" if player else "the " + unit.race,
-                                damage)
+                            #     term.refresh()
 
-                            self.draw_log(log)
-                            self.draw_status()
+                            #     term.clear_area(*(point + (self.main_x, self.main_y)),
+                            #         1, 1)
+                            #     term.layer(0)
+                                
+                            # log = "The {} attacks {} for {} damage".format(
+                            #     self.unit.race,
+                            #     "you" if player else "the " + unit.race,
+                            #     damage)
+
+                            # self.draw_log(log)
+                            # self.draw_status()
 
                             if not unit.is_alive:
-                                log = "The {} has killed {}!".format(
-                                    self.unit.race,
-                                    "you" if player else "the " + unit.race)
+                                # log = "The {} has killed {}!".format(
+                                #     self.unit.race,
+                                #     "you" if player else "the " + unit.race)
 
-                                self.draw_log(log, color="red")
+                                # self.draw_log(log, color="red")
 
                                 if player:
                                     exit('DEAD')
@@ -761,8 +781,8 @@ class Start(Scene):
                                 
                                 if item:
                                     self.location.item_add(*unit.local, item)
-                                    self.draw_log("The {} has dropped {}".format(
-                                        unit.race, item.name))
+                                    # self.draw_log("The {} has dropped {}".format(
+                                    #     unit.race, item.name))
 
                                 self.location.unit_remove(unit)
                             
@@ -795,11 +815,12 @@ class Start(Scene):
                         msg_chance = random.randint(0, 5)
 
                         if self.location.items_at(*point) and msg_chance:
-                            item_message = random.randint(
-                                a=0, 
-                                b=len(strings.pass_by_item) - 1)
-                            self.draw_log(
-                                strings.pass_by_item[item_message])
+                            pass
+                            # item_message = random.randint(
+                            #     a=0, 
+                            #     b=len(strings.pass_by_item) - 1)
+                            # self.draw_log(
+                            #     strings.pass_by_item[item_message])
                             
                     else:
                         unit = self.location.unit_at(*point)
@@ -807,17 +828,18 @@ class Start(Scene):
                         if isinstance(self.location, City):
                             self.player.displace(unit)
                             unit.energy.reset()
-                            log = "You switch places with the {}.".format(
-                                                unit.__class__.__name__.lower())
-                            self.draw_log(log)
+                            # log = "You switch places with the {}.".format(
+                            #                     unit.__class__.__name__.lower())
+                            # self.draw_log(log)
 
                         else:
                             chance = self.player.calculate_attack_chance()
 
                             if chance == 0:
-                                log = "You try attacking the {} but miss.".format(
-                                    unit.race)
-                                self.draw_log(log)
+                                pass
+                                # log = "You try attacking the {} but miss.".format(
+                                #     unit.race)
+                                # self.draw_log(log)
 
                             else:
                                 damage = self.player.calculate_attack_damage()
@@ -828,46 +850,46 @@ class Start(Scene):
 
                                 unit.cur_hp -= damage
                                 
-                                if self.location.check_light_level(*point):
-                                    term.puts(
-                                        *(point + (self.main_x, self.main_y)),
-                                        '[c=red]*[/c]')
-                                    term.refresh()
+                                # if self.location.check_light_level(*point):
+                                #     term.puts(
+                                #         *(point + (self.main_x, self.main_y)),
+                                #         '[c=red]*[/c]')
+                                #     term.refresh()
 
-                                log = "You{}attack the {} for {} damage. ".format(
-                                    " crit and " if chance == 2 else " ", 
-                                    unit.race, 
-                                    damage)
+                                # log = "You{}attack the {} for {} damage. ".format(
+                                #     " crit and " if chance == 2 else " ", 
+                                #     unit.race, 
+                                #     damage)
 
                                 if unit.cur_hp < 1:
-                                    log += "You have killed the {}! ".format(
-                                        unit.race)
-                                    log += "You gain {} exp.".format(unit.xp)
-                                    self.draw_log(log)
+                                    # log += "You have killed the {}! ".format(
+                                    #     unit.race)
+                                    # log += "You gain {} exp.".format(unit.xp)
+                                    # self.draw_log(log)
                                     self.player.gain_exp(unit.xp)
 
-                                    if self.player.check_exp():
-                                        log = "You level up. You are now level {}.".format(
-                                            self.player.level)
-                                        log += " You feel much stronger now."
-                                        self.draw_log(log)
+                                    # if self.player.check_exp():
+                                    #     log = "You level up. You are now level {}.".format(
+                                    #         self.player.level)
+                                    #     log += " You feel much stronger now."
+                                    #     self.draw_log(log)
 
                                     item = unit.drops()
 
-                                    if item:
-                                        self.location.item_add(*unit.local, item)
-                                        self.draw_log("The {} has dropped {}.".format(
-                                            unit.race, 
-                                            item.name))
+                                    # if item:
+                                    #     self.location.item_add(*unit.local, item)
+                                    #     self.draw_log("The {} has dropped {}.".format(
+                                    #         unit.race, 
+                                    #         item.name))
 
                                     self.location.unit_remove(unit)
 
-                                else:
-                                    log += "The {} has {} health left.".format(
-                                        unit.race, 
-                                        max(0, unit.cur_hp))
+                                # else:
+                                #     log += "The {} has {} health left.".format(
+                                #         unit.race, 
+                                #         max(0, unit.cur_hp))
 
-                                    self.draw_log(log, color="red")
+                                #     self.draw_log(log, color="red")
                     self.turn_inc = True
 
                 else:
