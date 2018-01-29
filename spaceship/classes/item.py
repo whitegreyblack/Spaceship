@@ -80,8 +80,10 @@ def sort(items):
 
 def mark(value: int) -> str:
     if isinstance(value, int):
-        if value >= 0:
+        if value > 0:
             return "+" + str(value)
+        elif value == 0:
+            return " " + str(value)
         else:
             return value
     return value
@@ -119,20 +121,26 @@ class Item:
         return f"{self.name} {seperate(self.effects)}"
 
     def __repr__(self):
-        return f"[{self.__class__.__name__}] {self.name} {seperate(self.effects)}"
+        return f"[{self.item_type}] {self.name} {seperate(self.effects)}"
 
     @property
     def effects(self):
         if self.__effects:
-            for effect, value in self.__effects:
+            for _, effect, value in self.__effects:
                 if effect == 'dmg':
                     if not isinstance(value, tuple):
                         value = (value, value)
-
-                    for effect, val in zip('dmg_lo dmg_hi'.split(), value):
-                        yield effect, val
+                    yield effect, value
                 else:
                     yield effect, value
+
+    @property
+    def effects_calc(self):
+        pass
+
+    @property
+    def effects_print(self):
+        pass
 
 class Food(Item):
     inventory = "food"

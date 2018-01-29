@@ -108,9 +108,10 @@ class Player(Unit):
 
         def color(item):
             if hasattr(item, 'char') and hasattr(item, 'color'):
+                if item.char == "[":
+                    return f"[c={item.color}]{item.char * 2}[/c]"
                 return f"[c={item.color}]{item.char}[/c]"
             return ""
-
         equipment = [color(i) for _, i in self.equipment]
         return (self.name, self.gender[0], self.race[0], self.job[0], 
             "".join(equipment),
