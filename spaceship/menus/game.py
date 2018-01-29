@@ -174,12 +174,16 @@ class Start(Scene):
         #         self.process_turn()
 
         # else:
-        #     for unit in self.location.units:
-        #         # unit.energy.gain()
-        #         self.unit = unit
-        #         # while unit.energy.ready():
-        #             # self.unit.energy.reset()
-        #         self.process_turn()   
+        #     for self.unit in self.location.units:
+        #         self.unit.energy.gain()
+
+        #     for self.unit in self.location.units:
+        #         if self.unit == self.player and not self.unit.energy.ready():
+        #             break
+
+        #         while self.unit.energy.ready():
+        #             self.unit.energy.reset()
+        #             self.process_turn()   
         # else:   
         #     for unit in self.location.units:
         #         unit.energy.gain()
@@ -246,14 +250,13 @@ class Start(Scene):
 
     def process_turn_unit(self):
         if hasattr(self.unit, 'acts'):
-            units = { u.local: u for u in self.location.units 
-                                                        if u != self.unit }
+            units = {u.local: u for u in self.location.units if u != self.unit}
 
             # subset of positions possible that can be seen due to sight
-            positions = self.location.fov_calc_blocks(
-                                                *self.unit.local,
-                                                self.unit.sight_norm)
-            # units = { self.location.unit_at(*position).position: self.location.unit_at(*position) 
+            positions = self.location.fov_calc_blocks(*self.unit.local,
+                                                      self.unit.sight_norm)
+            # units = {self.location.unit_at(*position).position: 
+            #               self.location.unit_at(*position) 
             #             for position in positions if self.location.unit_at(*position) }
 
             # if self.player not in units.values():
@@ -261,9 +264,10 @@ class Start(Scene):
 
             # tile info for every position that can be seen
             tiles = { position: self.location.square(*position) 
-                                                for position in positions }
+                      for position in positions }
 
-            # get the action variable after putting in all the info into unit.act
+            # get the action variable after putting in 
+            # all the info into unit.act
             action = self.unit.acts(units, tiles)
             if action:
                 self.process_handler_unit(*action)

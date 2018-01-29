@@ -67,7 +67,7 @@ class Unit(Object):
     def __str__(self):
         return "{}: (x={}, y={}, ch={}, fg={}, bg={}, race={}, sight={}, speed={}, {}/{})".format(
             self.__class__.__name__, 
-            *self.local.position,
+            *self.local,
             self.character,
             self.foreground,
             self.background,
