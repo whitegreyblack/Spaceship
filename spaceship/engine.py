@@ -31,7 +31,7 @@ class Engine:
         term.open()
         self.setup_font('Andale')
         # self.setup_font("Andux_cp866ish", cx=8, cy=8)
-        term.set('window: size=160x50, cellsize=auto, title="Spaceship", fullscreen=false')
+        term.set('window: size=80x25, cellsize=auto, title="Spaceship", fullscreen=false')
 
     def setup_font(self, font, cx=8, cy=None):
         '''Determines font and cell size'''

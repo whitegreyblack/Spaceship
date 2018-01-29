@@ -318,11 +318,11 @@ class Start(Scene):
                 divided[action](action)
             except KeyError:
                 invalid_command = strings.cmd_invalid.format(action)
-                self.draw_log(invalid_command)        
+                self.log.append(invalid_command)
 
         except KeyError:
             invalid_command = strings.cmd_invalid.format(action)
-            self.draw_log(invalid_command)
+            self.log.append(invalid_command)
 
     def process_move_unit_to_empty(self, x, y):
         occupied_player = self.player.local == (x, y)
@@ -358,20 +358,20 @@ class Start(Scene):
                     if isinstance(self.location, City):
                         self.unit.displace(unit)
                         unit.energy.reset()
-                        # log = strings.movement_unit_displace.format(
-                        #     self.unit.__class__.__name__, 
-                        #     unit.race if not player else "you")
-                        # self.draw_log(log) 
+                        log = strings.movement_unit_displace.format(
+                            self.unit.__class__.__name__, 
+                            unit.race if not player else "you")
+                        self.log.append(log)
 
                     else:
                         chance = self.unit.calculate_attack_chance()
 
                         if chance == 0:
                             pass
-                            # log = "The {} tries attacking {} but misses".format(
-                            #     self.unit.race, 
-                            #     "you" if player else "the " + unit.race)
-                            # self.draw_log(log)
+                            log = "The {} tries attacking {} but misses".format(
+                                self.unit.race, 
+                                "you" if player else "the " + unit.race)
+                            self.log.append(log)
 
                         else:
                             damage = self.unit.calculate_attack_damage()
@@ -393,30 +393,30 @@ class Start(Scene):
                             #         1, 1)
                             #     term.layer(0)
                                 
-                            # log = "The {} attacks {} for {} damage".format(
-                            #     self.unit.race,
-                            #     "you" if player else "the " + unit.race,
-                            #     damage)
-
-                            # self.draw_log(log)
-                            # self.draw_status()
+                            log = "The {} attacks {} for {} damage".format(
+                                self.unit.race,
+                                "you" if player else "the " + unit.race,
+                                damage)
+                            self.log.append(log)
 
                             if not unit.is_alive:
-                                # log = "The {} has killed {}!".format(
-                                #     self.unit.race,
-                                #     "you" if player else "the " + unit.race)
+                                log = "The {} has killed {}!".format(
+                                    self.unit.race,
+                                    "you" if player else "the " + unit.race)
 
-                                # self.draw_log(log, color="red")
+                                self.log.append(log)
 
-                                if player:
-                                    exit('DEAD')
+                                # if player:
+                                #     exit('DEAD')
 
-                                item = unit.drops()
+                                item = None
+                                if hasattr(unit, 'drops'):
+                                    item = unit.drops()
                                 
                                 if item:
                                     self.location.item_add(*unit.local, item)
-                                    # self.draw_log("The {} has dropped {}".format(
-                                    #     unit.race, item.name))
+                                    self.log.append("The {} has dropped {}".format(
+                                        unit.race, item.name))
 
                                 self.location.unit_remove(unit)
                             
@@ -492,34 +492,30 @@ class Start(Scene):
                                 self.log.append(log)
 
                                 if unit.cur_hp < 1:
-                                    # log += "You have killed the {}! ".format(
-                                    #     unit.race)
-                                    # log += "You gain {} exp.".format(unit.xp)
-                                    # self.draw_log(log)
+                                    self.log.append("You have killed the {}! ".format(unit.race))
+                                    self.log.append("You gain {} exp.".format(unit.xp))
                                     self.player.gain_exp(unit.xp)
 
-                                    # if self.player.check_exp():
-                                    #     log = "You level up. You are now level {}.".format(
-                                    #         self.player.level)
-                                    #     log += " You feel much stronger now."
-                                    #     self.draw_log(log)
+                                    if self.player.check_exp():
+                                        log = "You level up. You are now level {}.".format(self.player.level)
+                                        self.log.append(log)
+                                        self.log.append("You feel much stronger now.")
 
                                     item = unit.drops()
 
-                                    # if item:
-                                    #     self.location.item_add(*unit.local, item)
-                                    #     self.draw_log("The {} has dropped {}.".format(
-                                    #         unit.race, 
-                                    #         item.name))
+                                    if item:
+                                        self.location.item_add(*unit.local, item)
+                                        self.log.append("The {} has dropped {}.".format(unit.race, 
+                                                                                        item.name))
 
                                     self.location.unit_remove(unit)
 
-                                # else:
-                                #     log += "The {} has {} health left.".format(
-                                #         unit.race, 
-                                #         max(0, unit.cur_hp))
+                                else:
+                                    log += "The {} has {} health left.".format(
+                                        unit.race, 
+                                        max(0, unit.cur_hp))
+                                    self.log.append(log)
 
-                                #     self.draw_log(log, color="red")
                     self.turn_inc = True
 
                 else:
@@ -529,7 +525,7 @@ class Start(Scene):
                         try to move into the new map if it is not water
                     '''
                     if self.location.out_of_bounds(*point):
-                        self.draw_log(strings.movement_move_oob)
+                        self.log.append(strings.movement_move_oob)
 
                     else:
                         ch = self.location.square(*point).char
@@ -540,7 +536,7 @@ class Start(Scene):
                             log = strings.movement_move_block.format(
                                 strings.movement_move_chars[ch])
 
-                        self.draw_log(log)
+                        self.log.append(log)
 
     def draw(self):
         self.draw_log(refresh=False)
@@ -573,10 +569,14 @@ class Start(Scene):
         self.location.fov_calc([(*point, sight)])
         # self.location.fov_calc([(x, y, sight), (5, 5, sight)])
 
-        for x, y, col, ch in self.location.output(*point):
-            term.puts(x=x + self.main_x,
+        # for x, y, col, ch in self.location.output(*point):
+        #     term.puts(x=x + self.main_x,
+        #               y=y + self.main_y,
+        #               s="[c={}]{}[/c]".format(col, ch))
+        for (x, y), string in self.location.output(*point):
+            term.puts(x=x + self.main_x, 
                       y=y + self.main_y,
-                      s="[c={}]{}[/c]".format(col, ch))
+                      s=string)
 
         # sets the location name at the bottom of the status bar
         if g0:
@@ -782,7 +782,7 @@ class Start(Scene):
                 selected = code - term.TK_A
                 log = spells[selected][1]
             elif selected is not None and code in (term.TK_Y, term.TK_ENTER, selected + term.TK_A):
-                self.draw_log("You cast {}".format(spells[selected][0]))     
+                self.log.append("You cast {}".format(spells[selected][0]))     
                 break
 
     def draw_screens(self, key):

@@ -569,8 +569,11 @@ class Map:
             self.height)
         ext_y = cam_y + self.map_display_height + (-6 if shorten_y else 0)
 
+        putstr = "[c={}]{}[/c]"
         # height should total 24/25 units
         for y in range(cam_y, ext_y):
+            curstr = ""
+            yieldptr = None
             # width should total 80 units
             for x in range(cam_x, ext_x):
                 if (x, y) == (player_x, player_y):
@@ -591,8 +594,16 @@ class Map:
                         square = self.square(x, y)
                         char, color = square.char, "darkest grey"
                     else:
-                        continue
-                yield (x - cam_x, y - cam_y, color, char)
+                        char, color = ' ', 'black'
+                curstr += putstr.format(color, char)
+                # yield (x - cam_x, y - cam_y, color, char)
+
+                if not yieldptr:
+                    yieldptr = (x - cam_x, y - cam_y)
+                
+            if yieldptr and curstr:
+                yield yieldptr, curstr
+
         self.lit_reset()
 
         # stuff
