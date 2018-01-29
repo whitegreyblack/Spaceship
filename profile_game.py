@@ -10,7 +10,7 @@ def profile_game():
 
 def stats_out():
     p = pstats.Stats('profiler.txt')
-    p.sort_stats('tottime').print_stats(15)
+    p.sort_stats('tottime').print_stats()
 
 if __name__ == "__main__":
     cProfile.run('profile_game()', filename='profiler.txt')
