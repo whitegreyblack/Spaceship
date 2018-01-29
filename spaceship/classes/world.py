@@ -379,20 +379,20 @@ class World(Map):
         
         for y in range(cam_y, ext_y):
             for x in range(cam_x, ext_x):
-                light_level = self.check_light_level(x, y)
                 if x == player_x and y == player_y:
                     ch, col = "@", "white"
-
-                elif light_level == 2:
-                    square = self.square(x, y)
-                    ch, col = square.char, square.color
-
-                elif light_level == 1:
-                    square = self.square(x, y)
-                    ch, col = square.char, "darkest grey"
-
                 else:
-                    continue
+                    light_level = self.check_light_level(x, y)
+                    if light_level == 2:
+                        square = self.square(x, y)
+                        ch, col = square.char, square.color
+
+                    elif light_level == 1:
+                        square = self.square(x, y)
+                        ch, col = square.char, "darkest grey"
+
+                    else:
+                        continue
                 # else:
                 #     try:
                 #         # char, color, _, terr, tcol, king, kcol, _ = self.data[j][i]

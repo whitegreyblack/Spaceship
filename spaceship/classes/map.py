@@ -573,36 +573,26 @@ class Map:
         for y in range(cam_y, ext_y):
             # width should total 80 units
             for x in range(cam_x, ext_x):
-                light_level = self.check_light_level(x, y)
-                if light_level > 0:
-
-                    if (x, y) == (player_x, player_y):
-                        yield (x - cam_x, y - cam_y, "white", "@")
-
-                    elif light_level == 2:
+                if (x, y) == (player_x, player_y):
+                    char, color = "@", "white"
+                else:
+                    light_level = self.check_light_level(x, y)
+                    if light_level == 2:
                         if (x, y) in self.unit_positions:
                             unit = self.unit_at(x, y)
                             char, color = unit.character, unit.foreground
-
                         elif self.square(x, y).items:
                             item = self.square(x, y).items[-1]
                             char, color = item.char, item.color
-
                         else:
                             square = self.square(x, y)
                             char, color = square.char, square.color
-
-                        yield (x - cam_x, y - cam_y, color, char)
-
                     elif light_level == 1:
                         square = self.square(x, y)
                         char, color = square.char, "darkest grey"
-                        yield (x - cam_x, y - cam_y, color, char)
-
                     else:
-                        # yield (x - cam_x, y - cam_y, "black", " ")
                         continue
-                        
+                yield (x - cam_x, y - cam_y, color, char)
         self.lit_reset()
 
         # stuff

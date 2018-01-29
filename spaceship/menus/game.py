@@ -161,29 +161,30 @@ class Start(Scene):
         return action
 
     def process_units(self):
-        for unit in self.location.units:
-            self.unit = unit
-            self.process_turn()
-        # if isinstance(self.location, World):
-        #     for unit in self.location.units:
-        #         self.unit = unit
-        #         self.process_turn()
+        # for unit in self.location.units:
+        #     self.unit = unit
+        #     self.process_turn()
+        if isinstance(self.location, World):
+            for unit in self.location.units:
+                self.unit = unit
+                self.process_turn()
 
-        # elif len(list(self.location.units)) == 1:
-        #         self.unit = self.player
-        #         self.process_turn()
+        elif len(list(self.location.units)) == 1:
+                self.unit = self.player
+                self.process_turn()
 
-        # else:
-        #     for self.unit in self.location.units:
-        #         self.unit.energy.gain()
+        else:
+            for self.unit in self.location.units:
+                self.unit.energy.gain()
 
-        #     for self.unit in self.location.units:
-        #         if self.unit == self.player and not self.unit.energy.ready():
-        #             break
-
-        #         while self.unit.energy.ready():
-        #             self.unit.energy.reset()
-        #             self.process_turn()   
+            if any(u.energy.ready() for u in self.location.units):
+            # for self.unit in self.location.units:
+            #     if self.unit == self.player and not self.unit.energy.ready():
+            #         break
+                for self.unit in self.location.units:
+                    while self.unit.energy.ready():
+                        self.unit.energy.reset()
+                        self.process_turn()   
         # else:   
         #     for unit in self.location.units:
         #         unit.energy.gain()
@@ -574,10 +575,9 @@ class Start(Scene):
         # self.location.fov_calc([(x, y, sight), (5, 5, sight)])
 
         for x, y, col, ch in self.location.output(*point):
-            term.puts(
-                x=x + self.main_x,
-                y=y + self.main_y,
-                s="[c={}]{}[/c]".format(col, ch))
+            term.puts(x=x + self.main_x,
+                      y=y + self.main_y,
+                      s="[c={}]{}[/c]".format(col, ch))
 
         # sets the location name at the bottom of the status bar
         if g0:
@@ -590,37 +590,33 @@ class Start(Scene):
                 location = self.world.dungeon_legend[self.player.world]
 
             if location:
-                term.bkcolor('dark grey')
-                term.puts(
-                    x=self.main_x, 
-                    y=0, 
-                    s=' ' * (self.width - self.main_x))
-                    
-                term.bkcolor('black')
-                location_offset = center(
-                                    text=surround(location), 
-                                    width=self.width - self.main_x)
-                term.puts(
-                    x=self.main_x + location_offset,
-                    y=0, 
-                    s=surround(location))
+                # term.bkcolor('dark grey')
+                # term.puts(self.main_x, 0, ' ' * (self.width - self.main_x))
+                # term.bkcolor('black')
+                # location_offset = center(
+                #                     text=surround(location), 
+                #                     width=self.width - self.main_x)
+                # term.puts(
+                #     x=self.main_x + location_offset,
+                #     y=0, 
+                #     s=surround(location))
+                self.draw_screen_header(location)
 
     def draw_screen_header(self, header=None):
         '''Draws a line across the top of the window'''
         term.bkcolor('dark grey')
-        for i in range(self.width - self.main_x):
-            term.puts(self.main_x + i, 0, ' ')
+        term.puts(self.main_x, 0, ' ' * (self.width - self.main_x))
         term.bkcolor('black')
+
         if header:
             string = surround(header)
-            term.puts(
-                center(string, self.width + self.main_x), 0, string)
+            term.puts(center(string, self.width + self.main_x), 0, string)
                 
     def draw_status(self):
         '''Handles player status screen'''
-        term.puts(self.status_col, self.status_row,
-            strings.status.format(
-                *self.player.status(), self.turns))
+        term.puts(self.status_col, 
+                  self.status_row,
+                  strings.status.format(*self.player.status(), self.turns))
 
     def clear_status(self):
         term.clear_area(0, 0, self.width - self.main_width, self.height)
@@ -629,22 +625,18 @@ class Start(Scene):
         '''Handles player profile screen'''
 
         # draws header border
-        for i in range(self.width):
-            term.puts(i, 0, '#')
+        term.puts(i, 0, '#' * self.width)
         term.puts(center('profile  ', self.width), 0, ' Profile ')
 
         for colnum, column in enumerate(list(self.player.profile())):
-            term.puts(
-                x=self.screen_col + (20 * colnum), 
-                y=self.screen_row, 
-                s=column)
+            term.puts(x=self.screen_col + (20 * colnum), 
+                      y=self.screen_row, 
+                      s=column)
 
     def clear_main(self):
-        term.clear_area(
-            self.main_x, 
-            0, 
-            self.width - self.main_x,
-            self.height - self.log_height - 1)
+        term.clear_area(self.main_x, 0, 
+                        self.width - self.main_x,
+                        self.height - self.log_height - 1)
 
     def clear_item_box(self):
         term.clear_area(
@@ -655,8 +647,6 @@ class Start(Scene):
 
     def draw_equipment(self):
         '''Handles equipment screen'''
-
-        # draws header border
         self.draw_screen_header('Equipment')
 
         equipment = list(self.player.equipment)
@@ -831,7 +821,8 @@ class Start(Scene):
                     _, ri = next(self.player.item_on('hand_right'))
                 
                     log = strings.cmd_equip_two_hand.format(
-                        part, li.name if li else ri.name, 
+                        part, 
+                        li.name if li else ri.name, 
                         'left hand' if li else 'right hand',)
                     return 
 
@@ -899,7 +890,7 @@ class Start(Scene):
 
                 elif current_screen == "v":
                     items = [item for _, inv in self.player.inventory 
-                                        for item in inv]
+                             for item in inv]
                     self.draw_inventory(items)
                     self.draw_screen_log(strings.cmd_switch_iv)
 
