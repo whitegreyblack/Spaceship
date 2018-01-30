@@ -10,6 +10,7 @@ from .items import itemlist
 from .equipment import Equipment, parts
 from .inventory import Inventory
 from spaceship.strings import dump_template
+from .components import Health, Mana
 
 attrs=('str con dex wis int cha hp sp mp acc att_lo att_hi')
 
@@ -165,6 +166,8 @@ class Player(Unit):
             self.stat_update_final(name)
 
         item =  next(self.__equipment.unequip(part))
+        if item.item_type == "weapon":
+            self.__equipment.weapon_slots -= item.hands
         self.__inventory.add(item)
 
     def item_on(self, index):
@@ -228,6 +231,12 @@ class Player(Unit):
                 setattr(self, stat, 0)
 
         self.acc, self.dmg_lo, self.dmg_hi = 0, 1, 2
+
+        self.health = Health()
+        self.health.status_bonuses(self.str, self.con)
+        self.mana = Mana()
+        self.mana.status_bonuses(self.int, self.wis)
+        print(self.health, self.mana)
 
     def stats_attributes(self):
         return self.str, self.con, self.dex, self.int, self.wis, self.cha

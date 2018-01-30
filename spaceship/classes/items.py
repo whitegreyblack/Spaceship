@@ -471,7 +471,7 @@ itemlist = {
                         "ring_right"},
              hands=None,
              bonuses=(
-                 ("hp", 10),
+                 ("Health", "hp", 10),
              ),
              effects=None),
 

@@ -102,7 +102,7 @@ class Start(Scene):
             footer="_" + self.player.name + "_" + self.player.job)
 
         while self.proceed and self.player.is_alive:
-            term.clear()
+            # term.clear()
             self.draw()
             term.refresh()
 
@@ -112,7 +112,7 @@ class Start(Scene):
             if self.map_change:
                 self.determine_map_location()
 
-            term.delay (1000 // 75)
+            # term.delay (1000 // 75)
 
         self.proceed = True
         if hasattr(self, 'ret'):
@@ -174,20 +174,20 @@ class Start(Scene):
                 self.process_turn()
 
         else:
-            for unit in self.location.units:
-                self.unit = unit
-                self.process_turn()
-            # for self.unit in self.location.units:
-            #     self.unit.energy.gain()
+            # for unit in self.location.units:
+            #     self.unit = unit
+            #     self.process_turn()
+            for self.unit in self.location.units:
+                self.unit.energy.gain()
 
-            # if any(u.energy.ready() for u in self.location.units):
-            # # for self.unit in self.location.units:
-            # #     if self.unit == self.player and not self.unit.energy.ready():
-            # #         break
-            #     for self.unit in self.location.units:
-            #         while self.unit.energy.ready():
-            #             self.unit.energy.reset()
-            #             self.process_turn()   
+            if any(u.energy.ready() for u in self.location.units):
+            # for self.unit in self.location.units:
+            #     if self.unit == self.player and not self.unit.energy.ready():
+            #         break
+                for self.unit in self.location.units:
+                    for _ in range(self.unit.energy.turns):
+                        self.unit.energy.reset()
+                        self.process_turn()   
         # else:   
         #     for unit in self.location.units:
         #         unit.energy.gain()
@@ -359,10 +359,10 @@ class Start(Scene):
                     if safe_location or friendly_unit:
                         self.unit.displace(unit)
                         unit.energy.reset()
-                        log = strings.movement_unit_displace.format(
-                            self.unit.__class__.__name__, 
-                            unit.race if not player else "you")
-                        self.log.append(log)
+                        # log = strings.movement_unit_displace.format(
+                        #     self.unit.__class__.__name__, 
+                        #     unit.race if not player else "you")
+                        # self.log.append(log)
 
                     else:
                         chance = self.unit.calculate_attack_chance()
@@ -380,6 +380,7 @@ class Start(Scene):
                             if chance == 2:
                                 damage *= 2
 
+                            u
                             unit.cur_hp -= damage
                             
                             # if self.location.check_light_level(*point):
@@ -820,10 +821,10 @@ class Start(Scene):
                 if self.player.holding_two_handed_weapon():
                     _, li = next(self.player.item_on('hand_left'))
                     _, ri = next(self.player.item_on('hand_right'))
-                
+                    print(li, ri)
                     log = strings.cmd_equip_two_hand.format(
                         part, 
-                        li.name if li else ri.name, 
+                        li if li else ri,
                         'left hand' if li else 'right hand',)
                     return 
 
