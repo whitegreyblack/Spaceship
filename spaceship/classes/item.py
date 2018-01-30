@@ -67,12 +67,15 @@ def curattr(effect):
 def sort(items):
     # weapons, armors, potions, rings, food, others = [], [], [], [], []
     # seperate each item into its own grouping
+    slots = "weapon helmet armor belt potion ring food others".split()
     groups = {
-        g: [] for g in "weapon armor potion ring food others".split()
+        g: [] for g in slots
     }
     for item in items:
         try:
-            group = groups[item.__class__.__name__.lower()]
+            group = groups[item.item_type]
+        except AttributeError:
+            group = groups['others']
         except KeyError:
             group = groups['others']
         group.append(item)
@@ -89,6 +92,8 @@ def mark(value: int) -> str:
     return value
 
 def modify(value: str) -> str:
+    if value.startswith('dmg'):
+        value = 'dmg'
     return value.replace('', '')
 
 def seperate(stats):
@@ -98,6 +103,11 @@ def seperate(stats):
     else:
         return ""
 
+def ice_armor(item, wearer, enemy):
+    if hasattr(item, 'effects'):
+        for stat, name, value in item.effects:
+            pass
+                    
 class Item:
     def __init__(self, name, char, color, item_type=None, placement=None, 
                  hands=None, bonuses=None, effects=None):
@@ -106,7 +116,6 @@ class Item:
         self.color = color
         self.__effects = effects
         self.__bonuses = bonuses
-        print(hands, bonuses, effects)
         # used in sorting items by type
         self.item_type = item_type
 
@@ -139,7 +148,14 @@ class Item:
     def bonuses(self):
         if self.__bonuses:
             for bonus, name, value in self.__bonuses:
-                yield bonus, name, value
+                if name == 'dmg':
+                    for i, newname in enumerate('dmg_lo dmg_hi'.split()):
+                        if not isinstance(value, tuple):
+                            yield bonus, newname, value
+                        else:
+                            yield bonus, newname, value[i]
+                else:
+                    yield bonus, name, value
 
 class Food(Item):
     inventory = "food"

@@ -3,6 +3,7 @@ from collections import namedtuple
 
 item = namedtuple('Item', 'char color item_type placement hands bonuses effects')
 stats = namedtuple('Stats', 'stat abbr value')
+
 itemlist = {
     # TODO -- implement ranged weapons
     # TODO -- implement readable "items": scrolls, tomes
@@ -19,8 +20,8 @@ itemlist = {
              placement="head", 
              hands=None,
              bonuses=(
-                stats("defensive value", "mr", 1), 
-                stats("strength", "str", 1),
+                stats("Armor", "dv", 1), 
+                stats("Strength", "str", 1),
              ),
              effects=None),
 
@@ -31,8 +32,8 @@ itemlist = {
              placement="head", 
              hands=None,
              bonuses=(
-                stats("defensive value", "dv", 2), 
-                stats("strength", "str", 1),
+                stats("Armor", "dv", 2), 
+                stats("Strength", "str", 1),
              ),
              effects=None),
 
@@ -114,15 +115,16 @@ itemlist = {
 #                 ("dv", 3), ("mr", -3),
 #             )),  
 
-    # "thick fur coat": 
-    #     item(char="[", 
-	# 		 color="grey", 
-    #          item_type="armor",
-	# 		 placement="body", 
-    #          effects=(
-    #             ("dv", 2),
-    #          ),
-    #          hands=None),
+    "thick fur coat": 
+        item(char="[", 
+			 color="grey", 
+             item_type="armor",
+			 placement="body", 
+             hands=None,
+             bonuses=(
+                ("Armor", "dv", 2),
+             ),
+             effects=None),
 
 #     "light robe": 
 #         item(
@@ -154,15 +156,17 @@ itemlist = {
 #                 ("dv", 1), ("mr", 2),
 #             )),
 
-    # "thick fur bracers": 
-    #     item(char="~", 
-	# 		 color="grey", 
-    #          item_type="hands",
-	# 		 placement="body", 
-    #          effects=(
-    #             ("dv", 1),
-    #          ),
-    #          hands=None),
+    "thick fur bracers": 
+        item(char="~", 
+			 color="grey", 
+             item_type="hands",
+			 placement="body", 
+             hands=None,
+             bonuses=(
+                ("Armor", "dv", 1),
+                ("Resistance", "mr", 1),
+             ),
+             effects=None),
 
 #     "leather bracers": 
 #         item(
@@ -393,16 +397,18 @@ itemlist = {
 #             effects=(("acc", -3), ("dmg", (8, 15)),), 
 #             "hands": 2),
 # difference between written attribute name vs logical attribute name
-    # "wooden staff": 
-    #     item(char="(", 
-    #          color="grey", 
-    #          item_type="weapon",
-    #          placement={"hand_left", "hand_right"},
-    #          effects=(
-    #             ("acc", 3), 
-    #             ("dmg", (3, 5)),
-    #          ), 
-    #          hands=2),
+    "wooden staff": 
+        item(char="(", 
+             color="grey", 
+             item_type="weapon",
+             placement={"hand_left", 
+                        "hand_right"},
+             hands=2,
+             bonuses=(
+                ("Accuracy", "acc", 3), 
+                ("Damage", "dmg", (3, 5)),
+             ), 
+             effects=None),
 
 #     "quarterstaff": 
 #         {			 
@@ -421,13 +427,16 @@ itemlist = {
 #     # -- RINGS --
 
 #     # "ring of regen": None,
-    # "ring of protection": 
-    #     item(char="=", 
-    #          color="white", 
-    #          item_type="ring",
-    #          placement={"ring_left", "ring_right"},
-    #          effects=(("dv", 2),),
-    #          hands=None),
+    "ring of protection": 
+        item(char="=", 
+             color="white", 
+             item_type="ring",
+             placement={"ring_left", "ring_right"},
+             hands=None,
+             bonuses=(
+                 stats("Armor", "dv", 2),
+             ),
+             effects=None),
 
 #     # "ring of resistance": None,
 #     # "ring of darkness": None,
@@ -454,16 +463,17 @@ itemlist = {
 #             )
 # 		},
 
-#     "ring of ice": 
-#         {			 
-#             char=": ", 
-#             color="light blue", 
-#             item_type="ring",
-#             placement={"ring_left", "ring_right"},
-#             effects=(
-#                 ("hp", 10),
-#             )
-# 		},
+    "ring of ice": 
+        item(char="=", 
+             color="light blue", 
+             item_type="ring",
+             placement={"ring_left", 
+                        "ring_right"},
+             hands=None,
+             bonuses=(
+                 ("hp", 10),
+             ),
+             effects=None),
 
 #     "ring of fire": 
 #         			 
@@ -498,24 +508,25 @@ itemlist = {
 #             )
 # 		},
 
-#     "ring of earth": 
-#             char=": ", 
-#             color="dark green", 
-#             item_type="ring",
-#             placement={"ring_left", "ring_right"},
-#             effects=(
-#                 ("str", 1),
-#             )
+    "ring of earth":
+        item(char="=", 
+             color="#AA5533", 
+             item_type="ring",
+             placement={"ring_left", 
+                        "ring_right"},
+             hands=None,
+             bonuses=(("Strength", "str", 1),),
+             effects=None),
 
-    # "ring of nature": 
-    #     item(char="=", 
-    #          color="green", 
-    #          item_type="ring",
-    #          placement={"ring_left", "ring_right"},
-    #          effects=(
-    #             ("wis", 1),
-    #          ),
-    #          hands=1)
+    "ring of nature": 
+        item(char="=", 
+             color="green", 
+             item_type="ring",
+             placement={"ring_left", 
+                        "ring_right"},
+             hands=None,
+             bonuses=(("Wisdom", "wis", 1),),
+             effects=None),
 #   "ring of whater":
 #       item(ch, col, itype, placement)
 #
@@ -531,24 +542,26 @@ itemlist = {
 #             )
     
 #     # -- PANTS --
-#     "leather belt": 
-#         item( 
-#             char="[", 
-#             color="green", 
-#             placement="waist", 
-#             effects=(
-#                 ("dv", 1),
-#             )),
+    "leather belt": 
+        item(char="[", 
+             color="green", 
+             item_type="belt",
+             placement="waist", 
+             hands=None,
+             bonuses=(("Armor", "dv", 1),),
+             effects=None),
 
 
 #     # -- item --
-#     "leather boots": 
-#         item( 
-#             char="[", 
-#             color="green", 
-#             effects=(
-#                 ("dv", 1),
-#             )),
+    "leather boots": 
+        item(char="[", 
+             color="green", 
+             item_type="shoes",
+             placement="feet", 
+             hands=None,
+             bonuses=(("Armor", "dv", 1),),
+             effects=None),
+
 
 #     "metal boots": 
 #         item(
@@ -600,7 +613,6 @@ itemlist = {
 
 def build(item_name):
     if isinstance(item_name, str) and item_name in itemlist.keys():
-        print(itemlist[item_name])
         return Item(item_name, *itemlist[item_name])
     else:
         return item_name
