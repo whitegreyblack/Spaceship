@@ -506,6 +506,12 @@ class Map:
         for unit in self.units:
             yield unit.local
     
+    def unit_ready(self) -> object:
+        for unit in self.__units:
+            while unit.energy.ready():
+                unit.reset()
+                yield unit
+
     def unit_at(self, x, y) -> object:
         '''Returns a unit at the given position. If the unit exists then the
         unit is returned else an empty value is returned'''
@@ -526,7 +532,15 @@ class Map:
             print('No unit with that value')
 
     def generate_units(self):
+<<<<<<< HEAD
         max_units = 25
+=======
+        if self.height <= 25:
+            max_units = 10
+        else:
+            max_units = 10
+
+>>>>>>> b11c4447181e56341ada95e013a94f114ae06d9f
         if hasattr(self, 'spaces'):
             shuffle(self.spaces)
             for i in range(max_units):
@@ -559,38 +573,54 @@ class Map:
             self.height)
         ext_y = cam_y + self.map_display_height + (-6 if shorten_y else 0)
 
+        putstr = "[c={}]{}[/c]"
         # height should total 24/25 units
         for y in range(cam_y, ext_y):
+            curstr = ""
+            yieldptr = None
             # width should total 80 units
             for x in range(cam_x, ext_x):
+<<<<<<< HEAD
                 light_level = self.check_light_level(x, y)
                 if (x, y) == (player_x, player_y):
                     yield (x - cam_x, y - cam_y, "white", "@")
 
                 elif light_level > 0:
+=======
+                if (x, y) == (player_x, player_y):
+                    char, color = "@", "white"
+                else:
+                    light_level = self.check_light_level(x, y)
+>>>>>>> b11c4447181e56341ada95e013a94f114ae06d9f
                     if light_level == 2:
                         if (x, y) in self.unit_positions:
                             unit = self.unit_at(x, y)
                             char, color = unit.character, unit.foreground
-
                         elif self.square(x, y).items:
                             item = self.square(x, y).items[-1]
                             char, color = item.char, item.color
-
                         else:
                             square = self.square(x, y)
                             char, color = square.char, square.color
-
-                        yield (x - cam_x, y - cam_y, color, char)
-
                     elif light_level == 1:
                         square = self.square(x, y)
                         char, color = square.char, "darkest grey"
-                        yield (x - cam_x, y - cam_y, color, char)
-
                     else:
+<<<<<<< HEAD
                         continue
                         
+=======
+                        char, color = ' ', 'black'
+                curstr += putstr.format(color, char)
+                # yield (x - cam_x, y - cam_y, color, char)
+
+                if not yieldptr:
+                    yieldptr = (x - cam_x, y - cam_y)
+                
+            if yieldptr and curstr:
+                yield yieldptr, curstr
+
+>>>>>>> b11c4447181e56341ada95e013a94f114ae06d9f
         self.lit_reset()
 
         # stuff

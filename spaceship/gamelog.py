@@ -144,10 +144,9 @@ class GameLogger:
         self.clear()
         messages = self.write()
         for index, msg in enumerate(messages):
-            term.puts(
-                x=term.state(term.TK_WIDTH) - self.width,
-                y=term.state(term.TK_HEIGHT) - self.height + index - 1,
-                s="[c={}]{}[/c]".format(msg.color, msg.message))
+            term.puts(x=term.state(term.TK_WIDTH) - self.width,
+                      y=term.state(term.TK_HEIGHT) - self.height + index,
+                      s="[c={}]{}[/c]".format(msg.color, msg.message))
         
         if refresh:
             term.refresh()

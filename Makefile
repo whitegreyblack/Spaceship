@@ -52,7 +52,7 @@ help:
 
 run:
 	# python -m spaceship.start
-	python -m spaceship.engine
+	python3.6 -m spaceship.engine
 
 run-mem:
 	python -m memory_profiler spaceship\engine.py

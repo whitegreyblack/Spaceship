@@ -337,10 +337,10 @@ class World(Map):
 
     def legend(self) -> Tuple[str, str, str, int]:
         i = 0
-        for d, ch, colors in self.geo_legend.values():
+        for d, char, colorors in self.geo_legend.values():
             ch = ch if len(ch) == 1 else chr(int(ch, 16))
             for col in colors:
-                yield ch, col, d, i
+                yield char, color, d, i
                 i += 1
 
     def location_exists(self, x, y):
@@ -377,22 +377,33 @@ class World(Map):
             self.height)
         ext_y = cam_y + self.map_display_height + (-6 if shorten_y else 0)
         
+
+        putstr = "[c={}]{}[/c]"
         for y in range(cam_y, ext_y):
+            curstr, yieldptr = "", None
             for x in range(cam_x, ext_x):
-                light_level = self.check_light_level(x, y)
                 if x == player_x and y == player_y:
-                    ch, col = "@", "white"
-
-                elif light_level == 2:
-                    square = self.square(x, y)
-                    ch, col = square.char, square.color
-
-                elif light_level == 1:
-                    square = self.square(x, y)
-                    ch, col = square.char, "darkest grey"
-
+                    char, color = "@", "white"
                 else:
-                    continue
+                    light_level = self.check_light_level(x, y)
+                    if light_level == 2:
+                        square = self.square(x, y)
+                        char, color = square.char, square.color
+
+                    elif light_level == 1:
+                        square = self.square(x, y)
+                        char, color = square.char, "darkest grey"
+
+                    else:
+                        char, color = ' ', "black"
+                        
+                curstr += putstr.format(color, char)
+                if not yieldptr:
+                    yieldptr = (x - cam_x, y - cam_y)
+
+            if yieldptr and curstr:
+                yield yieldptr, curstr
+
                 # else:
                 #     try:
                 #         # char, color, _, terr, tcol, king, kcol, _ = self.data[j][i]
@@ -410,8 +421,9 @@ class World(Map):
 
                 #     col = tile.color
 
-                # print(ch, col)
-                yield (x - cam_x, y - cam_y, col, ch)
+                # print(char, color)
+                # yield (x - cam_x, y - cam_y, col, ch)
+            
         self.lit_reset()
 
 if __name__ == "__main__":

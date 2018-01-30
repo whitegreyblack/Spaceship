@@ -2,7 +2,7 @@ from spaceship.classes.item import Item, Food, Potion
 from collections import namedtuple
 
 item = namedtuple('Item', 'char color item_type placement effects hands')
-
+effect = namedtuple('Effect', 'effect abbr value')
 itemlist = {
     # TODO -- implement ranged weapons
     # TODO -- implement readable "items": scrolls, tomes
@@ -13,25 +13,26 @@ itemlist = {
     # -------------------------------------------------
 
     "horned helmet": 
-        item(
-            char="[", 
-            color="grey", 
-            item_type="helmet",
-            placement="head", 
-            effects=(
-                ("dv", 1), ("str", 1),
-            ),
-            hands=None),
+        item(char="[", 
+             color="grey", 
+             item_type="helmet",
+             placement="head", 
+             effects=(
+                effect("defensive value", "dv", 1), 
+                effect("strength", "str", 1),
+             ),
+             hands=None),
 
-#     "metal helmet": 
-#         item( 
-#             char="[", 
-#             color="grey", 
-#             item_type="helmet",
-#             placement="head", 
-#             effects=(
-#                 ("dv", 2), ("str", 1),
-#             )),
+    "metal helmet": 
+        item(char="[", 
+             color="grey", 
+             item_type="helmet",
+             placement="head", 
+             effects=(
+                effect("defensive value", "dv", 2), 
+                effect("strength", "str", 1),
+             ),
+             hands=None),
 
 #     "leather cap": 
 #         item( 
@@ -111,15 +112,15 @@ itemlist = {
 #                 ("dv", 3), ("mr", -3),
 #             )),  
 
-#     "thick fur coat": 
-#         item(
-# 			char="[", 
-# 			color="grey", 
-#             item_type="armor",
-# 			placement="body", 
-#             effects=(
-#                 ("dv", 2),
-#             )),
+    # "thick fur coat": 
+    #     item(char="[", 
+	# 		 color="grey", 
+    #          item_type="armor",
+	# 		 placement="body", 
+    #          effects=(
+    #             ("dv", 2),
+    #          ),
+    #          hands=None),
 
 #     "light robe": 
 #         item(
@@ -151,16 +152,15 @@ itemlist = {
 #                 ("dv", 1), ("mr", 2),
 #             )),
 
-#     "thick fur bracers": 
-#         item(
-# 			 
-# 			char="~", 
-# 			color="grey", 
-#             item_type="hands",
-# 			placement="body", 
-#             effects=(
-#                 ("dv", 1),
-#             )),
+    # "thick fur bracers": 
+    #     item(char="~", 
+	# 		 color="grey", 
+    #          item_type="hands",
+	# 		 placement="body", 
+    #          effects=(
+    #             ("dv", 1),
+    #          ),
+    #          hands=None),
 
 #     "leather bracers": 
 #         item(
@@ -390,17 +390,17 @@ itemlist = {
 #             placement={"hand_left", "hand_right"},
 #             effects=(("acc", -3), ("dmg", (8, 15)),), 
 #             "hands": 2),
-
-#     "wooden staff": 
-#         {			
-# 			 
-#             char="(", 
-#             color="grey", 
-#             item_type="weapon",
-#             placement={"hand_left", "hand_right"},
-#             effects=(("acc", 3), ("dmg", (3, 5)),), 
-#             "hands": 2
-# 		},
+# difference between written attribute name vs logical attribute name
+    # "wooden staff": 
+    #     item(char="(", 
+    #          color="grey", 
+    #          item_type="weapon",
+    #          placement={"hand_left", "hand_right"},
+    #          effects=(
+    #             ("acc", 3), 
+    #             ("dmg", (3, 5)),
+    #          ), 
+    #          hands=2),
 
 #     "quarterstaff": 
 #         {			 
@@ -419,14 +419,13 @@ itemlist = {
 #     # -- RINGS --
 
 #     # "ring of regen": None,
-    "ring of protection": 
-        item(
-            char="=", 
-            color="white", 
-            item_type="ring",
-            placement={"ring_left", "ring_right"},
-            effects=(("dv", 2),),
-            hands=None),
+    # "ring of protection": 
+    #     item(char="=", 
+    #          color="white", 
+    #          item_type="ring",
+    #          placement={"ring_left", "ring_right"},
+    #          effects=(("dv", 2),),
+    #          hands=None),
 
 #     # "ring of resistance": None,
 #     # "ring of darkness": None,
@@ -506,17 +505,19 @@ itemlist = {
 #                 ("str", 1),
 #             )
 
-    "ring of nature": 
-        item(
-            char="=", 
-            color="green", 
-            item_type="ring",
-            placement={"ring_left", "ring_right"},
-            effects=(
-                ("wis", 1),
-            ),
-            hands=1)
-
+    # "ring of nature": 
+    #     item(char="=", 
+    #          color="green", 
+    #          item_type="ring",
+    #          placement={"ring_left", "ring_right"},
+    #          effects=(
+    #             ("wis", 1),
+    #          ),
+    #          hands=1)
+#   "ring of whater":
+#       item(ch, col, itype, placement)
+#
+#
 #     "ring of power": 
 #         
 #             char=": ", 

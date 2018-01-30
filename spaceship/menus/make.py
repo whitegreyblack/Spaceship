@@ -253,7 +253,7 @@ class Create(Scene):
             # ignores key modifiers -- keyboard think of it as a single key
             code = term.read()
 
-        if code == term.TK_LEFT:
+        if code == term.TK_LEFT or code == term.TK_KP_4:
             if self.character_index == 0:
                 self.gender_index = modify(
                     increment=-1, 
@@ -272,7 +272,7 @@ class Create(Scene):
                     index=self.class_index, 
                     options=len(self.class_options))
 
-        elif code == term.TK_RIGHT:
+        elif code == term.TK_RIGHT or code == term.TK_KP_6:
             if self.character_index == 0:
                 self.gender_index = modify(
                     increment=1, 
@@ -291,12 +291,12 @@ class Create(Scene):
                     index=self.class_index, 
                     options=len(self.class_options))
 
-        elif code == term.TK_UP:
+        elif code == term.TK_UP or code == term.TK_KP_8:
             self.character_index = modify(-1, self.character_index, 4)
             if self.character_index <= 2:
                 self.inv_screen = -1
 
-        elif code == term.TK_DOWN:
+        elif code == term.TK_DOWN or code == term.TK_KP_2:
             self.character_index = modify(
                 increment=1, 
                 index=self.character_index, 
