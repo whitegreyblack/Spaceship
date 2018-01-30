@@ -29,8 +29,8 @@ class Engine:
     def setup(self):
         '''sets up instance of terminal'''
         term.open()
-        self.setup_font('Fira-Bold')
-        # self.setup_font("Andux_cp866ish", cx=8, cy=8)
+        # self.setup_font('VeraMono')
+        # self.setup_font("Source", cx=8, cy=8)
         term.set('window: size=80x25, cellsize=auto, title="Spaceship", fullscreen=false')
 
     def setup_font(self, font, cx=8, cy=None):

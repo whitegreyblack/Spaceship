@@ -18,7 +18,8 @@ self.damage_lower = 1
 self.damage_higher = 2
 '''
 
-unit_chars = ('@', 'o', 'r', 'b', 'R', "v", "V", "B", "G", "I", "S")
+unit_chars = {'@', 'o', 'r', 'b', 'R', "v", "V", "B", "G", "I", "S"}
+unit_chars = set('@ o r b R v V B G S'.split())
 
 class Energy:
     tot_energy = 30

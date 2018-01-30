@@ -538,32 +538,6 @@ class Start(Scene):
 
                         self.log.append(log)
 
-<<<<<<< HEAD
-    def process_units(self):
-        # if isinstance(self.location, World):
-        #     for unit in self.location.units:
-        #         self.unit = unit
-        #         self.process_turn()
-
-        # elif len(list(self.location.units)) == 1:
-        #         self.unit = self.player
-        #         self.process_turn()
-
-        # else:
-        #     for unit in self.location.units:
-        #         # unit.energy.gain()
-        #         self.unit = unit
-        #         # while unit.energy.ready():
-        #             # self.unit.energy.reset()
-        #         self.process_turn()      
-        for unit in self.location.units:
-            self.unit = unit
-            self.process_turn()
-            
-        if self.turn_inc:
-            self.turns += 1
-            self.turn_inc = False
-=======
     def draw(self):
         self.draw_log(refresh=False)
 
@@ -575,7 +549,6 @@ class Start(Scene):
         self.gamelog.draw(log if log else " ".join(self.log), color, refresh)
         if self.log:
             self.log = []
->>>>>>> b11c4447181e56341ada95e013a94f114ae06d9f
 
     def draw_world(self):
         '''Handles drawing of world features and map'''

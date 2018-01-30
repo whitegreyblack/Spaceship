@@ -427,8 +427,7 @@ class World(Map):
         self.lit_reset()
 
 if __name__ == "__main__":
-    w = World(
-        map_name="Calabaston",
-        map_link="./spaceship/assets/worldmap.png")
+    w = World(map_name="Calabaston",
+              map_link="./spaceship/assets/worldmap.png")
     w.save_map()
     w.save_img()

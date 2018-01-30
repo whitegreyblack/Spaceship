@@ -449,16 +449,16 @@ class Map:
                         # if self.blocked and not self.viewable     - wall
                         # if not self.blocked and self.viewable     - floor
                         # if not self.blocked and not self.viewable - empty space
-                        # if self.blocked(X, Y) and not self.viewable(X, Y):
-                        if self.blocked(X, Y):
+                        if self.blocked(X, Y) and not self.viewable(X, Y):
+                        # if self.blocked(X, Y):
                             new_start = r_slope
 
                         else:
                             blocked = False
                             start = new_start
                     else:
-                        # if self.blocked(X, Y) and not self.viewable(X, Y) and j < radius:
-                        if self.blocked(X, Y) and j < radius:
+                        if self.blocked(X, Y) and not self.viewable(X, Y) and j < radius:
+                        # if self.blocked(X, Y) and j < radius:
                             # This is a blocking square, start a child scan:
 
                             blocked = True
@@ -532,15 +532,7 @@ class Map:
             print('No unit with that value')
 
     def generate_units(self):
-<<<<<<< HEAD
         max_units = 25
-=======
-        if self.height <= 25:
-            max_units = 10
-        else:
-            max_units = 10
-
->>>>>>> b11c4447181e56341ada95e013a94f114ae06d9f
         if hasattr(self, 'spaces'):
             shuffle(self.spaces)
             for i in range(max_units):
@@ -580,18 +572,10 @@ class Map:
             yieldptr = None
             # width should total 80 units
             for x in range(cam_x, ext_x):
-<<<<<<< HEAD
-                light_level = self.check_light_level(x, y)
-                if (x, y) == (player_x, player_y):
-                    yield (x - cam_x, y - cam_y, "white", "@")
-
-                elif light_level > 0:
-=======
                 if (x, y) == (player_x, player_y):
                     char, color = "@", "white"
                 else:
                     light_level = self.check_light_level(x, y)
->>>>>>> b11c4447181e56341ada95e013a94f114ae06d9f
                     if light_level == 2:
                         if (x, y) in self.unit_positions:
                             unit = self.unit_at(x, y)
@@ -606,10 +590,6 @@ class Map:
                         square = self.square(x, y)
                         char, color = square.char, "darkest grey"
                     else:
-<<<<<<< HEAD
-                        continue
-                        
-=======
                         char, color = ' ', 'black'
                 curstr += putstr.format(color, char)
                 # yield (x - cam_x, y - cam_y, color, char)
@@ -620,7 +600,6 @@ class Map:
             if yieldptr and curstr:
                 yield yieldptr, curstr
 
->>>>>>> b11c4447181e56341ada95e013a94f114ae06d9f
         self.lit_reset()
 
         # stuff
