@@ -354,8 +354,9 @@ class Start(Scene):
                         unit = self.player
 
                     player = isinstance(unit, Player)
-
-                    if isinstance(self.location, City):
+                    safe_location = isinstance(self.location, City)
+                    friendly_unit = unit.friendly(self.unit)
+                    if safe_location or friendly_unit:
                         self.unit.displace(unit)
                         unit.energy.reset()
                         log = strings.movement_unit_displace.format(
@@ -455,8 +456,9 @@ class Start(Scene):
                             self.log.append(strings.pass_by_item[item_message])
                     else:
                         unit = self.location.unit_at(*point)
-
-                        if isinstance(self.location, City):
+                        safe_location = isinstance(self.location, City)
+                        friendly_unit = unit.friendly(self.unit)                        
+                        if safe_location or friendly_unit:
                             self.player.displace(unit)
                             unit.energy.reset()
                             switch = "You switch places with the {}.".format(

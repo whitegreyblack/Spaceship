@@ -100,11 +100,12 @@ class Player(Unit):
             '''
             Returns a color value given the total attr value vs current value
             '''
+            color = "white"
             if getattr(self, totattr(attr)) > getattr(self, attr):
-                return "green"
+                color = "green"
             elif getattr(self, totattr(attr)) < getattr(self, attr):
-                return "red"
-            return "white"
+                color = "red"
+            return color, getattr(self, totattr(attr))
 
         def color(item):
             if hasattr(item, 'char') and hasattr(item, 'color'):
@@ -112,22 +113,32 @@ class Player(Unit):
                     return f"[c={item.color}]{item.char * 2}[/c]"
                 return f"[c={item.color}]{item.char}[/c]"
             return ""
+
         equipment = [color(i) for _, i in self.equipment]
-        return (self.name, self.gender[0], self.race[0], self.job[0], 
-            "".join(equipment),
-            self.level,
-            "{}/{}".format(self.exp, self.advexp),
-            "{}/{}".format(self.cur_hp, self.tot_hp),
-            "{}/{}".format(self.cur_mp, self.tot_mp),
-            "{}-{}".format(self.tot_dmg_lo, self.tot_dmg_hi),
-            "{}/{}".format(self.tot_dv, self.tot_mr),
-            overloaded("str"), self.tot_str,
-            overloaded("con"), self.tot_con, 
-            overloaded("dex"), self.tot_dex, 
-            overloaded("int"), self.tot_int, 
-            overloaded("wis"), self.tot_wis, 
-            overloaded("cha"), self.tot_cha,
-            self.gold)
+
+        return (self.name, 
+                self.gender[0], 
+                self.race[0], 
+                self.job[0], 
+                "".join(equipment),
+                self.level,
+                "{}/{}".format(self.exp, 
+                               self.advexp),
+                "{}/{}".format(self.cur_hp, 
+                               self.tot_hp),
+                "{}/{}".format(self.cur_mp, 
+                               self.tot_mp),
+                "{}-{}".format(self.tot_dmg_lo, 
+                               self.tot_dmg_hi),
+                "[c={}]{}[/c]".format(*overloaded("dv")), 
+                "[c={}]{}[/c]".format(*overloaded("mr")),
+                *overloaded("str"), 
+                *overloaded("con"), 
+                *overloaded("dex"), 
+                *overloaded("int"), 
+                *overloaded("wis"), 
+                *overloaded("cha"),
+                self.gold)
 
     @property
     def equipment(self):
@@ -137,21 +148,21 @@ class Player(Unit):
     @equipment.setter
     def equipment(self, equipment):
         self.__equipment = Equipment(parts, equipment)
-        for attr, value in list(self.__equipment.stats()):
-            self.stat_update(attr, value)
-            self.stat_update_final(attr)
+        for attr, name, value in list(self.__equipment.bonuses()):
+            self.stat_update(name, value)
+            self.stat_update_final(name)
 
     def equip(self, part, item):
         self.__inventory.remove(item)
         if self.__equipment.equip(part, item):
-            for attr, value in list(self.__equipment.stats_by_part(part)):
-                self.stat_update(attr, value)
-                self.stat_update_final(attr)
+            for attr, name, value in list(self.__equipment.bonuses_by_part(part)):
+                self.stat_update(name, value)
+                self.stat_update_final(name)
 
     def unequip(self, part):
-        for attr, value in list(self.__equipment.stats_by_part(part)):
-            self.stat_update(attr, -value)
-            self.stat_update_final(attr)
+        for attr, name, value in list(self.__equipment.bonuses_by_part(part)):
+            self.stat_update(name, -value)
+            self.stat_update_final(name)
 
         item =  next(self.__equipment.unequip(part))
         self.__inventory.add(item)

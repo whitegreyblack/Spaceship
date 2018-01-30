@@ -91,21 +91,22 @@ def mark(value: int) -> str:
 def modify(value: str) -> str:
     return value.replace('', '')
 
-def seperate(effects):
-    string = ", ".join(f"{modify(e)}:{mark(v)}" for e, v in effects)
+def seperate(stats):
+    string = ", ".join(f"{modify(n)}:{mark(v)}" for _, n, v in stats)
     if string:
         return "(" + string + ")"
     else:
         return ""
 
 class Item:
-    def __init__(self, name, char, color, 
-                 item_type=None, placement=None, effects=None, hands=None):
+    def __init__(self, name, char, color, item_type=None, placement=None, 
+                 hands=None, bonuses=None, effects=None):
         self.name = name
         self.char = char
         self.color = color
         self.__effects = effects
-
+        self.__bonuses = bonuses
+        print(hands, bonuses, effects)
         # used in sorting items by type
         self.item_type = item_type
 
@@ -118,10 +119,10 @@ class Item:
             self.hands = hands
 
     def __str__(self):
-        return f"{self.name} {seperate(self.effects)}"
+        return f"{self.name} {seperate(self.bonuses)}"
 
     def __repr__(self):
-        return f"[{self.item_type}] {self.name} {seperate(self.effects)}"
+        return f"[{self.item_type}] {self.name} {seperate(self.bonuses)}"
 
     @property
     def effects(self):
@@ -135,12 +136,10 @@ class Item:
                     yield effect, value
 
     @property
-    def effects_calc(self):
-        pass
-
-    @property
-    def effects_print(self):
-        pass
+    def bonuses(self):
+        if self.__bonuses:
+            for bonus, name, value in self.__bonuses:
+                yield bonus, name, value
 
 class Food(Item):
     inventory = "food"

@@ -44,17 +44,29 @@ class Equipment:
             yield part, None
         yield part, item
 
-    def stats(self):
+    def bonuses(self):
+        for _, item in self.items:
+            if hasattr(item, 'bonuses'):
+                for bonus, name, value in item.bonuses:
+                    yield bonus, name, value
+
+    def bonuses_by_part(self, part):
+        _, item = next(self.item_by_part(part))
+        if hasattr(item, 'bonuses'):
+            for bonus, name, value in item.bonuses:
+                yield bonus, name, value
+
+    def effects(self):
         for _, item in self.items:
             if hasattr(item, 'effects'):
-                for effect, value in item.effects:
-                    yield effect, value
+                for effect, name, value in item.effects:
+                    yield effect, name, value
 
-    def stats_by_part(self, part):
+    def effects_by_part(self, part):
         _, item = next(self.item_by_part(part))
         if hasattr(item, 'effects'):
-            for effect, value in item.effects:
-                yield effect, value
+            for bonus, name, value in item.effects:
+                yield effect, name, value
 
     def equip(self, part, item):
         if not getattr(self, part):

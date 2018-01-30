@@ -50,9 +50,11 @@ help:
 	@echo "     test:"
 	@echo "        Runs pytest in tests folder"
 
-run:
-	# python -m spaceship.start
+run-lin:
 	python3.6 -m spaceship.engine
+
+run-win:
+	python -m spaceship.engine
 
 run-mem:
 	python -m memory_profiler spaceship\engine.py

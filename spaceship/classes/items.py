@@ -1,8 +1,8 @@
 from spaceship.classes.item import Item, Food, Potion
 from collections import namedtuple
 
-item = namedtuple('Item', 'char color item_type placement effects hands')
-effect = namedtuple('Effect', 'effect abbr value')
+item = namedtuple('Item', 'char color item_type placement hands bonuses effects')
+stats = namedtuple('Stats', 'stat abbr value')
 itemlist = {
     # TODO -- implement ranged weapons
     # TODO -- implement readable "items": scrolls, tomes
@@ -17,22 +17,24 @@ itemlist = {
              color="grey", 
              item_type="helmet",
              placement="head", 
-             effects=(
-                effect("defensive value", "dv", 1), 
-                effect("strength", "str", 1),
+             hands=None,
+             bonuses=(
+                stats("defensive value", "mr", 1), 
+                stats("strength", "str", 1),
              ),
-             hands=None),
+             effects=None),
 
     "metal helmet": 
         item(char="[", 
              color="grey", 
              item_type="helmet",
              placement="head", 
-             effects=(
-                effect("defensive value", "dv", 2), 
-                effect("strength", "str", 1),
+             hands=None,
+             bonuses=(
+                stats("defensive value", "dv", 2), 
+                stats("strength", "str", 1),
              ),
-             hands=None),
+             effects=None),
 
 #     "leather cap": 
 #         item( 
@@ -598,6 +600,7 @@ itemlist = {
 
 def build(item_name):
     if isinstance(item_name, str) and item_name in itemlist.keys():
+        print(itemlist[item_name])
         return Item(item_name, *itemlist[item_name])
     else:
         return item_name

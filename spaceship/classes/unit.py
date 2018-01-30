@@ -108,9 +108,12 @@ class Unit(Object):
         '''Returns the chance to hit'''
         return 1
 
-    def friendly():
+    def friendly(self, unit):
         '''Returns a boolean indicating if unit is friendly'''
-        self.relationship >= 0
+        uniclass = unit.__class__.__name__ == self.__class__.__name__
+        unirace = unit.race == self.race
+        unichar = unit.character == self.character
+        return uniclass or unichar or unichar
 
     def translate_sight(self, x, y):
         '''Offsets input point by current position and sight radius'''

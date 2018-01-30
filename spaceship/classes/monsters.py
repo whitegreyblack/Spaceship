@@ -17,7 +17,6 @@ class Rat(Unit):
         self.damage_higher = 5
         self.last_action = None
         self.current_action = None
-        self.friendly = False
     '''
     AI Behaviours:
         wander -> goto random point using a* search from current position to point
