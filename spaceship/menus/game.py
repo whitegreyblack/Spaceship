@@ -181,11 +181,13 @@ class Start(Scene):
                 self.unit.energy.gain()
 
             if any(u.energy.ready() for u in self.location.units):
+                print('Yep')
             # for self.unit in self.location.units:
             #     if self.unit == self.player and not self.unit.energy.ready():
             #         break
                 for self.unit in self.location.units:
                     for _ in range(self.unit.energy.turns):
+                        print(self.unit.unit_id, self.unit.race)
                         self.unit.energy.reset()
                         self.process_turn()   
         # else:   
@@ -380,7 +382,7 @@ class Start(Scene):
                             if chance == 2:
                                 damage *= 2
 
-                            u
+                            
                             unit.cur_hp -= damage
                             
                             # if self.location.check_light_level(*point):
@@ -1267,7 +1269,7 @@ class Start(Scene):
                 self.draw_screen_log(strings.cmd_use_none)
 
             if log:
-                self.draw_log(log)
+                self.draw_screen_log(log)
                 log = ""
 
             term.refresh()
@@ -1441,6 +1443,10 @@ class Start(Scene):
                 self.draw_log("You zap something")
                 proceed = False
         # term.composition(True)
+        term.clear_area(self.main_x, 
+                        self.main_y, 
+                        self.width - self.main_x,
+                        self.height - self.main_y)
         term.layer(0)
         print(self.log)
 

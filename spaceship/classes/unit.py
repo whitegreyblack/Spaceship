@@ -23,7 +23,7 @@ unit_chars = set('@ o r b R v V B G S'.split())
 
 class Energy:
     tot_energy = 30
-    def __init__(self, speed=10):
+    def __init__(self, speed=30):
         self.speed = speed
         self.cur_energy = 0
     
@@ -54,7 +54,7 @@ class Unit(Object):
     unit_id = 0
     # relation = 100
     def __init__(self, x, y, ch="@", fg=Color.white, bg=Color.black, 
-                 race="human", rs=0, speed=3):
+                 race="human", rs=0, speed=30):
         super().__init__(x, y, ch, fg, bg)
         self.sight_city = 6
         self.sight_norm = 6
@@ -63,6 +63,7 @@ class Unit(Object):
         self.relationship = rs
         self.energy = Energy(speed)
         self.behaviour_score = 0
+        self.unit_id = Unit.unit_id
         Unit.unit_id += 1
 
     def __str__(self):
