@@ -20,7 +20,7 @@ class Desert(Map):
     # Hills has a modified block_move char set due to hills having the same char as water
     #   The modified set has removed the hill char while other maps include it
     chars_block_move =  {"#", "+", "o", "x", "%", "Y", "T"}
-    def __init__(self, width, height, generate=False):
+    def __init__(self, width=66, height=22, generate=False):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
@@ -65,7 +65,7 @@ class Forest(Map):
         "T": (wcm.TREES.chars, blender(wcm.GRASS.hexcode)),
     }
     chars_block_move =  {"#", "+", "o", "x", "%"}
-    def __init__(self, width, height, generate=False):
+    def __init__(self, width=66, height=22, generate=False):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
@@ -105,7 +105,7 @@ class Grassland(Map):
         "T": (wcm.TREES.chars, blender(wcm.GRASS.hexcode)),
     }
     chars_block_move = {"#", "+", "o", "x", "~", "%"}
-    def __init__(self, width, height, generate=False):
+    def __init__(self, width=66, height=22, generate=False):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
@@ -134,7 +134,7 @@ class Hills(Map):
     # Hills has a modified block_move char set due to hills having the same char as water
     #   The modified set has removed the hill char while other maps include it
     chars_block_move =  {"#", "+", "o", "x", "%", "Y", "T"}
-    def __init__(self, width, height, generate=False):
+    def __init__(self, width=66, height=22, generate=False):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
@@ -161,7 +161,7 @@ class Plains(Map):
             ".": (".", blender(wcm.PLAIN.hexcode)),
             "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
     }
-    def __init__(self, width, height, generate=False):
+    def __init__(self, width=66, height=22, generate=False):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
@@ -189,7 +189,7 @@ class Woods(Map):
             ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
             "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),            
     }
-    def __init__(self, width, height, generate=False):
+    def __init__(self, width=66, height=22, generate=False):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()

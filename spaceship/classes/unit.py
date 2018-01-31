@@ -54,13 +54,12 @@ class Unit(Object):
     unit_id = 0
     # relation = 100
     def __init__(self, x, y, ch="@", fg=Color.white, bg=Color.black, 
-                 race="human", rs=0, speed=30):
+                 race="human", speed=30):
         super().__init__(x, y, ch, fg, bg)
         self.sight_city = 6
         self.sight_norm = 6
         self.race = race
         self.cur_hp = self.tot_hp = 5
-        self.relationship = rs
         self.energy = Energy(speed)
         self.behaviour_score = 0
         self.unit_id = Unit.unit_id

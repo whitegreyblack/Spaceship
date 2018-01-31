@@ -18,6 +18,12 @@ from spaceship.classes.city import City
 from spaceship.classes.cave import Cave
 from spaceship.classes.point import Point, spaces
 
+enter_maps = {
+    'cave': Cave,
+    'city': City,
+    'wild': wilderness
+}
+
 class Level: GLOBAL, WORLD, LOCAL = -1, 0, 1
 class Maps: CITY, CAVE, WILD, WORLD = range(4)
 
@@ -46,17 +52,17 @@ class Start(Scene):
                 # '@': self.draw_screens,
                 'q': self.draw_screens,
                 'v': self.draw_screens,
-                'S': self.action_save,
-                '>': self.action_enter_map,
+                'S': self.action_save,     
+                '>': self.action_enter_map, # Done
             },
             1: {
                 # '@': self.draw_screens,
                 'q': self.draw_screens,
                 'v': self.draw_screens,
-                '<': self.action_stairs_up,
-                '>': self.action_stairs_down,
-                'c': self.action_door_close,
-                'o': self.action_door_open,
+                '<': self.action_stairs_up, # done
+                '>': self.action_stairs_down, # done
+                'c': self.action_door_close, # done
+                'o': self.action_door_open, # done
                 ',': self.action_item_pickup,
                 'd': self.action_item_drop,
                 'u': self.action_item_use,
@@ -181,13 +187,12 @@ class Start(Scene):
                 self.unit.energy.gain()
 
             if any(u.energy.ready() for u in self.location.units):
-                print('Yep')
             # for self.unit in self.location.units:
             #     if self.unit == self.player and not self.unit.energy.ready():
             #         break
                 for self.unit in self.location.units:
                     for _ in range(self.unit.energy.turns):
-                        print(self.unit.unit_id, self.unit.race)
+                        # print(self.unit.unit_id, self.unit.race)
                         self.unit.energy.reset()
                         self.process_turn()   
         # else:   
@@ -1022,86 +1027,10 @@ class Start(Scene):
         self.location.units_add([self.player])
         self.map_change = False
 
-    def determine_map_on_enter(self, map_type):
-        '''Helper function to determine type of wilderness map'''
-        try:
-            return wilderness[map_type]
-        except KeyError:
-            raise ValueError("Map Type Not Implemented: {}".format(map_type))
-
-    def determine_map_enterance(self, x, y, location):
-        '''Helper function to determine start position when entering wild'''
-        return Point(max(int(location.width * x - 1), 0), 
-                max(int(location.height * y - 1), 0))
-
     def action_enter_map(self):
-        '''Enter map command: determines which kind of world to create when
-        entering a location based on teh world enterable and dungeon dicts.
-        If world is already created just load world as current location
-        '''
-        if not self.world.location_exists(*self.player.world):
-            # map type should be a city
-            if self.player.world in self.world.enterable_legend.keys():
-                fileloc = self.world.enterable_legend[self.player.world]
-                fileloc = fileloc.replace(' ', '_').lower()
-                img_name = strings.IMG_PATH + fileloc + ".png"
-                cfg_name = strings.IMG_PATH + fileloc + ".cfg"
-
-                location = City(
-                    map_id=fileloc,
-                    map_img=img_name,
-                    map_cfg=cfg_name,
-                    width=self.width, 
-                    height=self.height)
-
-                # on cities enter map in the middle
-                self.player.local = Point(location.width // 2, 
-                                          location.height // 2)
-
-            # map type should be a cave
-            elif self.player.world in self.world.dungeon_legend.keys():
-                location = Cave(
-                    width=self.width,
-                    height=self.height,
-                    max_rooms=random.randint(15, 20))
-
-                self.player.local = Point(*location.stairs_up)
-
-            # map type should be in the wilderness
-            else:
-                tile = self.world.square(*self.player.world)
-                location = self.determine_map_on_enter(tile.tile_type)(
-                    width=self.width,
-                    height=self.height,
-                    generate=True)
-
-                x, y = self.player.get_position_on_enter()
-                self.player.local = self.determine_map_enterance(x, y, location)
-
-            location.parent = self.world
-            self.world.location_create(*self.player.world, location)
-
-        else:
-            # location already been built -- retrieve from world map_data
-            # player position is different on map enter depending on map location
-            location = self.world.location(*self.player.world)
-            
-            # re-enter a city
-            if self.player.world in self.world.enterable_legend.keys():
-                self.player.local = Point(x=location.width // 2, 
-                                          y=location.height // 2)
-
-            # re-enter dungeon
-            elif self.player.world in self.world.dungeon_legend.keys():
-                self.player.local = Point(*location.stairs_up)
-
-            # reenter a wilderness
-            else:
-                x, y = self.player.get_position_on_enter()
-                self.player.local = self.determine_map_enterance(x, y, location)
-                
-        self.player.descend()
-        self.map_change = True
+        self.player, self.location, self.log = actions.enter_map(self.player, 
+                                                                 self.world, 
+                                                                 enter_maps)
 
     def action_stairs_down(self):
         if self.location.stairs_down:
@@ -1115,31 +1044,20 @@ class Start(Scene):
         self.player, self.location, self.log = actions.go_up_stairs(self.player, 
                                                                     self.location,
                                                                     Maps)
-
     def action_door_close(self):
-        self.location, self.log = actions.close_door(self.player,
-                                                     self.location,
-                                                     self.draw_log)
+        self.player, self.location, self.log = actions.close_door(self.player,
+                                        self.location,
+                                        self.draw_log)
                     
     def action_door_open(self):
-        self.location, self.log = actions.open_door(self.player,
-                                                    self.location,
-                                                    self.draw_log)
+        self.player, self.location, self.log = actions.open_door(self.player,
+                                     self.location,
+                                     self.draw_log)
 
     def action_unit_talk(self):
-        self.log = actions.converse(self.player, 
+        self.player, self.location, self.log = actions.converse(self.player, 
                                     self.location, 
                                     self.draw_log)
-
-    # more actions
-        # def action_unit_attack_melee(self):
-        #     pass
-
-        # def action_unit_attack_ranged(self):
-        #     pass
-
-        # def action_unit_displace(self):
-        #     pass
 
     def action_item_pickup(self):
         def pickup_item(item):

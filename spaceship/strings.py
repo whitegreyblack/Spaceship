@@ -385,6 +385,9 @@ Feet     : Sandals
 ========  Relations   ========
 """[1:]
 
+enter_map_city = "You enter the city of {}"
+enter_map_cave = "You enter the {}."
+enter_map_wild = "You enter the area."
 cmd_invalid = "'{}' is not a valid command"
 cmd_switch_eq = "Press 'v' to switch to inventory."
 cmd_switch_iv = "Press 'q' to switch to equipment."

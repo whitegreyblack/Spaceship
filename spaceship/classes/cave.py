@@ -55,7 +55,7 @@ class Cave(Map):
         ">": (dcm.GTHAN.chars, blender(dcm.GTHAN.hexcode)),
         "^": (dcm.TRAPS.chars, blender(dcm.TRAPS.hexcode)),
     }
-    def __init__(self, width, height, generate=True, rot=0, max_rooms=15, levels=3):
+    def __init__(self, width=66, height=22, generate=True, rot=0, max_rooms=8, levels=3):
         # builds a raw data map with given inputs
         super().__init__(width, height, self.__class__.__name__)
         self.levels = levels

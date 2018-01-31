@@ -78,10 +78,77 @@ commands_ai = {
     }
 }
 
+def enter_map(unit, world, constructor):
+    '''Enter map command: determines which kind of world to create when
+    entering an area based on teh world enterable and dungeon dicts.
+    If world is already created just load world as current area
+    '''
+    def map_enterance(x, y, area):
+        '''Helper function to determine start position when entering wild'''
+        return Point(x=max(int(area.width * x - 1), 0), 
+                     y=max(int(area.height * y - 1), 0))
+
+    log = ""
+    if not world.location_exists(*unit.world):
+        # map type should be a city
+        if unit.world in world.enterable_legend.keys():
+            fileloc = world.enterable_legend[unit.world].replace(' ', '_').lower()
+            full_path = strings.IMG_PATH + fileloc
+            img, cfg = full_path + ".png", full_path + ".cfg"
+
+            area = constructor['city'](map_id=fileloc,
+                                           map_img=img,
+                                           map_cfg=cfg)
+            
+            # on cities enter map in the middle
+            unit.local = Point(area.width // 2, area.height // 2)
+            log = strings.enter_map_city.format(world.enterable_legend[unit.world])
+        
+        # map type should be a cave
+        elif unit in world.dungeon_legend.keys():
+            area = constructor['cave']()
+            unit.local = Point(*area.stairs_up)
+            log = strings.enter_map_cave.format(world.dungeon_legend[unit.local])
+       
+        # map type should be in the wilderness
+        else:
+            tile = world.square(*unit)
+            area = constructor['wild'][tile.tile_type]()
+            unit.local = map_enterance(*unit.get_position_on_enter(), area)
+            log = strings.enter_map_wild
+
+        area.parent = world
+        world.location_create(*unit.world, area)
+
+    else:
+        # area already been built -- retrieve from world map_data
+        # player position is different on map enter depending on map area
+        area = world.location(*unit.world)
+        
+        # re-enter a city
+        if unit.world in world.enterable_legend.keys():
+            unit.local = Point(area.width // 2, area.height // 2)
+            log = strings.enter_map_city.format(world.enterable_legend[unit.world])
+        
+        # re-enter dungeon
+        elif unit.world in world.dungeon_legend.keys():
+            unit.local = Point(*area.stairs_up)
+            log = strings.enter_map_cave.format(world.dungeon_legend[unit.local])
+        
+        # reenter a wilderness
+        else:
+            unit.local = map_enterance(*unit.get_position_on_enter(), area)
+            log = strings.enter_map_wild
+
+    area.parent.unit_remove(unit)
+    area.units_add([unit])
+    unit.descend()
+    return unit, area, [log]
+
 def go_down_stairs(unit, area, area_constructor):
     '''Go Down command: Checks player position to the downstairs position
-    in the current location. If they match then create a dungeon with the
-    player starting position at the upstairs of the new location
+    in the current area. If they match then create a dungeon with the
+    player starting position at the upstairs of the new area
     '''
     log = "You cannot go downstairs without stairs."
 
@@ -103,7 +170,7 @@ def go_down_stairs(unit, area, area_constructor):
 
 def go_up_stairs(unit, area, maptypes):
     '''Go Up command: Checks player position to the upstairs position
-    in the current location. Then determine the parent location 
+    in the current area. Then determine the parent area 
     and reset position according to the type of parent
     '''
     log = "You cannot go upstairs without stairs."
@@ -113,7 +180,10 @@ def go_up_stairs(unit, area, maptypes):
         # Every child map has a parent map
         if unit.local == area.stairs_up:
             ascend = True
-            log = "You go up the stairs."
+            if unit.height == 1:
+                log = "You begin travelling."
+            else:
+                log = "You go up the stairs."
 
     elif area.map_type in (maptypes.CITY, maptypes.WILD):
         ascend = True
@@ -163,7 +233,7 @@ def close_door(unit, area, logger):
         area.close_door(*door)
         log = strings.close_door_act
 
-    return area, [log]
+    return unit, area, [log]
 
 def open_door(unit, area, logger):
     '''Open door command: handles opening doors in a one unit distance from
@@ -201,7 +271,7 @@ def open_door(unit, area, logger):
         area.open_door(*door)
         log = strings.open_door_act      
     
-    return area, [log]
+    return unit, area, [log]
 
 def converse(unit, area, logger):
     '''Converse action: handles finding units surrounding the given unit and 
@@ -238,4 +308,4 @@ def converse(unit, area, logger):
     if other:
         log = area.unit_at(*other).talk()
     
-    return [log]
+    return unit, area, [log]

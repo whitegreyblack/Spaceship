@@ -10,7 +10,7 @@ from .unit import Unit, unit_chars
 class Rat(Unit):
     def __init__(self, x, y, ch="r", fg=Color.orange_darker, bg=Color.black,
                  race="rat", job="monster", rs=-100, speed=15):
-        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=-100, speed=speed)
+        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, speed=speed)
         self.xp = 25
         self.job = "monster"
         self.damage_lower = 3

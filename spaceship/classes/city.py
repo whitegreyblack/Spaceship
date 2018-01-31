@@ -104,14 +104,15 @@ class City(Map):
 
     chars_block_move = {"#", "+", "o", "x", "~", "%", "Y", "T",}
 
-    def __init__(self, map_id, map_img, map_cfg, width, height):
-        super().__init__(width, height, self.__class__.__name__)
+    def __init__(self, map_id, map_img, map_cfg):
         self.map_id = map_id
         self.map_img = map_img
         self.map_cfg = map_cfg
-        self.relationship = 100
-        self.parse_img() # <== creates initial data map
+        width, height = self.parse_img() # <== creates initial data map
         self.parse_cfg()
+
+        super().__init__(width, height, self.__class__.__name__)
+
         self.create_tile_map()
         # print(repr(self))
 
@@ -173,7 +174,6 @@ class City(Map):
                 pixels = img.load()
                 w, h = img.size
         except FileNotFoundError:
-            # raise FileNotFoundError("Cannot find file for stringify: {}".format(self.map_img))
             with Image.open(IMG_PATH + 'sample.png') as img:
                 pixels = img.load()
                 w, h = img.size
@@ -182,7 +182,6 @@ class City(Map):
             line = ""
 
             for i in range(w):
-                # sometimes alpha channel is included so test for all values first
                 try:
                     r, g, b, _ = pixels[i, j]
                     
@@ -198,7 +197,7 @@ class City(Map):
                         char = "."
 
                     elif char in (".", ":", ",", "="):
-                        if self.within_generate_bounds(i, j):
+                        if 0 <= i < w and 0 <= j < h:
                             self.spaces.append((i, j))
 
                     line += char
@@ -210,6 +209,7 @@ class City(Map):
 
         # make sure accesses to the set are random
         shuffle(self.spaces)
+        return w, h
 
     # Unique to city map
     def parse_cfg(self):
@@ -258,7 +258,6 @@ class City(Map):
                                     job=job.lower(),
                                     ch=character,
                                     fg=color,
-                                    rs=self.relationship,
                                     spaces=self.unit_spaces[character] 
                                         if self.unit_spaces[character] 
                                         else self.spaces)])
@@ -270,9 +269,8 @@ class City(Map):
                                     x=i, 
                                     y=j,
                                     ch=character,
-                                    fg=color,
-                                    rs=self.relationship))
-                                    
+                                    fg=color))
+                                                                        
         except FileNotFoundError:
             # not explicitely needed -- can just pass instead of printing
             print("No unit configuration file found")
