@@ -173,7 +173,7 @@ def go_down_stairs(unit, area, constructor):
         unit.local = Point(area.stairs_up)
         log = "You go down the stairs."
         
-    return unit, area, [log]
+    # return unit, area, [log]
 
 def go_up_stairs(unit, area, maptypes):
     '''Go Up command: Checks player position to the upstairs position
@@ -193,7 +193,10 @@ def go_up_stairs(unit, area, maptypes):
 
     if ascend:
         area.unit_remove(unit)
+        print(area.__class__.__name__)
         area = area.parent
+        print(area.__class__.__name__)
+
         area.units_add([unit])
         unit.ascend()  
 
@@ -202,7 +205,7 @@ def go_up_stairs(unit, area, maptypes):
         else:
             log = strings.go_up_stairs
 
-    return unit, area, [log]
+    # return unit, area, [log]
 
 def close_door(unit, area, logger):
     '''Close door command: handles closing doors in a one unit distance
@@ -240,7 +243,7 @@ def close_door(unit, area, logger):
         area.close_door(*door)
         log = strings.close_door_act
 
-    return unit, area, [log]
+    # return unit, area, [log]
 
 def open_door(unit, area, logger):
     '''Open door command: handles opening doors in a one unit distance from
@@ -278,7 +281,7 @@ def open_door(unit, area, logger):
         area.open_door(*door)
         log = strings.open_door_act      
     
-    return unit, area, [log]
+    # return unit, area, [log]
 
 def converse(unit, area, logger):
     '''Converse action: handles finding units surrounding the given unit and 
@@ -315,7 +318,7 @@ def converse(unit, area, logger):
     if other:
         log = area.unit_at(*other).talk()
     
-    return unit, area, [log]
+    # return unit, area, [log]
 
 def eat():
     pass

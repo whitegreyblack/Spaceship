@@ -1009,13 +1009,13 @@ class Start(Scene):
                     self.location = self.location.sublevel
         self.map_change = False
 
+    # Map Changes -- These return unit, location, log -- maybe change for all actions?
     def action_enter_map(self):
         player_height = self.player.height
-        print(self.player, self.player.height , self.location.__class__.__name__)
         actions.enter_map(self.player, self.location, enter_maps)
-        print(self.player, self.player.height , self.location.__class__.__name__)
         if player_height != self.player.health:
             self.map_change = True
+
     def action_stairs_down(self):
         # if self.location.stairs_down:
         actions.go_down_stairs(self.player, self.location, Cave)
@@ -1024,6 +1024,11 @@ class Start(Scene):
 
     def action_stairs_up(self):
         actions.go_up_stairs(self.player, self.location, Maps)
+        player_height = self.player.height
+        actions.go_up_stairs(self.player, self.location, Maps)
+        if player_height != self.player.health:
+            self.map_change = True
+
     def action_door_close(self):
         actions.close_door(self.player, self.location, self.draw_log)
                     
