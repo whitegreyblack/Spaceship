@@ -89,41 +89,45 @@ def enter_map(unit, world, constructor):
                      y=max(int(area.height * y - 1), 0))
 
     log = ""
-    area = None
     if not world.location_exists(*unit.world):
         # map type should be a city
         if unit.world in world.cities.keys():
             fileloc = world.cities[unit.world].replace(' ', '_').lower()
             full_path = strings.IMG_PATH + fileloc
             img, cfg = full_path + ".png", full_path + ".cfg"
-
-            area = constructor['city'](map_id=fileloc,
-                                       map_img=img,
-                                       map_cfg=cfg)
             
+            world.location_create(*unit.world,
+                                  constructor['city'](map_id=fileloc,
+                                                      map_img=img,
+                                                      map_cfg=cfg))
+            world.location(*unit.world).parent = world
+
             # on cities enter map in the middle
-            unit.local = Point(x=area.width // 2, 
-                               y=area.height // 2)
+            unit.local = Point(x=world.location(*unit.world).width // 2, 
+                               y=world.location(*unit.world).height // 2)
 
             log = strings.enter_map_city.format(
                     world.cities[unit.world])
         
         # map type should be a cave
         elif unit.world in world.dungeons.keys():
-            area = constructor['cave']()
-            unit.local = Point(*area.stairs_up)
+            world.location_create(*unit.world, constructor['cave']())
+            world.location(*unit.world).parent = world
+
+            unit.local = Point(*world.location(*unit.world).stairs_up)
             log = strings.enter_map_cave.format(
                     world.dungeons[unit.world])
        
         # map type should be in the wilderness
         else:
             tile = world.square(*unit.world)
-            area = constructor['wild'][tile.tile_type]()
-            unit.local = map_enterance(*unit.get_position_on_enter(), area)
-            log = strings.enter_map_wild
+            world.location_create(*unit.world, 
+                                  constructor['wild'][tile.tile_type]())
+            world.location(*unit.world).parent = world
 
-        area.parent = world
-        world.location_create(*unit.world, area)
+            unit.local = map_enterance(*unit.get_position_on_enter(),
+                                       world.location(*unit.world))
+            log = strings.enter_map_wild
 
     else:
         # area already been built -- retrieve from world map_data
@@ -146,12 +150,10 @@ def enter_map(unit, world, constructor):
             log = strings.enter_map_wild
 
     world.unit_remove(unit)
-    print(area.__class__.__name__)
     world = world.location(*unit.world)
-    print(world.__class__.__name__)
     world.units_add([unit])
     unit.descend()
-    return unit, area, [log]
+    # return unit, area, [log]
 
 def go_down_stairs(unit, area, constructor):
     '''Go Down command: Checks player position to the downstairs position

@@ -116,7 +116,7 @@ class Start(Scene):
 
             self.process_units()
             if self.map_change:
-                self.determine_map_location()
+                self.change_map_location()
 
             # term.delay (1000 // 75)
 
@@ -994,11 +994,10 @@ class Start(Scene):
         self.ret['scene'] = 'main_menu'
         self.reset()
 
-    def determine_map_location(self):
+    def change_map_location(self):
         '''Given player coordinates, determines player current location and 
         adds player object to that location
         '''
-        self.location.unit_remove(self.player)
         if self.player.height == Level.WORLD:
             self.location = self.world
         
@@ -1008,15 +1007,15 @@ class Start(Scene):
             if self.player.height > 1:
                 for i in range(self.player.height - 1):
                     self.location = self.location.sublevel
-
-        self.location.units_add([self.player])
         self.map_change = False
 
     def action_enter_map(self):
+        player_height = self.player.height
         print(self.player, self.player.height , self.location.__class__.__name__)
         actions.enter_map(self.player, self.location, enter_maps)
         print(self.player, self.player.height , self.location.__class__.__name__)
-
+        if player_height != self.player.health:
+            self.map_change = True
     def action_stairs_down(self):
         # if self.location.stairs_down:
         actions.go_down_stairs(self.player, self.location, Cave)
