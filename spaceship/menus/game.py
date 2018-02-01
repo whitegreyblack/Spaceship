@@ -100,7 +100,7 @@ class Start(Scene):
             self.player = Player(player, name)
             self.location = self.world = World(map_name="Calabston", 
                                                map_link=world_map_path)
-            self.world.units_add([self.player])
+            self.location.units_add([self.player])
 
         self.gamelog = GameLogger(
             width=self.main_width,
@@ -322,12 +322,15 @@ class Start(Scene):
             try:
                 divided[action]()
             except TypeError:
+                raise
                 divided[action](action)
             except KeyError:
+                raise
                 invalid_command = strings.cmd_invalid.format(action)
                 self.log.append(invalid_command)
 
         except KeyError:
+            raise
             invalid_command = strings.cmd_invalid.format(action)
             self.log.append(invalid_command)
 
@@ -577,12 +580,6 @@ class Start(Scene):
             sight = self.player.sight_norm
 
         self.location.fov_calc([(*point, sight)])
-        # self.location.fov_calc([(x, y, sight), (5, 5, sight)])
-
-        # for x, y, col, ch in self.location.output(*point):
-        #     term.puts(x=x + self.main_x,
-        #               y=y + self.main_y,
-        #               s="[c={}]{}[/c]".format(col, ch))
         for (x, y), string in self.location.output(*point):
             term.puts(x=x + self.main_x, 
                       y=y + self.main_y,
@@ -592,23 +589,13 @@ class Start(Scene):
         if g0:
             location = None
 
-            if self.player.world in self.world.enterable_legend.keys():
-                location = self.world.enterable_legend[self.player.world]
+            if self.player.world in self.world.cities.keys():
+                location = self.world.cities[self.player.world]
 
-            elif self.player.world in self.world.dungeon_legend.keys():
-                location = self.world.dungeon_legend[self.player.world]
+            elif self.player.world in self.world.dungeons.keys():
+                location = self.world.dungeons[self.player.world]
 
             if location:
-                # term.bkcolor('dark grey')
-                # term.puts(self.main_x, 0, ' ' * (self.width - self.main_x))
-                # term.bkcolor('black')
-                # location_offset = center(
-                #                     text=surround(location), 
-                #                     width=self.width - self.main_x)
-                # term.puts(
-                #     x=self.main_x + location_offset,
-                #     y=0, 
-                #     s=surround(location))
                 self.draw_screen_header(location)
 
     def draw_screen_header(self, header=None):
@@ -977,8 +964,6 @@ class Start(Scene):
 
         # term.clear()
 
-    
-
     def action_save(self):
         '''Save command: checks save folder and saves the current game objects
         to file before going back to the main menu
@@ -1028,36 +1013,26 @@ class Start(Scene):
         self.map_change = False
 
     def action_enter_map(self):
-        self.player, self.location, self.log = actions.enter_map(self.player, 
-                                                                 self.world, 
-                                                                 enter_maps)
+        print(self.player, self.player.height , self.location.__class__.__name__)
+        actions.enter_map(self.player, self.location, enter_maps)
+        print(self.player, self.player.height , self.location.__class__.__name__)
 
     def action_stairs_down(self):
-        if self.location.stairs_down:
-            self.player, self.location, self.log = actions.go_down_stairs(self.player, 
-                                                                          self.location, 
-                                                                          Cave)
-        else:
-            self.log = ["You cannot go downstairs without stairs."]
+        # if self.location.stairs_down:
+        actions.go_down_stairs(self.player, self.location, Cave)
+        # else:
+        #     self.log = ["You cannot go downstairs without stairs."]
 
     def action_stairs_up(self):
-        self.player, self.location, self.log = actions.go_up_stairs(self.player, 
-                                                                    self.location,
-                                                                    Maps)
+        actions.go_up_stairs(self.player, self.location, Maps)
     def action_door_close(self):
-        self.player, self.location, self.log = actions.close_door(self.player,
-                                        self.location,
-                                        self.draw_log)
+        actions.close_door(self.player, self.location, self.draw_log)
                     
     def action_door_open(self):
-        self.player, self.location, self.log = actions.open_door(self.player,
-                                     self.location,
-                                     self.draw_log)
+        actions.open_door(self.player, self.location, self.draw_log)
 
     def action_unit_talk(self):
-        self.player, self.location, self.log = actions.converse(self.player, 
-                                    self.location, 
-                                    self.draw_log)
+        actions.converse(self.player, self.location, self.draw_log)
 
     def action_item_pickup(self):
         def pickup_item(item):

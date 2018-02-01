@@ -109,7 +109,7 @@ class World(Map):
     chars_block_move = {"A", "^", "=", "-"}
     chars_block_light = {"A", "^", "T", "~"}
 
-    enterable_legend = {
+    cities = {
         (5, 28): "Northshore",
         (51, 42): "Aerathalar",
         (12, 14): "Armagos",
@@ -184,7 +184,7 @@ class World(Map):
         (0, 162, 232): ("deep seas", "2248", ("#3040A0",)),
         (0, 0, 0): ("dungeon", "*", ("#FF00FF",)),
     }
-    dungeon_legend = {
+    dungeons = {
         (12, 52): "Pig Beach",
         (20, 57): "Beach Cave",
         (22, 50): "Small Dungeon",

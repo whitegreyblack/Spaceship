@@ -89,30 +89,35 @@ def enter_map(unit, world, constructor):
                      y=max(int(area.height * y - 1), 0))
 
     log = ""
+    area = None
     if not world.location_exists(*unit.world):
         # map type should be a city
-        if unit.world in world.enterable_legend.keys():
-            fileloc = world.enterable_legend[unit.world].replace(' ', '_').lower()
+        if unit.world in world.cities.keys():
+            fileloc = world.cities[unit.world].replace(' ', '_').lower()
             full_path = strings.IMG_PATH + fileloc
             img, cfg = full_path + ".png", full_path + ".cfg"
 
             area = constructor['city'](map_id=fileloc,
-                                           map_img=img,
-                                           map_cfg=cfg)
+                                       map_img=img,
+                                       map_cfg=cfg)
             
             # on cities enter map in the middle
-            unit.local = Point(area.width // 2, area.height // 2)
-            log = strings.enter_map_city.format(world.enterable_legend[unit.world])
+            unit.local = Point(x=area.width // 2, 
+                               y=area.height // 2)
+
+            log = strings.enter_map_city.format(
+                    world.cities[unit.world])
         
         # map type should be a cave
-        elif unit in world.dungeon_legend.keys():
+        elif unit.world in world.dungeons.keys():
             area = constructor['cave']()
             unit.local = Point(*area.stairs_up)
-            log = strings.enter_map_cave.format(world.dungeon_legend[unit.local])
+            log = strings.enter_map_cave.format(
+                    world.dungeons[unit.world])
        
         # map type should be in the wilderness
         else:
-            tile = world.square(*unit)
+            tile = world.square(*unit.world)
             area = constructor['wild'][tile.tile_type]()
             unit.local = map_enterance(*unit.get_position_on_enter(), area)
             log = strings.enter_map_wild
@@ -126,37 +131,37 @@ def enter_map(unit, world, constructor):
         area = world.location(*unit.world)
         
         # re-enter a city
-        if unit.world in world.enterable_legend.keys():
+        if unit.world in world.cities.keys():
             unit.local = Point(area.width // 2, area.height // 2)
-            log = strings.enter_map_city.format(world.enterable_legend[unit.world])
+            log = strings.enter_map_city.format(world.cities[unit.world])
         
         # re-enter dungeon
-        elif unit.world in world.dungeon_legend.keys():
+        elif unit.world in world.dungeons.keys():
             unit.local = Point(*area.stairs_up)
-            log = strings.enter_map_cave.format(world.dungeon_legend[unit.local])
+            log = strings.enter_map_cave.format(world.dungeons[unit.local])
         
         # reenter a wilderness
         else:
             unit.local = map_enterance(*unit.get_position_on_enter(), area)
             log = strings.enter_map_wild
 
-    area.parent.unit_remove(unit)
-    area.units_add([unit])
+    world.unit_remove(unit)
+    print(area.__class__.__name__)
+    world = world.location(*unit.world)
+    print(world.__class__.__name__)
+    world.units_add([unit])
     unit.descend()
     return unit, area, [log]
 
-def go_down_stairs(unit, area, area_constructor):
+def go_down_stairs(unit, area, constructor):
     '''Go Down command: Checks player position to the downstairs position
     in the current area. If they match then create a dungeon with the
     player starting position at the upstairs of the new area
     '''
     log = "You cannot go downstairs without stairs."
-
-    if unit.local == area.stairs_down:
+    if area.stairs_down and unit.local == area.stairs_down:
         if not area.sublevel:
-            area.sublevel = area_constructor(width=area.width,
-                                             height=area.height,
-                                             max_rooms=18)
+            area.sublevel = constructor()
             area.sublevel.parent = area
 
         area.unit_remove(unit)
@@ -173,27 +178,27 @@ def go_up_stairs(unit, area, maptypes):
     in the current area. Then determine the parent area 
     and reset position according to the type of parent
     '''
-    log = "You cannot go upstairs without stairs."
+    log = strings.go_up_error
     ascend = False
 
     if area.map_type == maptypes.CAVE:
         # Every child map has a parent map
         if unit.local == area.stairs_up:
             ascend = True
-            if unit.height == 1:
-                log = "You begin travelling."
-            else:
-                log = "You go up the stairs."
 
     elif area.map_type in (maptypes.CITY, maptypes.WILD):
         ascend = True
-        log = "You begin travelling."
 
     if ascend:
         area.unit_remove(unit)
         area = area.parent
         area.units_add([unit])
         unit.ascend()  
+
+        if unit.height == 1:
+            log = strings.go_up_travel
+        else:
+            log = strings.go_up_stairs
 
     return unit, area, [log]
 
@@ -309,3 +314,6 @@ def converse(unit, area, logger):
         log = area.unit_at(*other).talk()
     
     return unit, area, [log]
+
+def eat():
+    pass
