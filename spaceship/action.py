@@ -95,39 +95,30 @@ def enter_map(unit, world, constructor):
             fileloc = world.cities[unit.world].replace(' ', '_').lower()
             full_path = strings.IMG_PATH + fileloc
             img, cfg = full_path + ".png", full_path + ".cfg"
+
+            area = constructor['city'](map_id=fileloc,
+                                           map_img=img,
+                                           map_cfg=cfg)
             
-            world.location_create(*unit.world,
-                                  constructor['city'](map_id=fileloc,
-                                                      map_img=img,
-                                                      map_cfg=cfg))
-            world.location(*unit.world).parent = world
-
             # on cities enter map in the middle
-            unit.local = Point(x=world.location(*unit.world).width // 2, 
-                               y=world.location(*unit.world).height // 2)
-
-            log = strings.enter_map_city.format(
-                    world.cities[unit.world])
+            unit.local = Point(area.width // 2, area.height // 2)
+            log = strings.enter_map_city.format(world.cities[unit.world])
         
         # map type should be a cave
-        elif unit.world in world.dungeons.keys():
-            world.location_create(*unit.world, constructor['cave']())
-            world.location(*unit.world).parent = world
-
-            unit.local = Point(*world.location(*unit.world).stairs_up)
-            log = strings.enter_map_cave.format(
-                    world.dungeons[unit.world])
+        elif unit in world.dungeons.keys():
+            area = constructor['cave']()
+            unit.local = Point(*area.stairs_up)
+            log = strings.enter_map_cave.format(world.dungeons[unit.local])
        
         # map type should be in the wilderness
         else:
-            tile = world.square(*unit.world)
-            world.location_create(*unit.world, 
-                                  constructor['wild'][tile.tile_type]())
-            world.location(*unit.world).parent = world
-
-            unit.local = map_enterance(*unit.get_position_on_enter(),
-                                       world.location(*unit.world))
+            tile = world.square(*unit)
+            area = constructor['wild'][tile.tile_type]()
+            unit.local = map_enterance(*unit.get_position_on_enter(), area)
             log = strings.enter_map_wild
+
+        area.parent = world
+        world.location_create(*unit.world, area)
 
     else:
         # area already been built -- retrieve from world map_data
@@ -149,11 +140,10 @@ def enter_map(unit, world, constructor):
             unit.local = map_enterance(*unit.get_position_on_enter(), area)
             log = strings.enter_map_wild
 
-    world.unit_remove(unit)
-    world = world.location(*unit.world)
-    world.units_add([unit])
+    area.parent.unit_remove(unit)
+    area.units_add([unit])
     unit.descend()
-    # return unit, area, [log]
+    return unit, area, [log]
 
 def go_down_stairs(unit, area, constructor):
     '''Go Down command: Checks player position to the downstairs position
@@ -173,7 +163,7 @@ def go_down_stairs(unit, area, constructor):
         unit.local = Point(area.stairs_up)
         log = "You go down the stairs."
         
-    # return unit, area, [log]
+    return unit, area, [log]
 
 def go_up_stairs(unit, area, maptypes):
     '''Go Up command: Checks player position to the upstairs position
@@ -205,7 +195,7 @@ def go_up_stairs(unit, area, maptypes):
         else:
             log = strings.go_up_stairs
 
-    # return unit, area, [log]
+    return unit, area, [log]
 
 def close_door(unit, area, logger):
     '''Close door command: handles closing doors in a one unit distance
@@ -225,7 +215,8 @@ def close_door(unit, area, logger):
     elif len(doors) == 1:
         door = doors.pop()
     else:
-        logger(strings.close_door_many)
+        logger(strings.close_door_many, refresh=True)
+        
         code = term.read()
         shifted = term.state(term.TK_SHIFT)
 
@@ -243,7 +234,7 @@ def close_door(unit, area, logger):
         area.close_door(*door)
         log = strings.close_door_act
 
-    # return unit, area, [log]
+    return unit, area, [log]
 
 def open_door(unit, area, logger):
     '''Open door command: handles opening doors in a one unit distance from
@@ -263,7 +254,8 @@ def open_door(unit, area, logger):
     elif len(doors) == 1:
         door = doors.pop()
     else:
-        logger(strings.open_door_many)
+        logger(strings.open_door_many, refresh=True)
+
         code = term.read()
         shifted = term.state(term.TK_SHIFT)
 
@@ -281,7 +273,7 @@ def open_door(unit, area, logger):
         area.open_door(*door)
         log = strings.open_door_act      
     
-    # return unit, area, [log]
+    return unit, area, [log]
 
 def converse(unit, area, logger):
     '''Converse action: handles finding units surrounding the given unit and 
@@ -301,7 +293,8 @@ def converse(unit, area, logger):
     elif len(units) == 1:
         other = units.pop()
     else:
-        logger(strings.converse_many)
+        logger(strings.converse_many, refresh=True)
+
         code = term.read()
         shifted = term.state(term.TK_SHIFT)
 
@@ -318,7 +311,7 @@ def converse(unit, area, logger):
     if other:
         log = area.unit_at(*other).talk()
     
-    # return unit, area, [log]
+    return unit, area, [log]
 
 def eat():
     pass

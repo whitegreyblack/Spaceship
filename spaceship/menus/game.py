@@ -320,7 +320,7 @@ class Start(Scene):
         try:
             divided = self.actions[max(0, min(self.player.height, 1))]
             try:
-                divided[action]()
+                self.unit, self.location, self.log = divided[action]()
             except TypeError:
                 raise
                 divided[action](action)
@@ -1011,32 +1011,22 @@ class Start(Scene):
 
     # Map Changes -- These return unit, location, log -- maybe change for all actions?
     def action_enter_map(self):
-        player_height = self.player.height
-        actions.enter_map(self.player, self.location, enter_maps)
-        if player_height != self.player.health:
-            self.map_change = True
+        return actions.enter_map(self.player, self.location, enter_maps)
 
     def action_stairs_down(self):
-        # if self.location.stairs_down:
-        actions.go_down_stairs(self.player, self.location, Cave)
-        # else:
-        #     self.log = ["You cannot go downstairs without stairs."]
+        return actions.go_down_stairs(self.player, self.location, Cave)
 
     def action_stairs_up(self):
-        actions.go_up_stairs(self.player, self.location, Maps)
-        player_height = self.player.height
-        actions.go_up_stairs(self.player, self.location, Maps)
-        if player_height != self.player.health:
-            self.map_change = True
+        return actions.go_up_stairs(self.player, self.location, Maps)
 
     def action_door_close(self):
-        actions.close_door(self.player, self.location, self.draw_log)
+        return actions.close_door(self.player, self.location, self.draw_log)
                     
     def action_door_open(self):
-        actions.open_door(self.player, self.location, self.draw_log)
+        return actions.open_door(self.player, self.location, self.draw_log)
 
     def action_unit_talk(self):
-        actions.converse(self.player, self.location, self.draw_log)
+        return actions.converse(self.player, self.location, self.draw_log)
 
     def action_item_pickup(self):
         def pickup_item(item):

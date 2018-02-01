@@ -152,9 +152,9 @@ class GameLogger:
             term.refresh()
 
     def clear(self):
-        term.clear_area(0, 
+        term.clear_area(term.state(term.TK_WIDTH) - self.width - 1, 
                         term.state(term.TK_HEIGHT) - self.height - 1, 
-                        term.state(term.TK_WIDTH), 
+                        self.width + 1, 
                         self.height + 1)
 
     def write(self):
