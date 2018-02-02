@@ -322,7 +322,6 @@ class Start(Scene):
             try:
                 self.unit, self.location, self.log = divided[action]()
             except TypeError:
-                raise
                 divided[action](action)
             except KeyError:
                 raise
@@ -1092,51 +1091,45 @@ class Start(Scene):
         #                 self.clear_main()
         #                 self.draw_pickup(items)
 
-    '''
-    Notes :- Dropping Items:
-        Dropping items will always be dropped from inventory
-        If an item is equipped it CANNOT be dropped unless it is unequiped.
-        When an item is unequipped the item will be added back to the inventory
-        Then the player may drop the item from there
-    '''
     def action_item_drop(self):
-        def drop_item(item):
-            nonlocal log
-            self.player.item_remove(item)
-            self.location.item_add(*self.player.local, item)
-            if hasattr(item, 'name'):
-                item_name = item.name
-            else:
-                item_name = item
-            log = "You drop the {} onto the ground.".format(item_name)
-            log += " Your backpack feels lighter."
+        return actions.drop_item(self.player, self.location, self.clear_main, self.draw_inventory, self.draw_log, self.draw_screen_log)
+        # def drop_item(item):
+            # nonlocal log
+            # self.player.item_remove(item)
+            # self.location.item_add(*self.player.local, item)
+            # if hasattr(item, 'name'):
+                # item_name = item.name
+            # else:
+                # item_name = item
+            # log = "You drop the {} onto the ground.".format(item_name)
+            # log += " Your backpack feels lighter."
         
-        log = ""
-        items = [item for _, inv in self.player.inventory for item in inv]
-        self.clear_main()
-        self.draw_inventory(items)
+        # log = ""
+        # items = [item for _, inv in self.player.inventory for item in inv]
+        # self.clear_main()
+        # self.draw_inventory(items)
 
-        while True:
-            if items:
-                self.draw_screen_log(strings.cmd_drop_query)
-                log = ""
+        # while True:
+            # if items:
+                # self.draw_screen_log(strings.cmd_drop_query)
+                # log = ""
 
-            if log:
-                self.draw_log(log)
+            # if log:
+                # self.draw_log(log)
 
-            term.refresh()            
+            # term.refresh()            
 
-            code = term.read()
-            if code == term.TK_ESCAPE:
-                log = ""
-                break
+            # code = term.read()
+            # if code == term.TK_ESCAPE:
+                # log = ""
+                # break
 
-            elif term.TK_A <= code < term.TK_A + len(items):
-                drop_item(items.pop(code - 4))
-                items = [item for _, inv in self.player.inventory 
-                            for item in inv]
-                self.clear_main()
-                self.draw_inventory(items)
+            # elif term.TK_A <= code < term.TK_A + len(items):
+                # drop_item(items.pop(code - 4))
+                # items = [item for _, inv in self.player.inventory 
+                            # for item in inv]
+                # self.clear_main()
+                # self.draw_inventory(items)
 
     def action_item_use(self):
         def use_item(item):

@@ -274,7 +274,52 @@ def open_door(unit, area, logger):
         log = strings.open_door_act      
     
     return unit, area, [log]
+	
+def drop_item(unit, area, clearer, drawer, gamelog, screenlog):
+    '''Dropping items will always be dropped from inventory
+    If an item is equipped it CANNOT be dropped unless it is unequipped.
+    When an item is unequipped the item will be added back to the inventory
+    Then the player may drop the item from there
+    '''
+    def drop(item):
+        nonlocal log
+        unit.item_remove(item)
+        area.item_add(*unit.local, item)
+        if hasattr(item, 'name'):
+            item_name = item.name
+        else:
+            item_name = item
+        log = "You drop the {} onto the ground.".format(item_name)
+        log += " Your backpack feels lighter."
 
+    log = ""    
+    items = [item for _, inv in unit.inventory for item in inv]
+    clearer()
+    drawer(items)
+
+    while True:
+        if items:
+            screenlog(strings.cmd_drop_query)
+
+        if log:
+            gamelog(log)
+            log = ""
+
+        term.refresh()
+
+        code = term.read()
+        if code == term.TK_ESCAPE:
+            log = ""
+            break
+
+        elif term.TK_A <= code < term.TK_A + len(items):
+            drop(items[code - term.TK_A])
+            items = [item for _, inv in unit.inventory for item in inv]
+            clearer()
+            drawer(items)
+	
+    return unit, area, [log]
+	
 def pickup_item(unit, area, clearer, drawer, logger):
     '''Pickup item command: handles item pickup from local map on the tile the
     unit is currently standing on. Cases can range from no items, single item,
@@ -289,10 +334,10 @@ def pickup_item(unit, area, clearer, drawer, logger):
             area.item_remove(*unit.local, item)
             log = "You pick up {} and place it in your backpack".format(
                 item.name if hasattr(item, 'name') else item)
-            log.append("Your backpack gets heavier.")
+            log += " Your backpack gets heavier."
         else:
             log = "Cannot pick up {}. Your backpack is full.".format(
-                item.name if hasattr(utem, 'name', else item))
+                item.name if hasattr(item, 'name') else item)
             
     log = ""
     items = [item for item in area.items_at(*unit.local)]
