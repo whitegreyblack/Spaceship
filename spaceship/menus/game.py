@@ -661,69 +661,57 @@ class Start(Scene):
                 y=self.screen_row + index * self.row_spacing,
                 s=letter + body + item)
 
-    def draw_item_header(self, item_header):
-        '''Handles drawing of the item grouping header'''
-        term.puts(
-            x=self.screen_col + self.main_x,
-            y=self.screen_row + self.index_row * self.row_spacing,
-            s=item_header)
-        self.index_row += 1
-
-    def draw_item_row(self, item_desc):
-        '''Handles drawing the list of an item group to the screen'''
-        letter = chr(ord('a') + self.item_row) + ". "
-        term.puts(
-            x=self.screen_col + self.main_x,
-            y=self.screen_row + self.index_row * self.row_spacing,
-            s=letter + item_desc) 
-        self.index_row += 1
-        self.item_row += 1
-
-    def draw_item_grouping(self, header, container):
+    def draw_item_grouping(self, group, items, index, item):
         '''Handler to determine if we need to draw items or not'''
-        if container:
-            self.draw_item_header("   __" + header + "__")
-            for element in container:
-                self.draw_item_row(element.__str__())
-            self.index_row += 1
-
-    def draw_inventory(self, items, string=strings.cmd_inv_none):
-        '''Handles drawing of the inventory screen along with the specific 
-        groupings of each item type and their modification effects
-        '''
-        # keep track of items and row index
-        self.item_row = 0
-        self.index_row = 0
-
-        # header for inventory
-        self.draw_screen_header('Inventory')
-
-        if not items:
-            term.puts(
-                x=center(string, self.width - self.main_x) + self.main_x,
-                y=3,
-                s=string)
-
-        else:
-            for header, items in list(sort(items).items()):
-                self.draw_item_grouping(header, items)
-
-    def draw_pickup(self, items):
-        self.draw_screen_header('Pickup Items')
-        for group, items in sort(items).items():
+        if items:
             if group not in 'food others'.split():
                 group = list(group + 's')
                 group[0] = group[0].upper()
                 group = "".join(group)
-            self.draw_item_grouping(group, items)
+            
+            term.puts(x=self.screen_col + self.main_x,
+                      y=self.screen_row + index * self.row_spacing,
+                      s="   __" + group + "__")
+            index += 1
 
+            for i in items:
+                letter = chr(ord('a') + item) + ". "
+                term.puts(x=self.screen_col + self.main_x,
+                          y=self.screen_row + index * self.row_spacing,
+                          s=letter + i.__str__()) 
+                index += 1
+                item += 1
+            return index + 1, item
+        return index, item
+
+    def draw_inventory(self, items, index, row, string=strings.cmd_inv_none):
+        '''Handles drawing of the inventory screen along with the specific 
+        groupings of each item type and their modification effects
+        '''
+        self.draw_screen_header('Inventory')
+        if not items:
+            string_pos = center(string, self.main_width)
+            term.puts(string_pos + self.main_x, 3, string)
+        else:
+            for group, items in list(sort(items).items()):          
+                index, row = self.draw_item_grouping(group, items, index, row)
+        return index, row
+        
+    def draw_pickup(self, items, index, row):
+        '''Handles drawing of the items located on the ground along with 
+        specific groupings of each item type and their modification effects
+        '''
+        self.draw_screen_header('Pickup Items')
+        for group, items in sort(items).items():
+            index, row = self.draw_item_grouping(group, items, index, row)
+        return index, row
+            
     def draw_screen_log(self, log):
         strings = wrap(log, self.main_width)
         for index, string in enumerate(strings):
-            term.puts(
-                x=center(string, self.main_width) + self.main_x, 
-                y=self.height + index - 5, 
-                s=string)
+            term.puts(x=center(string, self.main_width) + self.main_x, 
+                      y=self.height + index - 5, 
+                      s=string)
 
     def clear_screen_log(self):
         term.clear_area(self.main_x, self.height - 5, self.main_width, 2)
@@ -756,6 +744,7 @@ class Start(Scene):
         self.draw_screen_header('Spells')
         self.clear_screen_log()
         self.draw_screen_log("What would you like to do?")
+
         while True:
             if log:
                 self.clear_screen_log()
@@ -1033,103 +1022,14 @@ class Start(Scene):
                                    self.clear_main,
                                    self.draw_pickup,
                                    self.draw_log)
-        # def pickup_item(item):
-        #     '''Pickup item can fail if the inventory is full.
-        #     Check to see if action succeeded before choosing log message
-        #     '''
-        #     nonlocal log
-        #     if self.player.item_add(item):
-        #         self.location.item_remove(*self.player.local, item)
-        #         try:
-        #             log = "You pick up {} and place it in your backpack.".format(
-        #                 item.name)
-        #         except AttributeError:
-        #             log = "You pick up {} and place it in your backpack.".format(
-        #                 item)
-        #         log += " Your backpack feels heavier."
-
-        #     else:
-        #         log = "Backpack is full. Cannot pick up {}.".format(item)
-
-        # items = [item for item in self.location.items_at(*self.player.local)]
-
-        # log = ""
-        # if not items:
-        #     self.draw_log("No items on the ground where you stand.")
-
-        # else:
-        #     log = ""
-        #     if len(items) == 1:
-        #         pickup_item(items.pop())
-        #         self.draw_log(log)
-
-        #     else:
-        #         self.index_row, self.item_row = 0, 0
-        #         self.clear_main()
-        #         self.draw_pickup(items)
-
-        #         while True:
-
-        #             if log:
-        #                 self.draw_log(log)
-        #                 log = ""
-                
-        #             term.refresh()
-        #             code = term.read()
-        #             if code == term.TK_ESCAPE:
-        #                 break
-                    
-        #             elif term.TK_A <= code < term.TK_A + len(items):
-        #                 pickup_item(items[code - 4])
-        #                 self.index_row, self.item_row = 0, 0
-        #                 items = [item for item 
-        #                     in self.location.items_at(*self.player.local)]
-
-        #                 if not items:
-        #                     break
-
-        #                 self.clear_main()
-        #                 self.draw_pickup(items)
 
     def action_item_drop(self):
-        return actions.drop_item(self.player, self.location, self.clear_main, self.draw_inventory, self.draw_log, self.draw_screen_log)
-        # def drop_item(item):
-            # nonlocal log
-            # self.player.item_remove(item)
-            # self.location.item_add(*self.player.local, item)
-            # if hasattr(item, 'name'):
-                # item_name = item.name
-            # else:
-                # item_name = item
-            # log = "You drop the {} onto the ground.".format(item_name)
-            # log += " Your backpack feels lighter."
-        
-        # log = ""
-        # items = [item for _, inv in self.player.inventory for item in inv]
-        # self.clear_main()
-        # self.draw_inventory(items)
-
-        # while True:
-            # if items:
-                # self.draw_screen_log(strings.cmd_drop_query)
-                # log = ""
-
-            # if log:
-                # self.draw_log(log)
-
-            # term.refresh()            
-
-            # code = term.read()
-            # if code == term.TK_ESCAPE:
-                # log = ""
-                # break
-
-            # elif term.TK_A <= code < term.TK_A + len(items):
-                # drop_item(items.pop(code - 4))
-                # items = [item for _, inv in self.player.inventory 
-                            # for item in inv]
-                # self.clear_main()
-                # self.draw_inventory(items)
+        return actions.drop_item(self.player, 
+                                 self.location, 
+                                 self.clear_main, 
+                                 self.draw_inventory, 
+                                 self.draw_log, 
+                                 self.draw_screen_log)
 
     def action_item_use(self):
         def use_item(item):

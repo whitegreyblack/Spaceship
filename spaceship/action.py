@@ -293,9 +293,10 @@ def drop_item(unit, area, clearer, drawer, gamelog, screenlog):
         log += " Your backpack feels lighter."
 
     log = ""    
+    index, row = 0, 0
     items = [item for _, inv in unit.inventory for item in inv]
     clearer()
-    drawer(items)
+    index, row = drawer(items, index, row)
 
     while True:
         if items:
@@ -316,7 +317,8 @@ def drop_item(unit, area, clearer, drawer, gamelog, screenlog):
             drop(items[code - term.TK_A])
             items = [item for _, inv in unit.inventory for item in inv]
             clearer()
-            drawer(items)
+            index, row = 0, 0
+            index, row = drawer(items, index, row)
 	
     return unit, area, [log]
 	
@@ -349,9 +351,9 @@ def pickup_item(unit, area, clearer, drawer, logger):
         log = "You pick up the {}".format(
             item.name if hasattr(item, 'name') else item)
     else:
-        index, row = 0, 0
         clearer()
-        drawer(items)
+        index, row = 0, 0
+        index, row = drawer(items, index, row)
         while True:
             if log:
                 logger(log)
@@ -365,12 +367,11 @@ def pickup_item(unit, area, clearer, drawer, logger):
                 pickup(item)
                 index, row = 0, 0
                 items = [item for item in area.items_at(*unit.local)]
-
-            if not items:
-                break
+                if not items:
+                    break
             
             clearer()
-            drawer()
+            index, row = drawer(items, index, row)
 
     return unit, area, [log]
 
