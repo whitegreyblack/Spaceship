@@ -1029,63 +1029,68 @@ class Start(Scene):
         return actions.converse(self.player, self.location, self.draw_log)
 
     def action_item_pickup(self):
-        def pickup_item(item):
-            '''Pickup item can fail if the inventory is full.
-            Check to see if action succeeded before choosing log message
-            '''
-            nonlocal log
-            if self.player.item_add(item):
-                self.location.item_remove(*self.player.local, item)
-                try:
-                    log = "You pick up {} and place it in your backpack.".format(
-                        item.name)
-                except AttributeError:
-                    log = "You pick up {} and place it in your backpack.".format(
-                        item)
-                log += " Your backpack feels heavier."
+        return actions.pickup_item(self.player, 
+                                   self.location, 
+                                   self.clear_main,
+                                   self.draw_pickup,
+                                   self.draw_log)
+        # def pickup_item(item):
+        #     '''Pickup item can fail if the inventory is full.
+        #     Check to see if action succeeded before choosing log message
+        #     '''
+        #     nonlocal log
+        #     if self.player.item_add(item):
+        #         self.location.item_remove(*self.player.local, item)
+        #         try:
+        #             log = "You pick up {} and place it in your backpack.".format(
+        #                 item.name)
+        #         except AttributeError:
+        #             log = "You pick up {} and place it in your backpack.".format(
+        #                 item)
+        #         log += " Your backpack feels heavier."
 
-            else:
-                log = "Backpack is full. Cannot pick up {}.".format(item)
+        #     else:
+        #         log = "Backpack is full. Cannot pick up {}.".format(item)
 
-        items = [item for item in self.location.items_at(*self.player.local)]
+        # items = [item for item in self.location.items_at(*self.player.local)]
 
-        log = ""
-        if not items:
-            self.draw_log("No items on the ground where you stand.")
+        # log = ""
+        # if not items:
+        #     self.draw_log("No items on the ground where you stand.")
 
-        else:
-            log = ""
-            if len(items) == 1:
-                pickup_item(items.pop())
-                self.draw_log(log)
+        # else:
+        #     log = ""
+        #     if len(items) == 1:
+        #         pickup_item(items.pop())
+        #         self.draw_log(log)
 
-            else:
-                self.index_row, self.item_row = 0, 0
-                self.clear_main()
-                self.draw_pickup(items)
+        #     else:
+        #         self.index_row, self.item_row = 0, 0
+        #         self.clear_main()
+        #         self.draw_pickup(items)
 
-                while True:
+        #         while True:
 
-                    if log:
-                        self.draw_log(log)
-                        log = ""
+        #             if log:
+        #                 self.draw_log(log)
+        #                 log = ""
                 
-                    term.refresh()
-                    code = term.read()
-                    if code == term.TK_ESCAPE:
-                        break
+        #             term.refresh()
+        #             code = term.read()
+        #             if code == term.TK_ESCAPE:
+        #                 break
                     
-                    elif term.TK_A <= code < term.TK_A + len(items):
-                        pickup_item(items[code - 4])
-                        self.index_row, self.item_row = 0, 0
-                        items = [item for item 
-                            in self.location.items_at(*self.player.local)]
+        #             elif term.TK_A <= code < term.TK_A + len(items):
+        #                 pickup_item(items[code - 4])
+        #                 self.index_row, self.item_row = 0, 0
+        #                 items = [item for item 
+        #                     in self.location.items_at(*self.player.local)]
 
-                        if not items:
-                            break
+        #                 if not items:
+        #                     break
 
-                        self.clear_main()
-                        self.draw_pickup(items)
+        #                 self.clear_main()
+        #                 self.draw_pickup(items)
 
     '''
     Notes :- Dropping Items:

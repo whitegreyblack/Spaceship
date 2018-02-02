@@ -275,6 +275,60 @@ def open_door(unit, area, logger):
     
     return unit, area, [log]
 
+def pickup_item(unit, area, clearer, drawer, logger):
+    '''Pickup item command: handles item pickup from local map on the tile the
+    unit is currently standing on. Cases can range from no items, single item,
+    multiple items, with multiple items opening up a gui to choose items from
+    '''
+    def pickup(item):
+        '''Pickup can fail if inventory is full.
+        Check to see if action succeeded before choosing log messages.
+        '''
+        nonlocal log
+        if unit.item_add(item):
+            area.item_remove(*unit.local, item)
+            log = "You pick up {} and place it in your backpack".format(
+                item.name if hasattr(item, 'name') else item)
+            log.append("Your backpack gets heavier.")
+        else:
+            log = "Cannot pick up {}. Your backpack is full.".format(
+                item.name if hasattr(utem, 'name', else item))
+            
+    log = ""
+    items = [item for item in area.items_at(*unit.local)]
+    if not items:
+        log = "No items on the ground where you stand."
+    elif len(items) == 1:
+        item = items.pop()
+        pickup(item)
+        log = "You pick up the {}".format(
+            item.name if hasattr(item, 'name') else item)
+    else:
+        index, row = 0, 0
+        clearer()
+        drawer(items)
+        while True:
+            if log:
+                logger(log)
+                log = ""
+            term.refresh()
+            code = term.read()
+            if code == term.TK_ESCAPE:
+                break
+            elif term.TK_A <= code < term.TK_A + len(items):
+                item = items[code - term.TK_A]
+                pickup(item)
+                index, row = 0, 0
+                items = [item for item in area.items_at(*unit.local)]
+
+            if not items:
+                break
+            
+            clearer()
+            drawer()
+
+    return unit, area, [log]
+
 def converse(unit, area, logger):
     '''Converse action: handles finding units surrounding the given unit and 
     talks to them. Cases can range from no units, a single unit, and multiple
