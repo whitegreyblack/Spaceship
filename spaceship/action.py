@@ -356,24 +356,64 @@ def pickup_item(unit, area, clearer, drawer, logger):
         index, row = drawer(items, index, row)
         while True:
             if log:
-                logger(log)
+                logger(log, refresh=True)
                 log = ""
-            term.refresh()
+
             code = term.read()
             if code == term.TK_ESCAPE:
                 break
+
             elif term.TK_A <= code < term.TK_A + len(items):
                 item = items[code - term.TK_A]
                 pickup(item)
-                index, row = 0, 0
                 items = [item for item in area.items_at(*unit.local)]
                 if not items:
                     break
+                clearer()
+                index, row = 0, 0
+                index, row = drawer(items, index, row)
             
-            clearer()
-            index, row = drawer(items, index, row)
-
     return unit, area, [log]
+
+def use_item(unit, area, clearer, drawer, logger, updater):
+    '''Use item command: handles item usage from player inventory for items that
+    are currently usable. If no items are usable then places a no-item-usable
+    message on screen. Else places the usable items into a list onto screen.
+    '''
+    def use(item):
+        nonlocal log
+        unit.item_use(item)
+        if hasattr(item, 'name')
+            item_name = item.name
+        else:
+            item_name = item
+        log = strings.cmd_use_item.format(item_name)
+        updater()
+
+    log = ""
+    items = list(unit.inventory_prop('use'))
+
+    clearer()
+    index, row = 0, 0
+    index, row = drawer(items, index, row)
+    while True:
+        if items:
+            screenlog(strings.cmd_use_query)
+        else:
+            screenlog(strings.cmd_use_none)
+
+        if log:
+            logger(log)
+            log = ""
+        
+        term.refresh()
+        code = term.read()
+        if code == term.TK_ESCAPE:
+            break
+        
+        elif term.TK_A <= code < term.TK_A + len(items):
+            use(items[code - 4])
+            items = list(self.player.inventory_prop('use'))
 
 def converse(unit, area, logger):
     '''Converse action: handles finding units surrounding the given unit and 

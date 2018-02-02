@@ -1032,41 +1032,47 @@ class Start(Scene):
                                  self.draw_screen_log)
 
     def action_item_use(self):
-        def use_item(item):
-            nonlocal log
-            self.player.item_use(item)
-            if hasattr(item, 'name'):
-                item_name = item.name
-            else:
-                item_name = item
-            log = strings.cmd_use_item.format(item_name)
+        return actions.use_item(self.player, 
+                                self.area, 
+                                self.clear_main,
+                                self.draw_inventory,
+                                self.draw_screen_log,
+                                self.draw_status)
+        # def use_item(item):
+        #     nonlocal log
+        #     self.player.item_use(item)
+        #     if hasattr(item, 'name'):
+        #         item_name = item.name
+        #     else:
+        #         item_name = item
+        #     log = strings.cmd_use_item.format(item_name)
         
-        log = ""
-        items = list(self.player.inventory_prop('use'))
+        # log = ""
+        # items = list(self.player.inventory_prop('use'))
 
-        while True:
-            self.clear_main()
-            self.draw_inventory(items, strings.cmd_use_none)
+        # while True:
+        #     self.clear_main()
+        #     self.draw_inventory(items, strings.cmd_use_none)
 
-            if items:
-                self.draw_screen_log(strings.cmd_use_query)
-            else:
-                self.draw_screen_log(strings.cmd_use_none)
+        #     if items:
+        #         self.draw_screen_log(strings.cmd_use_query)
+        #     else:
+        #         self.draw_screen_log(strings.cmd_use_none)
 
-            if log:
-                self.draw_screen_log(log)
-                log = ""
+        #     if log:
+        #         self.draw_screen_log(log)
+        #         log = ""
 
-            term.refresh()
+        #     term.refresh()
 
-            code = term.read()
-            if code == term.TK_ESCAPE:
-                break
+        #     code = term.read()
+        #     if code == term.TK_ESCAPE:
+        #         break
 
-            elif term.TK_A <= code < term.TK_A + len(items):
-                use_item(items[code - 4])
-                items = list(self.player.inventory_prop('use'))
-                self.draw_status()
+        #     elif term.TK_A <= code < term.TK_A + len(items):
+        #         use_item(items[code - 4])
+        #         items = list(self.player.inventory_prop('use'))
+        #         self.draw_status()
 
     def action_item_eat(self):
         def eat_item(item):
