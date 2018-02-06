@@ -375,7 +375,7 @@ def pickup_item(unit, area, clearer, drawer, logger):
             
     return unit, area, [log]
 
-def use_item(unit, area, clearer, drawer, logger, updater):
+def use_item(unit, area, clearer, drawer, logger, screenlog, updater):
     '''Use item command: handles item usage from player inventory for items that
     are currently usable. If no items are usable then places a no-item-usable
     message on screen. Else places the usable items into a list onto screen.
@@ -453,5 +453,38 @@ def converse(unit, area, logger):
     
     return unit, area, [log]
 
-def eat():
-    pass
+def eat_item(unit, area, clearer, drawer, logger, screenlog):
+    def eat(item):
+        nonlocal log
+        unit.item_eat(item)
+        if hasattr(item, 'name'):
+            item_name = item.name
+        else:
+            item_name = item
+
+    log = ""
+    items = list(unit.inventory_prop('eat')):
+
+    clearer()
+    index, row = 0, 0
+    index, row = drawer(items, index, row, strings.cmd_use_none)
+    while True:
+        if items:
+            screenlog(strings.cmd_eat_query)
+        else:
+            screenlog(strings.cmd_eat_none)
+        
+        if log:
+            logger(log)
+            log = ""
+        
+        term.refresH()
+        code = term.read()
+        if code == term.TK_ESCAPE:
+            break
+        
+        elif term.TK_A <= code < term.TK_A + len(items):
+            eat(items[code - 4])
+            items = list(unit.inventory_prop('eat'))
+            index, row = 0, 0
+            index, row = drawer(items, index, row, strings.cmd_use_none)
