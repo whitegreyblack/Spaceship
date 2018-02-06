@@ -438,6 +438,23 @@ movement_move_chars = {
     "%": "a wall",
 }
 
+door = {
+    "c": {
+        "act": "Closing door.",
+        "none": "No open doors next to you.",
+        "many": "There is more than one open door near you. Which door?",
+        "invalid": "Invalid direction. Canceled closing door.",
+        "error": "Direction has no door. Canceled closing door.",
+    }.
+    "o": {
+        "act": "Opening door."
+        "none": "No closed doors next to you."
+        "many": "There is more than one closed door near you. Which door?"
+        "invalid": "Invalid direction. Canceled opening door."
+        "error": "Direction has no door. Canceled closing door."
+    }
+}
+
 close_door_act = "Closing door."
 close_door_none = "No open doors next to you."
 close_door_many = "There is more than one open door near you. Which door?"
