@@ -997,7 +997,6 @@ class Start(Scene):
                     self.location = self.location.sublevel
         self.map_change = False
 
-    # Map Changes -- These return unit, location, log -- maybe change for all actions?
     def action_enter_map(self):
         return actions.enter_map(self.player, self.location, enter_maps)
 

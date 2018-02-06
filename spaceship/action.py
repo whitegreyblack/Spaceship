@@ -105,14 +105,14 @@ def enter_map(unit, world, constructor):
             log = strings.enter_map_city.format(world.cities[unit.world])
         
         # map type should be a cave
-        elif unit in world.dungeons.keys():
+        elif unit.world in world.dungeons.keys():
             area = constructor['cave']()
             unit.local = Point(*area.stairs_up)
-            log = strings.enter_map_cave.format(world.dungeons[unit.local])
+            log = strings.enter_map_cave.format(world.dungeons[unit.world])
        
         # map type should be in the wilderness
         else:
-            tile = world.square(*unit)
+            tile = world.square(*unit.world)
             area = constructor['wild'][tile.tile_type]()
             unit.local = map_enterance(*unit.get_position_on_enter(), area)
             log = strings.enter_map_wild
@@ -383,7 +383,7 @@ def use_item(unit, area, clearer, drawer, logger, updater):
     def use(item):
         nonlocal log
         unit.item_use(item)
-        if hasattr(item, 'name')
+        if hasattr(item, 'name'):
             item_name = item.name
         else:
             item_name = item
