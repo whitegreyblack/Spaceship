@@ -197,6 +197,46 @@ def go_up_stairs(unit, area, maptypes):
 
     return unit, area, [log]
 
+def interact_door(key, area, logger):
+    dlog = strings.door[key]
+
+    log = ""
+    doors = []
+    door = None
+
+    for point in spaces(unit.local):
+        if point != unit.local and area.square(*point).char == dlog['char']:
+            doors.append(point)
+    
+    if not doors:
+        log = dlog['none']
+    elif len(doors) == 1:
+        door = doors.pop()
+    else:
+        logger(dlog.['many'], refresh=True)
+
+        code = term.read()
+        shifted = term.state(term.TK_SHIFTED)
+
+        try:
+            dx, dy _, act = commands_player[(code, shifted)]
+        except KeyError:
+            log = dlog['invalid']
+        else:
+            if act == "move" and unit.local + Point(dx, dy) in doors:
+                door = unit.local + Point(dx, dy)
+            else:
+                log = dlog['error']
+
+    if door:
+        if dlog['char'] == '/':
+            area.close_door(*door)
+        else:
+            area.open_door(*door)
+        log = dlog['act']
+    
+    return unit, area, [log]
+
 def close_door(unit, area, logger):
     '''Close door command: handles closing doors in a one unit distance
     from the player. Cases can range from no doors, single door, multiple 
