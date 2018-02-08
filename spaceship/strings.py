@@ -399,6 +399,13 @@ cmd_unequip = "You unequip the {}."
 cmd_equip_none = "No items to equip for that slot."
 cmd_equip_two_hand = "You cannot equip a weapon to your {}. \
 You are already wielding the {} on your {}."
+
+# equip, drop, use, eat
+query = "Which item to {}?"
+item = "You {} the {}."
+invalid = "Invalid selection."
+error = "You cannot {} this item."
+
 cmds = {
     'equip': {
         'query': "Which item to equip?",  # ?
@@ -421,14 +428,16 @@ cmds = {
         'none': "You have no items in your inventory that are usable.",
         'invalid': "You cannot eat this item.",
     },
-    'save': {
-        'query': "Save and exit game? (Y/N)",
-        'folder': "saved folder does not exists -creating folder: './saves'",
-    },
-    'inventory': {
-        'funcs' : "What to do with the {}?",
-        'none': "You have nothing in your inventory.",
-    },
+}
+
+save = {
+    'query': "Save and exit game? (Y/N)",
+    'folder': "saved folder does not exists -creating folder: './saves'",
+}
+
+inventory = {
+    'funcs' : "What to do with the {}?",
+    'none': "You have nothing in your inventory.",
 }
 
 cmd_equip_query = "Which item to equip?"
