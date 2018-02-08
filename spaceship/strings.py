@@ -399,23 +399,61 @@ cmd_unequip = "You unequip the {}."
 cmd_equip_none = "No items to equip for that slot."
 cmd_equip_two_hand = "You cannot equip a weapon to your {}. \
 You are already wielding the {} on your {}."
+cmds = {
+    'equip': {
+        'query': "Which item to equip?",  # ?
+        'item': "You equip the {}.",      # ok
+        'invalid': "Invalid selection",   # no
+    },
+    'drop': {
+        'query': "Which item to drop?",
+        'item': "You drop the {}.",
+    },
+    'use': {
+        'query': "Which item to use?",
+        'item': "You use the {}.",
+        'none': "You have no items in your inventory that are useable.",
+        'invalid': "You cannot use this item.",
+    },
+    'eat': {
+        'query': "Which item to eat?",
+        'item': "You eat the {}",
+        'none': "You have no items in your inventory that are usable.",
+        'invalid': "You cannot eat this item.",
+    },
+    'save': {
+        'query': "Save and exit game? (Y/N)",
+        'folder': "saved folder does not exists -creating folder: './saves'",
+    },
+    'inventory': {
+        'funcs' : "What to do with the {}?",
+        'none': "You have nothing in your inventory.",
+    },
+}
+
 cmd_equip_query = "Which item to equip?"
 cmd_equip = "You equip the {}."
 cmd_equip_invalid = "Invalid selection."
+
 cmd_drop_query = "Which item to drop?"
 cmd_drop_item = "You drop the {}."
+
 cmd_use_none = "You have no items in your inventory that are usable."
 cmd_use_query = "Which item to use?"
 cmd_use_item = "You use the {}."
 cmd_cannot_use_item = "You cannot use this item."
+
 cmd_eat_query = "Which item to eat?"
 cmd_eat_none = "You do not have anything to eat."
 cmd_eat_item = "You eat the {}."
 cmd_cannot_eat_item = "You cannot eat this item."
+
 cmd_save = "Save and exit game? (Y/N)"
 cmd_save_folder = 'saved folder does not exist - creating folder: "./saves"'
+
 cmd_inv_funcs = "What to do with the {}?"
 cmd_inv_none = "You have nothing in your inventory."
+
 movement_wait_local = "You rest for a while."
 movement_wait_world = "You wait in the area."
 movement_move_error = "You cannot travel there."
