@@ -10,8 +10,8 @@ from .items import itemlist
 
 class VillagerChild(Unit):
     def __init__(self, x, y, ch="v", fg=Color.white, bg=Color.black, 
-                 race="human", job="villager", rs=0):
-        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
+                 race="human", job="villager"):
+        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
         self.sight = self.sight_city
         self.job = job
         self.spaces = spaces 
@@ -49,8 +49,8 @@ class VillagerChild(Unit):
 
 class Villager(Unit):
     def __init__(self, x, y, ch="V", fg=Color.white, bg=Color.black, 
-                 race="human", job="villager", rs=0, spaces=[]):
-        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
+                 race="human", job="villager", spaces=[]):
+        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
         self.job = job
         self.spaces = spaces 
         self.sight = self.sight_city
@@ -80,8 +80,8 @@ class Villager(Unit):
 
 class Shopkeeper(Unit):
     def __init__(self, x, y, ch="S", fg=Color.white, bg=Color.black, 
-                 race="human", job="shopkeeper", rs=0, spaces=[]):
-        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
+                 race="human", job="shopkeeper", spaces=[]):
+        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
         self.job = job
         self.spaces = spaces 
         self.sight = self.sight_city
@@ -95,16 +95,16 @@ class Shopkeeper(Unit):
 
 class Blacksmith(Unit):
     def __init__(self, x, y, ch="B", fg=Color.white, bg=Color.black,
-                race="human", job="blacksmith", rs=0, spaces=[]):
-        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
+                race="human", job="blacksmith", spaces=[]):
+        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
         self.job = job
         self.spaces = spaces 
         self.sight = self.sight_city
 
 class Innkeeper(Unit):
     def __init__(self, x, y, ch="I", fg=Color.white, bg=Color.black, 
-                 race="human", job="innkeeper", rs=0, spaces=[]):        
-        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
+                 race="human", job="innkeeper", spaces=[]):        
+        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
         self.job = job
         self.spaces = spaces
         self.sight = self.sight_city
@@ -118,8 +118,8 @@ class Innkeeper(Unit):
 
 class Bishop(Unit):
     def __init__(self, x, y, ch="B", fg=Color.white, bg=Color.black, 
-                 race="human", job="bishop", rs=0, spaces=[]):        
-        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
+                 race="human", job="bishop", spaces=[]):        
+        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
         self.job = job
         self.spaces = spaces
         self.sight = self.sight_city
@@ -214,8 +214,8 @@ class Soldier(Unit):
     or other units
     '''
     def __init__(self, x, y, ch="G", fg=Color.white, bg=Color.black, 
-                 race="human", job="soldierr", rs=0, spaces=[]):        
-        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race, rs=rs)
+                 race="human", job="soldierr", spaces=[]):        
+        super().__init__(x, y, ch=ch, fg=fg, bg=bg, race=race)
         self.job = job
         self.spaces = spaces 
         self.sight = self.sight_city

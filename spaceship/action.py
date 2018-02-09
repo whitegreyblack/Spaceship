@@ -463,7 +463,7 @@ def eat_item(unit, area, clearer, drawer, logger, screenlog):
             item_name = item
 
     log = ""
-    items = list(unit.inventory_prop('eat')):
+    items = list(unit.inventory_prop('eat'))
 
     clearer()
     index, row = 0, 0
