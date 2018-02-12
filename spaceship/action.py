@@ -528,3 +528,27 @@ def eat_item(unit, area, clearer, drawer, logger, screenlog):
             items = list(unit.inventory_prop('eat'))
             index, row = 0, 0
             index, row = drawer(items, index, row, strings.cmd_use_none)
+
+def menu_action(unit, items, area, strs, eraser, drawer, logger, fns):
+    log = ""
+    clearer()
+    index, row = 0, 0
+    index, row = drawer(items, index, row, strs.none)
+    while True:
+        if items:
+            logger(strs.query)
+        else:
+            logger(strs.none)
+        
+        if log:
+            logger(log)
+            log = ""
+        term.refresh()
+        code = term.read()
+        if code == term.TK_ESCAPE:
+            break
+        elif term.TK_A <= code < term.TK_A + len(items):
+            fns(items[code - 4])
+            items = get_items()
+            index, row = 0, 0
+            index, row = drawer(items, index, row, strs.none)
