@@ -7,9 +7,9 @@ from bearlibterminal import terminal as term
 # sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
 import spaceship.strings as strings
 from spaceship.screen_functions import *
-from spaceship.menus.options import Options
-from spaceship.menus.scene import Scene
-from spaceship.menus.game import Start
+from spaceship.options import Options
+from spaceship.scene import Scene
+from spaceship.game import Start
 
 '''
 Notes: Propagating Game Variables Through Scenes

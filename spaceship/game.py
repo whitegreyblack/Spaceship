@@ -5,7 +5,7 @@ from time import sleep, time
 from collections import namedtuple
 from bearlibterminal import terminal as term
 import spaceship.strings as strings
-from spaceship.menus.scene import Scene
+from spaceship.scene import Scene
 from spaceship.screen_functions import *
 import spaceship.tools as tools
 import spaceship.action as actions

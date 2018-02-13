@@ -1,22 +1,22 @@
-import os
-import sys
+# import os
+# import sys
 import shelve
 import random
 import textwrap
 from time import sleep, time
 from collections import namedtuple
 from bearlibterminal import terminal as term
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
-import strings
-from screen_functions import *
-from action import commands_player
-from gamelog import GameLogger
+# sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
+import spaceship.strings as strings
+from .screen_functions import *
+from .action import commands_player
+from .gamelog import GameLogger
 from .scene import Scene
-from ..classes.wild import wilderness
-from ..classes.player import Player
-from ..classes.world import World
-from ..classes.city import City
-from ..classes.cave import Cave
+from .classes.wild import wilderness
+from .classes.player import Player
+from .classes.world import World
+from .classes.city import City
+from .classes.cave import Cave
 
 class Name(Scene):
     def __init__(self, sid='name_menu'):

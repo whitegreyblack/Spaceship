@@ -213,13 +213,13 @@ def interact_door(key, area, logger):
     elif len(doors) == 1:
         door = doors.pop()
     else:
-        logger(dlog.['many'], refresh=True)
+        logger(dlog['many'], refresh=True)
 
         code = term.read()
         shifted = term.state(term.TK_SHIFTED)
 
         try:
-            dx, dy _, act = commands_player[(code, shifted)]
+            dx, dy, _, act = commands_player[(code, shifted)]
         except KeyError:
             log = dlog['invalid']
         else:

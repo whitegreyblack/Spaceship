@@ -2,13 +2,13 @@
 # import sys
 from bearlibterminal import terminal as term
 # sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
-from spaceship.menus.main import Main
-from spaceship.menus.options import Options
-from spaceship.menus.game import Start
-from spaceship.menus.load import Continue
-from spaceship.menus.make import Create
-from spaceship.menus.name import Name
-from strings import FONT_PATH
+from spaceship.main import Main
+from spaceship.options import Options
+from spaceship.game import Start
+from spaceship.load import Continue
+from spaceship.make import Create
+from spaceship.name import Name
+from spaceship.strings import FONT_PATH
 
 class Engine:
     def __init__(self):

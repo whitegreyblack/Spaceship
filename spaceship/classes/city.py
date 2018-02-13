@@ -6,7 +6,7 @@ from .map import Map
 from .utils import blender
 from .unit import Unit
 from .neutrals import neutrals
-from strings import IMG_PATH
+from ..strings import IMG_PATH
 # cities.py
 '''
 Shadowbarrow
