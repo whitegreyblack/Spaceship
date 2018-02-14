@@ -463,6 +463,21 @@ cmd_save_folder = 'saved folder does not exist - creating folder: "./saves"'
 cmd_inv_funcs = "What to do with the {}?"
 cmd_inv_none = "You have nothing in your inventory."
 
+movement = {
+    "wait": {
+        "local": "You rest for a while.",
+        "world": "You wait in the area.",
+    },
+    "blocked": {
+        "oob": "You reached the edge of the map.",
+        "swim": "You cannot swim.",
+        "wall": "You walk into {}.", 
+    },
+    "unit": {
+        "displace": "{} switches places with {}."
+    }
+}
+
 movement_wait_local = "You rest for a while."
 movement_wait_world = "You wait in the area."
 movement_move_error = "You cannot travel there."
