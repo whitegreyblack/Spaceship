@@ -1,9 +1,31 @@
 # -*- coding=utf-8 -*-
-"""Movement.py covers key-value pairs in bearlibterminal associated with movement actions. \
-Key constants are seperated into two lists to differentiate between arrow and numpad keys. \
-The key-value pair matches a bearlibterminal key to a two element tuple determining x, y directions"""
+"""Movement.py covers key-value pairs in bearlibterminal associated with 
+movement actions. Key constants are seperated into two lists to differentiate 
+between arrow and numpad keys. The key-value pair matches a bearlibterminal 
+key to a two element tuple determining x, y directions
 
-"""
+    Movement:
+        <,^,v,>: Movement keys -> (x,y)
+    Actions:
+        Movement:
+            KP (1->9)
+            UP-DOWN-LEFT-RIGHT
+        Actions:
+            A -> [A]ttack
+            E -> [E]at
+            T -> [T]hrow
+            S -> [S]ave
+            < -> Go upstairs
+            > -> Go downstairs
+            o -> [O]pen door
+            c -> [C]lose door
+            t -> [T]alk
+            v -> in[V]entory
+            q -> e[Q]uipment
+            d -> [D]rop item
+            e -> eat item
+            l -> look
+
 TODO: Might combine the movement keys into one dictionary
       Rename filename into actions.py with movement as a sub category in the file
       Add action key-value dictionaries alongside a combined movement dictionary
@@ -12,17 +34,6 @@ from collections import namedtuple
 from bearlibterminal import terminal as term
 from spaceship.classes.point import spaces, Point
 import spaceship.strings as strings
-"""
-    Movement:
-        <,^,v,>: Movement keys -> (x,y)
-    Actions:
-        (O|o)pen (blockable(s)): -> unblockable(s)
-        (C|c)lose (unblockable(s)): -> blockable(s)
-        (T|t)alk (object(s)): -> string
-    Menu Screens:
-        (I|i)nventory (menu): -> inventory screen
-        (Esc|Escape) (menu): -> escape screen/main menu
-"""
 keypress = namedtuple("Keypress", "x y char action")
 
 # handles processing input into keypress commands for player
@@ -52,8 +63,6 @@ commands_player = {
     (term.TK_E, 0): keypress(None, None, "e", "eat"),
     (term.TK_L, 0): keypress(None, None, "l", "look"),
     (term.TK_COMMA, 0): keypress(None, None, ",", "pickup"),
-    (term.TK_I, 0): keypress(None, None, "i", "equipment"),
-    (term.TK_V, 0): keypress(None, None, "v", "inventory"),
     (term.TK_T, 1): keypress(None, None, "T", "throw"),
     (term.TK_Z, 0): keypress(None, None, "z", "zap"),
     (term.TK_S, 0): keypress(None, None, "s", "spells"),
@@ -198,6 +207,9 @@ def go_up_stairs(unit, area, maptypes):
     return unit, area, [log]
 
 def interact_door(key, area, logger):
+    '''Top level function in working with doors. Should work with both opening
+    and closing doors given the key passed in as a parameter.
+    '''
     dlog = strings.door[key]
 
     log = ""
