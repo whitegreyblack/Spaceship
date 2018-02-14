@@ -494,6 +494,10 @@ def converse(unit, area, logger):
     return unit, area, [log]
 
 def eat_item(unit, area, clearer, drawer, logger, screenlog):
+    """Eating action: handles eating items from inventory. Currently only 
+    supports eating items with an eating component. This might change in 
+    the future.
+    """
     def eat(item):
         nonlocal log
         unit.item_eat(item)
@@ -530,6 +534,10 @@ def eat_item(unit, area, clearer, drawer, logger, screenlog):
             index, row = drawer(items, index, row, strings.cmd_use_none)
 
 def menu_action(unit, items, area, strs, eraser, drawer, logger, fns):
+    """Abstract action function that handles actions using screen menu draw 
+    functions. Takes in several parameters which may or may not be needed to 
+    complete run the function.
+    """
     log = ""
     clearer()
     index, row = 0, 0
