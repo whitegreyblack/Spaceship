@@ -1,23 +1,20 @@
-import os
-import sys
 import time
 import timeit
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 from bearlibterminal import terminal as t
 from spaceship.classes.city import City
 from spaceship.classes.cave import Cave
 from spaceship.classes.monsters import Rat
 from spaceship.classes.bat import Bat
-from spaceship.action import commands
+from spaceship.action import commands_player
 '''Test map with key handling functionality to test player input in controlled 
 layouts
 '''
 test_map_path = "./assets/maps/test_map.png"
 
-def test_map_output_speed_with_yield():
+def run_map_output_speed_with_yield():
     def run():
-        cave.fov_calc([(bat.x, bat.y, bat.sight)])
-        for _ in cave.output(bat.x, bat.y):
+        cave.fov_calc([(*bat.local.position, bat.sight_norm)])
+        for _ in cave.output(*bat.local.position):
             pass
 
     cave = Cave(66, 22)
@@ -27,10 +24,10 @@ def test_map_output_speed_with_yield():
     t = timeit.timeit(run, number=1000)
     return t
 
-def test_map_output_speed_with_return():
+def run_map_output_speed_with_return():
     def run():
-        cave.fov_calc([(bat.x, bat.y, bat.sight)])
-        for _ in cave.output_return(bat.x, bat.y):
+        cave.fov_calc([(*bat.local.position, bat.sight_norm)])
+        for _ in cave.output(*bat.local.position):
             pass
 
     cave = Cave(66, 22)
@@ -50,8 +47,8 @@ def run_sample_map_with_units():
     while proceed:
         for unit in [bat, rat]:
             t.clear()
-            cave.fov_calc([(unit.x, unit.y, unit.sight)])
-            for x, y, col, char in cave.output(unit.x, unit.y):
+            cave.fov_calc([(*unit.local.position, unit.sight)])
+            for x, y, col, char in cave.output(*unit.position):
                 t.puts(x, y, "[c={}]{}[/c]".format(col, char))
             t.refresh()
 
@@ -63,6 +60,7 @@ def run_sample_map_with_units():
             else:
                 proceed=False
                 break
+    t.close()
 
 def test_map_unit_iteration():
     cave = Cave(66, 22, generate=False)
@@ -73,7 +71,7 @@ def test_map_unit_build_dictionary():
     b = Bat(15, 10)
     cave = Cave(66, 22, generate=False)
     cave.units_add([b])
-    assert {u.position: u for u in cave.units} == {b.position: b}
+    assert {u.local.position: u for u in cave.units} == {b.local.position: b}
 
 def test_map_unit_position_iteration():
     cave = Cave(66, 22, generate=False)
@@ -84,7 +82,7 @@ def test_map_unit_position_at():
     b = Bat(15, 10)
     cave = Cave(66, 22, generate=False)
     cave.units_add([b])
-    assert cave.unit_at_position(15, 10) == b    
+    assert cave.unit_at(15, 10) == b    
 
 if __name__ == "__main__":
     # test_sample_map_with_units()

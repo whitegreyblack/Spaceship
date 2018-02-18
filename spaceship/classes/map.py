@@ -1,21 +1,13 @@
  # -*- coding=utf-8 -*-
-import os
-import sys
-from math import hypot
-from copy import deepcopy
-from textwrap import wrap
 from typing import Tuple, Union
 from namedlist import namedlist
 from functools import lru_cache
-from PIL import Image, ImageDraw
 from collections import namedtuple
 from random import randint, choice, shuffle
 from bearlibterminal import terminal as term
-from ..tools import scroll, distance, bresenhams
-from .charmap import WildernessCharmap as wcm
-from .charmap import DungeonCharmap as dcm
-from .monsters import Rat
-from .bat import Bat
+from spaceship.classes.monsters import Rat
+from spaceship.classes.bat import Bat
+from spaceship.tools import scroll
 
 '''
 The largest difference between World and City map tiles is that you can
@@ -62,18 +54,10 @@ TODO: seperate map and dungeon
             it has a chance to hold a dungeon i guess
 '''
 
-MapType = {T: V for V, T in enumerate(('City', 'Cave', 'Wild', 'World'))}
+MapType = { mt: i for i, mt in enumerate('City Cave Wild World'.split()) }
 
 class Map:
     '''The "ABSTRACT CLASS" that should hold the functions shared across all map class types'''
-    # class Tile:
-    #     def __init__(self, char, color, block_mov, block_lit):
-    #         self.char = char
-    #         self.color = color
-    #         self.block_mov = block_mov
-    #         self.block_lit = block_lit
-    #         self.items = []
-    #         self.light = 0
     Tile = namedlist("Tile", 'char color block_mov, block_lit items light')
     mult = [
                 [1,  0,  0, -1, -1,  0,  0,  1],
@@ -82,7 +66,6 @@ class Map:
                 [1,  0,  0,  1, -1,  0,  0, -1]
             ]
 
-    # tile = namedlist("Tile", "char color bkgd light block_mov block_lit items")
     chars_block_move = {"#", "+", "o", "x", "~", "%", "Y", "T"}
     chars_block_light = {"#", "+", "o", "%", "Y", "T"}
 
@@ -98,6 +81,7 @@ class Map:
         self.map_display_width = min(66, width)
         self.map_display_height = min(22, height)
         self.__units = []
+        self.__items = {}
 
     def build(self) -> None:
         raise NotImplementedError("cannot build the base map class -- use a child map object")
@@ -126,7 +110,7 @@ class Map:
         self.check_data()
         self.check_chars()
 
-        rows = []   
+        self.tilemap = []   
         for row in self.data:
             cols = []
             for char in row:
@@ -147,8 +131,7 @@ class Map:
                     light=0)
 
                 cols.append(tile)
-            rows.append(cols)
-        self.tilemap = rows        
+            self.tilemap.append(cols)
 
     def check_data(self) -> None:
         if not hasattr(self, 'data'):
@@ -228,6 +211,9 @@ class Map:
 
     def within_bounds(self, x, y) -> bool:
         return 0 <= x < self.width and 0 <= y < self.height
+
+    def within_generate_bounds(self, x, y):
+        return 6 <= x < self.width - 6 and 2 <= y < self.width - 2
 
     def out_of_bounds(self, x, y) -> bool:
         return not self.within_bounds(x, y)
@@ -418,7 +404,7 @@ class Map:
         '''    
         for unit in units:
             for o in range(8):
-                self.sight(*unit.position, 1, 1.0, 0.0, unit.sight,
+                self.sight(*unit.local, 1, 1.0, 0.0, unit.sight,
                         self.mult[0][o], 
                         self.mult[1][o], 
                         self.mult[2][o], 
@@ -464,17 +450,17 @@ class Map:
                         # if not self.blocked and self.viewable     - floor
                         # if not self.blocked and not self.viewable - empty space
                         if self.blocked(X, Y) and not self.viewable(X, Y):
+                        # if self.blocked(X, Y):
                             new_start = r_slope
-                        # elif self.blocked(X, Y) and self.viewable(X, Y):
-                        #     blocked = False
-                        #     start = new_start
-                        # if not self.blocked(x, y)
+
                         else:
                             blocked = False
                             start = new_start
                     else:
                         if self.blocked(X, Y) and not self.viewable(X, Y) and j < radius:
+                        # if self.blocked(X, Y) and j < radius:
                             # This is a blocking square, start a child scan:
+
                             blocked = True
                             self.sight(cx, cy, j + 1, start, l_slope,
                                         radius, xx, xy, yx, yy, id + 1)
@@ -487,27 +473,19 @@ class Map:
     ###########################################################################
     # Item object Functions                                                   #
     ###########################################################################
-    def item_add(self, x, y, i) -> None:
+    def item_add(self, x, y, item) -> None:
         '''Adds an item object to the list of items at position (x, y)
         on the map
         '''
-        print('add item', x, y, i, self.square(x, y).items)
-        self.square(x, y).items.append(i)
-        print('add item', x, y, i, self.square(x, y).items)
-
-    def item_remove(self, x, y, i) -> None:
+        self.items_at(x, y).append(item)
+        
+    def item_remove(self, x, y, item) -> None:
         '''Removes the item object from the list of items at position (x, y)
         on the map
         '''
-        print('remv item', x, y, i, self.square(x, y).items)
-        try:
-            self.square(x, y).items.remove(i)
-        except ValueError:
-            raise
-            print('no item with that value')
-        print('remv item', x, y, i, self.square(x, y).items)
+        self.items_at(x, y).remove(item)
 
-    def items_at(self, x, y) -> object:
+    def items_at(self, x, y) -> list:
         '''Returns a list of item objects at position (x, y) on the map.
         If no items are on the square then the list will return empty
         '''
@@ -526,13 +504,19 @@ class Map:
     def unit_positions(self) -> Tuple[int, int]:
         '''Yields all unit positions for units in the unit list'''
         for unit in self.units:
-            yield unit.position
+            yield unit.local
     
+    def unit_ready(self) -> object:
+        for unit in self.__units:
+            while unit.energy.ready():
+                unit.reset()
+                yield unit
+
     def unit_at(self, x, y) -> object:
         '''Returns a unit at the given position. If the unit exists then the
         unit is returned else an empty value is returned'''
         for u in self.__units:
-            if (x, y) == u.position:
+            if (x, y) == u.local:
                 return u
 
     def units_add(self, units) -> None:
@@ -543,127 +527,25 @@ class Map:
         '''Removes the unit from the list of units if the unit is found'''
         try:
             self.__units.remove(unit)
+
         except ValueError:
             print('No unit with that value')
 
-    def process_unit_actions(self, player):
-        for unit in self.__units:
-            if hasattr(unit, 'do_ai_stuff'):
-                units, items = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
-                unit.do_ai_stuff(units, items)
-
-    def handle_units(self, player):
-        # print(hasattr(self, 'units'))
-        for unit in self.__units:
-            # if hasattr(unit, 'acts'):
-            #     positions = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
-            #     tiles = {position: self.square(*position) for position in positions}
-            #     units = {u.position: u for u in self.__units if u != unit}
-            #     unit.acts(player, tiles, units)
-            #     if player.cur_health <= 0:
-            #         return
-            # print(unit, unit.energy.cur_energy)
-            if unit.energy.ready():
-                if hasattr(unit, 'acts'):
-                    positions = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
-                    tiles = {position: self.square(*position) for position in positions}
-                    units = {u.position: u for u in self.__units if u != unit}
-                    unit.acts(player, tiles, units)
-                    if player.cur_health <= 0:
-                        return
-                unit.energy.reset()
-            else:
-                unit.energy.gain_energy()
-
     def generate_units(self):
-        if self.height <= 25:
-            max_units = 5
-        else:
-            max_units = 0
-
+        max_units = 25
         if hasattr(self, 'spaces'):
             shuffle(self.spaces)
             for i in range(max_units):
                 i, j = self.spaces[randint(0, len(self.spaces)-1)]
-                unit = choice([Rat, Rat])(x=i, y=j, speed=choice([5, 10, 15]))
+                unit = choice([Rat, Rat])(x=i, y=j, speed=45)
                 self.__units.append(unit)
-                # self.square(i, j).units = units
+                
         else:
             raise AttributeError("Spaces has not yet been initialized")
-
-    def reduce_unit_relationships(self, reduce):
-        self.relationship = min(-100, max(self.relationship - reduce, 100))
-
-    def increase_unit_relationships(self, increase):
-        self.relationship = min(-100, max(self.relationship - increase, 100))
-        return "Your relationship with {} has decreased by {}".format(self.map_id)
 
     ###########################################################################
     # Output and Display Functions                                            #
     ###########################################################################
-    def output_return(self, player_x, player_y):
-        shorten_x = self.map_display_width > 66
-        shorten_y = self.map_display_height > 44
-
-        # get camera location for x coordinate
-        cam_x = scroll(
-            player_x, 
-            self.map_display_width + (-14 if shorten_x else 0), 
-            self.width)
-        ext_x = cam_x + self.map_display_width + (-14 if shorten_x else 0)
-        
-        # get camera location for y coordinate
-        cam_y = scroll(
-            player_y, 
-            self.map_display_height + (-6 if shorten_y else 0), 
-            self.height)
-        ext_y = cam_y + self.map_display_height + (-6 if shorten_y else 0)
-
-        positions = {}
-        if hasattr(self, 'units') and self.__units:
-            for unit in self.__units:
-                positions[unit.position] = unit
-
-        ret = []
-        # width should total 80 units
-        for x in range(cam_x, ext_x):
-            # height should total 24/25 units
-            for y in range(cam_y, ext_y):
-                light_level = self.check_light_level(x, y)
-                if (x, y) == (player_x, player_y):
-                    char, color =  "@", "white"
-                    ret.append((x - cam_x, y - cam_y, color, char))
-
-                elif light_level == 2:
-                    # print(player_x, player_y)
-                    # if (x, y) == (player_x, player_y):
-                    #     char, color =  "@", "white"
-                    if (x, y) in positions.keys():
-                        unit = positions[(x, y)]
-                        char, color = unit.character, unit.foreground
-
-                    elif self.square(x, y).items:
-                        item = self.square(x, y).items[0]
-                        char, color = item.char, item.color
-
-                    else:
-                        square = self.square(x, y)
-                        char, color = square.char, square.color
-
-                    ret.append((x - cam_x, y - cam_y, color, char))
-
-                elif light_level == 1:
-                    square = self.square(x, y)
-                    char, color = square.char, "darkest grey"
-                    ret.append((x - cam_x, y - cam_y, color, char))
-
-                else:
-                    # yield (x - cam_x, y - cam_y, "black", " ")
-                    continue
-
-        self.lit_reset()
-        return ret
-
     def output(self, player_x, player_y):
         # detect if map is smaller than usual
         shorten_x = self.map_display_width > 66
@@ -683,37 +565,41 @@ class Map:
             self.height)
         ext_y = cam_y + self.map_display_height + (-6 if shorten_y else 0)
 
+        putstr = "[c={}]{}[/c]"
         # height should total 24/25 units
         for y in range(cam_y, ext_y):
+            curstr = ""
+            yieldptr = None
             # width should total 80 units
             for x in range(cam_x, ext_x):
-                light_level = self.check_light_level(x, y)
                 if (x, y) == (player_x, player_y):
-                    yield (x - cam_x, y - cam_y, "white", "@")
-
-                elif light_level == 2:
-                    if (x, y) in self.unit_positions:
-                        unit = self.unit_at(x, y)
-                        char, color = unit.character, unit.foreground
-
-                    elif self.square(x, y).items:
-                        item = self.square(x, y).items[0]
-                        char, color = item.char, item.color
-
-                    else:
-                        square = self.square(x, y)
-                        char, color = square.char, square.color
-
-                    yield (x - cam_x, y - cam_y, color, char)
-
-                elif light_level == 1:
-                    square = self.square(x, y)
-                    char, color = square.char, "darkest grey"
-                    yield (x - cam_x, y - cam_y, color, char)
-
+                    char, color = "@", "white"
                 else:
-                    # yield (x - cam_x, y - cam_y, "black", " ")
-                    continue
+                    light_level = self.check_light_level(x, y)
+                    if light_level == 2:
+                        if (x, y) in self.unit_positions:
+                            unit = self.unit_at(x, y)
+                            char, color = unit.character, unit.foreground
+                        elif self.square(x, y).items:
+                            item = self.square(x, y).items[-1]
+                            char, color = item.char, item.color
+                        else:
+                            square = self.square(x, y)
+                            char, color = square.char, square.color
+                    elif light_level == 1:
+                        square = self.square(x, y)
+                        char, color = square.char, "darkest grey"
+                    else:
+                        char, color = ' ', 'black'
+                curstr += putstr.format(color, char)
+                # yield (x - cam_x, y - cam_y, color, char)
+
+                if not yieldptr:
+                    yieldptr = (x - cam_x, y - cam_y)
+                
+            if yieldptr and curstr:
+                yield yieldptr, curstr
+
         self.lit_reset()
 
         # stuff

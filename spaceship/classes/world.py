@@ -4,12 +4,10 @@ from typing import Tuple, Union
 from PIL import Image, ImageDraw
 from collections import namedtuple
 from random import shuffle, choice, randint
-from .charmap import WildernessCharmap as wcm
-from .charmap import DungeonCharmap as dcm
-from .charmap import WorldCharmap as ccm
-from .utils import splitter, blender
-from ..tools import toInt, scroll
-from .map import Map
+from spaceship.classes.utils import splitter, blender
+from spaceship.tools import toInt, scroll
+from spaceship.classes.map import Map
+from namedlist import namedlist
 
 '''
 Calabaston : Roguelike
@@ -102,17 +100,16 @@ Calabaston : Roguelike
         Rygor: Unknown,
     }
   }
-}
+    }
 '''
-
 class World(Map):
     chars = {
         "&": (["&"], "#FF8844"),
     }
-    chars_block_move = ["=", "-", 'A', '^']
-    chars_block_light = ["T", "^", "~", "A", "^"]
+    chars_block_move = {"A", "^", "=", "-"}
+    chars_block_light = {"A", "^", "T", "~"}
 
-    enterable_legend = {
+    cities = {
         (5, 28): "Northshore",
         (51, 42): "Aerathalar",
         (12, 14): "Armagos",
@@ -150,7 +147,6 @@ class World(Map):
     }
 
     capitals = {
-
     }
 
     geo_legend = {
@@ -188,35 +184,29 @@ class World(Map):
         (0, 162, 232): ("deep seas", "2248", ("#3040A0",)),
         (0, 0, 0): ("dungeon", "*", ("#FF00FF",)),
     }
-    dungeon_legend = {
+    dungeons = {
         (12, 52): "Pig Beach",
         (20, 57): "Beach Cave",
         (22, 50): "Small Dungeon",
     }
     # class WorldTile(Map.Tile):
-    class WorldTile:
-        def __init__(self, char, color, block_mov, block_lit, tile_type, tile_name=None):
-            '''Inherits from Map.Tile to create a tile specific for a world map'''
-            # super().__init__(char, color, block_mov, block_lit)
-            self.char = char
-            self.color = color
-            self.block_mov = block_mov
-            self.block_lit = block_lit
-            self.tile_type = tile_type
-            self.light = 0
-            if tile_name:
-                self.name = tile_name
+    # class WorldTile:
+    #     def __init__(self, char, color, block_mov, block_lit, tile_type, tile_name=None):
+    #         '''Inherits from Map.Tile to create a tile specific for a world map'''
+    #         # super().__init__(char, color, block_mov, block_lit)
+    #         self.char = char
+    #         self.color = color
+    #         self.block_mov = block_mov
+    #         self.block_lit = block_lit
+    #         self.tile_type = tile_type
+    #         self.light = 0
+            
+    #         if tile_name:
+    #             self.name = tile_name
 
-        def __repr__(self):
-            return self.char
-
-        def __str__(self):
-            return "{}, {}, {}, {}, {}".format(
-                self.char,
-                self.color,
-                self.block_mov,
-                self.block_lit,
-                self.light)
+    WorldTile = namedlist("WorldTile", "char color block_mov block_lit light tile_type tile_name")
+    
+    __slots__ = ('map_name',)
 
     def __init__(self, map_name, map_link):
         self.map_name = map_name
@@ -234,15 +224,16 @@ class World(Map):
 
     @staticmethod
     def capitals(capital: str) -> str:
-        city = {
-            "Tiphmore": (42, 62),
-            "Dun Badur": (83, 9),
-            "Aurundel": (41, 20),
-            "Renmar": (16, 46),
-            "Lok Gurrah": (72, 51),            
-        }
+        # city = {
+        #     "Tiphmore": (42, 62),
+        #     "Dun Badur": (83, 9),
+        #     "Aurundel": (41, 20),
+        #     "Renmar": (16, 46),
+        #     "Lok Gurrah": (72, 51),            
+        # }
 
-        return city[capital]
+        # return city[capital]
+        return (16, 46)
 
     @property
     def tilemap(self):
@@ -258,21 +249,28 @@ class World(Map):
             (237, 28, 36): ("town", "+", ("#00fF00",)),
             (136, 0, 21): ("fort", "o", ("#FF0000",)),
             (255, 255, 255): ("mountains", "^", ("#FFFFFF",)),
-            (195, 195, 195): ("mountains", "A", ("#C0C0C0",)),
-            (127, 127, 127): ("mountains", "A", ("#808080",)),
+            (195, 195, 195): ("mountains", "^", ("#C0C0C0",)),
+            (127, 127, 127): ("mountains", "^", ("#808080",)),
             (185, 122, 87): ("hills", "~", ("#826644",)),
             (181, 230, 29): ("forest", "T", ("#006400",)),
-            (34, 177, 76): ("dark woods", "T", ("#006400",)),
-            (255, 201, 14):("plains", ".", ("#568203",)),
-            (255, 127, 39): ("plains", ".", ("#FFBD22",)),
-            (255, 242, 0): ("fields", "X", ("#FFBF00",)),
+            (34, 177, 76): ("dark woods", "&", ("#006400",)),
+            (255, 201, 14):("grassland", ".", ("#568203",)),
+            # (255, 127, 39): ("plains", "\"", ("#FFBD22",)),
+            (255, 242, 0): ("plains", ".", ("#FFBF00",)),
             (255, 174, 201): ("desert", "~", ("#F0AC82",)),
             (112, 146, 190): ("river", "~", ("#30FFFF",)),
             (63, 72, 204): ("lake", "-", ("#3088FF",)),
             (0, 162, 232): ("deep seas", "=", ("#3040A0",)),
             (0, 0, 0): ("dungeon", "*", ("#FF00FF",)),
         }  
-       
+        '''       
+            (200, 191, 231): ("city", "00CA", ("#FF8844",)),
+            (163, 73, 164): ("city", "00CA", ("#FFFF00",)),
+            (185, 122, 87): ("hills", "007E", ("#826644",)),
+            (255, 201, 14):("grassland", "221A", ("#568203",)),
+            (63, 72, 204): ("lake", "2248", ("#3088FF",)),
+            (0, 162, 232): ("deep seas", "2248", ("#3040A0",)),
+        '''
         self.__tile_map = []
 
         try:
@@ -299,7 +297,7 @@ class World(Map):
                 hexcode = choice(hexcodes) if len(hexcodes) > 1 else hexcodes[0]
                 block_mov = tile_char in self.chars_block_move
                 block_lit = tile_char not in self.chars_block_light
-                # tile_name = cities[(i,j)] if tile_char in ("&", "o", "+", "#") else None
+
                 tile_name = None
 
                 tile = self.WorldTile(
@@ -307,6 +305,7 @@ class World(Map):
                     color=hexcode,
                     block_mov=block_mov,
                     block_lit=block_lit, 
+                    light=0,
                     tile_type=tile_type,
                     tile_name=tile_name)
                 # print(tile)
@@ -314,33 +313,34 @@ class World(Map):
             self.__tile_map.append(col)
 
     def save_map_check(self):
-        maps_path = "./spaceship/assets/maps/world/"
+        maps_path = "./spaceship/assets/world/"
         if not os.path.isdir(maps_path):
             print("Picturfy folder does not exist -- Creating 'world' folder")
             os.makedirs(maps_path)
+        return maps_path
 
     def save_img(self):
-        self.save_map_check()
+        path = self.save_map_check()
         file_name = "world.png"
         img = Image.new('RGB', (self.width, self.height))
         draw = ImageDraw.Draw(img)
         for j, row in enumerate(self.tilemap):
             for i, tile in enumerate(row):
                 img.load()[i, j] = tuple(toInt(color) for color in splitter(tile.color))
-        img.save("./spaceship/assets/maps/world/" + file_name)
+        img.save(path + file_name)
                 
     def save_map(self):
-        self.save_map_check()
+        path = self.save_map_check()
         file_name = "world.txt"
-        with open("./spaceship/assets/maps/world/" + file_name, 'w') as text:
+        with open(path + file_name, 'w') as text:
             text.write(str(self))
 
     def legend(self) -> Tuple[str, str, str, int]:
         i = 0
-        for d, ch, colors in self.geo_legend.values():
+        for d, char, colorors in self.geo_legend.values():
             ch = ch if len(ch) == 1 else chr(int(ch, 16))
             for col in colors:
-                yield ch, col, d, i
+                yield char, color, d, i
                 i += 1
 
     def location_exists(self, x, y):
@@ -355,18 +355,6 @@ class World(Map):
 
     def location(self, x, y):
         return self.locations[(x, y)]
-    # @property
-    # def location(self, x, y):
-    #     '''Returns map if exists else None'''
-    #     try:
-    #         return self.locations[(x, y)]
-    #     except KeyError:
-    #         return None
-
-    # @location.setter
-    # def location(self, x, y, l):
-    #     '''Sets location at (x, y)'''
-    #     self.locations[(x, y)] = l
 
     def landtype(self, x, y):
         return self.square(x, y).tile_type
@@ -389,22 +377,33 @@ class World(Map):
             self.height)
         ext_y = cam_y + self.map_display_height + (-6 if shorten_y else 0)
         
+
+        putstr = "[c={}]{}[/c]"
         for y in range(cam_y, ext_y):
+            curstr, yieldptr = "", None
             for x in range(cam_x, ext_x):
-                light_level = self.check_light_level(x, y)
                 if x == player_x and y == player_y:
-                    ch, col = "@", "white"
-
-                elif light_level == 2:
-                    square = self.square(x, y)
-                    ch, col = square.char, square.color
-
-                elif light_level == 1:
-                    square = self.square(x, y)
-                    ch, col = square.char, "darkest grey"
-
+                    char, color = "@", "white"
                 else:
-                    continue
+                    light_level = self.check_light_level(x, y)
+                    if light_level == 2:
+                        square = self.square(x, y)
+                        char, color = square.char, square.color
+
+                    elif light_level == 1:
+                        square = self.square(x, y)
+                        char, color = square.char, "darkest grey"
+
+                    else:
+                        char, color = ' ', "black"
+                        
+                curstr += putstr.format(color, char)
+                if not yieldptr:
+                    yieldptr = (x - cam_x, y - cam_y)
+
+            if yieldptr and curstr:
+                yield yieldptr, curstr
+
                 # else:
                 #     try:
                 #         # char, color, _, terr, tcol, king, kcol, _ = self.data[j][i]
@@ -422,16 +421,13 @@ class World(Map):
 
                 #     col = tile.color
 
-                # print(ch, col)
-                yield (x - cam_x, y - cam_y, col, ch)
+                # print(char, color)
+                # yield (x - cam_x, y - cam_y, col, ch)
+            
         self.lit_reset()
 
 if __name__ == "__main__":
-    w = World(
-        map_name="Calabaston",
-        map_link="./spaceship/assets/worldmap.png")
-    print(w.__repr__())
-    # w.create_tile_map()
-    print(w)
+    w = World(map_name="Calabaston",
+              map_link="./spaceship/assets/worldmap.png")
     w.save_map()
     w.save_img()

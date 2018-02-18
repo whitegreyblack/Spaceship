@@ -1,9 +1,10 @@
-import os
-import sys
 from bearlibterminal import terminal as term
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
-from spaceship.main_menu import (Continue, Create, Engine, Main, Name, Options,
-                                 Scene)
+from spaceship.engine import Engine
+from spaceship.menus.scene import Scene
+from spaceship.menus.main import Main
+from spaceship.menus.make import Create
+from spaceship.menus.name import Name
+from spaceship.menus.options import Options
 
 def test_scene_dimensions():
     term.open()

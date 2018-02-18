@@ -1,14 +1,12 @@
 from random import shuffle, choice, randint
 from collections import namedtuple
 from PIL import Image
-
+from collections import namedtuple
 from .map import Map
 from .utils import blender
-from .charmap import DungeonCharmap as dcm
-from .charmap import WildernessCharmap as wcm
 from .unit import Unit
 from .neutrals import neutrals
-
+from ..strings import IMG_PATH
 # cities.py
 '''
 Shadowbarrow
@@ -52,6 +50,33 @@ Corpse -> animatable -> Zombie
 # Leather
 # 
 '''
+charmap = namedtuple("Charmap", "chars hexcode")
+class DungeonCharmap:
+    # GRASS=charmap([",", ";"], ("#56ab2f", "#a8e063"))
+    GRASS=charmap([",", ";"], ("#008800", "#008800"))
+    HOUSE=charmap(["="], ("#ffffff", "#ffffff"))
+    TILES=charmap(["."], ("#C0C0C0", "#C0C0C0"))
+    # TILES=charmap(["."], ("#404040", "#404040"))
+    WALLS=charmap(["#"], ("#444444", "#656565"))
+    # WATER=charmap(["~"], ("#43C6AC", "#191654"))
+    WATER=charmap(["~"], ("#191654", "#191654"))
+    # WATER=charmap(["~"], ("#43C6AC", "#43C6AC"))
+
+    DOORS=charmap(["+"], ("#994C00", "#994C00"))
+    # PLANT=charmap(["|"], ("#F3E347", "#24FE41"))
+    PLANT=charmap(["'"], ("#ffc90e", "#ffc90e"))
+
+    LAMPS=charmap(["o"], ("#ffffff", "#ffffff"))
+    BRICK=charmap(["%"], ("#a73737", "#7a2828"))
+    # ROADS=charmap([":"], ("#808080", "#994C00"))
+    ROADS=charmap([":"], ("#994C00", "#994C00"))
+    POSTS=charmap(["x"], ("#9a8478", "#9a8478"))
+    BLOCK=charmap(["#", "+", "o", "x"],("#000000", "#ffffff"))
+    LTHAN=charmap(["<"], ("#c0c0c0", "#c0c0c0"))
+    GTHAN=charmap([">"], ("#c0c0c0", "#c0c0c0"))
+    TRAPS=charmap(["^"], ("#c0c0c0", "#c0c0c0"))
+
+dcm = DungeonCharmap
 
 class City(Map):
     chars = {
@@ -79,14 +104,15 @@ class City(Map):
 
     chars_block_move = {"#", "+", "o", "x", "~", "%", "Y", "T",}
 
-    def __init__(self, map_id, map_img, map_cfg, width, height):
-        super().__init__(width, height, self.__class__.__name__)
+    def __init__(self, map_id, map_img, map_cfg):
         self.map_id = map_id
         self.map_img = map_img
         self.map_cfg = map_cfg
-        self.relationship = 100
-        self.parse_img() # <== creates initial data map
+        width, height = self.parse_img() # <== creates initial data map
         self.parse_cfg()
+
+        super().__init__(width, height, self.__class__.__name__)
+
         self.create_tile_map()
         # print(repr(self))
 
@@ -148,49 +174,62 @@ class City(Map):
                 pixels = img.load()
                 w, h = img.size
         except FileNotFoundError:
-            # raise FileNotFoundError("Cannot find file for stringify: {}".format(self.map_img))
-            with Image.open('.spaceship/assets/maps/sample.png') as img:
+            with Image.open(IMG_PATH + 'sample.png') as img:
                 pixels = img.load()
                 w, h = img.size
 
         for j in range(h):
             line = ""
+
             for i in range(w):
-                # sometimes alpha channel is included so test for all values first
                 try:
                     r, g, b, _ = pixels[i, j]
+                    
                 except ValueError:
                     r, g, b = pixels[i, j]
+
                 try:
                     char = stringify_chars[(r, g, b)]
+
                     if char in self.unit_spaces.keys():
                         self.unit_spaces[char].append((i, j))
                         # revert the char to its original space
                         char = "."
+
                     elif char in (".", ":", ",", "="):
-                        self.spaces.append((i, j))
+                        if 0 <= i < w and 0 <= j < h:
+                            self.spaces.append((i, j))
+
                     line += char
+
                 except KeyError:
                     print((r, g, b))
+
             self.data.append(line)
 
         # make sure accesses to the set are random
         shuffle(self.spaces)
+        return w, h
 
     # Unique to city map
     def parse_cfg(self):
         if not self.spaces:
             raise AttributeError("No world configuration")
+
         self.stats = "{}: Unit List\n".format(self.map_id)
+
         try:
             with open(self.map_cfg, 'r') as cfg:
                 modifier = ""
+
                 for line in cfg:
                     if line.strip().startswith('#'):
                         pass # these are comments in the file
+
                     elif line.strip().startswith('['):
                         modifier = line.replace('[', '').replace(']', '')
                         modifier = modifier.lower().strip()
+
                     else:
                         job, color, character, number = line.split()
                         self.stats += "{}: {}\n".format(job, number)
@@ -198,6 +237,7 @@ class City(Map):
                         if modifier == "":
                             e="Configuration file has no race specifier"
                             raise ValueError(e)
+
                         if job.lower() in neutrals.keys():
                             for _ in range(int(number)):
                                 try:
@@ -218,10 +258,10 @@ class City(Map):
                                     job=job.lower(),
                                     ch=character,
                                     fg=color,
-                                    rs=self.relationship,
                                     spaces=self.unit_spaces[character] 
                                         if self.unit_spaces[character] 
                                         else self.spaces)])
+
                         else:
                             for _ in range(int(number)):
                                 i, j = self.spaces.pop()
@@ -229,8 +269,8 @@ class City(Map):
                                     x=i, 
                                     y=j,
                                     ch=character,
-                                    fg=color,
-                                    rs=self.relationship))
+                                    fg=color))
+                                                                        
         except FileNotFoundError:
             # not explicitely needed -- can just pass instead of printing
             print("No unit configuration file found")
@@ -238,16 +278,6 @@ class City(Map):
         except:
             # any other error should be raised
             raise
-
-    def handle_units(self, player):
-        for unit in self.units:
-            if hasattr(unit, 'acts'):
-                positions = self.fov_calc_blocks(unit.x, unit.y, unit.sight)
-                tiles = {position: self.square(*position) for position in positions}
-                units = {u.position: u for u in self.units if u != unit}
-                unit.acts(player, tiles, units)
-                if player.cur_health <= 0:
-                    return            
 
     def print_map(self):
         if hasattr(self, 'data'):

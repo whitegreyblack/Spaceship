@@ -1,65 +1,51 @@
 from typing import Tuple
+from namedlist import namedlist
+from .point import Point
+from re import search
 import math
-from .tile import Tile
 
-class Object(Tile):
+class Color:
+    def __init__(self, color):
+        if search(r'^#(?:[0-9a-fA-F]{3}){1,2}$', color):
+            self.color = color
+        else:
+            raise ValueError("Hexcode is an invalid color")
+
+class Object:
     '''Base object class used in the following subclasses:
-        
-    Tiles :- WorldTiles, MapTiles
-
     Units :- NPC's, Monsters, Player
-
-    Items :- Armor, Weapons, Usables
-
-    Implements position and object position interactions
-
-    Position :- Changes constantly so getter/setter
-
-    Graphics :- Doesn't usually change -- for now set as only getter
     '''
     object_id = 0
     
-    def __init__(self, x: int, y: int, ch: chr, fg: str, bg: str):
-        super().__init__(ch, fg, bg)
-        self.x, self.y = x, y
+    def __init__(self, x: int, y: int, ch: chr, fg: str, bg: str) -> None:
         Object.object_id += 1
+        self.character = ch
+        self.foreground = fg
+        self.background = bg
+        self.local = Point(x, y)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "{}: (x={}, y={}, ch={}, fg={}, bg={})".format(
             self.__class__.__name__, 
-            self.x, 
-            self.y, 
+            *self.local.position,
             self.character,
-            self.foreground,
-            self.background
-        )
+            *self.color)
 
     @property
-    def position(self) -> Tuple[int, int]:
-        '''returns local position within a non-global map'''
-        return self.x, self.y
-
-    @position.setter
-    def position(self, position: Tuple[int, int]) -> None:
-        '''sets local position given a tuple(x,y)'''
-        self.x, self.y = position
-
-    def distance(self, other):
-        return math.sqrt(
-            math.pow(other.x - self.x, 2) + \
-            math.pow(other.y - self.y, 2))
+    def color(self):
+        return self.foreground, self.background
 
     def output(self):
-        return (*super().draw(), self.x, self.y)
+        return (*self.local.position, self.character, *self.color)
 
 if __name__ == "__main__":
     # unit tests?
     obj = Object(5, 5, 'o', "#ffffff", "#000000")
     print(obj)
-    print(obj.position)
+    print(obj.local.position)
+    print(obj.output())
 
     a = Object(0, 0, "a", "#000000", "#ffffff")
     b = Object(9, 9, "b", "#000000", "#ffffff")
-    print(a.distance(b))
-
+    print(a.local.distance(b.local))
     print(Object.object_id)

@@ -2,9 +2,16 @@ import os
 import sys
 from .map import Map
 from .utils import blender
-from .charmap import DungeonCharmap as dcm
-from .charmap import WildernessCharmap as wcm
+from collections import namedtuple
 from random import randint, choice, choices
+
+charmap = namedtuple("Charmap", "chars hexcode")
+class WildernessCharmap:
+    GRASS=charmap([",", ";", "`","\'", "\""], ("#56ab2f", "#a8e063"))
+    PLAIN=charmap([".", "\"", ","], ("#F3E347", "#56ab2f"))
+    TREES=charmap(["Y", "T", "f"], ("#994C00", "#994C00"))
+    HILLS=charmap(["~"], ("#994C00", "#9A8478"))
+wcm = WildernessCharmap
 
 class Desert(Map):
     chars = {
@@ -13,10 +20,11 @@ class Desert(Map):
     # Hills has a modified block_move char set due to hills having the same char as water
     #   The modified set has removed the hill char while other maps include it
     chars_block_move =  {"#", "+", "o", "x", "%", "Y", "T"}
-    def __init__(self, width, height, generate=False):
+    def __init__(self, width=66, height=22, generate=False):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
+        
         if generate:
             self.generate_units()
 
@@ -57,7 +65,7 @@ class Forest(Map):
         "T": (wcm.TREES.chars, blender(wcm.GRASS.hexcode)),
     }
     chars_block_move =  {"#", "+", "o", "x", "%"}
-    def __init__(self, width, height, generate=False):
+    def __init__(self, width=66, height=22, generate=False):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
@@ -97,7 +105,7 @@ class Grassland(Map):
         "T": (wcm.TREES.chars, blender(wcm.GRASS.hexcode)),
     }
     chars_block_move = {"#", "+", "o", "x", "~", "%"}
-    def __init__(self, width, height, generate=False):
+    def __init__(self, width=66, height=22, generate=False):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
@@ -126,7 +134,7 @@ class Hills(Map):
     # Hills has a modified block_move char set due to hills having the same char as water
     #   The modified set has removed the hill char while other maps include it
     chars_block_move =  {"#", "+", "o", "x", "%", "Y", "T"}
-    def __init__(self, width, height, generate=False):
+    def __init__(self, width=66, height=22, generate=False):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
@@ -153,7 +161,7 @@ class Plains(Map):
             ".": (".", blender(wcm.PLAIN.hexcode)),
             "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),
     }
-    def __init__(self, width, height, generate=False):
+    def __init__(self, width=66, height=22, generate=False):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()
@@ -181,7 +189,7 @@ class Woods(Map):
             ".": (wcm.GRASS.chars, blender(wcm.GRASS.hexcode)),
             "T": (wcm.TREES.chars, blender(wcm.TREES.hexcode)),            
     }
-    def __init__(self, width, height, generate=False):
+    def __init__(self, width=66, height=22, generate=False):
         super().__init__(width, height, "Wild")
         self.build()
         self.create_tile_map()

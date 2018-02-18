@@ -1,5 +1,4 @@
-from .utils import spaceship
-from spaceship.classes.game import Point, Tile, Object, Unit, Monster, Game, Color
+from spaceship.classes.object import Point, Object
 import math
 
 def test_point_creation():
@@ -23,18 +22,18 @@ def test_points_addition():
     pass
     
 def test_object_position():
-    obj = Object(Point(5, 6), Tile('@', Color('#888888'), Color('#040404')))
-    assert obj.position == (5, 6)
-    assert obj.position == Point(5, 6)
+    obj = Object(5, 6, '@', '#888888', '#040404')
+    assert obj.local == (5, 6)
+    assert obj.local == Point(5, 6)
 
 def test_object_character():
-    obj = Object(Point(5, 6), Tile('@', Color('#888888'), Color('#040404')))
+    obj = Object(5, 6, '@', '#888888', '#040404')
     assert obj.character == '@'
 
 def test_object_foreground():
-    obj = Object(Point(5, 6), Tile('@', Color('#888888'), Color('#040404')))
+    obj = Object(5, 6, '@', '#888888', '#040404')
     assert obj.foreground == "#888888"
 
 def test_object_background():
-    obj = Object(Point(5, 6), Tile('@', Color('#888888'), Color('#040404')))
+    obj = Object(5, 6, '@', '#888888', '#040404')
     assert obj.background == "#040404"

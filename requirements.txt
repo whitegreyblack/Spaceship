@@ -1,5 +1,5 @@
-bearlibterminal==0.15.4
-pillow==4.2.1
+bearlibterminal
+pillow
 namedlist
 ptpython
 pytest

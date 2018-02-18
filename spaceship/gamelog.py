@@ -3,7 +3,7 @@ import sys
 import textwrap
 from time import ctime, clock
 from collections import namedtuple
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
+from bearlibterminal import terminal as term
 """Implements the Game Logger used in displaying messages to the terminal
 Basic Usage:
     After instantiation at global/main file level, calls to GameLogger should
@@ -18,9 +18,7 @@ Implementation Details:
         -   ?should it update index dynamically or manually?
 """
 
-statement = namedtuple("Statement", "statement ctime clock")
-
-log = namedtuple("Logger", "messages")
+log = namedtuple("Logger", "message color")
 
 class GameLogger:
     """
@@ -49,7 +47,7 @@ class GameLogger:
         self.messages = []
         self.width = width
         self.print_to_term = ptt
-        self.maxlines = screenlinelimit
+        self.height = screenlinelimit
         self.setupFileWriting(footer)
 
     def print_on(self):
@@ -97,7 +95,7 @@ class GameLogger:
         '''Returns a time string for use in log pre-messages'''
         return "[" + self.time() + "] :- "
 
-    def add(self, message):
+    def add(self, message, color):
         """Adds a message to queue and handles repeated messages from game"""
         def add_message(message):
             # checks terminal print flag
@@ -122,29 +120,51 @@ class GameLogger:
 
             # Dump the messages as long as they are not repeats of the same 
             # message
-            if len(self.messages) + 1 > self.maxlines:
+            if len(self.messages) + 1 > self.height:
                 # print('dump')
                 # don't need to repeatedly dump the same message every time
                 if not self.counter:
                     self.dump(self.messages.pop(0))
 
-            self.messages.append([self.getHeader(), message])
+            self.messages.append([self.getHeader(), message, color])
             self.update()
 
-        messages = textwrap.wrap(message, width=self.width)
+        messages = textwrap.wrap(message, width=self.width - 2)
         for msg in messages:
             add_message(msg)
 
     def update(self, n=0):
         """Updates the points to the message position to start printing from"""
-        self.index = len(self.messages) - self.maxlines if not n else n
+        self.index = len(self.messages) - self.height if not n else n
+
+    def draw(self, log=None, color="white", refresh=True):
+        if log:
+            self.add(log, color)
+        
+        self.clear()
+        messages = self.write()
+        for index, msg in enumerate(messages):
+            term.puts(x=term.state(term.TK_WIDTH) - self.width,
+                      y=term.state(term.TK_HEIGHT) - self.height + index,
+                      s="[c={}]{}[/c]".format(msg.color, msg.message))
+        
+        if refresh:
+            term.refresh()
+
+    def clear(self):
+        term.clear_area(term.state(term.TK_WIDTH) - self.width - 1, 
+                        term.state(term.TK_HEIGHT) - self.height - 1, 
+                        self.width + 1, 
+                        self.height + 1)
 
     def write(self):
         """Return a set of messages for game loop to print"""
-        if len(self.messages) < self.maxlines:  
-            return log(self.messages)
+        if len(self.messages) < self.height:  
+            return [log(message[1], message[2]) for message in self.messages]
+            # return log(self.messages, )
 
-        return log([self.messages[i] for i in range(self.maxlines)])
+        return [log(self.messages[i][1], self.messages[i][2])
+                for i in range(self.height)]
 
     def dump(self, message):
         """Write log to disk"""
