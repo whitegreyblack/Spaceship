@@ -5,6 +5,10 @@ import re
 class Die:
     __slots__ = ['multiplier', 'sides', 'modifier']
     def __init__(self, sides=6, multiplier=1, modifier=0):
+        '''Checks all three parameters for correct values. If incorrect
+        values are found then init raises ValueErrors and class creation
+        is aborted.
+        '''
         if sides < 2:
             raise ValueError('Number of sides on die must be 2 or more')
 
@@ -18,24 +22,21 @@ class Die:
         self.multiplier = multiplier
         self.modifier = modifier
 
-    @property
-    def string(self):
-        return self.__str__()
-
     @staticmethod
     def eval_dice_string(string):
         '''Used to recognize valid dice strings. Matches input string with
-        regex used in determining dice strings
+        regex used in determining dice strings. If match found then converts
+        die string into three integer parameters used in initializing dices.
         '''
         dice_init = namedtuple("die_params", "sides, mult, sub")
-        die_regex = r"\d{1,3}d\d{1,3}(?:\+|\-)\d{1,4}"
+        die_regex = r"\d{1,3}d\d{1,3}(?:(?:\+|\-)\d{1,4}){0,1}"
         if bool(re.match(die_regex, string)):
             try:
                 string, sub = re.split(r'(?:\+|\-)', string)
             except ValueError:
                 sub = 0
             mult, sides = string.split('d')
-            return dice_init(sides, mult, sub)
+            return dice_init(int(sides), int(mult), int(sub))
         raise ValueError('Die string is invalid')
 
     @classmethod
@@ -59,22 +60,23 @@ class Die:
         # return value if value < 0 else f"+{value}" if value > 0 else ""
 
     def roll(self):
-        value = 0
-        for die in range(self.multiplier):
-            value += random.randint(1, self.sides)
-        yield value
+        '''Returns a random value found in between the range roll'''
+        yield random.randint(*self.ranges())
 
     def ranges(self):
-        return 1 + self.modifier, self.multiplier * self.sides + self.modifier
+        '''Returns the range of the rolls possible by the die'''
+        return self.multiplier + self.modifier, self.multiplier * self.sides + self.modifier
 
     def __repr__(self):
+        '''Returns die info for developer'''
         c=self.__class__.__name__
         s=self.sides
         mu=self.multiplier
         mo=self.modifier
-        return f"{c}(sides={s}, mult={mu}, mod={mo}): {self.string}"
+        return f"{c}(sides={s}, mult={mu}, mod={mo}): {str(self)}"
 
     def __str__(self):
+        '''Returns die info for end-user'''
         return f"{self.multiplier}d{self.sides}{self.check_sign(self.modifier)}"
 
 if __name__ == "__main__":
