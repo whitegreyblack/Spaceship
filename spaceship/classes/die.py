@@ -22,13 +22,6 @@ class Die:
     def string(self):
         return self.__str__()
 
-    @classmethod
-    def parse(cls, string):
-        '''Creates a valid Die object using a die string instead of
-        normal parameters
-        '''
-        return cls(*Die.eval_dice_string(string))
-
     @staticmethod
     def eval_dice_string(string):
         '''Used to recognize valid dice strings. Matches input string with
@@ -44,6 +37,13 @@ class Die:
             mult, sides = string.split('d')
             return dice_init(sides, mult, sub)
         raise ValueError('Die string is invalid')
+
+    @classmethod
+    def parse(cls, string):
+        '''Creates a valid Die object using a die string instead of
+        normal parameters
+        '''
+        return cls(*Die.eval_dice_string(string))
 
     def check_sign(self, value):
         '''Converts all values into string representations. If value is 
@@ -90,5 +90,6 @@ if __name__ == "__main__":
     ex_str = "2d8+3"
     print(Die.eval_dice_string(ex_str))
 
-    ex_str = "2d8+3"
-    x, y = re.split(r'(?:\+|\-)', ex_str)
+    ex_str = "2d8"
+    print(Die.eval_dice_string(ex_str))
+    
