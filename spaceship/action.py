@@ -545,6 +545,8 @@ def eat_item(unit, area, clearer, drawer, logger, screenlog):
             index, row = 0, 0
             index, row = drawer(items, index, row, strings.cmd_use_none)
 
+    return unit, area, [log]
+    
 def menu_action(unit, items, area, strs, eraser, drawer, logger, fns):
     """Abstract action function that handles actions using screen menu draw 
     functions. Takes in several parameters which may or may not be needed to 
