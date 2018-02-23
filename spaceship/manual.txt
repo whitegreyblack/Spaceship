@@ -1,0 +1,38 @@
+
+EQUIPMENT:
+	armr
+	book
+	food
+	misc
+	mwpn
+	potn
+	ring
+	rwpn
+	scrl
+	wand
+
+commands(type):
+	EAT   [item: food]
+	USE   [item]
+	CAST  [item: book | ring | scrl | wand]
+	DROP  [item]
+	KICK  [objs: unit | tile: [wall | door]]
+	MOVE  [tile: flor]
+	OPEN  [tile: door]
+	READ  [item: book | scrl]
+	CLOSE [tile: door]
+	DRINK [item: potn]
+	EQUIP [item: armr | mwpn | ring | rwpn | wand]
+	THROW [item]
+
+commands(obj):
+	[objs]: (kick, )
+	[door]: (open, close)
+	[item]: (eat, use, thrown, equip, drop)
+
+C. MONSTERS: List of all monsters included in the game from weak to strong
+-------------------------------------------------------------------------------
+
+C.A: Rat
+-------------------------------------------------------------------------------
+Level: 1 Armor: 2 Hp: 1d6 Damage: 1d3 Exp: 2 Range: 1-8

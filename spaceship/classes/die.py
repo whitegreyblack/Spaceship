@@ -67,6 +67,16 @@ class Die:
         '''Returns the range of the rolls possible by the die'''
         return self.multiplier + self.modifier, self.multiplier * self.sides + self.modifier
 
+    def average(self, times, integer=True):
+        total = sum(next(self.roll()) for _ in range(times))
+        if integer:
+            return total // times
+        else:
+            return total / times
+
+    def graph(self):
+        pass
+
     def __repr__(self):
         '''Returns die info for developer'''
         c=self.__class__.__name__
@@ -87,7 +97,7 @@ if __name__ == "__main__":
     print(d, d.ranges(), next(d.roll()))
 
     d = Die(multiplier=2, modifier=2)
-    print(d, d.ranges(), next(d.roll()))
+    print(d, d.ranges(), next(d.roll()), d.average(10))
 
     d = Die.construct("2d6+2")
     print(d, d.ranges(), next(d.roll()))
