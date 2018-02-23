@@ -1,0 +1,48 @@
+# Manual
+-------------------------------------------------------------------------------
+A. ITEM TYPES: List of all item types that exist in the game
+-------------------------------------------------------------------------------
+EQUIPMENT:
+	armr: '['
+	book: '"'
+	cash: '$'
+	food: '%'
+	misc: '*'
+	mwpn: '('
+	potn: '!'
+	ring: '='
+	rwpn: '}'
+	scrl: '?'
+	wand: '/'
+-------------------------------------------------------------------------------
+B: COMMAND LANGUAGE TREE: List of all commands and applicable objects per cmd
+-------------------------------------------------------------------------------
+B.a: COMMANDS by TYPE:
+commands(type):
+	EAT   [item: food]
+	USE   [item]
+	CAST  [item: book | ring | scrl | wand]
+	DROP  [item]
+	KICK  [objs: unit | tile: [wall | door]]
+	MOVE  [tile: flor]
+	OPEN  [tile: door]
+	READ  [item: book | scrl]
+	CLOSE [tile: door]
+	DRINK [item: potn]
+	EQUIP [item: armr | mwpn | ring | rwpn | wand]
+	THROW [item]
+-------------------------------------------------------------------------------
+B.b: COMMANDS by OBJECT:
+commands(obj):
+	[objs]: (kick, )
+	[door]: (open, close)
+	[item]: (eat, use, thrown, equip, drop)
+-------------------------------------------------------------------------------
+C. MONSTERS: List of all monsters included in the game from weak to strong
+-------------------------------------------------------------------------------
+C.a.1: [Rat]:       Level: 1 Armor: 2 Hp: 1d6 Damage: 1d3 Exp: 1 Range: 1-8
+C.a.2: [Giant Rat]: Level: 4 Armor: 5 Hp: 3d6 Damage: 2d6 Exp: 8 Range: 1-8
+-------------------------------------------------------------------------------
+C.b.1: [Bat]:       Level: 2 Armor: 3 Hp: 1d8 Damage: 1d6 Exp: 3 Range: 1-8
+C.b.2: [Giant Bat]: Level: 3 Armor: 4 Hp: 2d8 Damage: 3d4 Exp: 6 Range: 1-8
+-------------------------------------------------------------------------------

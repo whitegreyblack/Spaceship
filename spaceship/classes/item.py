@@ -109,6 +109,8 @@ def ice_armor(item, wearer, enemy):
             pass
                     
 class Item:
+    # item types as enum integer values
+    ARMOR, BOOK, FOOD, MISC, M_WEAPON, POTION, RING, R_WEAPON, SCROLL, WAND = range(10)
     def __init__(self, name, char, color, item_type=None, placement=None, 
                  hands=None, bonuses=None, effects=None):
         self.name = name
