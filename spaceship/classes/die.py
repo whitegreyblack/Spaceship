@@ -40,7 +40,7 @@ class Die:
         raise ValueError('Die string is invalid')
 
     @classmethod
-    def parse(cls, string):
+    def construct(cls, string):
         '''Creates a valid Die object using a die string instead of
         normal parameters
         '''
@@ -87,6 +87,9 @@ if __name__ == "__main__":
     print(d, d.ranges(), next(d.roll()))
 
     d = Die(multiplier=2, modifier=2)
+    print(d, d.ranges(), next(d.roll()))
+
+    d = Die.construct("2d6+2")
     print(d, d.ranges(), next(d.roll()))
 
     ex_str = "2d8+3"
