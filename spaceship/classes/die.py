@@ -3,6 +3,10 @@ import random
 import re
 
 class Die:
+    '''Die class used in determining a controlled random number. Can be
+    used with any attribute, chance mechanic or random event occurance.
+    Examples include weapon damage, drop rate, enemy spawning.
+    '''
     __slots__ = ['multiplier', 'sides', 'modifier']
     def __init__(self, sides=6, multiplier=1, modifier=0):
         '''Checks all three parameters for correct values. If incorrect
@@ -57,7 +61,6 @@ class Die:
         elif value > 0:
             string = f"+{value}"
         return string
-        # return value if value < 0 else f"+{value}" if value > 0 else ""
 
     def roll(self):
         '''Returns a random value found in between the range roll'''
@@ -65,14 +68,13 @@ class Die:
 
     def ranges(self):
         '''Returns the range of the rolls possible by the die'''
-        return self.multiplier + self.modifier, self.multiplier * self.sides + self.modifier
+        return self.multiplier + self.modifier, 
+               self.multiplier * self.modifier + self.sides
 
     def average(self, times, integer=True):
+        '''Returns the sum of rolls divided number or times rolled'''
         total = sum(next(self.roll()) for _ in range(times))
-        if integer:
-            return total // times
-        else:
-            return total / times
+        return total // times if integer else total / times
 
     def graph(self):
         pass
