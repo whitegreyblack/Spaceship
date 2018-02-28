@@ -17,6 +17,7 @@ from spaceship.classes.world import World
 from spaceship.classes.city import City
 from spaceship.classes.cave import Cave
 from spaceship.classes.point import Point, spaces
+import spaceship.classes.controller as controller
 
 enter_maps = {
     'cave': Cave,
@@ -124,48 +125,6 @@ class Start(Scene):
         if hasattr(self, 'ret'):
             return self.ret
 
-    def get_input(self):     
-        '''Handles input reading and parsing unrecognized keys'''
-        key = term.read()
-        if key in (term.TK_SHIFT, term.TK_CONTROL, term.TK_ALT):
-            # skip any non-action keys
-            key = term.read()
-          
-        shifted = term.state(term.TK_SHIFT)
-        return key, shifted
-
-    def key_input(self):
-        '''Handles keyboard input and keypress transformation
-        Cases:
-            Skips any pre-inputs and non-read keys
-            if key read is a close command -- close early or set proceed to false
-            Elif key is valid command return the command from command list with continue
-            Else return invalid action tuple with continue value
-        '''
-        action = tuple(None for _ in range(4))
-
-        key, shifted = self.get_input()
-        
-        if key in (term.TK_ESCAPE, term.TK_CLOSE):
-            # exit command -- maybe need a back to menu screen?
-            if shifted:
-                exit('Early Exit')
-
-            elif self.player.height >= Level.WORLD:
-                self.draw_log('Escape key disabled.')
-
-            else:
-                self.ret['scene'] = 'main_menu'
-                self.proceed = False
-
-        try:
-            # discover the command and set as current action
-            action = actions.commands_player[(key, shifted)]
-        except KeyError:
-            pass
-            
-        return action
-
     def process_units(self):
         # for unit in self.location.units:
         #     self.unit = unit
@@ -251,6 +210,38 @@ class Start(Scene):
     
         if not self.proceed:
             return
+
+    def key_input(self):
+        '''Handles keyboard input and keypress transformation.
+        Cases:
+            Skips any pre-inputs and non-read keys
+            if key read is a close command -- close early or set proceed to false
+            Elif key is valid command return the command from command list with continue
+            Else return invalid action tuple with continue value
+        '''
+        action = tuple(None for _ in range(4))
+        
+        key, shifted = controller.get_input()
+        
+        if key in (term.TK_ESCAPE, term.TK_CLOSE):
+            # exit command -- maybe need a back to menu screen?
+            if shifted:
+                exit('Early Exit')
+
+            elif self.player.height >= Level.WORLD:
+                self.draw_log('Escape key disabled.')
+
+            else:
+                self.ret['scene'] = 'main_menu'
+                self.proceed = False
+
+        try:
+            # discover the command and set as current action
+            action = actions.commands_player[(key, shifted)]
+        except KeyError:
+            pass
+            
+        return action
 
     def process_turn_player(self):
         action = self.key_input()
