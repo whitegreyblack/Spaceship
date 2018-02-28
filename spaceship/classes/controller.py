@@ -14,4 +14,3 @@ def get_input():
 if __name__ == "__main__":
     terminal.open()
     terminal.refresh()
-
