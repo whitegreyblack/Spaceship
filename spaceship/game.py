@@ -190,6 +190,7 @@ class Start(Scene):
             # for self.unit in self.location.units:
             #     if self.unit == self.player and not self.unit.energy.ready():
             #         break
+                # for self.unit in sorted(self.location.units, key=u.energy.speed)
                 for self.unit in self.location.units:
                     for _ in range(self.unit.energy.turns):
                         # print(self.unit.unit_id, self.unit.race)

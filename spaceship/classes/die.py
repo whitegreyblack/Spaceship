@@ -105,4 +105,3 @@ if __name__ == "__main__":
 
     ex_str = "2d8"
     print(Die.eval_dice_string(ex_str))
-    

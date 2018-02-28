@@ -11,25 +11,25 @@ class Stats:
     '''Stats componenet used in unit classes'''
     __slots__ = ['str', 'con', 'agi', 'int', 'wis', 'luc']
     def __init__(self, stats):
+        '''Creates a valid stats object using a die string or container of 
+        integers or die strings as stat parameters instead of normal integer 
+        values. These stat values will be binded to the stats in the given
+        order.
+
+        Examples:
+            s = Stats((1, 2, 3, 4, 5, 6))
+            s = Stats("1d6 1d6 1d6 1d6 1d6 1d6")
+            s = Stats("1d6 1d6 1d6 1d6 1d6 1d6".split())
+        '''
         string_single = isinstance(stats, str)
         if string_single:
             stats = stats.split()
-
-        string_multiple = all([isinstance(s, str) for s in stats])
-        if string_single or string_multiple:
+        
+        if string_single or all([isinstance(s, str) for s in stats]):
             stats = [next(Die.construct(stat).roll()) for stat in stats]
 
         for attr, stat in zip(self.__slots__, stats):
             setattr(self, attr, stat)
-
-    # @classmethod
-    # def construct(cls, strings):
-    #     '''Creates a valid stats object using a die string as
-    #     stat parameters instead of normal integer values
-    #     '''
-    #     if isinstance(strings, str):
-    #         strings = strings.split() 
-    #     return cls(next(Die.construct(s).roll()) for s in strings)
 
     def __repr__(self):
         '''Returns stat information for dev'''
