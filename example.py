@@ -71,18 +71,16 @@ class Entity:
         Entity.obj_id += 1
 
     def __str__(self):
-        return f"{type(self).__name__}: {self.obj_id}"
+        return f"{type(self).__name__}({self.obj_id})"
 
     def __repr__(self):
-        name = type(self).__name__
-        delim = f"\n{' '*(len(name)+2)}"
-        components = delim.join([c for c in self.components])
-        return f'{name}: {components}'
+        components = ", ".join([c for c in self.components])
+        return f"{self}{(': (' + components + ')') if components else ''}"
 
     def __hash__(self):
         return self.obj_id
 
-    def __eq__(self):
+    def __eq__(self, other):
         return self.obj_id == hash(other.obj_id)
 
     @property
@@ -131,13 +129,33 @@ class Unit(Entity):
 class Tile(Entity):
     render = None
     
-def system(entities, component='position'):
+def TurnSystem(entities):
+    component='position'
     movables = sorted((e for e in entities 
-                        if hasattr(e, component) and getattr(e, component)),
+                         if hasattr(e, component) and getattr(e, component)),
                       key=operator.attrgetter('position.speed'))
+
     for e in movables:
-        if hasattr(e, component) and getattr(e, component):
-            print(e, e.position.speed)
+        print(e, e.position.speed)
+
+    return entities
+
+def DamageSystem(entities):
+    component = 'stats'
+    damageables = list(e for e in entities 
+                         if hasattr(e, component) and getattr(e, component))
+    removables = []
+    for e in damageables:
+        h = e.stats.health
+        e.stats.health = random.randint(0, 1)
+        print(h, e.stats.health)
+        if e.stats.health <= 0:
+            removables.append(e)
+    
+    for e in removables:
+        entities.remove(e)
+
+    return entities
 
 if __name__ == "__main__":
     print(Component())
@@ -151,11 +169,11 @@ if __name__ == "__main__":
     print(p.stats.str, p.stats.health)
 
     o = Hero()
+    o.components = Stats(3)
     o.components = Position(2, 3, 1)
     o.components = Render('@', '#ffffff', '#000000')
 
     q = Unit()
-    q.components = Stats(3)
     q.components = Position(2, 2, 1)
     q.components = Render('@', WHITE, BLACK)
 
@@ -165,5 +183,7 @@ if __name__ == "__main__":
     position = Position(0, 0, 0)
 
     entities = [p, e, t, o, q]
-    system(entities)
-    system(entities)
+    while len(entities) > 3:
+        entities = TurnSystem(entities)
+        entities = DamageSystem(entities)
+    print(entities)
