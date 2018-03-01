@@ -1,3 +1,5 @@
+import random
+import operator
 length = 100
 world = '''\
 ################################
@@ -8,6 +10,8 @@ world = '''\
 #....#....#....#....#..........#
 ################################
 '''[1:]
+WHITE = "#ffffff"
+BLACK = "#000000"
 map_symbols = {
     '=': ('#003366', '#000000'),
     '.': ('#996633', '#000000'),
@@ -19,66 +23,147 @@ map_symbols = {
 }
 
 class Component:
-    comp_mask = 0x0
+    mask = 0x0
     def __str__(self):
         if isinstance(self, tuple(Component.__subclasses__())):
-            parent = self.__class__.__base__.__name__
-            child = self.__class__.__name__
+            parent = type(self).__base__.__name__
+            child = type(self).__name__
             return f'{parent}: {child}'
-        return f'{self.__class__.__name__}: Base'
+
+        subclasses = "\n\t   ".join([s.__name__ for s in self.subclasses()])
+        return f'{type(self).__name__}: {subclasses}'
+
+    def subclasses(self):
+        for s in Component.__subclasses__():
+            yield s
+
+    def chain(self, unit):
+        self.unit = unit
 
 class Position(Component):
-    comp_mask = 0x1
-    __slots__ = ['x', 'y', 'z', 'unit']
-    def __init__(self, unit, x, y, z):
-        self.unit = unit
+    mask = 0x1
+    # __slots__ = ['x', 'y', 'z', 'unit']
+    def __init__(self, x, y, z):
+        self.speed = random.randint(0, 5)
         self.x, self.y, self.z = x, y, z
-
+        
 class Render(Component):
-    comp_mask = 0x2
-    __slots__ = ['char', 'fore', 'back', 'unit']
-    def __init__(self, unit, c, f, b):
-        self.unit = unit
+    mask = 0x2
+    # __slots__ = ['char', 'fore', 'back', 'unit']
+    def __init__(self, c, f, b):
         self.char, self.fore, self.back = c, f, b
 
-class Entity:
-    class_id = 0
-    class_mask = 0
-    def __init__(self):
-        Entity.class_id += 1
-    
-    def add_component(self, component):
-        name = component.__class__.__name__.lower()
-        if hasattr(self, name):
-            raise ValueError('Cannot add a second component of same type')
-        setattr(self, name, component)
-    
-class Player(Entity):
-    position = None
-    render  = None
+class Controller(Component):
+    mask = 0x3
 
-    def add_component(self, component):
-        self.class_mask |= component.comp_mask
-        name = component.__class__.__name__.lower()
+class Stats(Component):
+    mask = 0x4
+
+    def __init__(self, s):
+        self.str = s
+        self.health = s * 3
+    
+class Entity:
+    obj_id = 0
+    obj_mask = 0
+    def __init__(self): 
+        self.obj_id = Entity.obj_id
+        Entity.obj_id += 1
+
+    def __str__(self):
+        return f"{type(self).__name__}: {self.obj_id}"
+
+    def __repr__(self):
+        name = type(self).__name__
+        delim = f"\n{' '*(len(name)+2)}"
+        components = delim.join([c for c in self.components])
+        return f'{name}: {components}'
+
+    def __hash__(self):
+        return self.obj_id
+
+    def __eq__(self):
+        return self.obj_id == hash(other.obj_id)
+
+    @property
+    def components(self):
+        for component in self.__dict__:
+            if isinstance(getattr(self, component), Component):
+                yield component
+
+    @components.setter
+    def components(self, component):
+        name = type(component).__name__.lower()
         if hasattr(self, name) and getattr(self, name):
             raise ValueError('Cannot add a second component of same type')
         setattr(self, name, component)
+        self.mask = component
+        component.chain(self)
+
+    @property
+    def mask(self):
+        return self.obj_mask
+
+    @mask.setter
+    def mask(self, component):
+        self.obj_mask |= component.mask
+
+class Hero(Entity):
+    stats = None
+    position = None
+    render  = None
+    controller = None
+
+    def __init__(self, position=None, render=None, controller=None, stats=None):
+        super().__init__()
+        for component in [position, render, controller, stats]:
+            if component:
+                self.components = component
+        
+class Unit(Entity):
+    health = None
+    position = None
+    render = None
+
+    def walk(self):
+        return random.randint(-1, 1), random.randint(-1, 1)
+        
+class Tile(Entity):
+    render = None
+    
+def system(entities, component='position'):
+    movables = sorted((e for e in entities 
+                        if hasattr(e, component) and getattr(e, component)),
+                      key=operator.attrgetter('position.speed'))
+    for e in movables:
+        if hasattr(e, component) and getattr(e, component):
+            print(e, e.position.speed)
 
 if __name__ == "__main__":
-    p = Player()
-    print(p.class_mask)
-    print(p.position, p.render)
-    p.add_component(Position(p, 2, 3, 1))
-    print(p.position, p.class_mask)
-    p.add_component(Render(p, '@', '#ffffff', '#000000'))
-    print(p.render, p.class_mask)
-    print(p.class_id)
+    print(Component())
 
+    p = Hero(position=Position(2, 3, 1),
+             render=Render('@', WHITE, BLACK),
+             stats=Stats(3))
+
+    print(p)
+    print(repr(p))
+    print(p.stats.str, p.stats.health)
+
+    o = Hero()
+    o.components = Position(2, 3, 1)
+    o.components = Render('@', '#ffffff', '#000000')
+
+    q = Unit()
+    q.components = Stats(3)
+    q.components = Position(2, 2, 1)
+    q.components = Render('@', WHITE, BLACK)
+
+    t = Tile()
     e = Entity()
-    print(e.class_id)
 
-    q = Player()
-    print(q.class_id)
+    position = Position(0, 0, 0)
 
-    position = Position(None, 0, 0, 0)
-    print(position)
+    entities = [p, e, t, o, q]
+    system(entities)
+    system(entities)
