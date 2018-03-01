@@ -3,10 +3,6 @@ from die import Die
 import random
 import re
 
-class Example:
-    def __init__(self, stats):
-        self.stats = Stats(stats)
-
 class Stats:
     '''Stats componenet used in unit classes'''
     __slots__ = ['str', 'con', 'agi', 'int', 'wis', 'luc']
@@ -48,9 +44,3 @@ if __name__ == "__main__":
 
     s = Stats("1d6 1d6 1d6 1d6 1d6 1d6".split())
     print(s)
-
-    e = Example("1d6 1d6 1d6 1d6 1d6 1d6")
-    classes = [e]
-    for c in classes:
-        if hasattr(c, 'stats') and isinstance(c.stats, Stats):
-            print(e.stats)
