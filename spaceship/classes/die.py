@@ -1,3 +1,4 @@
+# die.py
 from collections import namedtuple
 import random
 import re
@@ -6,6 +7,22 @@ class Die:
     '''Die class used in determining a controlled random number. Can be
     used with any attribute, chance mechanic or random event occurance.
     Examples include weapon damage, drop rate, enemy spawning.
+
+    >>> between = lambda x, a, b: a<=x<=b
+    >>> ex_str = "2d8+3"
+    >>> Die.eval_dice_string(ex_str)
+    die_params(sides=8, mult=2, sub=3)
+    >>> d = Die()
+    >>> d
+    Die(sides=6, mult=1, mod=0): 1d6
+    >>> between(next(d.roll()), *d.ranges())
+    True
+    >>> Die(multiplier=2)
+    Die(sides=6, mult=2, mod=0): 2d6
+    >>> Die(multiplier=2, modifier=2)
+    Die(sides=6, mult=2, mod=2): 2d6+2
+    >>> Die.construct("2d6+2")
+    Die(sides=6, mult=2, mod=2): 2d6+2
     '''
     __slots__ = ['multiplier', 'sides', 'modifier']
     def __init__(self, sides=6, multiplier=1, modifier=0):
@@ -68,7 +85,8 @@ class Die:
 
     def ranges(self):
         '''Returns the range of the rolls possible by the die'''
-        return self.multiplier + self.modifier, self.multiplier * self.modifier + self.sides
+        lower = self.multiplier + self.modifier
+        return lower, lower + self.sides
 
     def average(self, times, integer=True):
         '''Returns the sum of rolls divided number or times rolled'''
@@ -88,20 +106,5 @@ class Die:
         return f"{self.multiplier}d{self.sides}{self.check_sign(self.modifier)}"
 
 if __name__ == "__main__":
-    d = Die()
-    print(d.__repr__(), d.ranges(), next(d.roll()))
-
-    d = Die(multiplier=2)
-    print(d, d.ranges(), next(d.roll()))
-
-    d = Die(multiplier=2, modifier=2)
-    print(d, d.ranges(), next(d.roll()), d.average(10))
-
-    d = Die.construct("2d6+2")
-    print(d, d.ranges(), next(d.roll()))
-
-    ex_str = "2d8+3"
-    print(Die.eval_dice_string(ex_str))
-
-    ex_str = "2d8"
-    print(Die.eval_dice_string(ex_str))
+    from doctest import testmod
+    testmod()
