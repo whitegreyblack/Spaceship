@@ -1,5 +1,5 @@
 # stats.py
-from collections import namedtuple
+from collections import namedtuple, Iterable
 from component import Component
 from die import Die
 import random
@@ -25,13 +25,10 @@ class Stats(Component):
         >>> list(type(e).__name__ for e in e.components)
         ['Stats']
         '''
-        string_single = isinstance(stats, str)
-        if string_single:
-            stats = stats.split()
-        
-        if string_single or all([isinstance(s, str) for s in stats]):
-            stats = [next(Die.construct(stat).roll()) for stat in stats]
-
+        if not isinstance(stats, (str, Iterable)):
+            raise ValueError('Invalid arguments')
+        # helper function from Die
+        stats = Die.split_dice_string(stats)
         for attr, stat in zip(self.__slots__, stats):
             setattr(self, attr, stat)
 

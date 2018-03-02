@@ -1,4 +1,5 @@
 # component.py
+from die import Die
 
 class Component:
     def __str__(self):
@@ -16,3 +17,13 @@ class Component:
 
     def chain(self, entity):
         self.entity = entity
+
+    def eval_dice_strings(string):
+        string_single = isinstance(strings, str)
+        if string_single:
+            strings = strings.split()
+        
+        if string_single or all([isinstance(s, str) for s in strings]):
+            strings = [next(Die.construct(stat).roll()) for stat in strings]
+        
+        return strings

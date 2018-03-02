@@ -60,6 +60,20 @@ class Die:
             return dice_init(int(sides), int(mult), int(sub))
         raise ValueError('Die string is invalid')
 
+    @staticmethod
+    def split_dice_string(string):
+        '''Used to recognize args made up of multiple valid die strings.
+        Returns a list of deliminated die strings used in iterating
+        '''
+        single_die = isinstance(string, str)
+        if single_die:
+            string = string.split()
+        
+        if single_die or all([isinstance(s, str) for s in string]):
+            string = [next(Die.construct(stat).roll()) for stat in string]
+        return string
+
+
     @classmethod
     def construct(cls, string):
         '''Creates a valid Die object using a die string instead of
