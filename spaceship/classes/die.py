@@ -68,8 +68,9 @@ class Die:
 
     def ranges(self):
         '''Returns the range of the rolls possible by the die'''
-        return self.multiplier + self.modifier, self.multiplier * self.modifier + self.sides
-
+        lower = self.multiplier + self.modifier
+        return lower, lower + self.sides
+        
     def average(self, times, integer=True):
         '''Returns the sum of rolls divided number or times rolled'''
         total = sum(next(self.roll()) for _ in range(times))

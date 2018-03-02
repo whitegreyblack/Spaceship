@@ -12,10 +12,11 @@ class Stats:
         values. These stat values will be binded to the stats in the given
         order.
 
-        Examples:
-            s = Stats((1, 2, 3, 4, 5, 6))
-            s = Stats("1d6 1d6 1d6 1d6 1d6 1d6")
-            s = Stats("1d6 1d6 1d6 1d6 1d6 1d6".split())
+        >>> s = Stats((1, 2, 3, 4, 5, 6))
+        >>> s
+        STATS: (STR: 1, CON: 2, AGI: 3, INT: 4, WIS: 5, LUC: 6)
+        >>> s = Stats("1d6 1d6 1d6 1d6 1d6 1d6")
+        >>> s = Stats("1d6 1d6 1d6 1d6 1d6 1d6".split())
         '''
         string_single = isinstance(stats, str)
         if string_single:
@@ -36,11 +37,5 @@ class Stats:
         return ", ".join(f'{s.upper()}: {getattr(self, s)}' for s in self.__slots__)
 
 if __name__ == "__main__":
-    s = Stats((1, 2, 3, 4, 5, 6))
-    print(s)
-
-    s = Stats("1d6 1d6 1d6 1d6 1d6 1d6")
-    print(s)
-
-    s = Stats("1d6 1d6 1d6 1d6 1d6 1d6".split())
-    print(s)
+    from doctest import testmod
+    testmod()
