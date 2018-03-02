@@ -1,5 +1,6 @@
+# example.py 
 import random
-import operator
+
 length = 100
 world = '''\
 ################################
