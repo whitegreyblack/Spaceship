@@ -1,6 +1,7 @@
 # components.py
+from component import Component
 
-class Health:
+class Health(Component):
     hp = 10
     def __init__(self):
         self.max_hp = self.cur_hp = 0
@@ -18,7 +19,7 @@ class Health:
     def heal_damage(self, heal):
         self.hitpoints += heal
 
-class Mana:
+class Mana(Component):
     mp = 5
     def __init__(self):
         self.max_mp = self.cur_mp = 0
