@@ -1,8 +1,9 @@
 # example.py 
 import random
-
+import operator
+from bearlibterminal import terminal as term
 length = 100
-world = '''\
+world = '''
 ################################
 #....#....#....#....#..........#
 #...................#..........#
@@ -44,7 +45,7 @@ class Component:
 class Position(Component):
     mask = 0x1
     # __slots__ = ['x', 'y', 'z', 'unit']
-    def __init__(self, x, y, z):
+    def __init__(self, x=0, y=0, z=0):
         self.speed = random.randint(0, 5)
         self.x, self.y, self.z = x, y, z
         
@@ -158,33 +159,57 @@ def DamageSystem(entities):
 
     return entities
 
+def init_player():
+    return Hero(position=Position(16, 4, 0),
+                render=Render('@', WHITE, BLACK),
+                stats=Stats(3))
+
+def init_enemy():
+    return Hero(position=Position(10, 2, 0),
+                render=Render('@', WHITE, BLACK),
+                stats=Stats(1))
+
+
+def main():
+    hero = init_player()
+    unit = init_enemy()
+    entities = [hero, unit]
+    term.open()
+    term.puts(0, 0, world)
+    for e in entities:
+        term.puts(e.position.x, e.position.y, e.render.char)
+    term.refresh()
+    term.read()
+    term.close()
+
 if __name__ == "__main__":
-    print(Component())
+    # print(Component())
 
-    p = Hero(position=Position(2, 3, 1),
-             render=Render('@', WHITE, BLACK),
-             stats=Stats(3))
+    # p = Hero(position=Position(2, 3, 1),
+    #          render=Render('@', WHITE, BLACK),
+    #          stats=Stats(3))
 
-    print(p)
-    print(repr(p))
-    print(p.stats.str, p.stats.health)
+    # print(p)
+    # print(repr(p))
+    # print(p.stats.str, p.stats.health)
 
-    o = Hero()
-    o.components = Stats(3)
-    o.components = Position(2, 3, 1)
-    o.components = Render('@', '#ffffff', '#000000')
+    # o = Hero()
+    # o.components = Stats(3)
+    # o.components = Position(2, 3, 1)
+    # o.components = Render('@', '#ffffff', '#000000')
 
-    q = Unit()
-    q.components = Position(2, 2, 1)
-    q.components = Render('@', WHITE, BLACK)
+    # q = Unit()
+    # q.components = Position(2, 2, 1)
+    # q.components = Render('@', WHITE, BLACK)
 
-    t = Tile()
-    e = Entity()
+    # t = Tile()
+    # e = Entity()
 
-    position = Position(0, 0, 0)
+    # position = Position(0, 0, 0)
 
-    entities = [p, e, t, o, q]
-    while len(entities) > 3:
-        entities = TurnSystem(entities)
-        entities = DamageSystem(entities)
-    print(entities)
+    # entities = [p, e, t, o, q]
+    # while len(entities) > 3:
+    #     entities = TurnSystem(entities)
+    #     entities = DamageSystem(entities)
+    # print(entities)
+    main()
