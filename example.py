@@ -123,10 +123,20 @@ class Unit(Entity):
     health = None
     position = None
     render = None
-
-    def walk(self):
-        return random.randint(-1, 1), random.randint(-1, 1)
-        
+    controller = None
+    
+def walk(world, unit):
+    x, y = random.randint(-1, 1), random.randint(-1, 1)
+    try:
+       tile = world[y+unit.y][x+unit.x]
+    except IndexError:
+        x, y = 0, 0
+    else:
+        if tile == ".":
+            return x, y
+        else:
+            return 0, 0
+       
 class Tile(Entity):
     render = None
     
