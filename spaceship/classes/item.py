@@ -1,5 +1,4 @@
 from collections import namedtuple
-from spaceship.classes.die import Die
 
 '''
 Item class is used in two areas, new character creation screen and new_game 

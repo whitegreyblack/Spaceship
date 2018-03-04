@@ -73,10 +73,9 @@ class Main(Scene):
         term.clear()
 
         # title -- multiplying space with title length to center title
-        term.puts(
-            center(' ' * (len(self.title.split('\n')[0])), self.width), 
-            self.title_height, 
-            self.title)
+        term.puts(center(' ' * (len(self.title.split('\n')[0])), self.width), 
+                  self.title_height, 
+                  self.title)
 
         # options
         length, option = longest(self.options)
@@ -88,14 +87,13 @@ class Main(Scene):
             term.puts(x, self.options_height[index], option)
 
         # FOOTER and VERSION
-        term.puts(
-            center(len(self.version), self.width), 
-            self.height - 4, 
-            self.version)
+        term.puts(center(len(self.version), self.width), 
+                  self.height - 4, 
+                  self.version)
 
         term.puts(center(self.developed_by, self.width), 
-            self.width - 2, 
-            self.developed_by)
+                  self.width - 2, 
+                  self.developed_by)
 
         term.refresh()
         code = term.read()
