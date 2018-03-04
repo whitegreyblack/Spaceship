@@ -1,3 +1,4 @@
+# example.py 
 import random
 import operator
 from bearlibterminal import terminal as term
@@ -11,8 +12,16 @@ world = '''
 #....#....#....#....#..........#
 ################################
 '''[1:]
+
 WHITE = "#ffffff"
 BLACK = "#000000"
+PURPLE = "#8800CC"
+YELLOW = "#DDDD00"
+ORANGE = "#FF8800"
+GREEN = "#00BB00"
+BLUE = "#0000BB"
+RED = "#BB0000"
+
 map_symbols = {
     '=': ('#003366', '#000000'),
     '.': ('#996633', '#000000'),
