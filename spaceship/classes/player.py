@@ -10,7 +10,7 @@ from .items import itemlist
 from .equipment import Equipment, parts
 from .inventory import Inventory
 from spaceship.strings import dump_template
-from .components import Health, Mana
+# from .components import Health, Mana
 
 attrs=('str con dex wis int cha hp sp mp acc att_lo att_hi')
 
@@ -23,12 +23,11 @@ class Stats:
         self.initialize_stats()
     
     def initialize_base(self):
-        self.str, self.con, self.dex, self.int, self.wis, self.cha = \
-                            tuple(s + g + r + c for s, g, r, c in zip(
-                                                    self.base_stats,
-                                                    self.gender_bonus,
-                                                    self.race_bonus,
-                                                    self.job_bonus))
+        stats = tuple(sum(s, g, r, c) for s, g, r, c in zip(self.base_stats,
+                                                            self.gender_bonus,
+                                                            self.race_bonus,
+                                                            self.job_bonus))
+        self.str, self.con, self.dex, self.int, self.wis, self.cha = stats
 
 # Player should inherit from unit just so during main game loop
 # the player class can be accessed in the same way as other units
@@ -232,11 +231,11 @@ class Player(Unit):
 
         self.acc, self.dmg_lo, self.dmg_hi = 0, 1, 2
 
-        self.health = Health()
-        self.health.status_bonuses(self.str, self.con)
-        self.mana = Mana()
-        self.mana.status_bonuses(self.int, self.wis)
-        print(self.health, self.mana)
+        # self.health = Health()
+        # self.health.status_bonuses(self.str, self.con)
+        # self.mana = Mana()
+        # self.mana.status_bonuses(self.int, self.wis)
+        # print(self.health, self.mana)
 
     def stats_attributes(self):
         return self.str, self.con, self.dex, self.int, self.wis, self.cha

@@ -676,7 +676,7 @@ class Start(Scene):
             return index + 1, item
         return index, item
 
-    def draw_inventory(self, items, index, row, string=strings.cmd_inv_none):
+    def draw_inventory(self, items, index=0, row=0, string=strings.cmd_inv_none):
         '''Handles drawing of the inventory screen along with the specific 
         groupings of each item type and their modification effects
         '''

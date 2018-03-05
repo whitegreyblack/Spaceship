@@ -1,6 +1,9 @@
 # components.py
+from collections import namedtuple
 from component import Component
-from ..die import Die
+from die import Die
+import random
+import re
 '''
 Entities: name, id
     Tile: render, position
@@ -67,3 +70,82 @@ class Health(Component):
     
 #     def gain_points(self, regen):
 #         self.cur_mp += usage
+def experience(max_hp, level):
+    '''Handles calculating level based on unit max level and health'''
+    if level == 1:
+        exp = max_hp // 8
+    else:
+        exp = max_hp // 6
+    if level > 9:
+        exp *= 20
+    elif level > 6:
+        exp *= 4
+    return exp
+
+def experience_unit(unit):
+    '''Wrapper function to handle unit parameter'''
+    return experience(unit.max_hp, unit.level)
+
+class Experience:
+    '''Experience class to hold experience calculate function'''
+    __slots__ = ['unit']
+    def __init__(self, unit):
+        self.unit = unit
+
+    def calculate(self):
+        if self.unit.level == 1:
+            exp = self.unit.max_hp // 8
+        else:
+            exp = self.unit.max_hp // 6
+        if self.unit.level > 9:
+            exp *= 20
+        elif self.unit.level > 6:
+            exp *= 4
+        return exp
+
+class Stats(Component):
+    '''Stats componenet used in unit classes'''
+    __slots__ = ['str', 'con', 'agi', 'int', 'wis', 'luc']
+    def __init__(self, stats):
+        '''Creates a valid stats object using a die string or container of 
+        integers or die strings as stat parameters instead of normal integer 
+        values. These stat values will be binded to the stats in the given
+        order.
+
+        >>> s = Stats((1, 2, 3, 4, 5, 6))
+        >>> s
+        STATS: (STR: 1, CON: 2, AGI: 3, INT: 4, WIS: 5, LUC: 6)
+        >>> s = Stats("1d6 1d6 1d6 1d6 1d6 1d6")
+        >>> s = Stats("1d6 1d6 1d6 1d6 1d6 1d6".split())
+        >>> from entity import Entity
+        >>> e = Entity('hero')
+        >>> e.component = s
+        >>> list(type(e).__name__ for e in e.components)
+        ['Stats']
+        '''
+        if not isinstance(stats, (str, Iterable)):
+            raise ValueError('Invalid arguments')
+        # helper function from Die
+        stats = Die.split_dice_string(stats)
+        for attr, stat in zip(self.__slots__, stats):
+            setattr(self, attr, stat)
+
+    def __repr__(self):
+        '''Returns stat information for dev'''
+        return f'{self.__class__.__name__.upper()}: ({self})'
+
+    def __str__(self):
+        '''Returns stat information for user'''
+        return ", ".join(f'{s.upper()}: {getattr(self, s)}' 
+                           for s in self.__slots__)
+
+if __name__ == "__main__":
+    from doctest import testmod
+    testmod()
+    unit = namedtuple("Unit", "max_hp level")
+
+    e = Experience(unit(16, 2))
+    print(e.calculate())
+
+    print(experience_unit(unit(16, 2)))
+    print(experience(16, 2))

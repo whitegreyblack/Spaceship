@@ -41,7 +41,6 @@ class Main(Scene):
                 '[[n]] new game',
                 '[[o]] options',
                 '[[q]] quit']
-
         self.reset()       
 
     def reset(self):

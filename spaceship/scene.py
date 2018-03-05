@@ -50,21 +50,21 @@ class Scene:
         self.proceed = True
         return self.ret
 
-    @property
-    def height(self):
-        return self.__height
+    # @property
+    # def height(self):
+    #     return self.__height
 
-    @height.setter
-    def height(self, h):
-        self.__height = h
+    # @height.setter
+    # def height(self, h):
+    #     self.__height = h
 
-    @property
-    def width(self):
-        return self.__width
+    # @property
+    # def width(self):
+    #     return self.__width
 
-    @width.setter
-    def width(self, w):
-        self.__width = w
+    # @width.setter
+    # def width(self, w):
+    #     self.__width = w
 
     def check_scene(self, scene: object) -> bool:
         '''Checks scene values to determine if valid scene object'''
