@@ -1,6 +1,6 @@
 # components.py
-from collections import namedtuple
-from component import Component
+from collections import namedtuple, Iterable
+from ecs import Component
 from die import Die
 import random
 import re
@@ -32,9 +32,31 @@ Component List:
         Current
         Refresh
 '''
+class Render(Component):
+    __slots__ = ['symbol', 'foreground', 'background']
+    def __init__(self, symbol, foreground="#ffffff", background="#000000"):
+        '''Render component that holds all information that allows the map
+        to be drawn with correct characters and colors
+        >>> r = Render('@')
+        >>> print(r)
+        Render: (@, #ffffff, #000000)
+        >>> r.symbol == '@'
+        True
+        '''
+        self.symbol = symbol
+        self.foreground = foreground
+        self.background = background
+
+class Description(Component):
+    __slots__ = ['describe', 'description']
+    def __init__(self, describe=None, description=None):
+        self.describe = describe
+        self.description = description
+
 class Damage(Component):
+    __slots__ = ["damage",]
     def __init__(self, damage):
-        self.damage = 
+        self.damage = Die.construct(damage)
 
 class Health(Component):
     def __init__(self):
@@ -53,23 +75,24 @@ class Health(Component):
     # def heal_damage(self, heal):
     #     self.hitpoints += heal
 
-# class Mana(Component):
-#     mp = 5
-#     def __init__(self):
-#         self.max_mp = self.cur_mp = 0
-    
-#     def __str__(self):
-#         return f"Mana: {self.cur_mp}/{self.max_mp}"
+    # class Mana(Component):
+    #     mp = 5
+    #     def __init__(self):
+    #         self.max_mp = self.cur_mp = 0
+        
+    #     def __str__(self):
+    #         return f"Mana: {self.cur_mp}/{self.max_mp}"
 
-#     def status_bonuses(self, intbon, wisbon):
-#         self.mod_mp = intbon + wisbon * 2
-#         self.max_mp = self.cur_mp = self.mp + self.mod_mp
+    #     def status_bonuses(self, intbon, wisbon):
+    #         self.mod_mp = intbon + wisbon * 2
+    #         self.max_mp = self.cur_mp = self.mp + self.mod_mp
 
-#     def use_points(self, usage):
-#         self.cur_mp -= usage
+    #     def use_points(self, usage):
+    #         self.cur_mp -= usage
+        
+    #     def gain_points(self, regen):
+    #         self.cur_mp += usage
     
-#     def gain_points(self, regen):
-#         self.cur_mp += usage
 def experience(max_hp, level):
     '''Handles calculating level based on unit max level and health'''
     if level == 1:
@@ -90,6 +113,11 @@ class Experience:
     '''Experience class to hold experience calculate function'''
     __slots__ = ['unit']
     def __init__(self, unit):
+        '''Binds unit to this class
+        >>> unit = namedtuple("Unit", "max_hp level")
+        >>> e = Experience(unit(16, 2))
+        '''
+
         self.unit = unit
 
     def calculate(self):
@@ -117,7 +145,7 @@ class Stats(Component):
         STATS: (STR: 1, CON: 2, AGI: 3, INT: 4, WIS: 5, LUC: 6)
         >>> s = Stats("1d6 1d6 1d6 1d6 1d6 1d6")
         >>> s = Stats("1d6 1d6 1d6 1d6 1d6 1d6".split())
-        >>> from entity import Entity
+        >>> from ecs import Entity
         >>> e = Entity('hero')
         >>> e.component = s
         >>> list(type(e).__name__ for e in e.components)
@@ -143,9 +171,3 @@ if __name__ == "__main__":
     from doctest import testmod
     testmod()
     unit = namedtuple("Unit", "max_hp level")
-
-    e = Experience(unit(16, 2))
-    print(e.calculate())
-
-    print(experience_unit(unit(16, 2)))
-    print(experience(16, 2))
