@@ -7,7 +7,7 @@ class Component:
 
     def __repr__(self):
         return f"{type(self).__name__}: ({', '.join(next(self.attrs))})"
-        
+
     def attr(self, name):
         return bool(hasattr(self, name) and getattr(self, name))
     
@@ -45,25 +45,29 @@ class Entity:
     Basic container for entity objects. Holds a list of components which is used
     to represent certain objects in game world.
 
-    >>> e = Entity('hero')
+    >>> import components
+    >>> e = Entity(description=components.Description('hero'))
     >>> e
-    hero(0)
+    hero(0): 
     >>> print(e)
     hero
     >>> hash(e)
     0
     '''
     eid = 0
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, description, components=None):
         self.eid = Entity.eid
         Entity.eid += 1
+        self.description = description
+        if components:
+            for name, component in components.items():
+                self.add_component(name, component)
+
+    def __str__(self):
+        return self.description.name
 
     def __repr__(self):
-        return f'{self.name}({self.eid})'
-
-    def __str__(self):  
-        return self.name
+        return f"{self}({self.eid}): {', '.join(str(c) for c in self.components)}"
 
     def __hash__(self):
         return self.eid
@@ -77,15 +81,6 @@ class Entity:
             if isinstance(getattr(self, component), Component):
                 yield self.__dict__[component]
 
-    @components.setter
-    def components(self, component):
-        name = type(component).__name__.lower()
-        if hasattr(self, name) and getattr(self, name):
-            raise ValueError('Cannot add a second component of same type')
-
-        setattr(self, name, component)
-        component.chain(self)
-
     def has_component(self, name):
         return bool(hasattr(self, name) and getattr(self, name))
 
@@ -96,6 +91,10 @@ class Entity:
     def del_component(self, name):
         if self.has_component(self, name):
             delattr(self, name)
+
+    def get_component(self, name, component):
+        if self.has_component(self, name):
+            return getattr(self, name)
 
 if __name__ == "__main__":
     from doctest import testmod

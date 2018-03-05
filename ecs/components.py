@@ -48,15 +48,21 @@ class Render(Component):
         self.background = background
 
 class Description(Component):
-    __slots__ = ['describe', 'description']
-    def __init__(self, describe=None, description=None):
-        self.describe = describe
-        self.description = description
+    __slots__ = ['name', 'less', 'more']
+    def __init__(self, name, less=None, more=None):
+        self.name = name
+        self.less = less
+        self.more = more
 
 class Damage(Component):
     __slots__ = ["damage",]
     def __init__(self, damage):
         self.damage = Die.construct(damage)
+
+class Defense(Component):
+    __slots__ = ["armor",]
+    def __init__(self, armor):
+        self.armor = armor
 
 class Health(Component):
     def __init__(self):
