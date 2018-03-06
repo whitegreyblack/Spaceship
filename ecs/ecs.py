@@ -61,6 +61,8 @@ class Entity:
     True
     >>> e.has_component('description')
     False
+    >>> list(e.components())
+    []
     '''
     eid = 0
     compdict = {}
@@ -72,7 +74,10 @@ class Entity:
                 self.add_component(component)
 
     def __str__(self):
-            return str(self.eid)
+        description = self.get_component('description')
+        if description and description.name:
+            return description.name
+        return str(self.eid)
 
     def __repr__(self):
         return str(self)
@@ -83,16 +88,10 @@ class Entity:
     def __eq__(self, other):
         return self.eid == hash(other.eid)
     
-    def components(self, eid):
-        for item in self.compdict.items():
-            try:
-                _, components = item
-            except:
-                pass
-            else:
-                for eid, component in components:
-                    if self.eid == eid:
-                        yield component
+    def components(self):
+        for components in self.compdict.values():
+            if self.eid in components.keys():
+                yield components[self.eid]
 
     def has_component(self, name: str) -> bool:
         if name in self.compdict.keys():
