@@ -1,5 +1,5 @@
 # component.py
-from die import Die
+from .die import Die
 
 class System:
     def update(self):
@@ -25,48 +25,68 @@ class Component:
         for a in self.__slots__:
             if self.attr(a):
                 yield (a, getattr(self, a))
-        # yield ((a, getattr(self, a)) for a in self.__slots__ if self.attr(a))
-    # def __str__(self):
-    #     if isinstance(self, tuple(Component.__subclasses__())):
-    #         parent = type(self).__base__.__name__
-    #         child = type(self).__name__
-    #         return f'{parent}: {child}'
+    
+class Description(Component):
+    __slots__ = ['unit', 'name', 'less', 'more']
+    def __init__(self, name, less=None, more=None):
+        self.name = name
+        self.less = less
+        self.more = more
 
-    #     subclasses = "\n\t   ".join([s.__name__ for s in self.subclasses()])
-    #     return f'{type(self).__name__}: {subclasses}'
+class Render(Component):
+    __slots__ = ['unit', 'symbol', 'foreground', 'background']
+    def __init__(self, symbol, foreground="#ffffff", background="#000000"):
+        '''Render component that holds all information that allows the map
+        to be drawn with correct characters and colors
+        >>> r = Render('@')
+        >>> r
+        Render(symbol=@, foreground=#ffffff, background=#000000)
+        >>> r.symbol == '@'
+        True
+        '''
+        self.symbol = symbol
+        self.foreground = foreground
+        self.background = background
 
-    # def subclasses(self):
-    #     for s in Component.__subclasses__():
-    #         yield s
+class Attribute(Component):
+    __slots__ = ['unit', 'strength', 'agility', 'intelligence']
+    def __init__(self, strength, agility, intelligence):
+        '''
+        >>> Attribute(5, 5, 5)
+        Attribute(strength=5, agility=5, intelligence=5)
+        '''
+        self.strength = strength
+        self.agility = agility
+        self.intelligence = intelligence
 
-    # def chain(self, entity):
-    #     self.entity = entity
+    def update(self):
+        if self.unit.has_component('health'):
+            self.unit.health.update()
 
-    # def eval_dice_strings(string):
-    #     string_single = isinstance(strings, str)
-    #     if string_single:
-    #         strings = strings.split()
-        
-    #     if string_single or all([isinstance(s, str) for s in strings]):
-    #         strings = [next(Die.construct(stat).roll()) for stat in strings]
-        
-    #     return strings
+class Health(Component):
+    __slots__ = ['unit', 'max_hp', 'cur_hp']
+    def __init__(self, health=0):
+        self.max_hp = self.cur_hp = health
+
+    def update(self):
+        if self.unit.has_component('attribute'):
+            strength = self.unit.get_component('attribute').strength
+            self.max_hp = strength * 2 + self.max_hp
+            self.cur_hp = strength * 2 + self.cur_hp
 
 class Entity:
     '''
     Basic container for entity objects. Holds a list of components which is used
     to represent certain objects in game world.
 
-    >>> import components
-    >>> e = Entity(components=[components.Description('hero'),])
+    >>> e = Entity(components=[Description('hero'),])
     >>> e, Entity.compdict
-    (0, {'description': {0: Description: ('hero')}})
+    (hero, {'description': {0: Description(unit=hero, name=hero)}})
     >>> e.has_component('description')
     True
     >>> e.get_component('description')
-    Description: ('hero')
+    Description(unit=hero, name=hero)
     >>> e.del_component('description')
-    True
     >>> e.has_component('description')
     False
     >>> list(e.components())
@@ -79,7 +99,10 @@ class Entity:
         Entity.eid += 1
         if components:
             for component in components:
+                component.unit = self
                 self.add_component(component)
+                if hasattr(component, 'update'):
+                    component.update()
 
     def __str__(self):
         description = self.get_component('description')
@@ -106,6 +129,9 @@ class Entity:
             return self.eid in self.compdict[name].keys()
         return False
 
+    def has_components(self, names: list) -> bool:
+        return all([self.has_component(name) for name in names])
+
     def add_component(self, component: object) -> bool:
         name = type(component).__name__.lower()
         if not self.has_component(name):
@@ -116,16 +142,22 @@ class Entity:
             return True
         return False
 
-    def del_component(self, name: str) -> bool:
+    def del_component(self, name: str) -> None:
         if self.has_component(name):
             del self.compdict[name][self.eid]
-            return True
-        return False
-            
+
+    def del_components(self, names: list) -> bool:
+        for name in names:
+            self.del_component(name)
+
     def get_component(self, name: str) -> object:
         if self.has_component(name):
             return self.compdict[name][self.eid]
-        return False
+        return None
+
+    def get_components(self, names: list) -> list:
+        return [self.get_component(name) 
+                    for name in names if self.has_component(name)]
 
 if __name__ == "__main__":
     from doctest import testmod

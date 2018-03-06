@@ -1,6 +1,6 @@
 from ecs import Entity
-import components
-from die import Die
+import .components
+from .die import Die
 
 def make_sword():
     return Entity(components={

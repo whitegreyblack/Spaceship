@@ -1,7 +1,7 @@
 # components.py
 from collections import namedtuple, Iterable
-from ecs import Component
-from die import Die
+from .ecs import Component
+from .die import Die
 import random
 import re
 '''
@@ -32,30 +32,6 @@ Component List:
         Current
         Refresh
 '''
-class Render(Component):
-    __slots__ = ['unit', 'symbol', 'foreground', 'background']
-    def __init__(self, unit, symbol, foreground="#ffffff", background="#000000"):
-        '''Render component that holds all information that allows the map
-        to be drawn with correct characters and colors
-        >>> r = Render(None, '@')
-        >>> r
-        Render(symbol=@, foreground=#ffffff, background=#000000)
-        >>> r.symbol == '@'
-        True
-        '''
-        self.unit = unit
-        self.symbol = symbol
-        self.foreground = foreground
-        self.background = background
-
-class Description(Component):
-    __slots__ = ['unit', 'name', 'less', 'more']
-    def __init__(self, unit, name, less=None, more=None):
-        self.unit = unit
-        self.name = name
-        self.less = less
-        self.more = more
-
 class Damage(Component):
     __slots__ = ['unit', "damage",]
     def __init__(self, unit, damage):
@@ -68,42 +44,16 @@ class Defense(Component):
         self.unit = unit
         self.armor = armor
 
-class Attribute(Component):
-    __slots__ = ['unit', 'strength', 'agility', 'intelligence']
-    def __init__(self, unit, strength, agility, intelligence):
-        '''
-        >>> Attribute(None, 5, 5, 5)
-        Attribute(strength=5, agility=5, intelligence=5)
-        '''
-        self.unit = unit
-        self.strength = strength
-        self.agility = agility
-        self.intelligence = intelligence
-
-class Strength(Component):
-    def __init__(self, unit, strength):
-        self.unit = unit
-        self.strength = strength
-        self.health = strength * 2
-
-class Agility(Component):
-    def __init__(self, unit, agility):
-        self.unit = unit
-        self.agility = agility
-
-class Intelligence(Component):
-    __slots__ = ["intelligence", "mana"]
-    def __init__(self, name, attr):
-        self.unit = unit
-        self.intelligence = intelligence
-
 class Health(Component):
-    def __init__(self):
-        self.max_hp = self.cur_hp = 0
-    
-    def __str__(self):
-        return f"Health: {self.cur_hp}/{self.max_hp}"
+    def __init__(self, unit, health=0):
+        self.max_hp = self.cur_hp = health
+        self.update()
 
+    def update(self):
+        print('update')
+        if unit.has_component('attribute'):
+            self.max_hp = self.cur_hp = unit.attribute.strength * 2 + health
+    
     # def status_bonuses(self, strbon, conbon):
     #     self.mod_hp = strbon + conbon * 2
     #     self.max_hp = self.cur_hp = self.hp + self.mod_hp
@@ -132,6 +82,37 @@ class Health(Component):
     #     def gain_points(self, regen):
     #         self.cur_mp += usage
     
+class Attribute(Component):
+    __slots__ = ['unit', 'strength', 'agility', 'intelligence']
+    def __init__(self, strength, agility, intelligence):
+        '''
+        >>> Attribute(5, 5, 5)
+        Attribute(strength=5, agility=5, intelligence=5)
+        '''
+        self.strength = strength
+        self.agility = agility
+        self.intelligence = intelligence
+
+    def update(self):
+        if self.unit.has_component('health'):
+            self.unit.health.update()
+
+class Strength(Component):
+    def __init__(self, unit, strength):
+        self.unit = unit
+        self.strength = strength
+        self.health = strength * 2
+
+class Agility(Component):
+    def __init__(self, unit, agility):
+        self.unit = unit
+        self.agility = agility
+
+class Intelligence(Component):
+    def __init__(self, name, attr):
+        self.unit = unit
+        self.intelligence = intelligence
+
 def experience(max_hp, level):
     '''Handles calculating level based on unit max level and health'''
     if level == 1:
@@ -156,7 +137,6 @@ class Experience:
         >>> unit = namedtuple("Unit", "max_hp level")
         >>> e = Experience(unit(16, 2))
         '''
-
         self.unit = unit
 
     def calculate(self):
@@ -169,6 +149,15 @@ class Experience:
         elif self.unit.level > 6:
             exp *= 4
         return exp
+
+'''
+Strength, measuring physical power
+Dexterity, measuring agility
+Constitution, measuring endurance
+Intelligence, measuring reasoning and memory
+Wisdom, measuring perception and insight
+Charisma, measuring force of personality
+'''
 
 class Stats(Component):
     '''Stats componenet used in unit classes. Creates a valid stats object 
