@@ -52,9 +52,11 @@ class Entity:
     >>> import components
     >>> e = Entity(components=[components.Description('hero'),])
     >>> e, Entity.compdict
-    (0, {'description': [(0, Description: ('hero'))]})
+    (0, {'description': {0: Description: ('hero')}})
     >>> e.has_component('description')
     True
+    >>> e.get_component('description')
+    Description: ('hero')
     >>> e.del_component('description')
     True
     >>> e.has_component('description')
@@ -70,7 +72,7 @@ class Entity:
                 self.add_component(component)
 
     def __str__(self):
-        return str(self.eid)
+            return str(self.eid)
 
     def __repr__(self):
         return str(self)
@@ -93,34 +95,29 @@ class Entity:
                         yield component
 
     def has_component(self, name: str) -> bool:
-        # return bool(hasattr(self, name) and getattr(self, name))
         if name in self.compdict.keys():
-            components = self.compdict[name]
-            return any(self.eid == eid for eid, component in components)
+            return self.eid in self.compdict[name].keys()
         return False
-            
-    def add_component(self, component) -> bool:
+
+    def add_component(self, component: object) -> bool:
         name = type(component).__name__.lower()
         if not self.has_component(name):
             try:
-                self.compdict[name].append((self.eid, component))
+                self.compdict[name].update({self.eid: component})
             except:
-                self.compdict[name] = [(self.eid, component),]
+                self.compdict[name] = {self.eid: component}
             return True
         return False
 
-    def del_component(self, name) -> bool:
+    def del_component(self, name: str) -> bool:
         if self.has_component(name):
-            components = self.compdict[name]
-            index = [i for i, v in enumerate(components) if v[0] == self.eid][0]
-            del self.compdict[name][index]
+            del self.compdict[name][self.eid]
             return True
         return False
             
-    def get_component(self, component) -> object:
-        if name in self.compdict.keys():
-            components = self.compdict[name]
-            return [comp for eid, comp in components if self.eid == eid]
+    def get_component(self, name: str) -> object:
+        if self.has_component(name):
+            return self.compdict[name][self.eid]
         return False
 
 if __name__ == "__main__":
