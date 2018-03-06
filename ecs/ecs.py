@@ -1,6 +1,10 @@
 # component.py
 from die import Die
 
+class System:
+    def update(self):
+        raise NotImplementedError
+
 class Component:
     def __str__(self):
         return f"{type(self).__name__}: ({', '.join(next(self.attrs))})"
@@ -46,28 +50,30 @@ class Entity:
     to represent certain objects in game world.
 
     >>> import components
-    >>> e = Entity(description=components.Description('hero'))
-    >>> e
-    hero(0): 
-    >>> print(e)
-    hero
-    >>> hash(e)
-    0
+    >>> e = Entity(components=[components.Description('hero'),])
+    >>> e, Entity.compdict
+    (0, {'description': [(0, Description: ('hero'))]})
+    >>> e.has_component('description')
+    True
+    >>> e.del_component('description')
+    True
+    >>> e.has_component('description')
+    False
     '''
     eid = 0
-    def __init__(self, description, components=None):
+    compdict = {}
+    def __init__(self, components=None):
         self.eid = Entity.eid
         Entity.eid += 1
-        self.description = description
         if components:
-            for name, component in components.items():
-                self.add_component(name, component)
+            for component in components:
+                self.add_component(component)
 
     def __str__(self):
-        return self.description.name
+        return str(self.eid)
 
     def __repr__(self):
-        return f"{self}({self.eid}): {', '.join(str(c) for c in self.components)}"
+        return str(self)
 
     def __hash__(self):
         return self.eid
@@ -75,26 +81,47 @@ class Entity:
     def __eq__(self, other):
         return self.eid == hash(other.eid)
     
-    @property
-    def components(self):
-        for component in self.__dict__:
-            if isinstance(getattr(self, component), Component):
-                yield self.__dict__[component]
+    def components(self, eid):
+        for item in self.compdict.items():
+            try:
+                _, components = item
+            except:
+                pass
+            else:
+                for eid, component in components:
+                    if self.eid == eid:
+                        yield component
 
-    def has_component(self, name):
-        return bool(hasattr(self, name) and getattr(self, name))
-
-    def add_component(self, name, component):
+    def has_component(self, name: str) -> bool:
+        # return bool(hasattr(self, name) and getattr(self, name))
+        if name in self.compdict.keys():
+            components = self.compdict[name]
+            return any(self.eid == eid for eid, component in components)
+        return False
+            
+    def add_component(self, component) -> bool:
+        name = type(component).__name__.lower()
         if not self.has_component(name):
-            setattr(self, name, component)
+            try:
+                self.compdict[name].append((self.eid, component))
+            except:
+                self.compdict[name] = [(self.eid, component),]
+            return True
+        return False
 
-    def del_component(self, name):
-        if self.has_component(self, name):
-            delattr(self, name)
-
-    def get_component(self, name, component):
-        if self.has_component(self, name):
-            return getattr(self, name)
+    def del_component(self, name) -> bool:
+        if self.has_component(name):
+            components = self.compdict[name]
+            index = [i for i, v in enumerate(components) if v[0] == self.eid][0]
+            del self.compdict[name][index]
+            return True
+        return False
+            
+    def get_component(self, component) -> object:
+        if name in self.compdict.keys():
+            components = self.compdict[name]
+            return [comp for eid, comp in components if self.eid == eid]
+        return False
 
 if __name__ == "__main__":
     from doctest import testmod
