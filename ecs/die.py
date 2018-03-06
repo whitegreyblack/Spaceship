@@ -61,7 +61,7 @@ class Die:
         raise ValueError('Die string is invalid')
 
     @staticmethod
-    def split_dice_string(string):
+    def split_dice_string(string: object) -> str:
         '''Used to recognize args made up of multiple valid die strings.
         Returns a list of deliminated die strings used in iterating
         '''

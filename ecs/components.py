@@ -33,36 +33,69 @@ Component List:
         Refresh
 '''
 class Render(Component):
-    __slots__ = ['symbol', 'foreground', 'background']
-    def __init__(self, symbol, foreground="#ffffff", background="#000000"):
+    __slots__ = ['unit', 'symbol', 'foreground', 'background']
+    def __init__(self, unit, symbol, foreground="#ffffff", background="#000000"):
         '''Render component that holds all information that allows the map
         to be drawn with correct characters and colors
-        >>> r = Render('@')
-        >>> print(r)
-        Render: (@, #ffffff, #000000)
+        >>> r = Render(None, '@')
+        >>> r
+        Render(symbol=@, foreground=#ffffff, background=#000000)
         >>> r.symbol == '@'
         True
         '''
+        self.unit = unit
         self.symbol = symbol
         self.foreground = foreground
         self.background = background
 
 class Description(Component):
-    __slots__ = ['name', 'less', 'more']
-    def __init__(self, name, less=None, more=None):
+    __slots__ = ['unit', 'name', 'less', 'more']
+    def __init__(self, unit, name, less=None, more=None):
+        self.unit = unit
         self.name = name
         self.less = less
         self.more = more
 
 class Damage(Component):
-    __slots__ = ["damage",]
-    def __init__(self, damage):
+    __slots__ = ['unit', "damage",]
+    def __init__(self, unit, damage):
+        self.unit = unit
         self.damage = Die.construct(damage)
 
 class Defense(Component):
-    __slots__ = ["armor",]
-    def __init__(self, armor):
+    __slots__ = ['unit', "armor",]
+    def __init__(self, unit, armor):
+        self.unit = unit
         self.armor = armor
+
+class Attribute(Component):
+    __slots__ = ['unit', 'strength', 'agility', 'intelligence']
+    def __init__(self, unit, strength, agility, intelligence):
+        '''
+        >>> Attribute(None, 5, 5, 5)
+        Attribute(strength=5, agility=5, intelligence=5)
+        '''
+        self.unit = unit
+        self.strength = strength
+        self.agility = agility
+        self.intelligence = intelligence
+
+class Strength(Component):
+    def __init__(self, unit, strength):
+        self.unit = unit
+        self.strength = strength
+        self.health = strength * 2
+
+class Agility(Component):
+    def __init__(self, unit, agility):
+        self.unit = unit
+        self.agility = agility
+
+class Intelligence(Component):
+    __slots__ = ["intelligence", "mana"]
+    def __init__(self, name, attr):
+        self.unit = unit
+        self.intelligence = intelligence
 
 class Health(Component):
     def __init__(self):
@@ -138,42 +171,37 @@ class Experience:
         return exp
 
 class Stats(Component):
-    '''Stats componenet used in unit classes'''
-    __slots__ = ['str', 'con', 'agi', 'int', 'wis', 'luc']
-    def __init__(self, stats):
-        '''Creates a valid stats object using a die string or container of 
-        integers or die strings as stat parameters instead of normal integer 
-        values. These stat values will be binded to the stats in the given
-        order.
-
-        >>> s = Stats((1, 2, 3, 4, 5, 6))
+    '''Stats componenet used in unit classes. Creates a valid stats object 
+        using a die string or container of integers or die strings as stat 
+        parameters instead of normal integer values. These stat values will 
+        be binded to the stats in the given order.
+        >>> s = Stats(unit(5, 1), (1, 2, 3, 4, 5, 6))
         >>> s
-        STATS: (STR: 1, CON: 2, AGI: 3, INT: 4, WIS: 5, LUC: 6)
-        >>> s = Stats("1d6 1d6 1d6 1d6 1d6 1d6")
-        >>> s = Stats("1d6 1d6 1d6 1d6 1d6 1d6".split())
-        >>> from ecs import Entity
-        >>> e = Entity('hero')
-        >>> e.component = s
-        >>> list(type(e).__name__ for e in e.components)
-        ['Stats']
+        Stats(unit=Unit(max_hp=5, level=1), str=1, con=2, agi=3, int=4, wis=5, luc=6)
+        >>> s = Stats(unit(5, 1), "1d6 1d6 1d6 1d6 1d6 1d6")
+        >>> s = Stats(unit(5, 1), "1d6 1d6 1d6 1d6 1d6 1d6".split())
         '''
+    __slots__ = ['unit', 'str', 'con', 'agi', 'int', 'wis', 'luc']
+    def __init__(self, unit, stats):
+
+        self.unit = unit
         if not isinstance(stats, (str, Iterable)):
             raise ValueError('Invalid arguments')
+
         # helper function from Die
         stats = Die.split_dice_string(stats)
-        for attr, stat in zip(self.__slots__, stats):
+        for attr, stat in zip(self.__slots__[1:], stats):
             setattr(self, attr, stat)
 
     def __repr__(self):
         '''Returns stat information for dev'''
-        return f'{self.__class__.__name__.upper()}: ({self})'
+        return f'{self.__class__.__name__}({self})'
 
     def __str__(self):
         '''Returns stat information for user'''
-        return ", ".join(f'{s.upper()}: {getattr(self, s)}' 
-                           for s in self.__slots__)
+        return ", ".join(f'{s}={getattr(self, s)}' for s in self.__slots__)
 
 if __name__ == "__main__":
     from doctest import testmod
-    testmod()
     unit = namedtuple("Unit", "max_hp level")
+    testmod()

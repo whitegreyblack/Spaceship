@@ -6,18 +6,26 @@ class System:
         raise NotImplementedError
 
 class Component:
-    def __str__(self):
-        return f"{type(self).__name__}: ({', '.join(next(self.attrs))})"
-
+    unit = None
     def __repr__(self):
-        return f"{type(self).__name__}: ({', '.join(next(self.attrs))})"
+        '''Returns stat information for dev'''
+        return f'{self.__class__.__name__}({self})'
 
-    def attr(self, name):
+    def __str__(self):
+        '''Returns stat information for user'''
+        return ", ".join(f'{s}={getattr(self, s)}' for s, a in self.attrs)
+
+    def attr(self, name: str):
+        '''Checks if attribute exists and is set'''
         return bool(hasattr(self, name) and getattr(self, name))
     
     @property
     def attrs(self):
-        yield (f"'{getattr(self, a)}'" for a in self.__slots__ if self.attr(a))
+        '''Yields attributes that are not None'''
+        for a in self.__slots__:
+            if self.attr(a):
+                yield (a, getattr(self, a))
+        # yield ((a, getattr(self, a)) for a in self.__slots__ if self.attr(a))
     # def __str__(self):
     #     if isinstance(self, tuple(Component.__subclasses__())):
     #         parent = type(self).__base__.__name__
