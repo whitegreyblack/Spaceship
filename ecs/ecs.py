@@ -61,7 +61,7 @@ class Attribute(Component):
 
     def update(self):
         if self.unit.has_component('health'):
-            self.unit.health.update()
+            self.unit.get_component('health').update()
 
 class Health(Component):
     __slots__ = ['unit', 'max_hp', 'cur_hp']
@@ -73,6 +73,33 @@ class Health(Component):
             strength = self.unit.get_component('attribute').strength
             self.max_hp = strength * 2 + self.max_hp
             self.cur_hp = strength * 2 + self.cur_hp
+
+class Mana(Component):
+    __slots__ = ['unit', 'max_mp', 'cur_mp']
+    def __init__(self, mana=0):
+        self.max_mp = self.cur_mp = mana
+
+    def update(self):
+        if self.unit.has_component('attribute'):
+            intelligence = self.unit.get_component('attribute').intelligence
+            self.max_mp = intelligence * 2 + self.max_mp
+            self.cur_mp = intelligence * 2 + self.cur_mp
+
+class Position(Component):
+    __slots__ = ['unit', 'x', 'y', 'ox', 'oy']
+    def __init__(self, x=0, y=0):
+        self.x = x
+        self.y = y
+
+    @property
+    def position(self):
+        return self.x, self.y
+
+    def move(self, x, y):
+        self.x, self.y = self.x + x, self.y + y
+
+    def save(self):
+        self.ox, self.oy = self.x, self.y
 
 class Entity:
     '''
@@ -123,6 +150,18 @@ class Entity:
         for components in self.compdict.values():
             if self.eid in components.keys():
                 yield components[self.eid]
+
+    def has(self, name: str=None, names:list=None) -> bool:
+        def check(name):
+            if name in self.compdict.keys():
+                return self.eid in self.compdict[name].keys()
+            return False
+        if names:
+            return all([self.has_component(name) for name in names])
+        elif name:
+            return check(name)
+        else:
+            raise ValueError('No arguments supplied to function: has()')
 
     def has_component(self, name: str) -> bool:
         if name in self.compdict.keys():

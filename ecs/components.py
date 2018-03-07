@@ -44,44 +44,6 @@ class Defense(Component):
         self.unit = unit
         self.armor = armor
 
-class Health(Component):
-    def __init__(self, unit, health=0):
-        self.max_hp = self.cur_hp = health
-        self.update()
-
-    def update(self):
-        print('update')
-        if unit.has_component('attribute'):
-            self.max_hp = self.cur_hp = unit.attribute.strength * 2 + health
-    
-    # def status_bonuses(self, strbon, conbon):
-    #     self.mod_hp = strbon + conbon * 2
-    #     self.max_hp = self.cur_hp = self.hp + self.mod_hp
-
-    # def take_damage(self, heal):
-    #     self.hitpoints += damage
-
-    # def heal_damage(self, heal):
-    #     self.hitpoints += heal
-
-    # class Mana(Component):
-    #     mp = 5
-    #     def __init__(self):
-    #         self.max_mp = self.cur_mp = 0
-        
-    #     def __str__(self):
-    #         return f"Mana: {self.cur_mp}/{self.max_mp}"
-
-    #     def status_bonuses(self, intbon, wisbon):
-    #         self.mod_mp = intbon + wisbon * 2
-    #         self.max_mp = self.cur_mp = self.mp + self.mod_mp
-
-    #     def use_points(self, usage):
-    #         self.cur_mp -= usage
-        
-    #     def gain_points(self, regen):
-    #         self.cur_mp += usage
-    
 class Attribute(Component):
     __slots__ = ['unit', 'strength', 'agility', 'intelligence']
     def __init__(self, strength, agility, intelligence):
@@ -96,6 +58,9 @@ class Attribute(Component):
     def update(self):
         if self.unit.has_component('health'):
             self.unit.health.update()
+        
+        if self.unit.has_component('mana'):
+            self.unit.mana.update()
 
 class Strength(Component):
     def __init__(self, unit, strength):
