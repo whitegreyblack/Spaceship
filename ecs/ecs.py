@@ -64,49 +64,6 @@ class Attribute(Component):
             if self.unit.has(attr):
                 self.unit.get(attr).update()
 
-class Health(Component):
-    __slots__ = ['unit', 'max_hp', 'cur_hp']
-    def __init__(self, health=0):
-        self.max_hp = self.cur_hp = health
-
-    def update(self):
-        if self.unit.has_component('attribute'):
-            strength = self.unit.get_component('attribute').strength
-            self.max_hp = strength * 2 + self.max_hp
-            self.cur_hp = strength * 2 + self.cur_hp
-
-    def take_damage(self, damage):
-        if self.unit.has('defense'):
-            damage = self.unit.get('defense').calculate_damage(damage)
-        self.cur_hp -= damage
-
-class Mana(Component):
-    __slots__ = ['unit', 'max_mp', 'cur_mp']
-    def __init__(self, mana=0):
-        self.max_mp = self.cur_mp = mana
-
-    def update(self):
-        if self.unit.has_component('attribute'):
-            intelligence = self.unit.get_component('attribute').intelligence
-            self.max_mp = intelligence * 2 + self.max_mp
-            self.cur_mp = intelligence * 2 + self.cur_mp
-
-class Position(Component):
-    __slots__ = ['unit', 'x', 'y', 'ox', 'oy']
-    def __init__(self, x=0, y=0):
-        self.x = x
-        self.y = y
-
-    @property
-    def position(self):
-        return self.x, self.y
-
-    def move(self, x, y):
-        self.x, self.y = self.x + x, self.y + y
-
-    def save(self):
-        self.ox, self.oy = self.x, self.y
-
 class Damage(Component):
     __slots__ = ['unit', "damages"]
     MAGICAL, PHYSICAL = range(2)
@@ -135,8 +92,52 @@ class Damage(Component):
                 if isinstance(dmg, Die):
                    dmg = next(dmg.roll())
                 total_damage += dmg
-            damage_per_type.append(total_damage)
+            damage_per_type.append((dtype, total_damage))
         return damage_per_type
+
+class Health(Component):
+    __slots__ = ['unit', 'max_hp', 'cur_hp']
+    def __init__(self, health=0):
+        self.max_hp = self.cur_hp = health
+
+    def update(self):
+        if self.unit.has_component('attribute'):
+            strength = self.unit.get_component('attribute').strength
+            self.max_hp = strength * 2 + self.max_hp
+            self.cur_hp = strength * 2 + self.cur_hp
+
+    def take_damage(self, damages):
+        for dtype, damage in damages:
+            if self.unit.has('defense'):
+                damage = self.unit.get('defense').calculate_damage(damage)
+            self.cur_hp -= damage
+
+class Mana(Component):
+    __slots__ = ['unit', 'max_mp', 'cur_mp']
+    def __init__(self, mana=0):
+        self.max_mp = self.cur_mp = mana
+
+    def update(self):
+        if self.unit.has_component('attribute'):
+            intelligence = self.unit.get_component('attribute').intelligence
+            self.max_mp = intelligence * 2 + self.max_mp
+            self.cur_mp = intelligence * 2 + self.cur_mp
+
+class Position(Component):
+    __slots__ = ['unit', 'x', 'y', 'ox', 'oy']
+    def __init__(self, x=0, y=0):
+        self.x = x
+        self.y = y
+
+    @property
+    def position(self):
+        return self.x, self.y
+
+    def move(self, x, y):
+        self.x, self.y = self.x + x, self.y + y
+
+    def save(self):
+        self.ox, self.oy = self.x, self.y
 
 class Defense(Component):
     __slots__ = ['unit', "armor",]
