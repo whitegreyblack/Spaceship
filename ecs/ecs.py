@@ -60,8 +60,9 @@ class Attribute(Component):
         self.intelligence = intelligence
 
     def update(self):
-        if self.unit.has_component('health'):
-            self.unit.get_component('health').update()
+        for attr in 'health mana defense'.split():
+            if self.unit.has(attr):
+                self.unit.get(attr).update()
 
 class Health(Component):
     __slots__ = ['unit', 'max_hp', 'cur_hp']
@@ -73,6 +74,11 @@ class Health(Component):
             strength = self.unit.get_component('attribute').strength
             self.max_hp = strength * 2 + self.max_hp
             self.cur_hp = strength * 2 + self.cur_hp
+
+    def take_damage(self, damage):
+        if self.unit.has('defense'):
+            damage = self.unit.get('defense').calculate_damage(damage)
+        self.cur_hp -= damage
 
 class Mana(Component):
     __slots__ = ['unit', 'max_mp', 'cur_mp']
@@ -100,6 +106,56 @@ class Position(Component):
 
     def save(self):
         self.ox, self.oy = self.x, self.y
+
+class Damage(Component):
+    __slots__ = ['unit', "damages"]
+    MAGICAL, PHYSICAL = range(2)
+    def __init__(self, damage=None, damages=None):
+        self.damages = {}
+        if not damage and not damages:
+            raise ValueError('Need to add a damage/damage type for init')
+
+        if damage:
+            damages = list(damage)
+        for dmg, dtype in damages:
+            if isinstance(dmg, str):
+                dmg = Die.construct(dmg)
+
+            if dtype in self.damages.keys():
+                self.damages[dtype].append(dmg)
+            else:
+                self.damages[dtype] = [dmg]
+
+    @property
+    def damage(self):
+        damage_per_type = []
+        for dtype, damages in self.damages.items():
+            total_damage = 0
+            for dmg in damages:
+                if isinstance(dmg, Die):
+                   dmg = next(dmg.roll())
+                total_damage += dmg
+            damage_per_type.append(total_damage)
+        return damage_per_type
+
+class Defense(Component):
+    __slots__ = ['unit', "armor",]
+    def __init__(self, armor, resistance):
+        self.armor = armor
+        self.resistance = resistance
+
+    def calculate_damage(self, damage, damages):
+        if not damage and not damages:
+            raise ValueError('Need to add a damage/damage type for init')
+        total_damage = []
+        if damage:
+            damages = list(damage)
+        for dmg, dtype in damages:
+            if dtype == "physical":
+                total_damage.append(damage - self.armor)
+            else:
+                total_damage.append(damage * self.resistance)
+        return total_damage
 
 class Entity:
     '''
@@ -171,7 +227,9 @@ class Entity:
             self.add_components(components)
         elif component:
             self.add_component(component)
-
+        else:
+            raise ValueError('No arguments supplied to function: add()')
+   
     def add_component(self, component: object) -> None:
         component.unit = self
         name = type(component).__name__.lower()
@@ -212,6 +270,8 @@ class Entity:
             return self.get_components(names)
         elif name:
             return self.get_component(name)
+        else:
+            raise ValueError('No arguments supplied to function: get()')
 
     def get_component(self, name: str) -> object:
         if self.has_component(name):

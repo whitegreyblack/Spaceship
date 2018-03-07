@@ -14,8 +14,6 @@ Entities: name, id
         Sword, Wand
 
 Component List:
-    Stats: [s | c | a | i | w | l]
-    Mover
     Damage:
         Type (physical, magical, pure)
         Range
@@ -32,35 +30,6 @@ Component List:
         Current
         Refresh
 '''
-class Damage(Component):
-    __slots__ = ['unit', "damage",]
-    def __init__(self, unit, damage):
-        self.unit = unit
-        self.damage = Die.construct(damage)
-
-class Defense(Component):
-    __slots__ = ['unit', "armor",]
-    def __init__(self, unit, armor):
-        self.unit = unit
-        self.armor = armor
-
-class Attribute(Component):
-    __slots__ = ['unit', 'strength', 'agility', 'intelligence']
-    def __init__(self, strength, agility, intelligence):
-        '''
-        >>> Attribute(5, 5, 5)
-        Attribute(strength=5, agility=5, intelligence=5)
-        '''
-        self.strength = strength
-        self.agility = agility
-        self.intelligence = intelligence
-
-    def update(self):
-        if self.unit.has_component('health'):
-            self.unit.health.update()
-        
-        if self.unit.has_component('mana'):
-            self.unit.mana.update()
 
 class Strength(Component):
     def __init__(self, unit, strength):
@@ -96,23 +65,28 @@ def experience_unit(unit):
 
 class Experience:
     '''Experience class to hold experience calculate function'''
-    __slots__ = ['unit']
-    def __init__(self, unit):
+    __slots__ = ['unit', 'level']
+    def __init__(self, level):
         '''Binds unit to this class
         >>> unit = namedtuple("Unit", "max_hp level")
         >>> e = Experience(unit(16, 2))
         '''
-        self.unit = unit
+        self.level = level
 
     def calculate(self):
-        if self.unit.level == 1:
-            exp = self.unit.max_hp // 8
+        if not self.unit.has('health'):
+            raise ValueError('Experience cannot be calculated without health')
+
+        if self.level == 1:
+            exp = self.unit.get('health').max_hp // 8
         else:
-            exp = self.unit.max_hp // 6
-        if self.unit.level > 9:
+            exp = self.unit.get('health').max_hp // 6
+
+        if self.level > 9:
             exp *= 20
-        elif self.unit.level > 6:
+        elif self.level > 6:
             exp *= 4
+
         return exp
 
 '''

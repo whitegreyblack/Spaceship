@@ -113,7 +113,7 @@ class Die:
         s=self.sides
         mu=self.multiplier
         mo=self.modifier
-        return f"{c}(sides={s}, mult={mu}, mod={mo}): {str(self)}"
+        return f"{c}(sides={s}, mult={mu}, mod={mo})"
 
     def __str__(self):
         '''Returns die info for end-user'''

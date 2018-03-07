@@ -1,5 +1,5 @@
 from ecs.ecs import (Entity, Description, Render, Attribute, Health, Mana,
-        Position
+        Position, Damage, Defense
     )
 # from ecs.components import Health, Attribute, Description, Render
 
@@ -46,14 +46,17 @@ def test_entity_stat_health():
     assert g.has_component('health')
     assert g.get_component('health').cur_hp == 11
 
-def entity_stat_health():
-    e = Entity(components=[
+def simulate_fight():
+    a = Entity(components=[
         Description('hero'),
-        Render('a'),
-        Attribute(5, 0, 0),
-        Health(1),
+        Damage([("2d4", Damage.PHYSICAL)]),
+        Health(10),
     ])
-    print(f"id={e.eid}, unit={e.get_component('health').unit}")
+    b = Entity(components=[
+        Description('enemy'),
+        Damage([("1d6", Damage.PHYSICAL)])
+    ])
+    print(a.get('damage').damage)
 
 def iterate_component_type():
     entities = set()
@@ -80,7 +83,7 @@ def iterate_component_type():
         print(entity.get_components(['render', 'mana']))
         print(list(entity.components))
         for component in entity.components:
-            print(component)
+            print(repr(component))
 
         if entity.has_component('description'):
             print(entity.eid)
@@ -98,5 +101,5 @@ def iterate_component_type():
             print(position, entity.get_component('position').position)
     
 if __name__ == "__main__":
-    entity_stat_health()
-    iterate_component_type()
+    # iterate_component_type()
+    simulate_fight()
