@@ -125,11 +125,7 @@ class Entity:
         self.eid = Entity.eid
         Entity.eid += 1
         if components:
-            for component in components:
-                component.unit = self
-                self.add_component(component)
-                if hasattr(component, 'update'):
-                    component.update()
+            self.add(components=components)
 
     def __str__(self):
         description = self.get_component('description')
@@ -146,20 +142,18 @@ class Entity:
     def __eq__(self, other):
         return self.eid == hash(other.eid)
     
+    @property
     def components(self):
         for components in self.compdict.values():
             if self.eid in components.keys():
                 yield components[self.eid]
 
+    # -- HAS --
     def has(self, name: str=None, names:list=None) -> bool:
-        def check(name):
-            if name in self.compdict.keys():
-                return self.eid in self.compdict[name].keys()
-            return False
         if names:
-            return all([self.has_component(name) for name in names])
+            return self.has_components(names)
         elif name:
-            return check(name)
+            return self.has_component(name)
         else:
             raise ValueError('No arguments supplied to function: has()')
 
@@ -171,7 +165,15 @@ class Entity:
     def has_components(self, names: list) -> bool:
         return all([self.has_component(name) for name in names])
 
-    def add_component(self, component: object) -> bool:
+    # -- ADD --
+    def add(self, component:object=None, components:list=None) -> bool:
+        if components:
+            self.add_components(components)
+        elif component:
+            self.add_component(component)
+
+    def add_component(self, component: object) -> None:
+        component.unit = self
         name = type(component).__name__.lower()
         if not self.has_component(name):
             try:
@@ -181,13 +183,35 @@ class Entity:
             return True
         return False
 
+    def add_components(self, components: list) -> bool:
+        for component in components:
+            if self.add_component(component):
+                if hasattr(component, 'update'):
+                    component.update()
+
+    # -- DEL --
+    def delete(self, name:str=None, names:list=None) -> None:
+        if names:
+            self.del_components(names)
+        elif name:
+            self.del_component(name)
+        else:
+            raise ValueError('No arguments supplied to function: del()')
+
     def del_component(self, name: str) -> None:
         if self.has_component(name):
             del self.compdict[name][self.eid]
 
-    def del_components(self, names: list) -> bool:
+    def del_components(self, names: list) -> None:
         for name in names:
             self.del_component(name)
+
+    # -- GET --
+    def get(self, name:str=None, names:list=None) -> object:
+        if names:
+            return self.get_components(names)
+        elif name:
+            return self.get_component(name)
 
     def get_component(self, name: str) -> object:
         if self.has_component(name):

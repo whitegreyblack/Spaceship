@@ -63,18 +63,23 @@ def iterate_component_type():
         Position(3, 3)
     ]))
     entities.add(Entity(components=[
-        Description('hero'),
+        Description('unit'),
         Render('a'),
         Attribute(5, 0, 0),
     ]))
     entities.add(Entity(components=[
-        Description('hero'),
+        Description('rind'),
         Render('a'),
         Attribute(5, 0, 1),
         Health(1),
         Mana(2),
         Position(4, 5)
     ]))
+    
+    for entity in entities:
+        for component in entity.components:
+            print(component)
+
     for entity in entities:
         if entity.has_component('description'):
             print(entity.eid)
