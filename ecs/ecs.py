@@ -64,6 +64,10 @@ class Render(Component):
         self.foreground = foreground
         self.background = background
 
+    @property
+    def render(self):
+        return f"[c={self.foreground}]{self.symbol}[/c]"
+        
 class Attribute(Component):
     __slots__ = ['unit', 'strength', 'agility', 'intelligence']
     def __init__(self, strength, agility, intelligence):

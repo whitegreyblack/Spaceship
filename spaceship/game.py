@@ -30,9 +30,11 @@ class Maps: CITY, CAVE, WILD, WORLD = range(4)
 
 class Start(Scene):
     def __init__(self, sid='start_game'):
+        '''Initialize scene parent variables'''
         super().__init__(scene_id=sid)
 
     def reset(self):
+        '''Set all variables back to default'''
         self.log = []
         self.turns = 0
         self.world = None
@@ -47,6 +49,7 @@ class Start(Scene):
         self.reset_size()
 
     def setup(self):
+        '''Add game varialbes to class dictionary'''
         # self.reset()
         self.actions = {
             0: {
