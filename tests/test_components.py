@@ -75,24 +75,23 @@ def iterate_component_type():
         Mana(2),
         Position(4, 5)
     ]))
-    
+
     for entity in entities:
+        print(entity.get_components(['render', 'mana']))
+        print(list(entity.components))
         for component in entity.components:
             print(component)
 
-    for entity in entities:
         if entity.has_component('description'):
             print(entity.eid)
             if entity.has_component('attribute'):
                 print(entity.eid)
                 if entity.has_component('health'):
                     print(entity.eid)
-    print('done')
-    for entity in entities:
+
         if entity.has_components(['health', 'mana']):
             print(entity.eid)
             
-    for entity in entities:
         if entity.has_component('position'):
             position = entity.get_component('position')
             position.move(2, 3)

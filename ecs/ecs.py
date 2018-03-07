@@ -219,8 +219,9 @@ class Entity:
         return None
 
     def get_components(self, names: list) -> list:
-        return [self.get_component(name) 
-                    for name in names if self.has_component(name)]
+        return [component for component 
+                in [self.get_component(name) for name in names]
+                    if component]
 
 if __name__ == "__main__":
     from doctest import testmod
