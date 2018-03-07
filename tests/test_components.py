@@ -1,6 +1,8 @@
 from ecs.ecs import (Entity, Description, Render, Attribute, Health, Mana,
         Position, Damage, Defense
     )
+import time
+import random
 # from ecs.components import Health, Attribute, Description, Render
 
 def test_entity():
@@ -81,7 +83,7 @@ def simulate_fight_with_armor():
     fight(a, b)
     a.add(Damage([("2d4", Damage.PHYSICAL)]))
     fight(a, b)
-    
+
 def fight(a, b):
     def check(unit):
         fightable = unit.has(names=['health', 'damage'])
@@ -134,13 +136,52 @@ def iterate_component_type():
 
         if entity.has_components(['health', 'mana']):
             print(entity.eid)
-            
+
+def iterate_component_by_entity():   
+    t = time.time
+    entities = set()
+    for i in range(1000):
+        e = Entity(components=[Position(0, 0),] if random.randint(0, 1) else [])
+        entities.add(e)
+
+    # print(len(entities))
+    # print(len([e for e in entities if e.has_component('position')]))
+    # count1 = 0
+    t1 = t()
+    for entity in entities:
+        # count1 += 1
         if entity.has_component('position'):
-            position = entity.get_component('position')
-            position.move(2, 3)
-            print(position, entity.get_component('position').position)
-    
+            entity.get_component('position').move(2, 3)
+    total1 = t() - t1
+    # print(count1)
+    print(total1)
+
+    t1 = t()
+    for component in Entity.compdict['position'].values():
+        component.move(2, 3)
+    print(t() - t1)
+
+    count2 = 0
+    t1 = t()
+    for entity in [e for e in entities if e.has_component('position')]:
+        position = entity.get_component('position')
+        position.move(2, 3)
+    total2 = t() - t1
+    print(total2)
+
+    total3 = 0.0
+    t1 = t()
+    for entity in [e for e in entities if e.has_component('position')]:
+        entity.get_component('position').move(2, 3)
+    total3 += t() - t1
+    print(total3)
+    print(total2 > total3)
+    return total1 > total2
+
+
 if __name__ == "__main__":
     # iterate_component_type()
+    # print(len([i for i in [iterate_component_by_entity() for _ in range(10000)] if i]))
+    iterate_component_by_entity()
     # simulate_fight_simple()
-    simulate_fight_with_armor()
+    # simulate_fight_with_armor()

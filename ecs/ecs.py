@@ -181,7 +181,7 @@ class Entity:
     >>> e.del_component('description')
     >>> e.has_component('description')
     False
-    >>> list(e.components())
+    >>> list(e.components)
     []
     '''
     eid = 0
