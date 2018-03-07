@@ -18,7 +18,7 @@ world = '''
 #....#....#....#....#..........##....#....#....#....#..........#
 ################################################################
 '''[1:]
-mapx, mapy = len(world.split()[0]), len(world.split())
+mapx, mapy = len(world.split()[0]) - 1, len(world.split()) - 1
 
 def system_draw_world():
     term.puts(0, 0, world)
@@ -36,7 +36,7 @@ class Game():
         self.player = Entity(components=[
             Position(random.randint(1, mapx - 1), 
                      random.randint(1, mapy - 1)),
-            Render('@', '#DD8822')
+            Render('a', '#DD8822')
         ])
         self.enemy = Entity(components=[
             Position(random.randint(1, mapx - 1),
@@ -56,4 +56,8 @@ class Game():
 
 if __name__ == "__main__":
     term.open()
+    FONT_PATH = "ecs/assets/"
+    font = 'PixelGrotesk'
+    cx, cy = '16', 'x16'
+    term.set(f"font: {FONT_PATH}{font}.ttf, size=20")
     Game().run()
