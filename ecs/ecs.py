@@ -26,6 +26,22 @@ class Component:
             if self.attr(a):
                 yield (a, getattr(self, a))
     
+class Position(Component):
+    __slots__ = ['unit', 'x', 'y', 'ox', 'oy']
+    def __init__(self, x=0, y=0):
+        self.x = x
+        self.y = y
+
+    @property
+    def position(self):
+        return self.x, self.y
+
+    def move(self, x, y):
+        self.x, self.y = self.x + x, self.y + y
+
+    def save(self):
+        self.ox, self.oy = self.x, self.y
+
 class Description(Component):
     __slots__ = ['unit', 'name', 'less', 'more']
     def __init__(self, name, less=None, more=None):
@@ -108,9 +124,36 @@ class Health(Component):
 
     def take_damage(self, damages):
         for dtype, damage in damages:
+            print(f"{self.unit} was hit with {damage} damage.")
             if self.unit.has('defense'):
-                damage = self.unit.get('defense').calculate_damage(damage)
+                blocked = damage
+                damage = self.unit.get('defense').calculate((dtype, damage))
+                print(f"{self.unit} blocked {blocked - damage} damage.")
+            else:
+                print(f"{self.unit} has no defense and takes full damage.")            
             self.cur_hp -= damage
+            print(f"{self.unit} took {damage} damage. " +
+                  f"{self.unit} has {self.cur_hp} health left.")
+
+class Defense(Component):
+    __slots__ = ['unit', "armor", "resistance"]
+    def __init__(self, armor=0, resistance=0):
+        self.armor = armor
+        self.resistance = resistance
+
+    def calculate(self, damage=None, damages=None):
+        print(f"{self.unit} has {self.armor} armor and {self.resistance} resistance.")
+        if not damage and not damages:
+            raise ValueError('Need to add a damage/damage type for init')
+        total_damage = []
+        if damage:
+            damages = [damage,]
+        for dtype, damage in damages:
+            if dtype == 1:
+                total_damage.append(damage - self.armor)
+            else:
+                total_damage.append(damage * self.resistance)
+        return sum(total_damage)
 
 class Mana(Component):
     __slots__ = ['unit', 'max_mp', 'cur_mp']
@@ -122,41 +165,6 @@ class Mana(Component):
             intelligence = self.unit.get_component('attribute').intelligence
             self.max_mp = intelligence * 2 + self.max_mp
             self.cur_mp = intelligence * 2 + self.cur_mp
-
-class Position(Component):
-    __slots__ = ['unit', 'x', 'y', 'ox', 'oy']
-    def __init__(self, x=0, y=0):
-        self.x = x
-        self.y = y
-
-    @property
-    def position(self):
-        return self.x, self.y
-
-    def move(self, x, y):
-        self.x, self.y = self.x + x, self.y + y
-
-    def save(self):
-        self.ox, self.oy = self.x, self.y
-
-class Defense(Component):
-    __slots__ = ['unit', "armor",]
-    def __init__(self, armor, resistance):
-        self.armor = armor
-        self.resistance = resistance
-
-    def calculate_damage(self, damage, damages):
-        if not damage and not damages:
-            raise ValueError('Need to add a damage/damage type for init')
-        total_damage = []
-        if damage:
-            damages = list(damage)
-        for dmg, dtype in damages:
-            if dtype == "physical":
-                total_damage.append(damage - self.armor)
-            else:
-                total_damage.append(damage * self.resistance)
-        return total_damage
 
 class Entity:
     '''

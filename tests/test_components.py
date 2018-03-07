@@ -46,7 +46,7 @@ def test_entity_stat_health():
     assert g.has_component('health')
     assert g.get_component('health').cur_hp == 11
 
-def simulate_fight():
+def simulate_fight_simple():
     a = Entity(components=[
         Description('hero'),
         Damage([("2d4", Damage.PHYSICAL)]),
@@ -64,6 +64,39 @@ def simulate_fight():
         print(f"{a.get('description').name} has died")
     else:
         print(f"{b.get('description').name} has died")
+
+def simulate_fight_with_armor():
+    a = Entity(components=[
+        Description('hero'),
+        # Damage([("2d4", Damage.PHYSICAL)]),
+        Health(10),
+        Defense(1),
+    ])
+    b = Entity(components=[
+        Description('enemy'),
+        Defense(2),
+        Damage([("1d6", Damage.PHYSICAL)]),
+        Health(10)
+    ])
+    fight(a, b)
+    a.add(Damage([("2d4", Damage.PHYSICAL)]))
+    fight(a, b)
+    
+def fight(a, b):
+    def check(unit):
+        fightable = unit.has(names=['health', 'damage'])
+        if not fightable:
+            print(f'{unit} has no health or damage')
+        return fightable
+
+    if check(a) and check(b):
+        while a.get('health').cur_hp > 0 and b.get('health').cur_hp > 0:
+            b.get('health').take_damage(a.get('damage').damage)
+            a.get('health').take_damage(b.get('damage').damage)
+        if a.get('health').cur_hp <= 0:
+            print(f"{a.get('description').name} has died")
+        else:
+            print(f"{b.get('description').name} has died")
 
 def iterate_component_type():
     entities = set()
@@ -109,4 +142,5 @@ def iterate_component_type():
     
 if __name__ == "__main__":
     # iterate_component_type()
-    simulate_fight()
+    # simulate_fight_simple()
+    simulate_fight_with_armor()
