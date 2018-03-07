@@ -54,9 +54,16 @@ def simulate_fight():
     ])
     b = Entity(components=[
         Description('enemy'),
-        Damage([("1d6", Damage.PHYSICAL)])
+        Damage([("1d6", Damage.PHYSICAL)]),
+        Health(10)
     ])
-    print(a.get('damage').damage)
+    while a.get('health').cur_hp > 0 and b.get('health').cur_hp > 0:
+        b.get('health').take_damage(a.get('damage').damage)
+        a.get('health').take_damage(b.get('damage').damage)
+    if a.get('health').cur_hp > 0:
+        print(f"{a.get('description').name} has died")
+    else:
+        print(f"{b.get('description').name} has died")
 
 def iterate_component_type():
     entities = set()
