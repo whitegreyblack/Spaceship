@@ -32,24 +32,28 @@ def system_draw_entities():
             term.puts(*position.position, renderer.render)
 
 def system_move_entities():
-    def move(position, x, y):
+    def move():
         dx, dy = (position.x + x, position.y + y)
         # tile is floor
         if (dx, dy) in floortiles:
             # tile is empty:
             if (dx, dy) not in set(p.position for p in positions):
                 position.move(x, y)
+                recompute = True
+            # elif position.unit.has('damage') and 
 
-    def direction(unit):
+    def direction():
         computer = unit.get('ai')
         if computer:
             x, y = computer.move()
+            # Don't care about monsters -- they do whatever
         else:
             x, y = unit.get('controller').move()       
             if (x, y) == (None, None):
-                return x, y, False
+                return x, y, False, None
         return x, y, True
 
+    recompute = False
     proceed = True
     positions = Entity.compdict['position'].values()
     for position in positions:
@@ -59,14 +63,14 @@ def system_move_entities():
         if energy:
             turns = energy.turns
         for turn in range(turns):
-            x, y, proceed = direction(unit)
+            # haven't moved yet -- just seeing which action to take
+            # allows for early exit if user entered ESCAPE
+            x, y, proceed = direction()
             if not proceed:
                 return proceed
+            # determines moving, staying, or attacking
             move(position, x, y)
-    return proceed
-
-def system_take_turn_entities():
-    pass
+    return proceed, recompute
 
 def random_position():
     tiles = set(floortiles)
@@ -110,12 +114,13 @@ class Game():
 
     def run(self):
         proceed = True
+        fov_recalc = True
         while proceed:
             term.clear()
             system_draw_world()
             system_draw_entities()
             term.refresh()
-            proceed = system_move_entities()
+            proceed, fov_recalc = system_move_entities()
 
 if __name__ == "__main__":
     # print(tilemap(world))
