@@ -31,27 +31,26 @@ entities = set()
 def system_draw_world():
     term.puts(0, 0, world)
 
+def draw_entity(position, background, string):
+    revert = False
+    if background != "#000000":
+        term.bkcolor(background)
+        revert = True
+    term.puts(*position, string)
+    if revert:
+        term.bkcolor('#000000')
+        
 def system_draw_entities():
-    # these are known values -- reading them off
     for position in Component.get('position').values():
-        # check if theyre in the dictionary
         renderer = position.unit.get('render')
         if renderer:
-            revert = False
-            bg, string = renderer.render
-            if bg != "#000000":
-                term.bkcolor(bg)
-                revert = True
-            term.puts(*position.position, string)
-            if revert:
-                term.bkcolor('#000000')
+            draw_entity(position.position, *renderer.render)
 
-def system_render():
+def system_render_by_entity():
     for e in entities:
         flags = Position.FLAG | Render.FLAG
         if e.FLAG & flags == flags:
-            revert = False
-            # bg, string = e
+            draw_entity(e.get('position').position, *e.get('render').render)
 
 def system_move_entities():
     def get_input():
@@ -132,7 +131,7 @@ def create_enemy():
 def create_player():
     entities.add(Entity(components=[
         Position(*random_position()),
-        Render('a', '#DD8822'),
+        Render('a', '#DD8822', '#000088'),
     ]))
 
 def tilemap(world):
@@ -151,8 +150,7 @@ class Game():
     def __init__(self):
         create_player()
         for _ in range(random.randint(3, 8)):
-            # create_enemy()
-            ...
+            create_enemy()
 
     def run(self):
         proceed = True
@@ -160,7 +158,8 @@ class Game():
         while proceed:
             term.clear()
             system_draw_world()
-            system_draw_entities()
+            # system_draw_entities()
+            system_render_by_entity()
             term.refresh()
             proceed, fov_recalc = system_move_entities()
 
