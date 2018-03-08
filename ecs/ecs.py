@@ -75,7 +75,6 @@ class Ai(Component):
     __slots__ = ['unit']
     FLAG = 1 << Component.bitflag
     Component.bitflag += 1
-
 # -- Needs Validation --
     # class Description(Component):
     #     __slots__ = ['unit', 'name', 'less', 'more']
@@ -208,18 +207,23 @@ class Entity:
     Basic container for entity objects. Holds a list of components which is used
     to represent certain objects in game world.
 
-    >>> e = Entity(components=[Description('hero'),])
-    >>> e, Entity.compdict
-    (hero, {'description': {0: Description(unit=hero, name=hero)}})
-    >>> e.has_component('description')
-    True
-    >>> e.get_component('description')
-    Description(unit=hero, name=hero)
-    >>> e.del_component('description')
-    >>> e.has_component('description')
-    False
-    >>> list(e.components)
-    []
+    # >>> e = Entity(components=[Description('hero'),])
+    # >>> e, Entity.compdict
+    # (hero, {'description': {0: Description(unit=hero, name=hero)}})
+    # >>> e.has_component('description')
+    # True
+    # >>> e.get_component('description')
+    # Description(unit=hero, name=hero)
+    # >>> e.del_component('description')
+    # >>> e.has_component('description')
+    # False
+    # >>> list(e.components)
+    # []
+    >>> e=Entity(components=[
+    ...     Render('@'),
+    ... ])
+    >>> e.render
+    Render(symbol=@, foreground=#ffffff, background=#000000)
     '''
     eid = 0
     compdict = {c.__name__.lower(): {} for c in Component.__subclasses__()}
@@ -228,11 +232,13 @@ class Entity:
         self.FLAG = 0
         Entity.eid += 1
         if components:
-            self.add(components=components)
+            for component in components:
+                setattr(self, component.__class__.__name__.lower(), component)
+        #     self.add(components=components)
 
     def __str__(self):
-        description = self.get_component('description')
-        if description and description.name:
+        # description = self.get_component('description')
+        if hasattr(self, 'description') and description.name:
             return description.name
         return str(self.eid)
 
@@ -245,92 +251,92 @@ class Entity:
     def __eq__(self, other):
         return self.eid == hash(other.eid)
     
-    # ? should I move these into components?
-    @property
-    def components(self):
-        for components in self.compdict.values():
-            if self.eid in components.keys():
-                yield components[self.eid]
+    # # ? should I move these into components?
+    # @property
+    # def components(self):
+    #     for components in self.compdict.values():
+    #         if self.eid in components.keys():
+    #             yield components[self.eid]
 
-    # -- HAS --
-    def has(self, name: str=None, names:list=None) -> bool:
-        if names:
-            return self.has_components(names)
-        elif name:
-            return self.has_component(name)
-        else:
-            raise ValueError('No arguments supplied to function: has()')
+    # # -- HAS --
+    # def has(self, name: str=None, names:list=None) -> bool:
+    #     if names:
+    #         return self.has_components(names)
+    #     elif name:
+    #         return self.has_component(name)
+    #     else:
+    #         raise ValueError('No arguments supplied to function: has()')
 
-    def has_component(self, name: str) -> bool:
-        if name in self.compdict.keys():
-            return self.eid in self.compdict[name].keys()
-        return False
+    # def has_component(self, name: str) -> bool:
+    #     if name in self.compdict.keys():
+    #         return self.eid in self.compdict[name].keys()
+    #     return False
 
-    def has_components(self, names: list) -> bool:
-        return all([self.has_component(name) for name in names])
+    # def has_components(self, names: list) -> bool:
+    #     return all([self.has_component(name) for name in names])
 
-    # -- ADD --
-    def add(self, component:object=None, components:list=None) -> bool:
-        if components:
-            self.add_components(components)
-        elif component:
-            self.add_component(component)
-        else:
-            raise ValueError('No arguments supplied to function: add()')
+    # # -- ADD --
+    # def add(self, component:object=None, components:list=None) -> bool:
+    #     if components:
+    #         self.add_components(components)
+    #     elif component:
+    #         self.add_component(component)
+    #     else:
+    #         raise ValueError('No arguments supplied to function: add()')
    
-    def add_component(self, component: object) -> None:
-        component.unit = self
-        name = type(component).__name__.lower()
-        if not self.has_component(name):
-            # try:
-            self.compdict[name].update({self.eid: component})
-            self.FLAG |= component.FLAG
-            # except:
-                # self.compdict[name] = {self.eid: component}
-            return True
-        return False
+    # def add_component(self, component: object) -> None:
+    #     component.unit = self
+    #     name = type(component).__name__.lower()
+    #     if not self.has_component(name):
+    #         # try:
+    #         self.compdict[name].update({self.eid: component})
+    #         self.FLAG |= component.FLAG
+    #         # except:
+    #             # self.compdict[name] = {self.eid: component}
+    #         return True
+    #     return False
 
-    def add_components(self, components: list) -> bool:
-        for component in components:
-            if self.add_component(component):
-                if hasattr(component, 'update'):
-                    component.update()
+    # def add_components(self, components: list) -> bool:
+    #     for component in components:
+    #         if self.add_component(component):
+    #             if hasattr(component, 'update'):
+    #                 component.update()
 
-    # -- DEL --
-    def delete(self, name:str=None, names:list=None) -> None:
-        if names:
-            self.del_components(names)
-        elif name:
-            self.del_component(name)
-        else:
-            raise ValueError('No arguments supplied to function: del()')
+    # # -- DEL --
+    # def delete(self, name:str=None, names:list=None) -> None:
+    #     if names:
+    #         self.del_components(names)
+    #     elif name:
+    #         self.del_component(name)
+    #     else:
+    #         raise ValueError('No arguments supplied to function: del()')
 
-    def del_component(self, name: str) -> None:
-        if self.has_component(name):
-            del self.compdict[name][self.eid]
+    # def del_component(self, name: str) -> None:
+    #     if self.has_component(name):
+    #         del self.compdict[name][self.eid]
 
-    def del_components(self, names: list) -> None:
-        for name in names:
-            self.del_component(name)
+    # def del_components(self, names: list) -> None:
+    #     for name in names:
+    #         self.del_component(name)
 
-    # -- GET --
-    def get(self, name:str=None, names:list=None) -> object:
-        if names:
-            return self.get_components(names)
-        elif name:
-            return self.get_component(name)
-        else:
-            raise ValueError('No arguments supplied to function: get()')
+    # # -- GET --
+    # def get(self, name:str=None, names:list=None) -> object:
+    #     if names:
+    #         return self.get_components(names)
+    #     elif name:
+    #         return self.get_component(name)
+    #     else:
+    #         raise ValueError('No arguments supplied to function: get()')
 
-    def get_component(self, name: str) -> object:
-        if self.has_component(name):
-            return self.compdict[name][self.eid]
-        return None
+    # def get_component(self, name: str) -> object:
+    #     if self.has_component(name):
+    #         return self.compdict[name][self.eid]
+    #     return None
 
-    def get_components(self, names: list) -> list:
-        return [component for component 
-                in [self.get_component(name) for name in names]
-                    if component]
+    # def get_components(self, names: list) -> list:
+    #     return [component for component 
+    #             in [self.get_component(name) for name in names]
+    #                 if component]
 
 COMPONENTS = {
     subclass.__name__.lower(): {} for subclass in Component.__subclasses__()

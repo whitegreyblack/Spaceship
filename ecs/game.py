@@ -171,3 +171,7 @@ if __name__ == "__main__":
     Game().run()
     # print(COMPONENTS)
     # print(Entity.compdict)
+    import os
+    import psutil
+    process = psutil.Process(os.getpid())
+    print(process.memory_info().rss)
