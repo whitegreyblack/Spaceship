@@ -35,7 +35,12 @@ class Component:
         for a in self.__slots__:
             if self.attr(a):
                 yield (a, getattr(self, a))
-    
+
+class Energy(Component):
+    unit = None
+    def __init__(self):
+        self.turns = 2
+
 class Ai(Component):
     unit = None
     def move(self):
@@ -45,6 +50,8 @@ class Controller(Component):
     unit = None
     def move(self):
         key = term.read()
+        while key != ESCAPE and key not in directions.keys():
+            key = term.read()
         if key == ESCAPE:
             return None, None
         return directions.get(key, (0, 0))

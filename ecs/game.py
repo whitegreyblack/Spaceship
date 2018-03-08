@@ -1,5 +1,5 @@
 from bearlibterminal import terminal as term
-from ecs.ecs import Entity, Component, Position, Render, Ai, Controller
+from ecs.ecs import Entity, Component, Position, Render, Ai, Controller, Energy
 import random
 
 UP, DOWN, LEFT, RIGHT = term.TK_UP, term.TK_DOWN, term.TK_LEFT, term.TK_RIGHT
@@ -9,12 +9,12 @@ world = '''
 ################################################################
 #....#....#....#....#..........##....#....#....#....#..........#
 #...................#..........##...................#..........#
-#....#....#....#....+.....#....##....#....#....#....+.....#....#
-#...................#...............................#..........#
+#....#....#....#..........#....##....#....#....#....+.....#....#
+#...................................................#..........#
+#....#....#....#....#................#....#....#....#..........#
 #....#....#....#....#..........##....#....#....#....#..........#
-#....#....#....#....#..........##....#....#....#....#..........#
-#...................#...............................#..........#
-#....#....#....#....+.....#....##....#....#....#....+.....#....#
+#...................................................#..........#
+#....#....#....#..........#....##....#....#....#....+.....#....#
 #...................#..........##...................#..........#
 #....#....#....#....#..........##....#....#....#....#..........#
 ################################################################
@@ -32,16 +32,7 @@ def system_draw_entities():
             term.puts(*position.position, renderer.render)
 
 def system_move_entities():
-    positions = Entity.compdict['position'].values()
-    for position in positions:
-        computer = position.unit.get('ai')
-        if computer:
-            x, y = computer.move()
-        else:
-            x, y = position.unit.get('controller').move()            
-            if (x, y) == (None, None):
-                return False
-
+    def move(position, x, y):
         dx, dy = (position.x + x, position.y + y)
         # tile is floor
         if (dx, dy) in floortiles:
@@ -49,7 +40,33 @@ def system_move_entities():
             if (dx, dy) not in set(p.position for p in positions):
                 position.move(x, y)
 
-    return True
+    def direction(unit):
+        computer = unit.get('ai')
+        if computer:
+            x, y = computer.move()
+        else:
+            x, y = unit.get('controller').move()       
+            if (x, y) == (None, None):
+                return x, y, False
+        return x, y, True
+
+    proceed = True
+    positions = Entity.compdict['position'].values()
+    for position in positions:
+        unit = position.unit
+        energy = unit.get('energy')
+        turns = 1
+        if energy:
+            turns = energy.turns
+        for turn in range(turns):
+            x, y, proceed = direction(unit)
+            if not proceed:
+                return proceed
+            move(position, x, y)
+    return proceed
+
+def system_take_turn_entities():
+    pass
 
 def random_position():
     tiles = set(floortiles)
@@ -64,6 +81,7 @@ def create_enemy():
     # determine position
     enemy.add(Position(*random_position()))
     enemy.add(Ai())
+    # enemy.add(Energy())
 
 def create_player():
     Entity(components=[
@@ -89,20 +107,6 @@ class Game():
         create_player()
         for _ in range(random.randint(3, 8)):
             create_enemy()
-        # self.player = Entity(components=[
-        #     Position(random.randint(1, mapx - 1), 
-        #              random.randint(1, mapy - 1)),
-        #     Render('a', '#DD8822'),
-        #     Controller()
-        # ])
-        # self.enemy = Entity(components=[
-        #     Position(random.randint(1, mapx - 1),
-        #              random.randint(1, mapy - 1)),
-        #     Render('g', '#008800'),
-        #     Ai(),
-        # ])
-        create_enemy()
-        # self.entities = [self.player, self.enemy]
 
     def run(self):
         proceed = True
