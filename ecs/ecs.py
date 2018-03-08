@@ -1,5 +1,15 @@
 # component.py
+from bearlibterminal import terminal as term
+import random
 from .die import Die
+UP, DOWN, LEFT, RIGHT = term.TK_UP, term.TK_DOWN, term.TK_LEFT, term.TK_RIGHT
+directions = {
+    term.TK_UP: (0, -1),
+    term.TK_DOWN: (0, 1), 
+    term.TK_LEFT: (-1, 0), 
+    term.TK_RIGHT: (1, 0),
+}
+ESCAPE = term.TK_ESCAPE
 
 class System:
     def update(self):
@@ -26,6 +36,19 @@ class Component:
             if self.attr(a):
                 yield (a, getattr(self, a))
     
+class Ai(Component):
+    unit = None
+    def move(self):
+        return random.randint(-1, 1), random.randint(-1, 1)
+
+class Controller(Component):
+    unit = None
+    def move(self):
+        key = term.read()
+        if key == ESCAPE:
+            return None, None
+        return directions.get(key, (0, 0))
+            
 class Position(Component):
     __slots__ = ['unit', 'x', 'y', 'ox', 'oy']
     def __init__(self, x=0, y=0):
