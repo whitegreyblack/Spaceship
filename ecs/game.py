@@ -1,10 +1,17 @@
 from bearlibterminal import terminal as term
-from ecs.ecs import Entity, Component, Position, Render, Ai, Controller, Energy
+from ecs.ecs import (
+    Entity, Component, Position, Render, Ai, COMPONENTS
+)
 import random
 
 UP, DOWN, LEFT, RIGHT = term.TK_UP, term.TK_DOWN, term.TK_LEFT, term.TK_RIGHT
 ESCAPE = term.TK_ESCAPE
-
+directions = {
+    term.TK_UP: (0, -1),
+    term.TK_DOWN: (0, 1), 
+    term.TK_LEFT: (-1, 0), 
+    term.TK_RIGHT: (1, 0),
+}
 world = '''
 ################################################################
 #....#....#....#....#..........##....#....#....#....#..........#
@@ -19,19 +26,42 @@ world = '''
 #....#....#....#....#..........##....#....#....#....#..........#
 ################################################################
 '''[1:]
+entities = set()
 
 def system_draw_world():
     term.puts(0, 0, world)
 
 def system_draw_entities():
     # these are known values -- reading them off
-    for position in Entity.compdict['position'].values():
+    for position in Component.get('position').values():
         # check if theyre in the dictionary
         renderer = position.unit.get('render')
         if renderer:
-            term.puts(*position.position, renderer.render)
+            revert = False
+            bg, string = renderer.render
+            if bg != "#000000":
+                term.bkcolor(bg)
+                revert = True
+            term.puts(*position.position, string)
+            if revert:
+                term.bkcolor('#000000')
+
+def system_render():
+    for e in entities:
+        flags = Position.FLAG | Render.FLAG
+        if e.FLAG & flags == flags:
+            revert = False
+            # bg, string = e
 
 def system_move_entities():
+    def get_input():
+        key = term.read()
+        while key != ESCAPE and key not in directions.keys():
+            key = term.read()
+        if key == ESCAPE:
+            return None, None
+        return directions.get(key, (0, 0))
+
     def move():
         dx, dy = (position.x + x, position.y + y)
         # tile is floor
@@ -45,12 +75,13 @@ def system_move_entities():
     def direction():
         computer = unit.get('ai')
         if computer:
-            x, y = computer.move()
             # Don't care about monsters -- they do whatever
+            x, y = random.randint(-1, 1), random.randint(-1, 1)
+
         else:
-            x, y = unit.get('controller').move()       
+            x, y = get_input()   
             if (x, y) == (None, None):
-                return x, y, False, None
+                return x, y, False
         return x, y, True
 
     recompute = False
@@ -67,9 +98,19 @@ def system_move_entities():
             # allows for early exit if user entered ESCAPE
             x, y, proceed = direction()
             if not proceed:
-                return proceed
+                # return proceed, recompute
+                break
             # determines moving, staying, or attacking
-            move(position, x, y)
+            dx, dy = (position.x + x, position.y + y)
+            # tile is floor
+            if (dx, dy) in floortiles:
+                # tile is empty:
+                if (dx, dy) not in set(p.position for p in positions):
+                    position.x += x
+                    position.y += y
+                    recompute = True        
+        if not proceed:
+            break
     return proceed, recompute
 
 def random_position():
@@ -84,15 +125,15 @@ def create_enemy():
     enemy.add(Render(*random.choice((('g', '#008800'), ('r', '#664422')))))
     # determine position
     enemy.add(Position(*random_position()))
+    # add a component class telling systems this is an npc/monster
     enemy.add(Ai())
-    # enemy.add(Energy())
+    entities.add(enemy)
 
 def create_player():
-    Entity(components=[
+    entities.add(Entity(components=[
         Position(*random_position()),
         Render('a', '#DD8822'),
-        Controller()
-    ])
+    ]))
 
 def tilemap(world):
     return [[c for c in r] for r in world.split('\n')]
@@ -110,7 +151,8 @@ class Game():
     def __init__(self):
         create_player()
         for _ in range(random.randint(3, 8)):
-            create_enemy()
+            # create_enemy()
+            ...
 
     def run(self):
         proceed = True
@@ -128,3 +170,5 @@ if __name__ == "__main__":
     # print([c.__name__.lower() for c in Component.__subclasses__()])
     term.open()
     Game().run()
+    # print(COMPONENTS)
+    # print(Entity.compdict)

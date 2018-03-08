@@ -2,86 +2,46 @@
 from bearlibterminal import terminal as term
 import random
 from .die import Die
-UP, DOWN, LEFT, RIGHT = term.TK_UP, term.TK_DOWN, term.TK_LEFT, term.TK_RIGHT
-directions = {
-    term.TK_UP: (0, -1),
-    term.TK_DOWN: (0, 1), 
-    term.TK_LEFT: (-1, 0), 
-    term.TK_RIGHT: (1, 0),
-}
-ESCAPE = term.TK_ESCAPE
 
 class System:
     def update(self):
         raise NotImplementedError
 
 class Component:
-    unit = None
+    bitflag = 0
+    __instances = {}
     def __repr__(self):
         '''Returns stat information for dev'''
         return f'{self.__class__.__name__}({self})'
 
     def __str__(self):
         '''Returns stat information for user'''
-        return ", ".join(f'{s}={getattr(self, s)}' for s, a in self.attrs)
+        return ", ".join(f'{s}={getattr(self, s)}' 
+            for s in self.__slots__
+            if bool(hasattr(self, s) and getattr(self, s)))
 
-    def attr(self, name: str):
-        '''Checks if attribute exists and is set'''
-        return bool(hasattr(self, name) and getattr(self, name))
-    
+    # Reference link to currently connected entity unit
     @property
-    def attrs(self):
-        '''Yields attributes that are not None'''
-        for a in self.__slots__:
-            if self.attr(a):
-                yield (a, getattr(self, a))
+    def unit(self):
+        return self._unit
 
-class Energy(Component):
-    unit = None
-    def __init__(self):
-        self.turns = 2
+    @unit.setter
+    def unit(self, unit):
+        self._unit = unit
+        subclass = self.__class__.__name__.lower()
+        if subclass not in Component.__instances:
+            Component.__instances[subclass] = {unit.eid: self}
+        else:
+            Component.__instances[subclass].update({unit.eid: self})
 
-class Ai(Component):
-    unit = None
-    def move(self):
-        return random.randint(-1, 1), random.randint(-1, 1)
-
-class Controller(Component):
-    unit = None
-    def move(self):
-        key = term.read()
-        while key != ESCAPE and key not in directions.keys():
-            key = term.read()
-        if key == ESCAPE:
-            return None, None
-        return directions.get(key, (0, 0))
-            
-class Position(Component):
-    __slots__ = ['unit', 'x', 'y', 'ox', 'oy']
-    instances = {}
-    def __init__(self, x=0, y=0):
-        self.x = x
-        self.y = y
-
-    @property
-    def position(self):
-        return self.x, self.y
-
-    def move(self, x, y):
-        self.x, self.y = self.x + x, self.y + y
-
-    def save(self):
-        self.ox, self.oy = self.x, self.y
-
-class Description(Component):
-    __slots__ = ['unit', 'name', 'less', 'more']
-    def __init__(self, name, less=None, more=None):
-        self.name = name
-        self.less = less
-        self.more = more
+    @staticmethod
+    def get(key):
+        return Component.__instances[key]
 
 class Render(Component):
-    __slots__ = ['unit', 'symbol', 'foreground', 'background']
+    __slots__ = ['_unit', 'symbol', 'foreground', 'background']
+    FLAG = 1 << Component.bitflag
+    Component.bitflag += 1
     def __init__(self, symbol, foreground="#ffffff", background="#000000"):
         '''Render component that holds all information that allows the map
         to be drawn with correct characters and colors
@@ -97,109 +57,151 @@ class Render(Component):
 
     @property
     def render(self):
-        return f"[c={self.foreground}]{self.symbol}[/c]"
-        
-class Attribute(Component):
-    __slots__ = ['unit', 'strength', 'agility', 'intelligence']
-    def __init__(self, strength, agility, intelligence):
-        '''
-        >>> Attribute(5, 5, 5)
-        Attribute(strength=5, agility=5, intelligence=5)
-        '''
-        self.strength = strength
-        self.agility = agility
-        self.intelligence = intelligence
+        return self.background, f"[c={self.foreground}]{self.symbol}[/c]"
 
-    def update(self):
-        for attr in 'health mana defense'.split():
-            if self.unit.has(attr):
-                self.unit.get(attr).update()
-
-class Damage(Component):
-    __slots__ = ['unit', "damages"]
-    MAGICAL, PHYSICAL = range(2)
-    def __init__(self, damage=None, damages=None):
-        self.damages = {}
-        if not damage and not damages:
-            raise ValueError('Need to add a damage/damage type for init')
-
-        if damage:
-            damages = list(damage)
-        for dmg, dtype in damages:
-            if isinstance(dmg, str):
-                dmg = Die.construct(dmg)
-
-            if dtype in self.damages.keys():
-                self.damages[dtype].append(dmg)
-            else:
-                self.damages[dtype] = [dmg]
+class Position(Component):
+    __slots__ = ['_unit', 'x', 'y']
+    FLAG = 1 << Component.bitflag
+    Component.bitflag += 1
+    def __init__(self, x=0, y=0):
+        self.x = x
+        self.y = y
 
     @property
-    def damage(self):
-        damage_per_type = []
-        for dtype, damages in self.damages.items():
-            total_damage = 0
-            for dmg in damages:
-                if isinstance(dmg, Die):
-                   dmg = next(dmg.roll())
-                total_damage += dmg
-            damage_per_type.append((dtype, total_damage))
-        return damage_per_type
+    def position(self):
+        return self.x, self.y
 
-class Health(Component):
-    __slots__ = ['unit', 'max_hp', 'cur_hp']
-    def __init__(self, health=0):
-        self.max_hp = self.cur_hp = health
+class Ai(Component):
+    __slots__ = ['unit']
+    FLAG = 1 << Component.bitflag
+    Component.bitflag += 1
 
-    def update(self):
-        if self.unit.has_component('attribute'):
-            strength = self.unit.get_component('attribute').strength
-            self.max_hp = strength * 2 + self.max_hp
-            self.cur_hp = strength * 2 + self.cur_hp
+# -- Needs Validation --
+    # class Description(Component):
+    #     __slots__ = ['unit', 'name', 'less', 'more']
+    #     FLAG = 1 << Component.bitflag
+    #     Component.bitflag += 1
+    #     def __init__(self, name, less=None, more=None):
+    #         self.name = name
+    #         self.less = less
+    #         self.more = more
+            
+    # class Attribute(Component):
+    #     __slots__ = ['unit', 'strength', 'agility', 'intelligence']
+    #     FLAG = 1 << Component.bitflag
+    #     Component.bitflag += 1
+    #     def __init__(self, strength, agility, intelligence):
+    #         '''
+    #         >>> Attribute(5, 5, 5)
+    #         Attribute(strength=5, agility=5, intelligence=5)
+    #         '''
+    #         self.strength = strength
+    #         self.agility = agility
+    #         self.intelligence = intelligence
 
-    def take_damage(self, damages):
-        for dtype, damage in damages:
-            print(f"{self.unit} was hit with {damage} damage.")
-            if self.unit.has('defense'):
-                blocked = damage
-                damage = self.unit.get('defense').calculate((dtype, damage))
-                print(f"{self.unit} blocked {blocked - damage} damage.")
-            else:
-                print(f"{self.unit} has no defense and takes full damage.")            
-            self.cur_hp -= damage
-            print(f"{self.unit} took {damage} damage. " +
-                  f"{self.unit} has {self.cur_hp} health left.")
+    #     def update(self):
+    #         for attr in 'health mana defense'.split():
+    #             if self.unit.has(attr):
+    #                 self.unit.get(attr).update()
 
-class Defense(Component):
-    __slots__ = ['unit', "armor", "resistance"]
-    def __init__(self, armor=0, resistance=0):
-        self.armor = armor
-        self.resistance = resistance
+    # class Damage(Component):
+    #     __slots__ = ['unit', "damages"]
+    #     FLAG = 1 << Component.bitflag
+    #     Component.bitflag += 1
+    #     MAGICAL, PHYSICAL = range(2)
+    #     def __init__(self, damage=None, damages=None):
+    #         self.damages = {}
+    #         if not damage and not damages:
+    #             raise ValueError('Need to add a damage/damage type for init')
 
-    def calculate(self, damage=None, damages=None):
-        print(f"{self.unit} has {self.armor} armor and {self.resistance} resistance.")
-        if not damage and not damages:
-            raise ValueError('Need to add a damage/damage type for init')
-        total_damage = []
-        if damage:
-            damages = [damage,]
-        for dtype, damage in damages:
-            if dtype == 1:
-                total_damage.append(damage - self.armor)
-            else:
-                total_damage.append(damage * self.resistance)
-        return sum(total_damage)
+    #         if damage:
+    #             damages = list(damage)
+    #         for dmg, dtype in damages:
+    #             if isinstance(dmg, str):
+    #                 dmg = Die.construct(dmg)
 
-class Mana(Component):
-    __slots__ = ['unit', 'max_mp', 'cur_mp']
-    def __init__(self, mana=0):
-        self.max_mp = self.cur_mp = mana
+    #             if dtype in self.damages.keys():
+    #                 self.damages[dtype].append(dmg)
+    #             else:
+    #                 self.damages[dtype] = [dmg]
 
-    def update(self):
-        if self.unit.has_component('attribute'):
-            intelligence = self.unit.get_component('attribute').intelligence
-            self.max_mp = intelligence * 2 + self.max_mp
-            self.cur_mp = intelligence * 2 + self.cur_mp
+    #     @property
+    #     def damage(self):
+    #         damage_per_type = []
+    #         for dtype, damages in self.damages.items():
+    #             total_damage = 0
+    #             for dmg in damages:
+    #                 if isinstance(dmg, Die):
+    #                    dmg = next(dmg.roll())
+    #                 total_damage += dmg
+    #             damage_per_type.append((dtype, total_damage))
+    #         return damage_per_type
+
+    # class Health(Component):
+    #     __slots__ = ['unit', 'max_hp', 'cur_hp']
+    #     FLAG = 1 << Component.bitflag
+    #     Component.bitflag += 1
+    #     def __init__(self, health=0):
+    #         self.max_hp = self.cur_hp = health
+
+    #     def update(self):
+    #         if self.unit.has_component('attribute'):
+    #             strength = self.unit.get_component('attribute').strength
+    #             self.max_hp = strength * 2 + self.max_hp
+    #             self.cur_hp = strength * 2 + self.cur_hp
+
+    #     def take_damage(self, damages):
+    #         for dtype, damage in damages:
+    #             print(f"{self.unit} was hit with {damage} damage.")
+    #             if self.unit.has('defense'):
+    #                 blocked = damage
+    #                 damage = self.unit.get('defense').calculate((dtype, damage))
+    #                 print(f"{self.unit} blocked {blocked - damage} damage.")
+    #             else:
+    #                 print(f"{self.unit} has no defense and takes full damage.")            
+    #             self.cur_hp -= damage
+    #             print(f"{self.unit} took {damage} damage. " +
+    #                   f"{self.unit} has {self.cur_hp} health left.")
+
+    # class Defense(Component):
+    #     __slots__ = ['unit', "armor", "resistance"]
+    #     FLAG = 1 << Component.bitflag
+    #     Component.bitflag += 1
+    #     def __init__(self, armor=0, resistance=0):
+    #         self.armor = armor
+    #         self.resistance = resistance
+
+    #     def calculate(self, damage=None, damages=None):
+    #         print(f"{self.unit} has {self.armor} armor and {self.resistance} resistance.")
+    #         if not damage and not damages:
+    #             raise ValueError('Need to add a damage/damage type for init')
+    #         total_damage = []
+    #         if damage:
+    #             damages = [damage,]
+    #         for dtype, damage in damages:
+    #             if dtype == 1:
+    #                 total_damage.append(damage - self.armor)
+    #             else:
+    #                 total_damage.append(damage * self.resistance)
+    #         return sum(total_damage)
+
+    # class Mana(Component):
+    #     __slots__ = ['unit', 'max_mp', 'cur_mp']
+    #     FLAG = 1 << Component.bitflag
+    #     Component.bitflag += 1
+    #     def __init__(self, mana=0):
+    #         self.max_mp = self.cur_mp = mana
+
+    #     def update(self):
+    #         if self.unit.has_component('attribute'):
+    #             intelligence = self.unit.get_component('attribute').intelligence
+    #             self.max_mp = intelligence * 2 + self.max_mp
+    #             self.cur_mp = intelligence * 2 + self.cur_mp
+
+    # class Energy(Component):
+    #     __slots__ = ['unit']
+    #     FLAG = 1 << Component.bitflag
+    #     Component.bitflag += 1
 
 class Entity:
     '''
@@ -223,6 +225,7 @@ class Entity:
     compdict = {c.__name__.lower(): {} for c in Component.__subclasses__()}
     def __init__(self, components=None):
         self.eid = Entity.eid
+        self.FLAG = 0
         Entity.eid += 1
         if components:
             self.add(components=components)
@@ -242,6 +245,7 @@ class Entity:
     def __eq__(self, other):
         return self.eid == hash(other.eid)
     
+    # ? should I move these into components?
     @property
     def components(self):
         for components in self.compdict.values():
@@ -278,10 +282,11 @@ class Entity:
         component.unit = self
         name = type(component).__name__.lower()
         if not self.has_component(name):
-            try:
-                self.compdict[name].update({self.eid: component})
-            except:
-                self.compdict[name] = {self.eid: component}
+            # try:
+            self.compdict[name].update({self.eid: component})
+            self.FLAG |= component.FLAG
+            # except:
+                # self.compdict[name] = {self.eid: component}
             return True
         return False
 
@@ -326,6 +331,17 @@ class Entity:
         return [component for component 
                 in [self.get_component(name) for name in names]
                     if component]
+
+COMPONENTS = {
+    subclass.__name__.lower(): {} for subclass in Component.__subclasses__()
+}
+BITS = {
+    subclass.__name__.lower(): 1 << bit
+        for bit, subclass in enumerate(Component.__subclasses__())
+}
+# print(COMPONENTS)
+# print(BITS)
+# Component.set_flags()
 
 if __name__ == "__main__":
     from doctest import testmod
