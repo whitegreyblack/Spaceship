@@ -143,9 +143,9 @@ def iterate_component_by_entity():
     for i in range(1000):
         e = Entity(components=[Position(0, 0),] if random.randint(0, 1) else [])
         entities.add(e)
-
-    # print(len(entities))
-    # print(len([e for e in entities if e.has_component('position')]))
+    
+    print(len(entities))
+    print(len([e for e in entities if e.has_component('position')]))
     # count1 = 0
     t1 = t()
     for entity in entities:

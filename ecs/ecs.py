@@ -51,6 +51,7 @@ class Controller(Component):
             
 class Position(Component):
     __slots__ = ['unit', 'x', 'y', 'ox', 'oy']
+    instances = {}
     def __init__(self, x=0, y=0):
         self.x = x
         self.y = y
@@ -212,7 +213,7 @@ class Entity:
     []
     '''
     eid = 0
-    compdict = {}
+    compdict = {c.__name__.lower(): {} for c in Component.__subclasses__()}
     def __init__(self, components=None):
         self.eid = Entity.eid
         Entity.eid += 1
