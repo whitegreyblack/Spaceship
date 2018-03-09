@@ -1,6 +1,7 @@
 from bearlibterminal import terminal as term
+from collections import namedtuple
 from ecs.ecs import (
-    Entity, Component, Position, Render, Ai, COMPONENTS
+    Entity, Component, Position, Render, Ai, COMPONENTS, Delete
 )
 import random
 
@@ -26,11 +27,15 @@ world = '''
 #....#....#....#....#..........##....#....#....#....#..........#
 ################################################################
 '''[1:]
-def has(entity, components:list=None):
-    return all(hasattr(entity, component) for component in components)
+def has(entity, components=None):
+    if not isinstance(components, list):
+        return hasattr(entity, components.name())
+    return all(hasattr(entity, component.name()) for component in components)
 
-def system_draw_world():
-    term.puts(0, 0, world)
+def system_draw(world):
+    for j, row in enumerate(world):
+        for i, cell in enumerate(row):
+            term.puts(i, j, cell)
 
 def draw_entity(position, background, string):
     revert = False
@@ -40,25 +45,29 @@ def draw_entity(position, background, string):
     term.puts(*position, string)
     if revert:
         term.bkcolor('#000000')
-        
-def system_draw_entities():
-    for position in Component.get('position').values():
-        renderer = position.unit.get('render')
-        if renderer:
-            draw_entity(position.position, *renderer.render)
 
-def system_render_by_entity():
-    for e in entities:
-        flags = Position.FLAG | Render.FLAG
-        if e.FLAG & flags == flags:
-            draw_entity(e.get('position').position, *e.get('render').render)
+#  -- Outdated --
+    # def system_draw_entities():
+    #     for position in Component.get('position').values():
+    #         renderer = position.unit.get('render')
+    #         if renderer:
+    #             draw_entity(position.position, *renderer.render)
 
-def system_render():
+    # def system_render_by_entity():
+    #     for e in entities:
+    #         flags = Position.FLAG | Render.FLAG
+    #         if e.FLAG & flags == flags:
+    #             draw_entity(e.get('position').position, *e.get('render').render)
+
+def system_render(entities):
     for e in entities:
-        if has(e, components=[Position.name(), Render.name()]):
+        if has(e, components=[Position, Render]):
             draw_entity(e.position.position, *e.render.render)
 
-def system_move_entities():
+def system_alive(entites):
+    return 0 in [e.eid for e in entites]
+
+def system_action(entities, floortiles):
     def get_input():
         key = term.read()
         while key != ESCAPE and key not in directions.keys():
@@ -67,20 +76,8 @@ def system_move_entities():
             return None, None
         return directions.get(key, (0, 0))
 
-    def move():
-        dx, dy = (e.position.x + x, e.position.y + y)
-        # tile is floor
-        if (dx, dy) in floortiles:
-            # tile is empty:
-            if (dx, dy) not in set(e.position.position for e in positions):
-                position.move(x, y)
-                recompute = True
-            # elif position.unit.has('damage') and 
-
     def direction():
-        # computer = unit.get('ai')
-        # if computer:
-        if has(e, components=[Ai.name()]):
+        if has(entity, components=[Ai]):
             # Don't care about monsters -- they do whatever
             x, y = random.randint(-1, 1), random.randint(-1, 1)
         else:
@@ -91,39 +88,60 @@ def system_move_entities():
 
     recompute = False
     proceed = True
-    for e in entities:
-        if has(e, components=[Position.name()]):
+    for entity in entities:
+        if has(entity, Position) and not has(entity, Delete):
             x, y, proceed = direction()
             if not proceed:
                 break
-            dx, dy = e.position.x + x, e.position.y + y
+            dx, dy = entity.position.x + x, entity.position.y + y
+            # tile is floor
             if (dx, dy) in floortiles:
+                print('itle')
                 if (dx, dy) not in set(e.position.position for e in entities):
-                    e.position.x += x
-                    e.position.y += y
+                    entity.position.x += x
+                    entity.position.y += y
                     recompute = True
+                else:
+                    print('att')
+                    other = None
+                    for e in entities:
+                        if entity != e and e.position.position == (dx, dy):
+                            print('found', e)
+                            e.delete = Delete()
+                            print(repr(e.delete))
+    for entity in entities:
+        if has(entity, Delete):
+            print(entity)
+
     return proceed, recompute
 
+def system_remove(entities):
+    # return [e for e in entities if not has(e, Delete)]
+    remove = [e for e in entities if has(e, Delete)]
+    for e in remove:
+        entities.remove(e)
+    return entities
+
+# -- helper functions -- 
 def random_position(floortiles, entities):
     tiles = set(floortiles)
     for e in entities:
-        if has(e, [Position.name()]):
+        if has(e, [Position]):
             tiles.remove(e.position.position)
     return tiles.pop()
 
-def create_player(floors, entities):
+def create_player(entities, floors):
     entities.append(Entity(components=[
         Position(*random_position(floors, entities)),
         Render('a', '#DD8822', '#000088'),
     ]))
-    return entities
 
-def create_enemy(floors, entities):
-    return Entity(components=[
+def create_enemy(entities, floors):
+    entities.append(Entity(components=[
         Render(*random.choice((('g', '#008800'), ('r', '#664422')))),
-        Position(*random_position()),
+        Position(*random_position(floors, entities)),
         Ai(),
-    ])
+    ]))
 
 class Tile:
     def __init__(self, ttype):
@@ -131,38 +149,66 @@ class Tile:
     def walkable(self): return self.ttype
 WALL, FLOOR, OPEN_DOOR, CLOSED_DOOR = [Tile(i) for i in range(4)]
 
-class Game():
+class Result:
+    def __init__(self):
+        self.events = []
+        self.proceed = False
+
+    @property
+    def refresh(self) -> bool:
+        return self.proceed or bool(self.events)
+
+Event = namedtuple('Event', 'string position')
+# class Event:
+#     def __init__(self, string, position):
+#         self.string = string
+#         self.position = position
+
+class Game:
     def __init__(self, world:str):
         # world variables
         self.world = [[c for c in r] for r in world.split('\n')]
-        self.width = len(self.world) - 1
-        self.height = len(self.world[0]) - 1
-        self.floors = set((i, j) for j, r in enumerate(world) 
-                                 for i, c in enumerate(r)
-                                 if c == '.')
+        self.height = len(self.world) - 1
+        self.width = len(self.world[0]) - 1        
+        self.floors = set((i, j) for j in range(self.height)
+                                 for i in range(self.width)
+                                 if self.world[j][i] == '.')
 
         # entities -- game objects
-        self.eindex = 0        
-        self.entities = create_player(self.floors, [])
+        self.eindex = 0     
+        self.entities = []   
+        create_player(self.entities, self.floors)
+        for i in range(random.randint(3, 5)):
+            create_enemy(self.entities, self.floors)
 
-        # for _ in range(random.randint(3, 8)):
-        #     create_enemy()
-
-    # def run(self):
-    #     proceed = True
-    #     fov_recalc = True
-    #     while proceed:
-    #         term.clear()
-    #         system_draw_world()
-    #         # system_draw_entities()
-    #         # system_render_by_entity()
-    #         system_render()
-    #         term.refresh()
-    #         proceed, fov_recalc = system_move_entities()
+    def run(self):
+        proceed = True
+        fov_recalc = True
+        while proceed:
+            if fov_recalc:
+                term.clear()                
+                system_draw(self.world)
+                system_render(self.entities)
+                term.refresh()
+            # read write
+            proceed, fov_recalc = system_action(self.entities, self.floors)
+            for entity in self.entities:
+                if has(entity, Delete):
+                    print(entity)
+            print(self.entities)
+            self.entites = system_remove(self.entities)
+            print(self.entities)
+            # print(system_alive(self.entites))
+            if not system_alive(self.entites):
+                term.clear()
+                term.puts(0, 0,'You died')
+                term.refresh()
+                term.read()
+                break
 
     @property
     def entity(self):
-        return self.entities[self.index]
+        return self.entities[self.eindex]
 
 if __name__ == "__main__":
     # print(tilemap(world))
@@ -174,7 +220,7 @@ if __name__ == "__main__":
     #     print(random_position())
     term.open()
     g = Game(world)
-    
+    g.run()
     # print(COMPONENTS)
     # print(Entity.compdict)
     # import os

@@ -18,13 +18,13 @@ def test_no_args(entity):
     assert has(entity, components=[]) == True
 
 def test_single_args(entity):
-    assert has(entity, components=[Position.name()]) == True
-    assert has(entity, components=[Render.name()]) == True
-    assert has(entity, components=[Ai.name()]) == False
+    assert has(entity, components=[Position]) == True
+    assert has(entity, components=[Render]) == True
+    assert has(entity, components=[Ai]) == False
 
 
 def test_multiple_args(entity):
-    assert has(entity, components=[Position.name(), Render.name()]) == True
-    assert has(entity, components=[Position.name(), Ai.name()]) == False
+    assert has(entity, components=[Position, Render]) == True
+    assert has(entity, components=[Position, Ai]) == False
 
 

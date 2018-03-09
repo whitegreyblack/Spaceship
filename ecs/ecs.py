@@ -84,6 +84,11 @@ class Backpack(Component):
     FLAG = 1 << Component.bitflag
     Component.bitflag += 1
     
+class Delete(Component):
+    __slots__ = ['unit']
+    FLAG = 1 << Component.bitflag
+    Component.bitflag += 1
+
     # -- Needs Validation --
     # class Description(Component):
     #     __slots__ = ['unit', 'name', 'less', 'more']
