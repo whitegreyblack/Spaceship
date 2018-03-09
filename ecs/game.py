@@ -26,8 +26,6 @@ world = '''
 #....#....#....#....#..........##....#....#....#....#..........#
 ################################################################
 '''[1:]
-entities = set()
-
 def has(entity, components:list=None):
     return all(hasattr(entity, component) for component in components)
 
@@ -105,93 +103,66 @@ def system_move_entities():
                     e.position.y += y
                     recompute = True
     return proceed, recompute
-    # positions = Entity.compdict['position'].values()
-    # for position in positions:
-    #     unit = position.unit
-    #     energy = unit.get('energy')
-    #     turns = 1
-    #     if energy:
-    #         turns = energy.turns
-    #     for turn in range(turns):
-    #         # haven't moved yet -- just seeing which action to take
-    #         # allows for early exit if user entered ESCAPE
-    #         x, y, proceed = direction()
-    #         if not proceed:
-    #             # return proceed, recompute
-    #             break
-    #         # determines moving, staying, or attacking
-    #         dx, dy = (position.x + x, position.y + y)
-    #         # tile is floor
-    #         if (dx, dy) in floortiles:
-    #             # tile is empty:
-    #             if (dx, dy) not in set(p.position for p in positions):
-    #                 position.x += x
-    #                 position.y += y
-    #                 recompute = True        
-    #     if not proceed:
-    #         break
-    # return proceed, recompute
 
-def random_position():
+def random_position(floortiles, entities):
     tiles = set(floortiles)
-    # for p in Entity.compdict['position'].values():
     for e in entities:
         if has(e, [Position.name()]):
             tiles.remove(e.position.position)
     return tiles.pop()
 
-def create_enemy():
-    enemy = Entity(components=[
+def create_player(floors, entities):
+    entities.append(Entity(components=[
+        Position(*random_position(floors, entities)),
+        Render('a', '#DD8822', '#000088'),
+    ]))
+    return entities
+
+def create_enemy(floors, entities):
+    return Entity(components=[
         Render(*random.choice((('g', '#008800'), ('r', '#664422')))),
         Position(*random_position()),
         Ai(),
     ])
-    # determine type of enemy
-    # enemy.add(Render(*random.choice((('g', '#008800'), ('r', '#664422')))))
-    # enemy.render=Render(*random.choice((('g', '#008800'), ('r', '#664422'))))
-    # determine position
-    # enemy.add(Position(*random_position()))
-    # enemy.position=Position(*random_position())
-    # add a component class telling systems this is an npc/monster
-    # enemy.add(Ai())
-    # enemy.ai = Ai()
-    entities.add(enemy)
 
-def create_player():
-    entities.add(Entity(components=[
-        Position(*random_position()),
-        Render('a', '#DD8822', '#000088'),
-    ]))
-
-def tilemap(world):
-    return [[c for c in r] for r in world.split('\n')]
-
-def floors(world):
-    return set((i, j ) for j, r in enumerate(world) 
-                       for i, c in enumerate(r)
-                       if c == '.')
-
-worldmap = tilemap(world)
-floortiles = floors(worldmap)
-mapx, mapy = len(world.split()[0]) - 1, len(world.split()) - 1
+class Tile:
+    def __init__(self, ttype):
+        self.ttype = ttype
+    def walkable(self): return self.ttype
+WALL, FLOOR, OPEN_DOOR, CLOSED_DOOR = [Tile(i) for i in range(4)]
 
 class Game():
-    def __init__(self):
-        create_player()
-        for _ in range(random.randint(3, 8)):
-            create_enemy()
+    def __init__(self, world:str):
+        # world variables
+        self.world = [[c for c in r] for r in world.split('\n')]
+        self.width = len(self.world) - 1
+        self.height = len(self.world[0]) - 1
+        self.floors = set((i, j) for j, r in enumerate(world) 
+                                 for i, c in enumerate(r)
+                                 if c == '.')
 
-    def run(self):
-        proceed = True
-        fov_recalc = True
-        while proceed:
-            term.clear()
-            system_draw_world()
-            # system_draw_entities()
-            # system_render_by_entity()
-            system_render()
-            term.refresh()
-            proceed, fov_recalc = system_move_entities()
+        # entities -- game objects
+        self.eindex = 0        
+        self.entities = create_player(self.floors, [])
+
+        # for _ in range(random.randint(3, 8)):
+        #     create_enemy()
+
+    # def run(self):
+    #     proceed = True
+    #     fov_recalc = True
+    #     while proceed:
+    #         term.clear()
+    #         system_draw_world()
+    #         # system_draw_entities()
+    #         # system_render_by_entity()
+    #         system_render()
+    #         term.refresh()
+    #         proceed, fov_recalc = system_move_entities()
+
+    @property
+    def entity(self):
+        return self.entities[self.index]
 
 if __name__ == "__main__":
     # print(tilemap(world))
@@ -202,7 +173,8 @@ if __name__ == "__main__":
     # for i in range(3):
     #     print(random_position())
     term.open()
-    Game().run()
+    g = Game(world)
+    
     # print(COMPONENTS)
     # print(Entity.compdict)
     # import os

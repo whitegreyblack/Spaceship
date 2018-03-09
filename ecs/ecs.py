@@ -79,7 +79,12 @@ class Ai(Component):
     FLAG = 1 << Component.bitflag
     Component.bitflag += 1
 
-# -- Needs Validation --
+class Backpack(Component):
+    __slots__ = ['unit']
+    FLAG = 1 << Component.bitflag
+    Component.bitflag += 1
+    
+    # -- Needs Validation --
     # class Description(Component):
     #     __slots__ = ['unit', 'name', 'less', 'more']
     #     FLAG = 1 << Component.bitflag
