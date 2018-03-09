@@ -46,19 +46,6 @@ def draw_entity(position, background, string):
     if revert:
         term.bkcolor('#000000')
 
-#  -- Outdated --
-    # def system_draw_entities():
-    #     for position in Component.get('position').values():
-    #         renderer = position.unit.get('render')
-    #         if renderer:
-    #             draw_entity(position.position, *renderer.render)
-
-    # def system_render_by_entity():
-    #     for e in entities:
-    #         flags = Position.FLAG | Render.FLAG
-    #         if e.FLAG & flags == flags:
-    #             draw_entity(e.get('position').position, *e.get('render').render)
-
 def system_render(entities):
     for e in entities:
         if has(e, components=[Position, Render]):
@@ -96,23 +83,15 @@ def system_action(entities, floortiles):
             dx, dy = entity.position.x + x, entity.position.y + y
             # tile is floor
             if (dx, dy) in floortiles:
-                print('itle')
                 if (dx, dy) not in set(e.position.position for e in entities):
                     entity.position.x += x
                     entity.position.y += y
                     recompute = True
                 else:
-                    print('att')
                     other = None
                     for e in entities:
                         if entity != e and e.position.position == (dx, dy):
-                            print('found', e)
                             e.delete = Delete()
-                            print(repr(e.delete))
-    for entity in entities:
-        if has(entity, Delete):
-            print(entity)
-
     return proceed, recompute
 
 def system_remove(entities):
@@ -192,13 +171,8 @@ class Game:
                 term.refresh()
             # read write
             proceed, fov_recalc = system_action(self.entities, self.floors)
-            for entity in self.entities:
-                if has(entity, Delete):
-                    print(entity)
-            print(self.entities)
             self.entites = system_remove(self.entities)
-            print(self.entities)
-            # print(system_alive(self.entites))
+            # check player alive
             if not system_alive(self.entites):
                 term.clear()
                 term.puts(0, 0,'You died')
