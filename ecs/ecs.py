@@ -25,11 +25,14 @@ class Component:
     def unit(self):
         return self._unit
 
+    @classmethod
+    def name(cls):
+        return cls.__name__.lower()
+
     @unit.setter
     def unit(self, unit):
         self._unit = unit
-        subclass = self.__class__.__name__.lower()
-        if subclass not in Component.__instances:
+        if self.name not in Component.__instances:
             Component.__instances[subclass] = {unit.eid: self}
         else:
             Component.__instances[subclass].update({unit.eid: self})
@@ -75,6 +78,7 @@ class Ai(Component):
     __slots__ = ['unit']
     FLAG = 1 << Component.bitflag
     Component.bitflag += 1
+
 # -- Needs Validation --
     # class Description(Component):
     #     __slots__ = ['unit', 'name', 'less', 'more']
@@ -226,14 +230,14 @@ class Entity:
     Render(symbol=@, foreground=#ffffff, background=#000000)
     '''
     eid = 0
-    compdict = {c.__name__.lower(): {} for c in Component.__subclasses__()}
+    # compdict = {c.__name__.lower(): {} for c in Component.__subclasses__()}
     def __init__(self, components=None):
         self.eid = Entity.eid
-        self.FLAG = 0
         Entity.eid += 1
+        self.FLAG = 0
         if components:
             for component in components:
-                setattr(self, component.__class__.__name__.lower(), component)
+                setattr(self, component.name(), component)
         #     self.add(components=components)
 
     def __str__(self):

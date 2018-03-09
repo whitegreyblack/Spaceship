@@ -28,6 +28,9 @@ world = '''
 '''[1:]
 entities = set()
 
+def has(entity, components:list=None):
+    return all(hasattr(entity, component) for component in components)
+
 def system_draw_world():
     term.puts(0, 0, world)
 
@@ -52,6 +55,11 @@ def system_render_by_entity():
         if e.FLAG & flags == flags:
             draw_entity(e.get('position').position, *e.get('render').render)
 
+def system_render():
+    for e in entities:
+        if has(e, components=[Position.name(), Render.name()]):
+            draw_entity(e.position.position, *e.render.render)
+
 def system_move_entities():
     def get_input():
         key = term.read()
@@ -62,21 +70,21 @@ def system_move_entities():
         return directions.get(key, (0, 0))
 
     def move():
-        dx, dy = (position.x + x, position.y + y)
+        dx, dy = (e.position.x + x, e.position.y + y)
         # tile is floor
         if (dx, dy) in floortiles:
             # tile is empty:
-            if (dx, dy) not in set(p.position for p in positions):
+            if (dx, dy) not in set(e.position.position for e in positions):
                 position.move(x, y)
                 recompute = True
             # elif position.unit.has('damage') and 
 
     def direction():
-        computer = unit.get('ai')
-        if computer:
+        # computer = unit.get('ai')
+        # if computer:
+        if has(e, components=[Ai.name()]):
             # Don't care about monsters -- they do whatever
             x, y = random.randint(-1, 1), random.randint(-1, 1)
-
         else:
             x, y = get_input()   
             if (x, y) == (None, None):
@@ -85,47 +93,68 @@ def system_move_entities():
 
     recompute = False
     proceed = True
-    positions = Entity.compdict['position'].values()
-    for position in positions:
-        unit = position.unit
-        energy = unit.get('energy')
-        turns = 1
-        if energy:
-            turns = energy.turns
-        for turn in range(turns):
-            # haven't moved yet -- just seeing which action to take
-            # allows for early exit if user entered ESCAPE
+    for e in entities:
+        if has(e, components=[Position.name()]):
             x, y, proceed = direction()
             if not proceed:
-                # return proceed, recompute
                 break
-            # determines moving, staying, or attacking
-            dx, dy = (position.x + x, position.y + y)
-            # tile is floor
+            dx, dy = e.position.x + x, e.position.y + y
             if (dx, dy) in floortiles:
-                # tile is empty:
-                if (dx, dy) not in set(p.position for p in positions):
-                    position.x += x
-                    position.y += y
-                    recompute = True        
-        if not proceed:
-            break
+                if (dx, dy) not in set(e.position.position for e in entities):
+                    e.position.x += x
+                    e.position.y += y
+                    recompute = True
     return proceed, recompute
+    # positions = Entity.compdict['position'].values()
+    # for position in positions:
+    #     unit = position.unit
+    #     energy = unit.get('energy')
+    #     turns = 1
+    #     if energy:
+    #         turns = energy.turns
+    #     for turn in range(turns):
+    #         # haven't moved yet -- just seeing which action to take
+    #         # allows for early exit if user entered ESCAPE
+    #         x, y, proceed = direction()
+    #         if not proceed:
+    #             # return proceed, recompute
+    #             break
+    #         # determines moving, staying, or attacking
+    #         dx, dy = (position.x + x, position.y + y)
+    #         # tile is floor
+    #         if (dx, dy) in floortiles:
+    #             # tile is empty:
+    #             if (dx, dy) not in set(p.position for p in positions):
+    #                 position.x += x
+    #                 position.y += y
+    #                 recompute = True        
+    #     if not proceed:
+    #         break
+    # return proceed, recompute
 
 def random_position():
     tiles = set(floortiles)
-    for p in Entity.compdict['position'].values():
-        tiles.remove(p.position)
+    # for p in Entity.compdict['position'].values():
+    for e in entities:
+        if has(e, [Position.name()]):
+            tiles.remove(e.position.position)
     return tiles.pop()
 
 def create_enemy():
-    enemy = Entity()
+    enemy = Entity(components=[
+        Render(*random.choice((('g', '#008800'), ('r', '#664422')))),
+        Position(*random_position()),
+        Ai(),
+    ])
     # determine type of enemy
-    enemy.add(Render(*random.choice((('g', '#008800'), ('r', '#664422')))))
+    # enemy.add(Render(*random.choice((('g', '#008800'), ('r', '#664422')))))
+    # enemy.render=Render(*random.choice((('g', '#008800'), ('r', '#664422'))))
     # determine position
-    enemy.add(Position(*random_position()))
+    # enemy.add(Position(*random_position()))
+    # enemy.position=Position(*random_position())
     # add a component class telling systems this is an npc/monster
-    enemy.add(Ai())
+    # enemy.add(Ai())
+    # enemy.ai = Ai()
     entities.add(enemy)
 
 def create_player():
@@ -139,8 +168,8 @@ def tilemap(world):
 
 def floors(world):
     return set((i, j ) for j, r in enumerate(world) 
-                        for i, c in enumerate(r)
-                         if c == '.')
+                       for i, c in enumerate(r)
+                       if c == '.')
 
 worldmap = tilemap(world)
 floortiles = floors(worldmap)
@@ -159,7 +188,8 @@ class Game():
             term.clear()
             system_draw_world()
             # system_draw_entities()
-            system_render_by_entity()
+            # system_render_by_entity()
+            system_render()
             term.refresh()
             proceed, fov_recalc = system_move_entities()
 
@@ -167,11 +197,15 @@ if __name__ == "__main__":
     # print(tilemap(world))
     # print(random_position(floortiles))
     # print([c.__name__.lower() for c in Component.__subclasses__()])
+    # for i in range(5):
+    #     create_player()
+    # for i in range(3):
+    #     print(random_position())
     term.open()
     Game().run()
     # print(COMPONENTS)
     # print(Entity.compdict)
-    import os
-    import psutil
-    process = psutil.Process(os.getpid())
-    print(process.memory_info().rss)
+    # import os
+    # import psutil
+    # process = psutil.Process(os.getpid())
+    # print(process.memory_info().rss)
