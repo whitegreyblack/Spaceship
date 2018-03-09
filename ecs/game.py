@@ -17,12 +17,12 @@ world = '''
 ################################################################
 #....#....#....#....#..........##....#....#....#....#..........#
 #...................#..........##...................#..........#
-#....#....#....#..........#....##....#....#....#....+.....#....#
+#....#....#....#..........#....##....#....#....#..........#....#
 #...................................................#..........#
 #....#....#....#....#................#....#....#....#..........#
 #....#....#....#....#..........##....#....#....#....#..........#
 #...................................................#..........#
-#....#....#....#..........#....##....#....#....#....+.....#....#
+#....#....#....#..........#....##....#....#....#..........#....#
 #...................#..........##...................#..........#
 #....#....#....#....#..........##....#....#....#....#..........#
 ################################################################
@@ -32,10 +32,16 @@ def has(entity, components=None):
         return hasattr(entity, components.name())
     return all(hasattr(entity, component.name()) for component in components)
 
-def system_draw(world):
-    for j, row in enumerate(world):
+def system_draw(world, entities):
+    positions = {e.position.position: e.render.render for e in entities}
+    print(positions)
+    for j, row in enumerate(world.world):
         for i, cell in enumerate(row):
-            term.puts(i, j, cell)
+            if world.lit(i, j):
+                if (i, j) in positions.keys():
+                    draw_entity((i, j), *positions[(i, j)])
+                else:
+                    term.puts(i, j, cell)
 
 def draw_entity(position, background, string):
     revert = False
@@ -46,9 +52,9 @@ def draw_entity(position, background, string):
     if revert:
         term.bkcolor('#000000')
 
-def system_render(entities):
+def system_render(world, entities):
     for e in entities:
-        if has(e, components=[Position, Render]):
+        if has(e, components=[Position, Render]) and world.lit(*e.position.position):
             draw_entity(e.position.position, *e.render.render)
 
 def system_alive(entites):
@@ -126,6 +132,7 @@ class Tile:
     def __init__(self, ttype):
         self.ttype = ttype
     def walkable(self): return self.ttype
+
 WALL, FLOOR, OPEN_DOOR, CLOSED_DOOR = [Tile(i) for i in range(4)]
 
 class Result:
@@ -143,34 +150,119 @@ Event = namedtuple('Event', 'string position')
 #         self.string = string
 #         self.position = position
 
+class Map:
+    mult = [
+            [1,  0,  0, -1, -1,  0,  0,  1],
+            [0,  1, -1,  0,  0, -1,  1,  0],
+            [0,  1,  1,  0,  0, -1, -1,  0],
+            [1,  0,  0,  1, -1,  0,  0, -1]
+        ]
+    def __init__(self, world:str):
+        self.world = [[c for c in r] for r in world.split('\n')]
+        self.height = len(self.world)
+        self.width = len(self.world[0])
+        self.floors = set((i, j) for j in range(self.height-1)
+                                 for i in range(self.width-1)
+                                 if self.world[j][i] == '.')
+        self.reset_light()
+    
+    def reset_light(self):
+        self.light = [[0 for _ in r] for r in self.world]
+
+    def square(self, x, y):
+        return self.world[y][x]
+
+    def blocked(self, x, y):
+        return (not 0 <= x < self.width or not 0 <= y < self.height
+                or self.world[y][x] in ("#", '+'))
+                
+    def lit(self, x, y):
+        return self.light[y][x] > 0
+
+    def set_lit(self, x, y):
+        if 0 <= x < self.width and 0 <= y < self.height:
+            self.light[y][x] = 1
+
+    def do_fov(self, x, y, radius):
+        "Calculate lit squares from the given location and radius"
+        self.set_lit(x, y)
+        self.visit = 0
+        for oct in range(8):
+            self._cast_light(x, y, 1, 1.0, 0.0, radius,
+                             self.mult[0][oct], self.mult[1][oct],
+                             self.mult[2][oct], self.mult[3][oct], 0)
+
+    def _cast_light(self, cx, cy, row, start, end, radius, xx, xy, yx, yy, id):
+        "Recursive lightcasting function"
+        if start < end:
+            return
+        radius_squared = radius*radius
+        for j in range(row, radius + 1):
+            dx, dy = -j - 1, -j
+            blocked = False
+            while dx <= 0:
+                dx += 1
+                # Translate the dx, dy coordinates into map coordinates:
+                X, Y = cx + dx * xx + dy * xy, cy + dx * yx + dy * yy
+                self.visit += 1
+                # l_slope and r_slope store the slopes of the left and right
+                # extremities of the square we're considering:
+                l_slope = (dx - 0.5) / (dy + 0.5)
+                r_slope = (dx + 0.5) / (dy - 0.5)
+                if start < r_slope:
+                    continue
+                elif end > l_slope:
+                    break
+                else:
+                    # Our light beam is touching this square; light it:
+                    if dx*dx + dy*dy < radius_squared:
+                        self.set_lit(X, Y)
+                    if blocked:
+                        # we're scanning a row of blocked squares:
+                        if self.blocked(X, Y):
+                            new_start = r_slope
+                            continue
+                        else:
+                            blocked = False
+                            start = new_start
+                    else:
+                        if self.blocked(X, Y) and j < radius:
+                            # This is a blocking square, start a child scan:
+                            blocked = True
+                            self._cast_light(cx, cy, j+1, start, l_slope,
+                                             radius, xx, xy, yx, yy, id+1)
+                            new_start = r_slope
+            # Row is scanned; do next row unless last square was blocked:
+            if blocked:
+                break
+
 class Game:
     def __init__(self, world:str):
         # world variables
-        self.world = [[c for c in r] for r in world.split('\n')]
-        self.height = len(self.world) - 1
-        self.width = len(self.world[0]) - 1        
-        self.floors = set((i, j) for j in range(self.height)
-                                 for i in range(self.width)
-                                 if self.world[j][i] == '.')
+        self.dungeon = Map(world)
 
         # entities -- game objects
         self.eindex = 0     
         self.entities = []   
-        create_player(self.entities, self.floors)
+        create_player(self.entities, self.dungeon.floors)
         for i in range(random.randint(3, 5)):
-            create_enemy(self.entities, self.floors)
+            create_enemy(self.entities, 
+                         self.dungeon.floors)
 
     def run(self):
         proceed = True
         fov_recalc = True
         while proceed:
             if fov_recalc:
+                self.dungeon.do_fov(*self.entities[0].position.position, 8)
                 term.clear()                
-                system_draw(self.world)
-                system_render(self.entities)
+                system_draw(self.dungeon, self.entities)
+                # system_render(self.dungeon, self.entities)
                 term.refresh()
+
             # read write
-            proceed, fov_recalc = system_action(self.entities, self.floors)
+            proceed, fov_recalc = system_action(self.entities, 
+                                                self.dungeon.floors)
             self.entites = system_remove(self.entities)
             # check player alive
             if not system_alive(self.entites):
@@ -179,6 +271,9 @@ class Game:
                 term.refresh()
                 term.read()
                 break
+            
+            if fov_recalc:
+                self.dungeon.reset_light()
 
     @property
     def entity(self):

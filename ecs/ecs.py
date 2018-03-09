@@ -76,18 +76,12 @@ class Position(Component):
 
 class Ai(Component):
     __slots__ = ['unit']
-    FLAG = 1 << Component.bitflag
-    Component.bitflag += 1
 
 class Backpack(Component):
     __slots__ = ['unit']
-    FLAG = 1 << Component.bitflag
-    Component.bitflag += 1
     
 class Delete(Component):
     __slots__ = ['unit']
-    FLAG = 1 << Component.bitflag
-    Component.bitflag += 1
 
     # -- Needs Validation --
     # class Description(Component):
@@ -240,6 +234,7 @@ class Entity:
     Render(symbol=@, foreground=#ffffff, background=#000000)
     '''
     eid = 0
+    instances = {}
     # compdict = {c.__name__.lower(): {} for c in Component.__subclasses__()}
     def __init__(self, components=None):
         self.eid = Entity.eid
@@ -248,6 +243,7 @@ class Entity:
         if components:
             for component in components:
                 setattr(self, component.name(), component)
+
         #     self.add(components=components)
 
     def __str__(self):
