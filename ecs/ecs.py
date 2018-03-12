@@ -72,12 +72,6 @@ class Position(Component):
     def position(self):
         return self.x, self.y
 
-class Moveable(Component):
-    __slots__ = ['unit']
-
-class Ai(Component):
-    __slots__ = ['unit']
-
 class Backpack(Component):
     __slots__ = ['unit', 'backpack']
     def __init__(self, backpack=[None for _ in range(6)]):
@@ -245,7 +239,7 @@ class Entity:
     >>> e.render
     Render(symbol=@, foreground=#ffffff, background=#000000)
     '''
-    __slots__ = ['eid', 'delete'] + [
+    __slots__ = ['eid', 'delete', 'ai', 'moveable'] + [
         sc.name() for sc in Component.__subclasses__()
     ]
     EID = 0

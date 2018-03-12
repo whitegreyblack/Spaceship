@@ -1,8 +1,7 @@
 from bearlibterminal import terminal as term
 from collections import namedtuple
 from ecs.ecs import (
-    Entity, Component, Position, Render, 
-    Ai, COMPONENTS, Moveable, Backpack
+    Entity, Component, Position, Render, COMPONENTS, Backpack
 )
 import math
 import random
@@ -37,14 +36,19 @@ world = '''
 ################################################################
 #....#....#....#....#..........##....#....#....#....#..........#
 #...................#..........##...................#..........#
-#....#....#....#..........#....##....#....#....#..........#....#
-#...................................................#..........#
+#....#....#....#..........#....##....#....#....#....#.....#....#
+#..............................................................#
 #....#....#....#....#................#....#....#....#..........#
 #....#....#....#....#..........##....#....#....#....#..........#
-#...................................................#..........#
-#....#....#....#..........#....##....#....#....#..........#....#
-#...................#..........##...................#..........#
-#....#....#....#....#..........##....#....#....#....#..........#
+#..............................................................#
+#....#....#....#..........#....##....#....#....#....#.....#....#
+#..............................................................#
+#..............................................................#
+#..............................................................#
+#..............................................................#
+#..............................................................#
+#..............................................................#
+#..............................................................#
 ################################################################'''[1:]
 
 def has(entity, components=None):
@@ -130,7 +134,7 @@ def system_action(entities, floortiles, lightedtiles):
 
     def take_turn():
         a, (x, y) = None, (0, 0)
-        if has(entity, components=[Ai]):
+        if has(entity, components='ai'):
             hero = [e for e in entities if e.eid == 0]
             # if entity.position.position in lightedtiles:
             #     pass
@@ -154,30 +158,32 @@ def system_action(entities, floortiles, lightedtiles):
     proceed = True
     for entity in entities:
         # needs these two components to move -- dead entities don't move
-        if has(entity, Moveable) and not has(entity, 'delete'):
+        if has(entity, 'moveable') and not has(entity, 'delete'):
             a, x, y, proceed = take_turn()
             if not proceed:
                 break
             if a:
                 if a == "pickup":
                     for e in entities: 
-                        if not has(e, Moveable):
+                        if not has(e, 'moveable'):
                             e.position = None
                             entity.backpack.append(e)
                             for i in entity.backpack:
                                 print(list(i.components))
                             e.delete = True
                     return proceed, recompute
+
                 elif a == "inventory":
                     print(entity.backpack)
                     for i in entity.backpack:
                         print(has(i, Position))
-                    return proceed, recompute
+
                 elif a == "drop":
                     item = entity.backpack.pop()
                     item.position = Position(*entity.position.position)
                     item.delete = False
                     entities.append(item)                   
+                    return proceed, recompute
 
             dx, dy = entity.position.x + x, entity.position.y + y
             # tile is floor
@@ -193,7 +199,7 @@ def system_action(entities, floortiles, lightedtiles):
                     for e in entities:
                         if entity != e and e.position.position == (dx, dy):
                             # will only be one movable on this tile -- delete
-                            if has(e, Moveable):
+                            if has(e, 'moveable'):
                                 other = e
                     if not other:
                         entity.position.x += x
@@ -215,7 +221,7 @@ def random_position(entities, floortiles):
     tiles = list(floortiles)
     random.shuffle(tiles)
     for e in entities:
-        if has(e, [Moveable]):
+        if has(e, 'moveable'):
             tiles.remove(e.position.position)
     tile = tiles.pop()
     return tile
@@ -224,7 +230,7 @@ def create_player(entities, floors):
     entities.append(Entity(components=[
         Position(*random_position(entities, floors)),
         Render('a', '#DD8822', '#000088'),
-        Moveable(),
+        ('moveable', True),
         ('backpack', []),
     ]))
 
@@ -232,13 +238,13 @@ def create_enemy(entities, floors):
     entities.append(Entity(components=[
         Render(*random.choice((('g', '#008800'), ('r', '#664422')))),
         Position(*random_position(entities, floors)),
-        Moveable(),
-        Ai(),
+        ('moveable', True),
+        ('ai', True),
     ]))
 
 def create_weapon(entities, floors):
     entities.append(Entity(components=[
-        Render('[', '#00AAAA'),
+        Render('[[', '#00AAAA'),
         Position(*random_position(entities, floors)),
     ]))
 
@@ -379,7 +385,7 @@ class Game:
         fov_recalc = True
         while proceed:
             if fov_recalc:
-                self.dungeon.do_fov(*self.entities[0].position.position, 8)
+                self.dungeon.do_fov(*self.entities[0].position.position, 15)
                 term.clear()                
                 system_draw(self.dungeon, self.entities)
                 # system_render(self.dungeon, self.entities)
