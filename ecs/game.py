@@ -2,8 +2,9 @@ from bearlibterminal import terminal as term
 from collections import namedtuple
 from ecs.ecs import (
     Entity, Component, Position, Render, 
-    Ai, COMPONENTS, Delete, Weapon, Moveable
+    Ai, COMPONENTS, Delete, Moveable
 )
+import math
 import random
 
 class Keyboard:
@@ -45,15 +46,17 @@ world = '''
 ################################################################'''[1:]
 
 def has(entity, components=None):
+    def attr(name):
+        return hasattr(entity, name) and getattr(entity, name)
     if not isinstance(components, list):
-        return bool(hasattr(entity, components.name()))
-    return all(hasattr(entity, component.name()) for component in components)
+        return attr(components.name())
+    return all(attr(component.name()) for component in components)
 
-def distance_to(self, other):
+def distance(self, other):
     #return the distance to another object
     dx = other.x - self.x
     dy = other.y - self.y
-    return math.sqrt(dx ** 2 + dy ** 2)
+    return dx ** 2 + dy ** 2
 
 def system_draw(world, entities):
     positions = {
@@ -118,6 +121,14 @@ def system_action(entities, floortiles, lightedtiles):
     def take_turn():
         a, (x, y) = None, (0, 0)
         if has(entity, components=[Ai]):
+            hero = [e for e in entities if e.eid == 0]
+            # if entity.position.position in lightedtiles:
+            #     pass
+                    
+            # notmonster = [e for e in entities 
+            #     if has(e, Position) and not has(e, Ai) and 
+            #         distance(entity, e) == 2]
+            # if any(distance(e) == 2 for e in notmonster):
             # Don't care about monsters -- they do whatever
             # the return value will always be a directional x, y value
             x, y = random.randint(-1, 1), random.randint(-1, 1)
@@ -148,7 +159,7 @@ def system_action(entities, floortiles, lightedtiles):
                     other = None
                     for e in entities:
                         if entity != e and e.position.position == (dx, dy):
-                            if not has(e, Weapon):
+                            if not has(e, Moveable):
                                 e.delete = Delete()
                             else:
                                 entity.position.x += x
@@ -167,9 +178,10 @@ def system_remove(entities):
 def random_position(entities, floortiles):
     tiles = set(floortiles)
     for e in entities:
-        if has(e, [Position]) and not has(e, [Weapon]):
+        if has(e, [Moveable]):
             tiles.remove(e.position.position)
-    return tiles.pop()
+    tile = tiles.pop()
+    return tile
 
 def create_player(entities, floors):
     entities.append(Entity(components=[
@@ -190,7 +202,6 @@ def create_weapon(entities, floors):
     entities.append(Entity(components=[
         Render('[', '#334433'),
         Position(*random_position(entities, floors)),
-        Weapon(),
     ]))
 
 class Tile:
@@ -322,7 +333,7 @@ class Game:
         create_player(self.entities, self.dungeon.floors)
         for i in range(random.randint(3, 5)):
             create_enemy(self.entities, self.dungeon.floors)
-        for i in range(1):
+        for i in range(3):
             create_weapon(self.entities, self.dungeon.floors)
 
     def run(self):
@@ -340,7 +351,6 @@ class Game:
             proceed, fov_recalc = system_action(self.entities, 
                                                 self.dungeon.floors,
                                                 self.dungeon.lighted)
-            print(proceed)
             self.entites = system_remove(self.entities)
 
             # check player alive

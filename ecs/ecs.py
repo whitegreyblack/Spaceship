@@ -75,9 +75,6 @@ class Position(Component):
 class Moveable(Component):
     __slots__ = ['unit']
 
-class Weapon(Component):
-    __slots__ = ['unit']
-
 class Ai(Component):
     __slots__ = ['unit']
 
@@ -88,10 +85,18 @@ class Backpack(Component):
 
 class Equipment(Component):
     __slots__ = ['unit', 'left_hand', 'right_hand', 'body']
+    def __init__(self, lh=None, rh=None, body=None):
+        if lh:
+            self.left_hand = lh
+        if rh:
+            self.right_hand = rg
+        if body:
+            self.body = body
 
 class Delete(Component):
     __slots__ = ['unit']
 
+print([sc.name() for sc in Component.__subclasses__()])
     # -- Needs Validation --
     # class Description(Component):
     #     __slots__ = ['unit', 'name', 'less', 'more']
@@ -242,13 +247,14 @@ class Entity:
     >>> e.render
     Render(symbol=@, foreground=#ffffff, background=#000000)
     '''
-    eid = 0
-    instances = {}
+    __slots__ = ['eid'] + [sc.name() for sc in Component.__subclasses__()]
+    EID = 0
+    # instances = {}
     # compdict = {c.__name__.lower(): {} for c in Component.__subclasses__()}
     def __init__(self, components=None):
-        self.eid = Entity.eid
-        Entity.eid += 1
-        self.FLAG = 0
+        self.eid = Entity.EID
+        Entity.EID += 1
+        # self.FLAG = 0
         if components:
             for component in components:
                 setattr(self, component.name(), component)
