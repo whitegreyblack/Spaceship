@@ -1,7 +1,7 @@
 from bearlibterminal import terminal as term
 from collections import namedtuple
 from ecs.ecs import (
-    Entity, Component, Position, Render, COMPONENTS, Backpack
+    Entity, Component, Position, Render, COMPONENTS, Backpack, Damage
 )
 import math
 import random
@@ -207,6 +207,9 @@ def system_action(entities, floortiles, lightedtiles):
                         entity.position.y += y
                         recompute = True
                     else:
+                        if has(entity, Damage):
+                            dmg = entity.damage.deal
+                            print(f"{entity.race} deals {dmg} damage to {other.race}")
                         print(f"{entity.race} has killed the {other.race}")
                         other.delete = True
     return proceed, recompute
@@ -231,26 +234,27 @@ def random_position(entities, floortiles):
 def create_player(entities, floors):
     entities.append(Entity(components=[
         Position(*random_position(entities, floors)),
-        ('race', "Hero"),
         Render('a', '#DD8822', '#000088'),
+        Damage(damage=(Damage.PHYSICAL, "1d6")),
+        ('race', "Hero"),
         ('moveable', True),
         ('backpack', []),
-    ]))
+    ])) 
 
 def create_enemy(entities, floors):
     if random.randint(0, 1):
         entities.append(Entity(components=[
+            Position(*random_position(entities, floors)),
             Render('g', '#008800'),
             ('race', 'goblin'),
-            Position(*random_position(entities, floors)),
             ('moveable', True),
             ('ai', True),
         ]))
     else:
         entities.append(Entity(components=[
+            Position(*random_position(entities, floors)),   
             Render('r', '#664422'),
             ('race', 'rat'),
-            Position(*random_position(entities, floors)),
             ('moveable', True),
             ('ai', True),
         ]))

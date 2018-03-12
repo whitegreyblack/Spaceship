@@ -88,7 +88,6 @@ class Equipment(Component):
         if body:
             self.body = body
 
-print([sc.name() for sc in Component.__subclasses__()])
     # -- Needs Validation --
     # class Description(Component):
     #     __slots__ = ['unit', 'name', 'less', 'more']
@@ -117,38 +116,36 @@ print([sc.name() for sc in Component.__subclasses__()])
     #             if self.unit.has(attr):
     #                 self.unit.get(attr).update()
 
-    # class Damage(Component):
-    #     __slots__ = ['unit', "damages"]
-    #     FLAG = 1 << Component.bitflag
-    #     Component.bitflag += 1
-    #     MAGICAL, PHYSICAL = range(2)
-    #     def __init__(self, damage=None, damages=None):
-    #         self.damages = {}
-    #         if not damage and not damages:
-    #             raise ValueError('Need to add a damage/damage type for init')
+class Damage(Component):
+    __slots__ = ['unit', "damages"]
+    # FLAG = 1 << Component.bitflag
+    # Component.bitflag += 1
+    MAGICAL, PHYSICAL = range(2)
+    def __init__(self, damage=None, damages=None):
+        self.damages = {}
+        if not damage and not damages:
+            raise ValueError('Need to add a damage/damage type for init')
+        if damage:
+            damages = [damage]
+        for dmg, dtype in damages:
+            if isinstance(dmg, str):
+                dmg = Die.construct(dmg)
+            if dtype in self.damages.keys():
+                self.damages[dtype].append(dmg)
+            else:
+                self.damages[dtype] = [dmg]
 
-    #         if damage:
-    #             damages = list(damage)
-    #         for dmg, dtype in damages:
-    #             if isinstance(dmg, str):
-    #                 dmg = Die.construct(dmg)
-
-    #             if dtype in self.damages.keys():
-    #                 self.damages[dtype].append(dmg)
-    #             else:
-    #                 self.damages[dtype] = [dmg]
-
-    #     @property
-    #     def damage(self):
-    #         damage_per_type = []
-    #         for dtype, damages in self.damages.items():
-    #             total_damage = 0
-    #             for dmg in damages:
-    #                 if isinstance(dmg, Die):
-    #                    dmg = next(dmg.roll())
-    #                 total_damage += dmg
-    #             damage_per_type.append((dtype, total_damage))
-    #         return damage_per_type
+    @property
+    def deal(self):
+        damage_per_type = []
+        for dtype, damages in self.damages.items():
+            total_damage = 0
+            for dmg in damages:
+                if isinstance(dmg, Die):
+                    dmg = next(dmg.roll())
+                total_damage += dmg
+            damage_per_type.append((dtype, total_damage))
+        return damage_per_type
 
     # class Health(Component):
     #     __slots__ = ['unit', 'max_hp', 'cur_hp']
@@ -215,6 +212,7 @@ print([sc.name() for sc in Component.__subclasses__()])
     #     __slots__ = ['unit']
     #     FLAG = 1 << Component.bitflag
     #     Component.bitflag += 1
+print([sc.name() for sc in Component.__subclasses__()])
 
 class Entity:
     '''
