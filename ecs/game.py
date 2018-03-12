@@ -2,7 +2,7 @@ from bearlibterminal import terminal as term
 from collections import namedtuple
 from ecs.ecs import (
     Entity, Component, Position, Render, 
-    Ai, COMPONENTS, Moveable
+    Ai, COMPONENTS, Moveable, Backpack
 )
 import math
 import random
@@ -28,7 +28,9 @@ class Keyboard:
         term.TK_KP_9: (1, -1),
     }
     KEYBOARD = {
-        term.TK_COMMA: "pickup",
+        (term.TK_COMMA, 0): "pickup",
+        (term.TK_I, 0): "inventory",
+        (term.TK_D, 0): "drop",
     }
 
 world = '''
@@ -100,17 +102,21 @@ def system_action(entities, floortiles, lightedtiles):
         a, (x, y) = None, (0, 0)
         
         key = term.read()
+        shifted = term.state(term.TK_SHIFT)
         notexit = key != Keyboard.ESCAPE
         notarrows = key not in Keyboard.ARROWS.keys()
         notkeypad = key not in Keyboard.KEYPAD.keys()
+        notkeyboard = (key, shifted) not in Keyboard.KEYBOARD.keys()
 
-        while notexit and notarrows and notkeypad:
+        while notexit and notarrows and notkeypad and notkeyboard:
             key = term.read()
+            shifted = term.state(term.TK_SHIFT)
+
             notexit = key != Keyboard.ESCAPE
             notarrows = key not in Keyboard.ARROWS.keys()
             notkeypad = key not in Keyboard.KEYPAD.keys()
-            
-        shifted = term.state(term.TK_SHIFT)
+            notkeyboard = (key, shifted) not in Keyboard.KEYBOARD.keys()
+
         # we finally get the right key value after parsing invalid keys
         if key == Keyboard.ESCAPE:
             x, y, = None, None
@@ -149,10 +155,30 @@ def system_action(entities, floortiles, lightedtiles):
     for entity in entities:
         # needs these two components to move -- dead entities don't move
         if has(entity, Moveable) and not has(entity, 'delete'):
-            print(entity)
             a, x, y, proceed = take_turn()
             if not proceed:
                 break
+            if a:
+                if a == "pickup":
+                    for e in entities: 
+                        if not has(e, Moveable):
+                            e.position = None
+                            entity.backpack.append(e)
+                            for i in entity.backpack:
+                                print(list(i.components))
+                            e.delete = True
+                    return proceed, recompute
+                elif a == "inventory":
+                    print(entity.backpack)
+                    for i in entity.backpack:
+                        print(has(i, Position))
+                    return proceed, recompute
+                elif a == "drop":
+                    item = entity.backpack.pop()
+                    item.position = Position(*entity.position.position)
+                    item.delete = False
+                    entities.append(item)                   
+
             dx, dy = entity.position.x + x, entity.position.y + y
             # tile is floor
             if (dx, dy) in floortiles:
@@ -169,14 +195,12 @@ def system_action(entities, floortiles, lightedtiles):
                             # will only be one movable on this tile -- delete
                             if has(e, Moveable):
                                 other = e
-
                     if not other:
                         entity.position.x += x
                         entity.position.y += y
                         recompute = True
                     else:
                         other.delete = True
-
     return proceed, recompute
 
 def system_remove(entities):
@@ -188,7 +212,8 @@ def system_remove(entities):
 
 # -- helper functions -- 
 def random_position(entities, floortiles):
-    tiles = set(floortiles)
+    tiles = list(floortiles)
+    random.shuffle(tiles)
     for e in entities:
         if has(e, [Moveable]):
             tiles.remove(e.position.position)
@@ -200,6 +225,7 @@ def create_player(entities, floors):
         Position(*random_position(entities, floors)),
         Render('a', '#DD8822', '#000088'),
         Moveable(),
+        ('backpack', []),
     ]))
 
 def create_enemy(entities, floors):
@@ -212,7 +238,7 @@ def create_enemy(entities, floors):
 
 def create_weapon(entities, floors):
     entities.append(Entity(components=[
-        Render('[', '#334433'),
+        Render('[', '#00AAAA'),
         Position(*random_position(entities, floors)),
     ]))
 
@@ -343,10 +369,10 @@ class Game:
         self.eindex = 0     
         self.entities = []   
         create_player(self.entities, self.dungeon.floors)
-        for i in range(random.randint(3, 5)):
-            create_enemy(self.entities, self.dungeon.floors)
-        for i in range(3):
-            create_weapon(self.entities, self.dungeon.floors)
+        # for i in range(random.randint(3, 5)):
+        #     create_enemy(self.entities, self.dungeon.floors)
+        # for i in range(3):
+        create_weapon(self.entities, self.dungeon.floors)
 
     def run(self):
         proceed = True

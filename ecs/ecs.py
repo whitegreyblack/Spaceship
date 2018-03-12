@@ -81,6 +81,7 @@ class Ai(Component):
 class Backpack(Component):
     __slots__ = ['unit', 'backpack']
     def __init__(self, backpack=[None for _ in range(6)]):
+        self.max = 6
         self.backpack = backpack
 
 class Equipment(Component):
@@ -268,7 +269,7 @@ class Entity:
         return str(self.eid)
 
     def __repr__(self):
-        return str(self)
+        return f"Entity(eid={self})"
 
     def __hash__(self):
         return self.eid
@@ -279,11 +280,11 @@ class Entity:
     def __lt__(self, other):
         return self.eid < hash(other.eid)
     # # ? should I move these into components?
-    # @property
-    # def components(self):
-    #     for components in self.compdict.values():
-    #         if self.eid in components.keys():
-    #             yield components[self.eid]
+    @property
+    def components(self):
+        for component in self.__slots__:
+            if hasattr(self, component) and getattr(self, component) is not None:
+                yield repr(getattr(self, component))
 
     # # -- HAS --
     # def has(self, name: str=None, names:list=None) -> bool:
