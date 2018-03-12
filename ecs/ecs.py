@@ -257,8 +257,10 @@ class Entity:
         # self.FLAG = 0
         if components:
             for component in components:
-                setattr(self, component.name(), component)
-
+                if isinstance(component, Component):
+                    setattr(self, component.name(), component)
+                else:
+                    setattr(self, component, True)
         #     self.add(components=components)
 
     def __str__(self):

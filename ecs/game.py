@@ -47,10 +47,14 @@ world = '''
 
 def has(entity, components=None):
     def attr(name):
-        return hasattr(entity, name) and getattr(entity, name)
+        try:
+            name = name.name()
+        except AttributeError:
+            name = name
+        return hasattr(entity, name) and bool(getattr(entity, name))
     if not isinstance(components, list):
-        return attr(components.name())
-    return all(attr(component.name()) for component in components)
+        return attr(components)
+    return all(attr(component) for component in components)
 
 def distance(self, other):
     #return the distance to another object
@@ -145,6 +149,7 @@ def system_action(entities, floortiles, lightedtiles):
     for entity in entities:
         # needs these two components to move -- dead entities don't move
         if has(entity, Moveable) and not has(entity, Delete):
+            print(entity)
             a, x, y, proceed = take_turn()
             if not proceed:
                 break
@@ -152,19 +157,26 @@ def system_action(entities, floortiles, lightedtiles):
             # tile is floor
             if (dx, dy) in floortiles:
                 if (dx, dy) not in set(e.position.position for e in entities):
+                    # nothing here -- move
                     entity.position.x += x
                     entity.position.y += y
                     recompute = True
                 else:
                     other = None
+                    move = False
                     for e in entities:
                         if entity != e and e.position.position == (dx, dy):
-                            if not has(e, Moveable):
-                                e.delete = Delete()
-                            else:
-                                entity.position.x += x
-                                entity.position.y += y
-                                recompute = True
+                            # will only be one movable on this tile -- delete
+                            if has(e, Moveable):
+                                other = e
+
+                    if not other:
+                        entity.position.x += x
+                        entity.position.y += y
+                        recompute = True
+                    else:
+                        other.delete = Delete()
+
     return proceed, recompute
 
 def system_remove(entities):
