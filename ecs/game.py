@@ -1,18 +1,35 @@
 from bearlibterminal import terminal as term
 from collections import namedtuple
 from ecs.ecs import (
-    Entity, Component, Position, Render, Ai, COMPONENTS, Delete
+    Entity, Component, Position, Render, 
+    Ai, COMPONENTS, Delete, Weapon, Moveable
 )
 import random
 
-UP, DOWN, LEFT, RIGHT = term.TK_UP, term.TK_DOWN, term.TK_LEFT, term.TK_RIGHT
-ESCAPE = term.TK_ESCAPE
-directions = {
-    term.TK_UP: (0, -1),
-    term.TK_DOWN: (0, 1), 
-    term.TK_LEFT: (-1, 0), 
-    term.TK_RIGHT: (1, 0),
-}
+class Keyboard:
+    UP, DOWN, LEFT, RIGHT = term.TK_UP, term.TK_DOWN, term.TK_LEFT, term.TK_RIGHT
+    ESCAPE = term.TK_ESCAPE
+    ARROWS = {
+        term.TK_UP: (0, -1),
+        term.TK_DOWN: (0, 1), 
+        term.TK_LEFT: (-1, 0), 
+        term.TK_RIGHT: (1, 0),
+    }
+    KEYPAD = {
+        term.TK_KP_1: (-1, 1),
+        term.TK_KP_2: (0, 1),
+        term.TK_KP_3: (1, 1),
+        term.TK_KP_4: (-1, 0),
+        term.TK_KP_5: (0, 0),
+        term.TK_KP_6: (1, 0),
+        term.TK_KP_7: (-1, -1),
+        term.TK_KP_8: (0, -1),
+        term.TK_KP_9: (1, -1),
+    }
+    KEYBOARD = {
+        term.TK_COMMA: "pickup",
+    }
+
 world = '''
 ################################################################
 #....#....#....#....#..........##....#....#....#....#..........#
@@ -25,15 +42,24 @@ world = '''
 #....#....#....#..........#....##....#....#....#..........#....#
 #...................#..........##...................#..........#
 #....#....#....#....#..........##....#....#....#....#..........#
-################################################################
-'''[1:]
+################################################################'''[1:]
+
 def has(entity, components=None):
     if not isinstance(components, list):
-        return hasattr(entity, components.name())
+        return bool(hasattr(entity, components.name()))
     return all(hasattr(entity, component.name()) for component in components)
 
+def distance_to(self, other):
+    #return the distance to another object
+    dx = other.x - self.x
+    dy = other.y - self.y
+    return math.sqrt(dx ** 2 + dy ** 2)
+
 def system_draw(world, entities):
-    positions = {e.position.position: e.render.render for e in entities}
+    positions = {
+        e.position.position: e.render.render 
+            for e in sorted(entities, reverse=True)
+    }
     for j, row in enumerate(world.world):
         for i, cell in enumerate(row):
             lighted = world.lit(i, j)
@@ -43,7 +69,7 @@ def system_draw(world, entities):
                 else:
                     term.put(i, j, cell)
             elif lighted == 1:
-                term.puts(i, j, f"[c=#888888]{cell}[/c]")
+                term.puts(i, j, f"[c=#222222]{cell}[/c]")
 
 def draw_entity(position, background, string):
     revert = False
@@ -62,30 +88,53 @@ def system_render(world, entities):
 def system_alive(entites):
     return 0 in [e.eid for e in entites]
 
-def system_action(entities, floortiles):
+def system_action(entities, floortiles, lightedtiles):
     def get_input():
+        a, (x, y) = None, (0, 0)
+        
         key = term.read()
-        while key != ESCAPE and key not in directions.keys():
-            key = term.read()
-        if key == ESCAPE:
-            return None, None
-        return directions.get(key, (0, 0))
+        notexit = key != Keyboard.ESCAPE
+        notarrows = key not in Keyboard.ARROWS.keys()
+        notkeypad = key not in Keyboard.KEYPAD.keys()
 
-    def direction():
+        while notexit and notarrows and notkeypad:
+            key = term.read()
+            notexit = key != Keyboard.ESCAPE
+            notarrows = key not in Keyboard.ARROWS.keys()
+            notkeypad = key not in Keyboard.KEYPAD.keys()
+            
+        shifted = term.state(term.TK_SHIFT)
+        # we finally get the right key value after parsing invalid keys
+        if key == Keyboard.ESCAPE:
+            x, y, = None, None
+        elif key in Keyboard.ARROWS.keys():
+            x, y = Keyboard.ARROWS[key]
+        elif key in Keyboard.KEYPAD.keys():
+            x, y = Keyboard.KEYPAD[key]
+        elif (key, shifted) in Keyboard.KEYBOARD.keys():
+            a = Keyboard.KEYBOARD[(key, shifted)]
+        return a, x, y
+
+    def take_turn():
+        a, (x, y) = None, (0, 0)
         if has(entity, components=[Ai]):
             # Don't care about monsters -- they do whatever
+            # the return value will always be a directional x, y value
             x, y = random.randint(-1, 1), random.randint(-1, 1)
         else:
-            x, y = get_input()   
+            # a :- action variable if action is chosen
+            a, x, y = get_input()
+            # on escape inputs -- early exit
             if (x, y) == (None, None):
-                return x, y, False
-        return x, y, True
+                return None, x, y, False
+        return a, x, y, True
 
     recompute = False
     proceed = True
     for entity in entities:
-        if has(entity, Position) and not has(entity, Delete):
-            x, y, proceed = direction()
+        # needs these two components to move -- dead entities don't move
+        if has(entity, Moveable) and not has(entity, Delete):
+            a, x, y, proceed = take_turn()
             if not proceed:
                 break
             dx, dy = entity.position.x + x, entity.position.y + y
@@ -99,7 +148,12 @@ def system_action(entities, floortiles):
                     other = None
                     for e in entities:
                         if entity != e and e.position.position == (dx, dy):
-                            e.delete = Delete()
+                            if not has(e, Weapon):
+                                e.delete = Delete()
+                            else:
+                                entity.position.x += x
+                                entity.position.y += y
+                                recompute = True
     return proceed, recompute
 
 def system_remove(entities):
@@ -110,24 +164,33 @@ def system_remove(entities):
     return entities
 
 # -- helper functions -- 
-def random_position(floortiles, entities):
+def random_position(entities, floortiles):
     tiles = set(floortiles)
     for e in entities:
-        if has(e, [Position]):
+        if has(e, [Position]) and not has(e, [Weapon]):
             tiles.remove(e.position.position)
     return tiles.pop()
 
 def create_player(entities, floors):
     entities.append(Entity(components=[
-        Position(*random_position(floors, entities)),
+        Position(*random_position(entities, floors)),
         Render('a', '#DD8822', '#000088'),
+        Moveable(),
     ]))
 
 def create_enemy(entities, floors):
     entities.append(Entity(components=[
         Render(*random.choice((('g', '#008800'), ('r', '#664422')))),
-        Position(*random_position(floors, entities)),
+        Position(*random_position(entities, floors)),
+        Moveable(),
         Ai(),
+    ]))
+
+def create_weapon(entities, floors):
+    entities.append(Entity(components=[
+        Render('[', '#334433'),
+        Position(*random_position(entities, floors)),
+        Weapon(),
     ]))
 
 class Tile:
@@ -173,6 +236,13 @@ class Map:
 
     def reset_light(self):
         self.light = [[1 if c >= 1 else 0 for c in r] for r in self.light]
+
+    @property
+    def lighted(self) -> set:
+        return {
+            (x, y) for y in range(self.height) for x in range(self.width)
+                   if self.square(x, y) == '.' and self.lit(x, y) == 2
+        }
 
     def square(self, x, y):
         return self.world[y][x]
@@ -251,8 +321,9 @@ class Game:
         self.entities = []   
         create_player(self.entities, self.dungeon.floors)
         for i in range(random.randint(3, 5)):
-            create_enemy(self.entities, 
-                         self.dungeon.floors)
+            create_enemy(self.entities, self.dungeon.floors)
+        for i in range(1):
+            create_weapon(self.entities, self.dungeon.floors)
 
     def run(self):
         proceed = True
@@ -267,8 +338,11 @@ class Game:
 
             # read write
             proceed, fov_recalc = system_action(self.entities, 
-                                                self.dungeon.floors)
+                                                self.dungeon.floors,
+                                                self.dungeon.lighted)
+            print(proceed)
             self.entites = system_remove(self.entities)
+
             # check player alive
             if not system_alive(self.entites):
                 term.clear()
@@ -295,6 +369,7 @@ if __name__ == "__main__":
     term.open()
     g = Game(world)
     g.run()
+    term.close()
     # print(COMPONENTS)
     # print(Entity.compdict)
     # import os

@@ -8,8 +8,8 @@ class System:
         raise NotImplementedError
 
 class Component:
-    bitflag = 0
-    __instances = {}
+    # bitflag = 0
+    # __instances = {}
     def __repr__(self):
         '''Returns stat information for dev'''
         return f'{self.__class__.__name__}({self})'
@@ -29,22 +29,22 @@ class Component:
     def name(cls):
         return cls.__name__.lower()
 
-    @unit.setter
-    def unit(self, unit):
-        self._unit = unit
-        if self.name not in Component.__instances:
-            Component.__instances[subclass] = {unit.eid: self}
-        else:
-            Component.__instances[subclass].update({unit.eid: self})
+    # @unit.setter
+    # def unit(self, unit):
+    #     self._unit = unit
+    #     if self.name not in Component.__instances:
+    #         Component.__instances[subclass] = {unit.eid: self}
+    #     else:
+    #         Component.__instances[subclass].update({unit.eid: self})
 
-    @staticmethod
-    def get(key):
-        return Component.__instances[key]
+    # @staticmethod
+    # def get(key):
+    #     return Component.__instances[key]
 
 class Render(Component):
     __slots__ = ['_unit', 'symbol', 'foreground', 'background']
-    FLAG = 1 << Component.bitflag
-    Component.bitflag += 1
+    # FLAG = 1 << Component.bitflag
+    # Component.bitflag += 1
     def __init__(self, symbol, foreground="#ffffff", background="#000000"):
         '''Render component that holds all information that allows the map
         to be drawn with correct characters and colors
@@ -64,8 +64,6 @@ class Render(Component):
 
 class Position(Component):
     __slots__ = ['_unit', 'x', 'y']
-    FLAG = 1 << Component.bitflag
-    Component.bitflag += 1
     def __init__(self, x=0, y=0):
         self.x = x
         self.y = y
@@ -74,12 +72,23 @@ class Position(Component):
     def position(self):
         return self.x, self.y
 
+class Moveable(Component):
+    __slots__ = ['unit']
+
+class Weapon(Component):
+    __slots__ = ['unit']
+
 class Ai(Component):
     __slots__ = ['unit']
 
 class Backpack(Component):
-    __slots__ = ['unit']
-    
+    __slots__ = ['unit', 'backpack']
+    def __init__(self, backpack=[None for _ in range(6)]):
+        self.backpack = backpack
+
+class Equipment(Component):
+    __slots__ = ['unit', 'left_hand', 'right_hand', 'body']
+
 class Delete(Component):
     __slots__ = ['unit']
 
@@ -261,6 +270,8 @@ class Entity:
     def __eq__(self, other):
         return self.eid == hash(other.eid)
     
+    def __lt__(self, other):
+        return self.eid < hash(other.eid)
     # # ? should I move these into components?
     # @property
     # def components(self):
