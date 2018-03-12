@@ -2,7 +2,7 @@ from bearlibterminal import terminal as term
 from collections import namedtuple
 from ecs.ecs import (
     Entity, Component, Position, Render, 
-    Ai, COMPONENTS, Delete, Moveable
+    Ai, COMPONENTS, Moveable
 )
 import math
 import random
@@ -50,8 +50,8 @@ def has(entity, components=None):
         try:
             name = name.name()
         except AttributeError:
-            name = name
-        return hasattr(entity, name) and bool(getattr(entity, name))
+            pass
+        return hasattr(entity, name) and getattr(entity, name) is not None
     if not isinstance(components, list):
         return attr(components)
     return all(attr(component) for component in components)
@@ -148,7 +148,7 @@ def system_action(entities, floortiles, lightedtiles):
     proceed = True
     for entity in entities:
         # needs these two components to move -- dead entities don't move
-        if has(entity, Moveable) and not has(entity, Delete):
+        if has(entity, Moveable) and not has(entity, 'delete'):
             print(entity)
             a, x, y, proceed = take_turn()
             if not proceed:
@@ -175,13 +175,13 @@ def system_action(entities, floortiles, lightedtiles):
                         entity.position.y += y
                         recompute = True
                     else:
-                        other.delete = Delete()
+                        other.delete = True
 
     return proceed, recompute
 
 def system_remove(entities):
     # return [e for e in entities if not has(e, Delete)]
-    remove = [e for e in entities if has(e, Delete)]
+    remove = [e for e in entities if has(e, 'delete') and e.delete]
     for e in remove:
         entities.remove(e)
     return entities

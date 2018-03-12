@@ -93,9 +93,6 @@ class Equipment(Component):
         if body:
             self.body = body
 
-class Delete(Component):
-    __slots__ = ['unit']
-
 print([sc.name() for sc in Component.__subclasses__()])
     # -- Needs Validation --
     # class Description(Component):
@@ -247,7 +244,9 @@ class Entity:
     >>> e.render
     Render(symbol=@, foreground=#ffffff, background=#000000)
     '''
-    __slots__ = ['eid'] + [sc.name() for sc in Component.__subclasses__()]
+    __slots__ = ['eid', 'delete'] + [
+        sc.name() for sc in Component.__subclasses__()
+    ]
     EID = 0
     # instances = {}
     # compdict = {c.__name__.lower(): {} for c in Component.__subclasses__()}
@@ -260,8 +259,7 @@ class Entity:
                 if isinstance(component, Component):
                     setattr(self, component.name(), component)
                 else:
-                    setattr(self, component, True)
-        #     self.add(components=components)
+                    setattr(self, *component)
 
     def __str__(self):
         # description = self.get_component('description')
