@@ -21,9 +21,9 @@ class Component:
             if bool(hasattr(self, s) and getattr(self, s)))
 
     # Reference link to currently connected entity unit
-    @property
-    def unit(self):
-        return self._unit
+    # @property
+    # def unit(self):
+    #     return self._unit
 
     @classmethod
     def name(cls):
@@ -63,7 +63,7 @@ class Render(Component):
         return self.background, f"[c={self.foreground}]{self.symbol}[/c]"
 
 class Position(Component):
-    __slots__ = ['_unit', 'x', 'y']
+    __slots__ = ['unit', 'x', 'y']
     def __init__(self, x=0, y=0):
         self.x = x
         self.y = y
@@ -239,7 +239,7 @@ class Entity:
     >>> e.render
     Render(symbol=@, foreground=#ffffff, background=#000000)
     '''
-    __slots__ = ['eid', 'delete', 'ai', 'moveable'] + [
+    __slots__ = ['eid', 'delete', 'ai', 'moveable', 'race'] + [
         sc.name() for sc in Component.__subclasses__()
     ]
     EID = 0

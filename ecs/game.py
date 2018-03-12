@@ -69,9 +69,8 @@ def distance(self, other):
     return dx ** 2 + dy ** 2
 
 def system_draw(world, entities):
-    positions = {
-        e.position.position: e.render.render 
-            for e in sorted(entities, reverse=True)
+    positions = { e.position.position: e.render.render 
+                    for e in sorted(entities, reverse=True) 
     }
     for j, row in enumerate(world.world):
         for i, cell in enumerate(row):
@@ -80,7 +79,7 @@ def system_draw(world, entities):
                 if (i, j) in positions.keys():
                     draw_entity((i, j), *positions[(i, j)])
                 else:
-                    term.put(i, j, cell)
+                    term.puts(i, j, f"[c=#999999]{cell}[/c]")
             elif lighted == 1:
                 term.puts(i, j, f"[c=#222222]{cell}[/c]")
 
@@ -196,16 +195,19 @@ def system_action(entities, floortiles, lightedtiles):
                 else:
                     other = None
                     move = False
+                    # find the other entity on the occupied position
                     for e in entities:
                         if entity != e and e.position.position == (dx, dy):
                             # will only be one movable on this tile -- delete
                             if has(e, 'moveable'):
                                 other = e
+                    # couldn't find the entity, just move
                     if not other:
                         entity.position.x += x
                         entity.position.y += y
                         recompute = True
                     else:
+                        print(f"{entity.race} has killed the {other.race}")
                         other.delete = True
     return proceed, recompute
 
@@ -229,18 +231,29 @@ def random_position(entities, floortiles):
 def create_player(entities, floors):
     entities.append(Entity(components=[
         Position(*random_position(entities, floors)),
+        ('race', "Hero"),
         Render('a', '#DD8822', '#000088'),
         ('moveable', True),
         ('backpack', []),
     ]))
 
 def create_enemy(entities, floors):
-    entities.append(Entity(components=[
-        Render(*random.choice((('g', '#008800'), ('r', '#664422')))),
-        Position(*random_position(entities, floors)),
-        ('moveable', True),
-        ('ai', True),
-    ]))
+    if random.randint(0, 1):
+        entities.append(Entity(components=[
+            Render('g', '#008800'),
+            ('race', 'goblin'),
+            Position(*random_position(entities, floors)),
+            ('moveable', True),
+            ('ai', True),
+        ]))
+    else:
+        entities.append(Entity(components=[
+            Render('r', '#664422'),
+            ('race', 'rat'),
+            Position(*random_position(entities, floors)),
+            ('moveable', True),
+            ('ai', True),
+        ]))
 
 def create_weapon(entities, floors):
     entities.append(Entity(components=[
@@ -375,8 +388,8 @@ class Game:
         self.eindex = 0     
         self.entities = []   
         create_player(self.entities, self.dungeon.floors)
-        # for i in range(random.randint(3, 5)):
-        #     create_enemy(self.entities, self.dungeon.floors)
+        for i in range(random.randint(3, 5)):
+            create_enemy(self.entities, self.dungeon.floors)
         # for i in range(3):
         create_weapon(self.entities, self.dungeon.floors)
 
