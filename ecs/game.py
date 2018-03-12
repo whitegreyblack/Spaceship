@@ -34,14 +34,16 @@ def has(entity, components=None):
 
 def system_draw(world, entities):
     positions = {e.position.position: e.render.render for e in entities}
-    print(positions)
     for j, row in enumerate(world.world):
         for i, cell in enumerate(row):
-            if world.lit(i, j):
+            lighted = world.lit(i, j)
+            if lighted == 2:
                 if (i, j) in positions.keys():
                     draw_entity((i, j), *positions[(i, j)])
                 else:
-                    term.puts(i, j, cell)
+                    term.put(i, j, cell)
+            elif lighted == 1:
+                term.puts(i, j, f"[c=#888888]{cell}[/c]")
 
 def draw_entity(position, background, string):
     revert = False
@@ -161,13 +163,16 @@ class Map:
         self.world = [[c for c in r] for r in world.split('\n')]
         self.height = len(self.world)
         self.width = len(self.world[0])
-        self.floors = set((i, j) for j in range(self.height-1)
-                                 for i in range(self.width-1)
+        self.floors = set((i, j) for j in range(self.height - 1)
+                                 for i in range(self.width - 1)
                                  if self.world[j][i] == '.')
-        self.reset_light()
-    
+        self.init_light()
+
+    def init_light(self):
+        self.light = [[0 for c in r] for r in self.world]
+
     def reset_light(self):
-        self.light = [[0 for _ in r] for r in self.world]
+        self.light = [[1 if c >= 1 else 0 for c in r] for r in self.light]
 
     def square(self, x, y):
         return self.world[y][x]
@@ -177,11 +182,11 @@ class Map:
                 or self.world[y][x] in ("#", '+'))
                 
     def lit(self, x, y):
-        return self.light[y][x] > 0
+        return self.light[y][x]
 
     def set_lit(self, x, y):
         if 0 <= x < self.width and 0 <= y < self.height:
-            self.light[y][x] = 1
+            self.light[y][x] = 2
 
     def do_fov(self, x, y, radius):
         "Calculate lit squares from the given location and radius"
