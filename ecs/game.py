@@ -2,7 +2,7 @@ from bearlibterminal import terminal as term
 from collections import namedtuple
 from ecs.ecs import (
     Entity, Component, Position, Render, Backpack, Damage, Equipment,
-    Information
+    Information, Health
 )
 import math
 import random
@@ -315,6 +315,7 @@ def create_player(entities, floors):
         ('backpack', []),
         Equipment(Damage(("1d6", Damage.PHYSICAL)),
                   Damage(("1d6", Damage.PHYSICAL))),
+        Health(),
     ])) 
 
 def create_enemy(entities, floors):

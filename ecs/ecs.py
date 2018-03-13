@@ -21,7 +21,7 @@ class Component:
         return cls.__name__.lower()
 
 class Render(Component):
-    __slots__ = ['_unit', 'symbol', 'foreground', 'background']
+    __slots__ = ['unit', 'symbol', 'foreground', 'background']
     def __init__(self, symbol, foreground="#ffffff", background="#000000"):
         '''Render component that holds all information that allows the map
         to be drawn with correct characters and colors
@@ -213,9 +213,7 @@ class Entity:
     # []
     >>> e=Entity(components=[Render('@')])
     >>> e.render
-    render
-
-    # Render(symbol=@, foreground=#ffffff, background=#000000)
+    Render(symbol=@, foreground=#ffffff, background=#000000)
     '''
     __slots__ = ['eid', 'delete', 'ai', 'moveable', 'race'] + [
         sc.classname() for sc in Component.__subclasses__()
@@ -355,3 +353,10 @@ class Entity:
 if __name__ == "__main__":
     from doctest import testmod
     testmod()
+
+    import json
+    component_dictionary = {
+        subclass.__name__.lower(): [v for v in subclass.__slots__ if v != 'unit']
+        for subclass in Component.__subclasses__()
+    }
+    print(json.dumps(component_dictionary, sort_keys=True, indent=4, separators=(',', ':')))
