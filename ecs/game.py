@@ -1,7 +1,7 @@
 from bearlibterminal import terminal as term
 from collections import namedtuple
 from ecs.ecs import (
-    Entity, Component, Position, Render, Backpack, Damage,
+    Entity, Component, Position, Render, Backpack, Damage, Equipment,
     Information
 )
 import math
@@ -31,6 +31,12 @@ class Keyboard:
         (term.TK_COMMA, 0): "pickup",
         (term.TK_I, 0): "inventory",
         (term.TK_D, 0): "drop",
+        (term.TK_E, 0): "equip",
+        (term.TK_U, 0): "unequip",
+    }
+    MAIN_MENU = {
+        term.TK_P: "pressed play",
+        term.TK_E: "pressed exit",
     }
 
 world = '''
@@ -114,7 +120,6 @@ def system_alive(entites):
 def system_action(entities, floortiles, lightedtiles):
     def get_input():
         a, (x, y) = None, (0, 0)
-        
         key = term.read()
         shifted = term.state(term.TK_SHIFT)
         notexit = key != Keyboard.ESCAPE
@@ -171,8 +176,12 @@ def system_action(entities, floortiles, lightedtiles):
     recompute = False
     proceed = True
     for entity in entities:
+        # print(repr(entity))
         # needs these two components to move -- dead entities don't move
         if has(entity, 'moveable') and not has(entity, 'delete'):
+            if loggable((entity,)) and not has(entity, 'ai'): 
+                print(f"{entity.information.name()} takes his turn")
+            print(f"{entity.information.name()}, {entity.delete if has(entity, 'delete') else False}")
             a, x, y, proceed = take_turn()
             if not proceed:
                 break
@@ -184,58 +193,101 @@ def system_action(entities, floortiles, lightedtiles):
                             entity.backpack.append(e)
                             for i in entity.backpack:
                                 print(i, is_weapon(i))
+                                if is_weapon(i):
+                                    print(i, repr(i.damage))
                             e.delete = True
-                    # return proceed, recompute
-
                 elif a == "inventory":
                     print(entity.backpack)
                     for i in entity.backpack:
                         print(has(i, Position))
-
                 elif a == "drop":
                     item = entity.backpack.pop()
                     item.position = Position(*entity.position.coordinates)
                     item.delete = False
-                    entities.append(item)                   
-                    # return proceed, recompute
+                    entities.append(item)         
+                elif a == "equip":
+                    if len(entity.backpack) == 1:
+                        item = entity.backpack.pop()
+                        if not entity.equipment.left_hand:
+                            print("current damage:", entity.equipment.left_hand)
+                            print("equipping left hand with item")
+                            entity.equipment.left_hand = item.damage
+                            print("current damage:", entity.equipment.left_hand)
+                        elif not entity.equipment.right_hand:
+                            print("current damage:", entity.equipment.right_hand)
+                            print("equipping right hand with item")  
+                            entity.equipment.right_hand = item.damage
+                            print("current damage:", entity.equipment.right_hand)
+                        else:
+                            print("Both hands are full")
+                            entity.backpack.append(item)
+                        entity.equipment.left_hand
+                elif a == "unequip":
+                    item = None
+                    if has(entity.equipment, 'left_hand') and entity.equipment.left_hand:
+                        print("Unequipping left hand")
+                        item = entity.equipment.left_hand
+                        entity.equipment.left_hand = Damage("1d6", Damage.PHYSICAL)
+                    elif has(entity.equipment, 'right_hand') and entity.equipment.right_hand:
+                        item = entity.equipment.right_hand
+                        entity.equipment.right_hand = Damage("1d6", Damage.PHYSICAL)
+                    else:
+                        print("Both hands are empty")
+                    if item:
+                        entity.backpack.append(item)
                 continue
+
+            recompute = True
             dx, dy = entity.position.x + x, entity.position.y + y
             # tile is floor
             if (dx, dy) in floortiles:
                 positions = set(e.position.coordinates for e in entities
-                                                        if has(e, 'position'))
+                                if has(e, 'position') and not has(e, 'delete'))
                 if (dx, dy) not in positions:
                     # nothing here -- move
                     move(entity, x, y)
-                    recompute = True
                 else:
                     other = None
                     # find the other entity on the occupied position
                     for e in entities:
-                        if has(e, Position) and e.position.coordinates == (dx, dy):
+                        if entity != e and e.position.coordinates == (dx, dy):
                             # will only be one movable on this tile -- delete
                             if has(e, 'moveable'):
                                 other = e
                     # couldn't find the entity, just move and exit
                     if not other:
                         move(entity, x, y)
-                        recompute = True
-                        continue 
-                    if loggable(entities=(entity, other)):
+                        print('moved')
+                        continue
+
+                    elif loggable(entities=(entity, other)):
                         attacker = entity.information.name()
                         defender = other.information.name()
+                        if has(entity, Equipment):
+                            damage = entity.equipment.left_hand.deal
+                            damage += entity.equipment.right_hand.deal
+                            damages = [0 for _ in range(2)]
+                            for dt, dmg in damage:
+                                damages[dt] += dmg
+                            print(f"{attacker} dealt {sum(damages)} damage to the {defender}")
                         print(f"{attacker} has killed the {defender}")
-                        
+
                         # if has(entity, Damage):
                         #     dmg = entity.damage.deal
                         #     print(f"{attacker} deals {dmg} damage to {defender}")
                     other.delete = True
+                    print(f"{other.information.name()} will be deleted: {other.delete}")
+        # print(repr(entity), list(entity.components))
     return proceed, recompute
 
 def system_remove(entities):
     # return [e for e in entities if not has(e, Delete)]
     remove = [e for e in entities if has(e, 'delete') and e.delete]
     for e in remove:
+        try:
+            print(f"Deleting: {e.information.name()}")
+        except:
+            print(f"Deleting item: {e.eid}")
         entities.remove(e)
     return entities
 
@@ -259,6 +311,8 @@ def create_player(entities, floors):
         Render('a', '#DD8822', '#000088'),
         ('moveable', True),
         ('backpack', []),
+        Equipment(Damage(("1d6", Damage.PHYSICAL)), 
+                  Damage(("1d6", Damage.PHYSICAL))),
     ])) 
 
 def create_enemy(entities, floors):
@@ -404,6 +458,19 @@ class Map:
             if blocked:
                 break
 
+def draw_main_menu():
+    term.clear()
+    term.puts(0, 0, "Play Game")
+    term.puts(0, 1, "Exit")
+    term.refresh()
+
+    key = term.read()
+    while key not in Keyboard.MAIN_MENU.keys():
+        key = term.read()
+
+    term.clear()
+    return Keyboard.MAIN_MENU[key]
+
 class Game:
     def __init__(self, world:str):
         # world variables
@@ -421,34 +488,29 @@ class Game:
     def run(self):
         proceed = True
         fov_recalc = True
-        while proceed:
+        while proceed and system_alive(self.entities):
             if fov_recalc:
+                term.clear()               
+                self.dungeon.reset_light()
                 self.dungeon.do_fov(*self.entities[0].position.coordinates, 15)
-                # term.clear()                
                 system_draw(self.dungeon, self.entities)
                 # system_render(self.dungeon, self.entities)
                 term.refresh()
 
-            # read write
+            # read write -- if user presses exit here then quit next loop?
             proceed, fov_recalc = system_action(self.entities, 
                                                 self.dungeon.floors,
                                                 self.dungeon.lighted)
-            self.entites = system_remove(self.entities)
 
-            # check player alive
-            if not system_alive(self.entites):
-                term.clear()
-                term.puts(0, 0,'You died')
-                term.refresh()
-                term.read()
-                break
+            self.entities = system_remove(self.entities)
             
-            if fov_recalc:
-                self.dungeon.reset_light()
+        # check player alive
+        else:
+            term.puts(0, 24,'You died')
+            term.refresh()
+            term.read()
+            
 
-    @property
-    def entity(self):
-        return self.entities[self.eindex]
 
 if __name__ == "__main__":
     # print(tilemap(world))
@@ -459,9 +521,10 @@ if __name__ == "__main__":
     # for i in range(3):
     #     print(random_position())
     term.open()
-    g = Game(world)
-    g.run()
-    term.close()
+    if draw_main_menu() == "pressed play":
+        g = Game(world)
+        g.run()
+    # term.close()
     # print(COMPONENTS)
     # print(Entity.compdict)
     # import os

@@ -95,8 +95,7 @@ class Equipment(Component):
     __slots__ = ['unit', 'left_hand', 'right_hand', 'body']
     def __init__(self, lh=None, rh=None, body=None):
         for a, v in zip(['left_hand', 'right_hand', 'body'], [lh, rh, body]):
-            if val:
-                setattr(self, attr, val)
+            setattr(self, a, v if v else None)
 
     # -- Needs Validation --
     # class Description(Component):
@@ -130,7 +129,7 @@ class Damage(Component):
     __slots__ = ['unit', "damages"]
     # FLAG = 1 << Component.bitflag
     # Component.bitflag += 1
-    MAGICAL, PHYSICAL = range(2)
+    PHYSICAL, MAGICAL = range(2)
     def __init__(self, damage=None, damages=None):
         self.damages = {}
         if not damage and not damages:
