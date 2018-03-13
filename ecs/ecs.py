@@ -8,8 +8,6 @@ class System:
         raise NotImplementedError
 
 class Component:
-    # bitflag = 0
-    # __instances = {}
     def __repr__(self):
         '''Returns stat information for dev'''
         return f'{self.__class__.__name__}({self})'

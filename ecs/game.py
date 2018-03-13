@@ -84,12 +84,20 @@ def distance(self, other):
     dy = other.y - self.y
     return dx ** 2 + dy ** 2
 
-def move(entity, x, y):
-    entity.position.x += x
-    entity.position.y += y
-
 
 def system_draw(world, entities):
+    def draw_entity(position, background, string):
+        revert = False
+        if background != "#000000":
+            term.bkcolor(background)
+            revert = True
+        term.puts(*position, string)
+        if revert:
+            term.bkcolor('#000000')
+            
+    term.clear()
+    dungeon.reset_light()
+    dungeon.do_fov(*entities[0].position(), 15)
     positions = { e.position(): e.render() 
                     for e in sorted(entities, reverse=True) 
     }
@@ -103,56 +111,10 @@ def system_draw(world, entities):
                     term.puts(i, j, f"[c=#999999]{cell}[/c]")
             elif lighted == 1:
                 term.puts(i, j, f"[c=#222222]{cell}[/c]")
-
-def draw_entity(position, background, string):
-    revert = False
-    if background != "#000000":
-        term.bkcolor(background)
-        revert = True
-    term.puts(*position, string)
-    if revert:
-        term.bkcolor('#000000')
-
-def system_render(world, entities):
-    for e in entities:
-        if has(e, components=[Position, Render]):
-            if world.lit(*e.position()):
-                draw_entity(e.position(), *e.render())
+    term.refresh()
 
 def system_alive(entites):
     return 0 in [e.eid for e in entites]
-
-def system_combat(entity, direction, x, y, entities):
-    other = None
-    # find the other entity on the occupied position
-    for e in entities:
-        if entity != e and e.position() == direction:
-            # will only be one movable on this tile -- delete
-            if has(e, 'moveable'):
-                other = e
-    # couldn't find the entity, just move and exit
-    if not other:
-        move(entity, x, y)
-        print('moved')
-        return
-
-    elif loggable(entities=(entity, other)):
-        attacker = entity.information()
-        defender = other.information()
-        if has(entity, Equipment):
-            damage = entity.equipment.left_hand()
-            damage += entity.equipment.right_hand()
-            damages = [0 for _ in range(2)]
-            for dt, dmg in damage:
-                damages[dt] += dmg
-            print(f"{attacker} dealt {sum(damages)} damage to the {defender}")
-        print(f"{attacker} has killed the {defender}")
-
-        # if has(entity, Damage):
-        #     dmg = entity.damage()
-        #     print(f"{attacker} deals {dmg} damage to {defender}")
-    other.delete = True
-    print(f"{other.information()} will be deleted: {other.delete}")
 
 def system_action(entities, floortiles, lightedtiles):
     def get_input():
@@ -205,6 +167,42 @@ def system_action(entities, floortiles, lightedtiles):
             if (x, y) == (None, None):
                 return None, x, y, False
         return a, x, y, True
+
+    def combat(entity, direction, x, y, entities):
+        other = None
+        # find the other entity on the occupied position
+        for e in entities:
+            if entity != e and e.position() == direction:
+                # will only be one movable on this tile -- delete
+                if has(e, 'moveable'):
+                    other = e
+        # couldn't find the entity, just move and exit
+        if not other:
+            move(entity, x, y)
+            print('moved')
+            return
+
+        elif loggable(entities=(entity, other)):
+            attacker = entity.information()
+            defender = other.information()
+            if has(entity, Equipment):
+                damage = entity.equipment.left_hand()
+                damage += entity.equipment.right_hand()
+                damages = [0 for _ in range(2)]
+                for dt, dmg in damage:
+                    damages[dt] += dmg
+                print(f"{attacker} dealt {sum(damages)} damage to the {defender}")
+            print(f"{attacker} has killed the {defender}")
+
+            # if has(entity, Damage):
+            #     dmg = entity.damage()
+            #     print(f"{attacker} deals {dmg} damage to {defender}")
+        other.delete = True
+        print(f"{other.information()} will be deleted: {other.delete}")
+
+    def move(entity, x, y):
+        entity.position.x += x
+        entity.position.y += y
 
     recompute = False
     proceed = True
@@ -280,7 +278,7 @@ def system_action(entities, floortiles, lightedtiles):
                     # nothing here -- move
                     move(entity, x, y)
                 else:
-                    system_combat(entity, (dx, dy), x, y, entities)
+                    combat(entity, (dx, dy), x, y, entities)
         # print(repr(entity), list(entity.components))
     return proceed, recompute
 
@@ -475,6 +473,12 @@ def draw_main_menu():
     term.clear()
     return Keyboard.MAIN_MENU[key]
 
+class World:
+    def __init__(self):
+        self.world = None
+        self.entities = set()
+        self.components = {Component.__subclasses__()}
+
 class Game:
     def __init__(self, world:str):
         # world variables
@@ -494,12 +498,7 @@ class Game:
         fov_recalc = True
         while proceed and system_alive(self.entities):
             if fov_recalc:
-                term.clear()               
-                self.dungeon.reset_light()
-                self.dungeon.do_fov(*self.entities[0].position(), 15)
                 system_draw(self.dungeon, self.entities)
-                # system_render(self.dungeon, self.entities)
-                term.refresh()
 
             # read write -- if user presses exit here then quit next loop?
             proceed, fov_recalc = system_action(self.entities, 
