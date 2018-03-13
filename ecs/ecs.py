@@ -69,24 +69,30 @@ class Position(Component):
         self.y = y
 
     @property
-    def position(self):
+    def coordinates(self):
         return self.x, self.y
 
+class Information(Component):
+    __slots__ = ['unit', 'title', 'information', 'gender']
+    def __init__(self, title=None, race=None, gender=None):
+        if not title and not race:
+            raise ValueError("Need at least a name or race")
+        for atr, val in zip(['title', 'race', 'gender'], [title, race, gender]):
+            if val:
+                setattr(self, atr, val)
+        
 class Backpack(Component):
     __slots__ = ['unit', 'backpack']
     def __init__(self, backpack=[None for _ in range(6)]):
-        self.max = 6
+        self.max = 26
         self.backpack = backpack
 
 class Equipment(Component):
     __slots__ = ['unit', 'left_hand', 'right_hand', 'body']
     def __init__(self, lh=None, rh=None, body=None):
-        if lh:
-            self.left_hand = lh
-        if rh:
-            self.right_hand = rg
-        if body:
-            self.body = body
+        for a, v in zip(['left_hand', 'right_hand', 'body'], [lh, rh, body]):
+            if val:
+                setattr(self, attr, val)
 
     # -- Needs Validation --
     # class Description(Component):
@@ -231,11 +237,11 @@ class Entity:
     # False
     # >>> list(e.components)
     # []
-    >>> e=Entity(components=[
-    ...     Render('@'),
-    ... ])
+    >>> e=Entity(components=[Render('@')])
     >>> e.render
-    Render(symbol=@, foreground=#ffffff, background=#000000)
+    render
+
+    # Render(symbol=@, foreground=#ffffff, background=#000000)
     '''
     __slots__ = ['eid', 'delete', 'ai', 'moveable', 'race'] + [
         sc.name() for sc in Component.__subclasses__()
@@ -358,13 +364,13 @@ class Entity:
     #             in [self.get_component(name) for name in names]
     #                 if component]
 
-COMPONENTS = {
-    subclass.__name__.lower(): {} for subclass in Component.__subclasses__()
-}
-BITS = {
-    subclass.__name__.lower(): 1 << bit
-        for bit, subclass in enumerate(Component.__subclasses__())
-}
+# COMPONENTS = {
+#     subclass.__name__.lower(): {} for subclass in Component.__subclasses__()
+# }
+# BITS = {
+#     subclass.__name__.lower(): 1 << bit
+#         for bit, subclass in enumerate(Component.__subclasses__())
+# }
 # print(COMPONENTS)
 # print(BITS)
 # Component.set_flags()
