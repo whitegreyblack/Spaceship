@@ -63,8 +63,14 @@ def has(entity, components=None):
         return attr(components)
     return all(attr(component) for component in components)
 
-def printable(entities):
+def loggable(entities):
     return all(has(e, Information) for e in entities)
+
+def is_weapon(entity):
+    return has(entity, Damage)
+
+def is_hero(entity):
+    return not has(entity, Ai)
 
 def distance(self, other):
     #return the distance to another object
@@ -73,7 +79,7 @@ def distance(self, other):
     return dx ** 2 + dy ** 2
 
 def system_draw(world, entities):
-    positions = { e.position.coordinates: e.render.render 
+    positions = { e.position.coordinates: e.render.draw 
                     for e in sorted(entities, reverse=True) 
     }
     for j, row in enumerate(world.world):
@@ -100,7 +106,7 @@ def system_render(world, entities):
     for e in entities:
         if has(e, components=[Position, Render]):
             if world.lit(*e.position.coordinates):
-                draw_entity(e.position.coordinates, *e.render.render)
+                draw_entity(e.position.coordinates, *e.render.draw)
 
 def system_alive(entites):
     return 0 in [e.eid for e in entites]
@@ -139,7 +145,7 @@ def system_action(entities, floortiles, lightedtiles):
     def take_turn():
         a, (x, y) = None, (0, 0)
         if has(entity, components='ai'):
-            hero = [e for e in entities if e.eid == 0]
+            # hero = [e for e in entities if e.eid == 0]
             # if entity.position.coordinates in lightedtiles:
             #     pass
                     
@@ -158,10 +164,15 @@ def system_action(entities, floortiles, lightedtiles):
                 return None, x, y, False
         return a, x, y, True
 
+    def move(entity, x, y):
+        entity.position.x += x
+        entity.position.y += y
+
     recompute = False
     proceed = True
     for entity in entities:
         # needs these two components to move -- dead entities don't move
+        print(repr(entity), list(entity.components))        
         if has(entity, 'moveable') and not has(entity, 'delete'):
             a, x, y, proceed = take_turn()
             if not proceed:
@@ -173,9 +184,9 @@ def system_action(entities, floortiles, lightedtiles):
                             e.position = None
                             entity.backpack.append(e)
                             for i in entity.backpack:
-                                print(list(i.components))
+                                print(i, is_weapon(i))
                             e.delete = True
-                    return proceed, recompute
+                    # return proceed, recompute
 
                 elif a == "inventory":
                     print(entity.backpack)
@@ -187,39 +198,40 @@ def system_action(entities, floortiles, lightedtiles):
                     item.position = Position(*entity.position.coordinates)
                     item.delete = False
                     entities.append(item)                   
-                    return proceed, recompute
-
+                    # return proceed, recompute
+                continue
             dx, dy = entity.position.x + x, entity.position.y + y
             # tile is floor
             if (dx, dy) in floortiles:
-                if (dx, dy) not in set(e.position.coordinates for e in entities):
+                positions = set(e.position.coordinates for e in entities
+                                                        if has(e, 'position'))
+                if (dx, dy) not in positions:
                     # nothing here -- move
-                    entity.position.x += x
-                    entity.position.y += y
+                    move(entity, x, y)
                     recompute = True
                 else:
                     other = None
-                    move = False
                     # find the other entity on the occupied position
                     for e in entities:
                         if entity != e and e.position.coordinates == (dx, dy):
                             # will only be one movable on this tile -- delete
                             if has(e, 'moveable'):
                                 other = e
-                    # couldn't find the entity, just move
+                    # couldn't find the entity, just move and exit
                     if not other:
-                        entity.position.x += x
-                        entity.position.y += y
+                        move(entity, x, y)
                         recompute = True
-                    else:
-                        printer = printable((entity, e))
-                        if has(entity, Damage):
-                            dmg = entity.damage.deal
-                            if printer:
-                                print(f"{entity.race} deals {dmg} damage to {other.race}")
-                        if printer:
-                            print(f"{entity.race} has killed the {other.race}")
-                        other.delete = True
+                        continue 
+
+                    if loggable((entity, e)):
+                        attacker = entity.name if entity.name else entity.race
+                        defender = other.name if other.name else other.race
+                        print(f"{attacker} has killed the {defender}")
+                        
+                        # if has(entity, Damage):
+                        #     dmg = entity.damage.deal
+                        #     print(f"{attacker} deals {dmg} damage to {defender}")
+                    other.delete = True
     return proceed, recompute
 
 def system_remove(entities):
@@ -255,16 +267,16 @@ def create_enemy(entities, floors):
     if random.randint(0, 1):
         entities.append(Entity(components=[
             Position(*random_position(entities, floors)),
+            Information(race="goblin"),
             Render('g', '#008800'),
-            ('race', 'goblin'),
             ('moveable', True),
             ('ai', True),
         ]))
     else:
         entities.append(Entity(components=[
             Position(*random_position(entities, floors)),   
+            Information(race="rat"),
             Render('r', '#664422'),
-            ('race', 'rat'),
             ('moveable', True),
             ('ai', True),
         ]))
@@ -273,6 +285,7 @@ def create_weapon(entities, floors):
     entities.append(Entity(components=[
         Render('[[', '#00AAAA'),
         Position(*random_position(entities, floors)),
+        Damage(("1d6", Damage.PHYSICAL)),
     ]))
 
 class Tile:
@@ -413,7 +426,7 @@ class Game:
         while proceed:
             if fov_recalc:
                 self.dungeon.do_fov(*self.entities[0].position.coordinates, 15)
-                term.clear()                
+                # term.clear()                
                 system_draw(self.dungeon, self.entities)
                 # system_render(self.dungeon, self.entities)
                 term.refresh()

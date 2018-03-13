@@ -59,7 +59,7 @@ class Render(Component):
         self.background = background
 
     @property
-    def render(self):
+    def draw(self):
         return self.background, f"[c={self.foreground}]{self.symbol}[/c]"
 
 class Position(Component):
@@ -282,7 +282,10 @@ class Entity:
     def components(self):
         for component in self.__slots__:
             if hasattr(self, component) and getattr(self, component) is not None:
-                yield repr(getattr(self, component))
+                if component in Component.__subclasses__():
+                    yield repr(getattr(self, component))
+                else:
+                    yield f"{component}={getattr(self, component)}"
 
     # # -- HAS --
     # def has(self, name: str=None, names:list=None) -> bool:
