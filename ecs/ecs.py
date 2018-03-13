@@ -26,7 +26,7 @@ class Component:
     #     return self._unit
 
     @classmethod
-    def name(cls):
+    def classname(cls):
         return cls.__name__.lower()
 
     # @unit.setter
@@ -78,9 +78,13 @@ class Information(Component):
         if not title and not race:
             raise ValueError("Need at least a name or race")
         for atr, val in zip(['title', 'race', 'gender'], [title, race, gender]):
-            if val:
-                setattr(self, atr, val)
-        
+            setattr(self, atr, val if val else None)
+    
+    def name(self):
+        if self.title:
+            return self.title
+        return self.race
+
 class Backpack(Component):
     __slots__ = ['unit', 'backpack']
     def __init__(self, backpack=[None for _ in range(6)]):
@@ -218,7 +222,7 @@ class Damage(Component):
     #     __slots__ = ['unit']
     #     FLAG = 1 << Component.bitflag
     #     Component.bitflag += 1
-print([sc.name() for sc in Component.__subclasses__()])
+print([sc.classname() for sc in Component.__subclasses__()])
 
 class Entity:
     '''
@@ -244,7 +248,7 @@ class Entity:
     # Render(symbol=@, foreground=#ffffff, background=#000000)
     '''
     __slots__ = ['eid', 'delete', 'ai', 'moveable', 'race'] + [
-        sc.name() for sc in Component.__subclasses__()
+        sc.classname() for sc in Component.__subclasses__()
     ]
     EID = 0
     # instances = {}
@@ -256,7 +260,7 @@ class Entity:
         if components:
             for component in components:
                 if isinstance(component, Component):
-                    setattr(self, component.name(), component)
+                    setattr(self, component.classname(), component)
                 else:
                     setattr(self, *component)
 

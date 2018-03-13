@@ -55,7 +55,7 @@ world = '''
 def has(entity, components=None):
     def attr(name):
         try:
-            name = name.name()
+            name = name.classname()
         except AttributeError:
             pass
         return hasattr(entity, name) and getattr(entity, name) is not None
@@ -172,7 +172,6 @@ def system_action(entities, floortiles, lightedtiles):
     proceed = True
     for entity in entities:
         # needs these two components to move -- dead entities don't move
-        print(repr(entity), list(entity.components))        
         if has(entity, 'moveable') and not has(entity, 'delete'):
             a, x, y, proceed = take_turn()
             if not proceed:
@@ -213,7 +212,7 @@ def system_action(entities, floortiles, lightedtiles):
                     other = None
                     # find the other entity on the occupied position
                     for e in entities:
-                        if entity != e and e.position.coordinates == (dx, dy):
+                        if has(e, Position) and e.position.coordinates == (dx, dy):
                             # will only be one movable on this tile -- delete
                             if has(e, 'moveable'):
                                 other = e
@@ -222,10 +221,9 @@ def system_action(entities, floortiles, lightedtiles):
                         move(entity, x, y)
                         recompute = True
                         continue 
-
-                    if loggable((entity, e)):
-                        attacker = entity.name if entity.name else entity.race
-                        defender = other.name if other.name else other.race
+                    if loggable(entities=(entity, other)):
+                        attacker = entity.information.name()
+                        defender = other.information.name()
                         print(f"{attacker} has killed the {defender}")
                         
                         # if has(entity, Damage):
