@@ -13,38 +13,17 @@ class Component:
     def __repr__(self):
         '''Returns stat information for dev'''
         return f'{self.__class__.__name__}({self})'
-
     def __str__(self):
         '''Returns stat information for user'''
         return ", ".join(f'{s}={getattr(self, s)}' 
             for s in self.__slots__
             if bool(hasattr(self, s) and getattr(self, s)))
-
-    # Reference link to currently connected entity unit
-    # @property
-    # def unit(self):
-    #     return self._unit
-
     @classmethod
     def classname(cls):
         return cls.__name__.lower()
 
-    # @unit.setter
-    # def unit(self, unit):
-    #     self._unit = unit
-    #     if self.name not in Component.__instances:
-    #         Component.__instances[subclass] = {unit.eid: self}
-    #     else:
-    #         Component.__instances[subclass].update({unit.eid: self})
-
-    # @staticmethod
-    # def get(key):
-    #     return Component.__instances[key]
-
 class Render(Component):
     __slots__ = ['_unit', 'symbol', 'foreground', 'background']
-    # FLAG = 1 << Component.bitflag
-    # Component.bitflag += 1
     def __init__(self, symbol, foreground="#ffffff", background="#000000"):
         '''Render component that holds all information that allows the map
         to be drawn with correct characters and colors
@@ -57,9 +36,7 @@ class Render(Component):
         self.symbol = symbol
         self.foreground = foreground
         self.background = background
-
-    @property
-    def draw(self):
+    def __call__(self):
         return self.background, f"[c={self.foreground}]{self.symbol}[/c]"
 
 class Position(Component):
@@ -67,9 +44,7 @@ class Position(Component):
     def __init__(self, x=0, y=0):
         self.x = x
         self.y = y
-
-    @property
-    def coordinates(self):
+    def __call__(self):
         return self.x, self.y
 
 class Information(Component):
@@ -79,8 +54,7 @@ class Information(Component):
             raise ValueError("Need at least a name or race")
         for atr, val in zip(['title', 'race', 'gender'], [title, race, gender]):
             setattr(self, atr, val if val else None)
-    
-    def name(self):
+    def __call__(self):
         if self.title:
             return self.title
         return self.race
@@ -143,9 +117,7 @@ class Damage(Component):
                 self.damages[dtype].append(dmg)
             else:
                 self.damages[dtype] = [dmg]
-
-    @property
-    def deal(self):
+    def __call__(self):
         damage_per_type = []
         for dtype, damages in self.damages.items():
             total_damage = 0
@@ -156,12 +128,13 @@ class Damage(Component):
             damage_per_type.append((dtype, total_damage))
         return damage_per_type
 
-    # class Health(Component):
-    #     __slots__ = ['unit', 'max_hp', 'cur_hp']
-    #     FLAG = 1 << Component.bitflag
-    #     Component.bitflag += 1
-    #     def __init__(self, health=0):
-    #         self.max_hp = self.cur_hp = health
+    class Health(Component):
+        __slots__ = ['unit', 'max_hp', 'cur_hp']
+        def __init__(self, health=0):
+            self.max_hp = self.cur_hp = health
+        @property
+        def alive(self):
+            return self.cur_hp > 0
 
     #     def update(self):
     #         if self.unit.has_component('attribute'):
