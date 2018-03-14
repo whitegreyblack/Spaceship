@@ -18,7 +18,7 @@ def test_no_args(entity):
 def test_single_args(entity):
     assert has(entity, components=Position) == True
     assert has(entity, components=[Position]) == True
-    assert has(entity, components=[Render]) == True
+    assert has(entity, components=[Position,]) == True
 
 def test_multiple_args(entity):
     assert has(entity, components=[Position, Render]) == True
@@ -27,6 +27,15 @@ def test_non_component_arg():
     e = Entity(components=[('delete', False)])
     assert has(e, ['delete'])
     assert has(e, 'delete')
+
+def test_construction_method():
+    e = Entity(components=Position(3, 3))
+    assert has(e, Position)
+    f = Entity()
+    assert not has(f, Position)
+    f.position = Position(3, 3)
+    assert has(f, Position)
+    assert has(e, Position) == has(f, Position)
 
 def test_addon_after(entity):
     entity.delete = True
