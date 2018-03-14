@@ -71,7 +71,9 @@ def has(entity, components=None):
     return all(attr(component) for component in components)
 
 def loggable(entities):
-    return all(has(e, Information) for e in entities)
+    print_info = all(has(e, Information) for e in entities)
+    matters = 0 in [e.eid for e in entities]
+    return print_info and matters
 
 def is_weapon(entity):
     return has(entity, Damage)
@@ -85,6 +87,22 @@ def distance(self, other):
     dy = other.y - self.y
     return dx ** 2 + dy ** 2
 
+def equipment_damage(entity):
+    if has(entity, Equipment):
+        damage = entity.left_hand()
+        damage += entity.right_hand()
+        damages = [0 for _ in range(2)]
+        for dt, dmg in damage:
+            damages[dt] += dmg
+        return sum(damages)
+    return 0
+
+def equipment_armor(entity):
+    return entity.body() if has(entity, Equipment) else 0
+
+def health_change(entity, change):
+    entity.cur_hp = max(0, entity.cur_hp - change)
+    return entity.cur_hp, entity.max_hp
 
 def system_draw(world, entities):
     def draw_entity(position, background, string):
@@ -180,26 +198,22 @@ def system_action(entities, floortiles, lightedtiles):
         # couldn't find the entity, just move and exit
         if not other:
             move(entity, x, y)
-            print('moved')
             return
 
         elif loggable(entities=(entity, other)):
             attacker = entity.information()
             defender = other.information()
             if has(entity, Equipment):
-                damage = entity.left_hand()
-                damage += entity.right_hand()
-                damages = [0 for _ in range(2)]
-                for dt, dmg in damage:
-                    damages[dt] += dmg
-                print(f"{attacker} dealt {sum(damages)} damage to the {defender}")
-            print(f"{attacker} has killed the {defender}")
-
+                damages = equipment_damage(entity)
+                print(f"{attacker} dealt {damages} damage to the {defender}")
+                cur_hp, max_hp = health_change(other, damages)
+                print(f"{defender.title()} has {cur_hp}/{max_hp} left")
+                if cur_hp == 0:
+                    other.delete = True
+                    print(f"{attacker} has killed the {defender}")
             # if has(entity, Damage):
             #     dmg = entity.damage()
             #     print(f"{attacker} deals {dmg} damage to {defender}")
-        other.delete = True
-        print(f"{other.information()} will be deleted: {other.delete}")
 
     def move(entity, x, y):
         entity.position.x += x
@@ -227,12 +241,12 @@ def system_action(entities, floortiles, lightedtiles):
             term.puts(0, i, f"{item.name}: {item.damage.info}")
         term.refresh()
         term.read()
-        # entity.backpack
+        recompute = True
 
     recompute = False
     proceed = True
     for entity in entities:
-        # print(repr(entity))
+        # print(entity)
         # needs these two components to move -- dead entities don't move
         if has(entity, 'moveable') and not has(entity, 'delete'):
             # if loggable((entity,)) and not has(entity, 'ai'): 
@@ -245,7 +259,6 @@ def system_action(entities, floortiles, lightedtiles):
                     item_pickup(entity)
                 elif a == "inventory":
                     show_inventory(entity)
-                    recompute = True
                 elif a == "drop":
                     item = entity.backpack.pop()
                     item.position = Position(*entity.position())
@@ -334,22 +347,18 @@ def create_player(entities, floors):
     ])) 
 
 def create_enemy(entities, floors):
-    if random.randint(0, 1):
-        entities.append(Entity(components=[
-            Position(*random_position(entities, floors)),
-            Information(race="goblin"),
-            Render('g', '#008800'),
-            ('moveable', True),
-            ('ai', True),
-        ]))
-    else:
-        entities.append(Entity(components=[
-            Position(*random_position(entities, floors)),   
-            Information(race="rat"),
-            Render('r', '#664422'),
-            ('moveable', True),
-            ('ai', True),
-        ]))
+    goblin = (Information(race="goblin"), Render('g', "#008800"))
+    rat = (Information(race="rat"), Render('r', '#664422'))
+    random.randint(0, 1)
+    e = Entity(components=[
+        *(rat if random.randint(0, 1) else goblin),
+        Position(*random_position(entities, floors)),
+        ('moveable', True),
+        ('ai', True),
+        Health(random.randint(3, 12)),
+    ])
+    print(e)
+    entities.append(e)
 
 def create_weapon(entities, floors):
     entities.append(Entity(components=[
@@ -505,8 +514,8 @@ class Game:
         self.eindex = 0     
         self.entities = []   
         create_player(self.entities, self.dungeon.floors)
-        # for i in range(random.randint(3, 5)):
-        #     create_enemy(self.entities, self.dungeon.floors)
+        for i in range(random.randint(3, 5)):
+            create_enemy(self.entities, self.dungeon.floors)
         # for i in range(3):
         create_weapon(self.entities, self.dungeon.floors)
 

@@ -46,16 +46,14 @@ class Position(Component):
         return self.x, self.y
 
 class Information(Component):
-    __slots__ = ['unit', 'name', 'information', 'gender']
+    __slots__ = ['unit', 'name', 'race', 'gender']
     def __init__(self, name=None, race=None, gender=None):
         if not name and not race:
             raise ValueError("Need at least a name or race")
         for atr, val in zip(['name', 'race', 'gender'], [name, race, gender]):
             setattr(self, atr, val if val else None)
     def __call__(self):
-        if self.name:
-            return self.name
-        return self.race
+        return self.name if self.name else self.race
 
 class Backpack(Component):
     __slots__ = ['unit', 'backpack']
@@ -241,7 +239,7 @@ class Entity:
 
     def __str__(self):
         if Information.classname() in self.components.keys():
-            return self.name
+            return self.information()
         return str(self.eid)
 
     def __repr__(self): 

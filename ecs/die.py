@@ -95,7 +95,7 @@ class Die:
     
     def roll(self):
         '''Returns a random value found in between the range roll'''
-        yield random.randint(*self.ranges())
+        yield random.randint(*self.ranges)
 
     @property
     def ranges(self):
