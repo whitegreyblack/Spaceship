@@ -33,6 +33,7 @@ class Keyboard:
         (term.TK_D, 0): "drop",
         (term.TK_E, 0): "equip",
         (term.TK_U, 0): "unequip",
+        (term.TK_B, 0): "backpack",
     }
     MAIN_MENU = {
         term.TK_P: "pressed play",
@@ -214,14 +215,19 @@ def system_action(entities, floortiles, lightedtiles):
                 if not has(e, 'moveable') and entity.position() == e.position():
                     e.position = None
                     entity.backpack.append(e)
-                    for i in entity.backpack:
-                        print(i, is_weapon(i))
-                        if is_weapon(i):
-                            print(i, i.name, repr(i.damage))
                     e.delete = True
                     pickup = True
         if not pickup:
             print("No item where you stand")
+
+    def show_inventory(entity):
+        term.clear()
+        for i, item in enumerate(entity.backpack):
+            print(item.name, item.damage.info)
+            term.puts(0, i, f"{item.name}: {item.damage.info}")
+        term.refresh()
+        term.read()
+        # entity.backpack
 
     recompute = False
     proceed = True
@@ -229,17 +235,17 @@ def system_action(entities, floortiles, lightedtiles):
         # print(repr(entity))
         # needs these two components to move -- dead entities don't move
         if has(entity, 'moveable') and not has(entity, 'delete'):
-            if loggable((entity,)) and not has(entity, 'ai'): 
-                print(f"{entity.information()} takes his turn")
+            # if loggable((entity,)) and not has(entity, 'ai'): 
+            #     print(f"{entity.information()} takes his turn")
             a, x, y, proceed = take_turn()
             if not proceed:
                 break
             if a:
-                if a == "pickup": item_pickup(entity)
+                if a == "pickup": 
+                    item_pickup(entity)
                 elif a == "inventory":
-                    print(entity.backpack)
-                    for i in entity.backpack:
-                        print(has(i, Position))
+                    show_inventory(entity)
+                    recompute = True
                 elif a == "drop":
                     item = entity.backpack.pop()
                     item.position = Position(*entity.position())

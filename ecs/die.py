@@ -92,16 +92,18 @@ class Die:
         elif value > 0:
             string = f"+{value}"
         return string
-
+    
     def roll(self):
         '''Returns a random value found in between the range roll'''
         yield random.randint(*self.ranges())
 
+    @property
     def ranges(self):
         '''Returns the range of the rolls possible by the die'''
         lower = self.multiplier + self.modifier
         return lower, lower + self.sides
 
+    @property
     def average(self, times, integer=True):
         '''Returns the sum of rolls divided number or times rolled'''
         total = sum(next(self.roll()) for _ in range(times))

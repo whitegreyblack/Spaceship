@@ -115,6 +115,7 @@ class Damage(Component):
                 self.damages[dtype].append(dmg)
             else:
                 self.damages[dtype] = [dmg]
+
     def __call__(self):
         damage_per_type = []
         for dtype, damages in self.damages.items():
@@ -126,6 +127,18 @@ class Damage(Component):
             damage_per_type.append((dtype, total_damage))
         return damage_per_type
 
+    @property
+    def info(self):
+        damage_info = []
+        for dtype, damages in self.damages.items():
+            for dmg in damages:
+                if isinstance(dmg, Die):
+                    dmg = dmg.ranges
+                damage_info.append(str(dmg))
+        if len(damage_info):
+            return str(damage_info.pop())
+        return "/".join([str(d) for d in damage_info])
+        
 class Health(Component):
     __slots__ = ['unit', 'max_hp', 'cur_hp']
     def __init__(self, health=0):
