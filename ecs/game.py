@@ -96,8 +96,8 @@ def system_draw(world, entities):
             term.bkcolor('#000000')
             
     term.clear()
-    dungeon.reset_light()
-    dungeon.do_fov(*entities[0].position(), 15)
+    world.reset_light()
+    world.do_fov(*entities[0].position(), 15)
     positions = { e.position(): e.render() 
                     for e in sorted(entities, reverse=True) 
     }
@@ -186,8 +186,8 @@ def system_action(entities, floortiles, lightedtiles):
             attacker = entity.information()
             defender = other.information()
             if has(entity, Equipment):
-                damage = entity.equipment.left_hand()
-                damage += entity.equipment.right_hand()
+                damage = entity.left_hand()
+                damage += entity.right_hand()
                 damages = [0 for _ in range(2)]
                 for dt, dmg in damage:
                     damages[dt] += dmg
@@ -204,6 +204,25 @@ def system_action(entities, floortiles, lightedtiles):
         entity.position.x += x
         entity.position.y += y
 
+    def item_pickup(entity):
+        pickup = False
+        for e in entities:
+            is_entity = entity == e
+            is_movable = has(e, 'moveable')
+            same_spot = entity.position() == e.position()
+            if entity != e:
+                if not has(e, 'moveable') and entity.position() == e.position():
+                    e.position = None
+                    entity.backpack.append(e)
+                    for i in entity.backpack:
+                        print(i, is_weapon(i))
+                        if is_weapon(i):
+                            print(i, i.name, repr(i.damage))
+                    e.delete = True
+                    pickup = True
+        if not pickup:
+            print("No item where you stand")
+
     recompute = False
     proceed = True
     for entity in entities:
@@ -212,21 +231,11 @@ def system_action(entities, floortiles, lightedtiles):
         if has(entity, 'moveable') and not has(entity, 'delete'):
             if loggable((entity,)) and not has(entity, 'ai'): 
                 print(f"{entity.information()} takes his turn")
-            print(f"{entity.information()}, {entity.delete if has(entity, 'delete') else False}")
             a, x, y, proceed = take_turn()
             if not proceed:
                 break
             if a:
-                if a == "pickup":
-                    for e in entities: 
-                        if not has(e, 'moveable'):
-                            e.position = None
-                            entity.backpack.append(e)
-                            for i in entity.backpack:
-                                print(i, is_weapon(i))
-                                if is_weapon(i):
-                                    print(i, repr(i.damage))
-                            e.delete = True
+                if a == "pickup": item_pickup(entity)
                 elif a == "inventory":
                     print(entity.backpack)
                     for i in entity.backpack:
@@ -309,7 +318,7 @@ def create_player(entities, floors):
     # backpack stuff
     entities.append(Entity(components=[
         Position(*random_position(entities, floors)),
-        Information(title="Hero", race="Human"),
+        Information(name="Hero", race="Human"),
         Render('a', '#DD8822', '#000088'),
         ('moveable', True),
         ('backpack', []),
@@ -339,6 +348,7 @@ def create_enemy(entities, floors):
 def create_weapon(entities, floors):
     entities.append(Entity(components=[
         Render('[[', '#00AAAA'),
+        Information(name="sword"),
         Position(*random_position(entities, floors)),
         Damage(("1d6", Damage.PHYSICAL)),
     ]))
@@ -489,8 +499,8 @@ class Game:
         self.eindex = 0     
         self.entities = []   
         create_player(self.entities, self.dungeon.floors)
-        for i in range(random.randint(3, 5)):
-            create_enemy(self.entities, self.dungeon.floors)
+        # for i in range(random.randint(3, 5)):
+        #     create_enemy(self.entities, self.dungeon.floors)
         # for i in range(3):
         create_weapon(self.entities, self.dungeon.floors)
 
@@ -510,7 +520,10 @@ class Game:
             
         # check player alive
         else:
-            term.puts(0, 24,'You died')
+            if not proceed:
+                term.puts(0, 24, 'Exit Game')
+            else:
+                term.puts(0, 24,'You died')
             term.refresh()
             term.read()
 

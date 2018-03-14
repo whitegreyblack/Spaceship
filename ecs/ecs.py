@@ -46,15 +46,15 @@ class Position(Component):
         return self.x, self.y
 
 class Information(Component):
-    __slots__ = ['unit', 'title', 'information', 'gender']
-    def __init__(self, title=None, race=None, gender=None):
-        if not title and not race:
+    __slots__ = ['unit', 'name', 'information', 'gender']
+    def __init__(self, name=None, race=None, gender=None):
+        if not name and not race:
             raise ValueError("Need at least a name or race")
-        for atr, val in zip(['title', 'race', 'gender'], [title, race, gender]):
+        for atr, val in zip(['name', 'race', 'gender'], [name, race, gender]):
             setattr(self, atr, val if val else None)
     def __call__(self):
-        if self.title:
-            return self.title
+        if self.name:
+            return self.name
         return self.race
 
 class Backpack(Component):
@@ -126,13 +126,13 @@ class Damage(Component):
             damage_per_type.append((dtype, total_damage))
         return damage_per_type
 
-    class Health(Component):
-        __slots__ = ['unit', 'max_hp', 'cur_hp']
-        def __init__(self, health=0):
-            self.max_hp = self.cur_hp = health
-        @property
-        def alive(self):
-            return self.cur_hp > 0
+class Health(Component):
+    __slots__ = ['unit', 'max_hp', 'cur_hp']
+    def __init__(self, health=0):
+        self.max_hp = self.cur_hp = health
+    @property
+    def alive(self):
+        return self.cur_hp > 0
 
     #     def update(self):
     #         if self.unit.has_component('attribute'):
@@ -198,26 +198,11 @@ class Entity:
     '''
     Basic container for entity objects. Holds a list of components which is used
     to represent certain objects in game world.
-
-    # >>> e = Entity(components=[Description('hero'),])
-    # >>> e, Entity.compdict
-    # (hero, {'description': {0: Description(unit=hero, name=hero)}})
-    # >>> e.has_component('description')
-    # True
-    # >>> e.get_component('description')
-    # Description(unit=hero, name=hero)
-    # >>> e.del_component('description')
-    # >>> e.has_component('description')
-    # False
-    # >>> list(e.components)
-    # []
-    >>> e=Entity(components=[Render('@')])
-    >>> e.render
-    Render(symbol=@, foreground=#ffffff, background=#000000)
     '''
-    __slots__ = ['eid', 'delete', 'ai', 'moveable', 'race'] + [
-        sc.classname() for sc in Component.__subclasses__()
-    ]
+    # __slots__ = ['eid', 'delete', 'ai', 'moveable', 'race'] + [
+    #     sc.classname() for sc in Component.__subclasses__()
+    # ]
+    __slots__ = ['eid', 'components']
     EID = 0
     # instances = {}
     # compdict = {c.__name__.lower(): {} for c in Component.__subclasses__()}
@@ -225,39 +210,69 @@ class Entity:
         self.eid = Entity.EID
         Entity.EID += 1
         # self.FLAG = 0
+        self.components = dict()
         if components:
+            if not isinstance(components, list):
+                components = [components]
             for component in components:
                 if isinstance(component, Component):
-                    setattr(self, component.classname(), component)
+                    self.__setattr__(component.classname(), component)
                 else:
-                    setattr(self, *component)
+                    self.__setattr__(*component)
+
+    def __new__(cls, components=None):
+        if components:
+            if not isinstance(components, list):
+                components = [components]
+        return object.__new__(cls)
 
     def __str__(self):
-        # description = self.get_component('description')
-        if hasattr(self, 'description') and description.name:
-            return description.name
+        if Information.classname() in self.components.keys():
+            return self.name
         return str(self.eid)
 
-    def __repr__(self):
+    def __repr__(self): 
         return f"Entity(eid={self})"
 
-    def __hash__(self):
+    def __hash__(self): 
         return self.eid
 
-    def __eq__(self, other):
+    def __eq__(self, other): 
         return self.eid == hash(other.eid)
-    
-    def __lt__(self, other):
+
+    def __lt__(self, other): 
         return self.eid < hash(other.eid)
+
+    def __getattr__(self, key):
+        if key in self.__slots__:
+            return super(Entity, self).__getattr__(key)
+        if key in self.components:
+            return self.components[key]
+        for component in self.components.values():
+            if isinstance(component, Component) and key in component.__slots__:
+                return getattr(component, key)
+
+    def __setattr__(self, key, value):
+        if isinstance(value, Component):
+            value.unit = self
+        if key in self.__slots__:
+            super(Entity, self).__setattr__(key, value)
+            return
+        for component in self.components.values():
+            if isinstance(component, Component) and key in component.__slots__:
+                setattr(component, key, value)
+                return
+        self.components[key] = value
+        # raise ValueError(f"Entity has no attribute {key}")
     # # ? should I move these into components?
-    @property
-    def components(self):
-        for component in self.__slots__:
-            if hasattr(self, component) and getattr(self, component) is not None:
-                if component in Component.__subclasses__():
-                    yield repr(getattr(self, component))
-                else:
-                    yield f"{component}={getattr(self, component)}"
+    # @property
+    # def components(self):
+    #     for component in self.components:
+    #         if hasattr(self, component) and getattr(self, component) is not None:
+    #             if component in Component.__subclasses__():
+    #                 yield repr(getattr(self, component))
+    #             else:
+    #                 yield f"{component}={getattr(self, component)}"
 
     # # -- HAS --
     # def has(self, name: str=None, names:list=None) -> bool:
@@ -352,9 +367,9 @@ class Entity:
 
 if __name__ == "__main__":
     from doctest import testmod
-    testmod()
-
     import json
+
+    testmod()
     component_dictionary = {
         subclass.__name__.lower(): [v for v in subclass.__slots__ if v != 'unit']
         for subclass in Component.__subclasses__()
