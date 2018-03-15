@@ -70,10 +70,18 @@ def has(entity, components=None):
         return attr(components)
     return all(attr(component) for component in components)
 
-def loggable(entities):
+def loggable(entities, anything=False):
     print_info = all(has(e, Information) for e in entities)
-    matters = 0 in [e.eid for e in entities]
+    if anything:
+        matters = True
+    else:
+        matters = 0 in [e.eid for e in entities]
     return print_info and matters
+
+def letter(index):
+    if not 0 <= index <= 25:
+        raise ValueError("Cannot make index into letter: Index out of range")
+    return chr(ord('a') + index)
 
 def is_weapon(entity):
     return has(entity, Damage)
@@ -87,14 +95,23 @@ def distance(self, other):
     dy = other.y - self.y
     return dx ** 2 + dy ** 2
 
+def calculate_damage(damage):
+    damages = [0 for _ in range(2)]
+    for dt, dmg in damage:
+        damages[dt] += dmg
+    return sum(damages)    
+
 def equipment_damage(entity):
     if has(entity, Equipment):
         damage = entity.left_hand()
         damage += entity.right_hand()
-        damages = [0 for _ in range(2)]
-        for dt, dmg in damage:
-            damages[dt] += dmg
-        return sum(damages)
+        return calculate_damage(damage)
+    return 0
+
+def natural_damage(entity):
+    if has(entity, Damage):
+        damage = entity.damage()
+        return calculate_damage(damage)
     return 0
 
 def equipment_armor(entity):
@@ -187,30 +204,35 @@ def system_action(entities, floortiles, lightedtiles):
                 return None, x, y, False
         return a, x, y, True
 
-    def combat(entity, direction, x, y, entities):
-        other = None
+    def combat(entity, other):
+        # other = None
         # find the other entity on the occupied position
-        for e in entities:
-            if entity != e and e.position() == direction:
-                # will only be one movable on this tile -- delete
-                if has(e, 'moveable'):
-                    other = e
+        # for e in entities:
+        #     if entity != e and e.position() == direction:
+        #         # will only be one movable on this tile -- delete
+        #         if has(e, 'moveable'):
+        #             other = e
         # couldn't find the entity, just move and exit
-        if not other:
-            move(entity, x, y)
-            return
-
-        elif loggable(entities=(entity, other)):
+        # if other:
+        #     print(entity, other)
+        # if not other:
+        #     move(entity, x, y)
+        #     return
+        if loggable(entities=(entity, other), anything=False):
             attacker = entity.information()
             defender = other.information()
             if has(entity, Equipment):
                 damages = equipment_damage(entity)
-                print(f"{attacker} dealt {damages} damage to the {defender}")
-                cur_hp, max_hp = health_change(other, damages)
-                print(f"{defender.title()} has {cur_hp}/{max_hp} left")
-                if cur_hp == 0:
-                    other.delete = True
-                    print(f"{attacker} has killed the {defender}")
+            elif has(entity, Damage):
+                damages = natural_damage(entity)
+            else:
+                damages = 1
+            print(f"{attacker} dealt {damages} damage to the {defender}")
+            cur_hp, max_hp = health_change(other, damages)
+            print(f"{defender.title()} has {cur_hp}/{max_hp} left")
+            if cur_hp == 0:
+                other.delete = True
+                print(f"{attacker} has killed the {defender}")
             # if has(entity, Damage):
             #     dmg = entity.damage()
             #     print(f"{attacker} deals {dmg} damage to {defender}")
@@ -234,13 +256,30 @@ def system_action(entities, floortiles, lightedtiles):
         if not pickup:
             print("No item where you stand")
 
-    def show_inventory(entity):
+    def draw_inventory(entity):
         term.clear()
         for i, item in enumerate(entity.backpack):
             print(item.name, item.damage.info)
-            term.puts(0, i, f"{item.name}: {item.damage.info}")
+            term.puts(0, i, f"{letter(i)}. {item.name}: {item.damage.info}")
         term.refresh()
+
+    def show_inventory(entity):
+        draw_inventory(entity)
         term.read()
+        recompute = True
+        
+    def drop_inventory(entity):
+        draw_inventory(entity)
+        while 1:
+            key = term.read()
+            if key == term.TK_ESCAPE:
+                break
+            elif term.TK_A <= code < term.TK_A + len(entity.backpack):
+                selected = code - term.TK_A
+                item = entity.backpack.pop(selected)
+                item.delete = False
+                item.position = Position(*entity.position())
+                break
         recompute = True
 
     recompute = False
@@ -300,13 +339,16 @@ def system_action(entities, floortiles, lightedtiles):
             dx, dy = entity.position.x + x, entity.position.y + y
             # tile is floor
             if (dx, dy) in floortiles:
-                positions = set(e.position() for e in entities
-                                if has(e, 'position') and not has(e, 'delete'))
-                if (dx, dy) not in positions:
+                positions = {e.position(): e for e in entities
+                                if entity != e
+                                and has(e, [Position, 'moveable'])
+                                and not has(e, 'delete')}
+                if (dx, dy) not in positions.keys():
                     # nothing here -- move
                     move(entity, x, y)
                 else:
-                    combat(entity, (dx, dy), x, y, entities)
+                    print('combat', entity, positions[(dx, dy)])
+                    combat(entity, positions[(dx, dy)])
         # print(repr(entity), list(entity.components))
     return proceed, recompute
 
@@ -347,9 +389,12 @@ def create_player(entities, floors):
     ])) 
 
 def create_enemy(entities, floors):
-    goblin = (Information(race="goblin"), Render('g', "#008800"))
-    rat = (Information(race="rat"), Render('r', '#664422'))
-    random.randint(0, 1)
+    goblin = (Information(race="goblin"), 
+              Render('g', "#008800"), 
+              Damage(("1d6", Damage.PHYSICAL)))
+    rat = (Information(race="rat"), 
+           Render('r', '#664422'), 
+           Damage(("1d4", Damage.PHYSICAL)))
     e = Entity(components=[
         *(rat if random.randint(0, 1) else goblin),
         Position(*random_position(entities, floors)),
@@ -357,8 +402,8 @@ def create_enemy(entities, floors):
         ('ai', True),
         Health(random.randint(3, 12)),
     ])
-    print(e)
     entities.append(e)
+    print(len(entities) - 1)
 
 def create_weapon(entities, floors):
     entities.append(Entity(components=[
@@ -514,7 +559,7 @@ class Game:
         self.eindex = 0     
         self.entities = []   
         create_player(self.entities, self.dungeon.floors)
-        for i in range(random.randint(3, 5)):
+        for i in range(random.randint(5, 7)):
             create_enemy(self.entities, self.dungeon.floors)
         # for i in range(3):
         create_weapon(self.entities, self.dungeon.floors)
