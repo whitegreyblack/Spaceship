@@ -148,7 +148,6 @@ def system_draw(recalc, world, entities):
                         term.puts(i, j, f"[c=#999999]{cell}[/c]")
                 elif lighted == 1:
                     term.puts(i, j, f"[c=#222222]{cell}[/c]")
-        term.refresh()
 
 def system_alive(entites):
     return 0 in [e.eid for e in entites]
@@ -160,7 +159,8 @@ def cache(lines):
     def funcwrap(logger):
         def wrapper(messages):
             nonlocal index, messagelog, lines
-            messages = textwrap.wrap(messages, term.state(term.TK_WIDTH))
+            messages = [textwrap.wrap(m, term.state(term.TK_WIDTH)) for m in messages]
+            print('c', messages)
             index += len(messages)                
             messagelog += messages
             if len(messagelog) <= lines:
@@ -180,7 +180,7 @@ def system_logger(messages):
             break
     term.refresh()
 
-def system_action(entities, floortiles, lightedtiles):
+def system_action(entities, dungeon, messages):
     def get_input():
         a, (x, y) = None, (0, 0)
         key = term.read()
@@ -212,7 +212,7 @@ def system_action(entities, floortiles, lightedtiles):
 
     def take_turn():
         a, (x, y) = None, (0, 0)
-        print(f'{entity} is taking its turn')
+        # print(f'{entity} is taking its turn')
         if has(entity, components='ai'):
             other = None
             for e in entities:
@@ -254,7 +254,7 @@ def system_action(entities, floortiles, lightedtiles):
             # if has(entity, Damage):
             #     dmg = entity.damage()
             #     print(f"{attacker} deals {dmg} damage to {defender}")
-            system_logger(msg)
+            messages.append(msg)
 
     def move(entity, x, y):
         entity.position.x += x
@@ -273,7 +273,7 @@ def system_action(entities, floortiles, lightedtiles):
                     e.delete = True
                     pickup = True
         if not pickup:
-            system_logger("No item where you stand")
+            messages.append("No item where you stand")
 
     def draw_inventory(entity):
         term.clear()
@@ -357,7 +357,7 @@ def system_action(entities, floortiles, lightedtiles):
             recompute = True
             dx, dy = entity.position.x + x, entity.position.y + y
             # tile is floor
-            if (dx, dy) in floortiles:
+            if (dx, dy) in dungeon.floors:
                 positions = {e.position(): e for e in entities
                                 if entity != e
                                 and has(e, [Position, 'moveable'])
@@ -369,7 +369,8 @@ def system_action(entities, floortiles, lightedtiles):
                     print('combat', entity, positions[(dx, dy)])
                     combat(entity, positions[(dx, dy)])
         # print(repr(entity), list(entity.components))
-    return proceed, recompute
+    print(messages)
+    return proceed, recompute, messages
 
 def system_remove(entities):
     # return [e for e in entities if not has(e, Delete)]
@@ -404,7 +405,7 @@ def create_player(entities, floors):
         ('backpack', []),
         Equipment(Damage(("1d6", Damage.PHYSICAL)),
                   Damage(("1d6", Damage.PHYSICAL))),
-        Health(1),
+        Health(10),
     ])) 
 
 def create_enemy(entities, floors):
@@ -583,28 +584,31 @@ class Game:
         self.eindex = 0     
         self.entities = []   
         create_player(self.entities, self.dungeon.floors)
-        # for i in range(random.randint(5, 7)):
-        create_enemy(self.entities, self.dungeon.floors)
+        for i in range(random.randint(5, 7)):
+            create_enemy(self.entities, self.dungeon.floors)
         # for i in range(3):
         create_weapon(self.entities, self.dungeon.floors)
 
     def run(self):
         proceed = True
         fov_recalc = True
-        system_draw(fov_recalc, self.dungeon, self.entities)
+        messages = []
+        # system_draw(fov_recalc, self.dungeon, self.entities)
         while proceed:
             # read write -- if user presses exit here then quit next loop?
-            proceed, fov_recalc = system_action(self.entities, 
-                                                self.dungeon.floors,
-                                                self.dungeon.lighted)
-
             system_draw(fov_recalc, self.dungeon, self.entities)
+            system_logger(messages)
+            term.refresh
+            proceed, fov_recalc, messages = system_action(self.entities, 
+                                                          self.dungeon,
+                                                          messages)
+            # system_draw(fov_recalc, self.dungeon, self.entities)
             self.entities = system_remove(self.entities)        
                    
             if not system_alive(self.entities):
                 break
-                
-            system_draw(fov_recalc, self.dungeon, self.entities)         
+
+            # system_draw(fov_recalc, self.dungeon, self.entities)         
         # else:            
         # check player alive
         if not proceed:
