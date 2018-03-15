@@ -101,7 +101,8 @@ class Die:
     def ranges(self):
         '''Returns the range of the rolls possible by the die'''
         lower = self.multiplier + self.modifier
-        return lower, lower + self.sides
+        higher = self.multiplier * self.sides + self.modifier
+        return lower, higher
 
     @property
     def average(self, times, integer=True):

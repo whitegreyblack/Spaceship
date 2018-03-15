@@ -6,6 +6,7 @@ from ecs.ecs import (
 )
 import math
 import random
+import textwrap
 
 class Keyboard:
     UP, DOWN, LEFT, RIGHT = term.TK_UP, term.TK_DOWN, term.TK_LEFT, term.TK_RIGHT
@@ -86,14 +87,14 @@ def letter(index):
 def is_weapon(entity):
     return has(entity, Damage)
 
-def is_hero(entity):
-    return not has(entity, Ai)
+def distance(entity, other):
+    dx = other.x - entity.x
+    dy = other.y - entity.y
+    return math.sqrt(dx ** 2 + dy ** 2), dx, dy
 
-def distance(self, other):
-    #return the distance to another object
-    dx = other.x - self.x
-    dy = other.y - self.y
-    return dx ** 2 + dy ** 2
+def towards_target(entity, other):
+    d, dx, dy = distance(entity, other)
+    return int(round(dx / d)), int(round(dy / d))
 
 def calculate_damage(damage):
     damages = [0 for _ in range(2)]
@@ -121,7 +122,7 @@ def health_change(entity, change):
     entity.cur_hp = max(0, entity.cur_hp - change)
     return entity.cur_hp, entity.max_hp
 
-def system_draw(world, entities):
+def system_draw(recalc, world, entities):
     def draw_entity(position, background, string):
         revert = False
         if background != "#000000":
@@ -130,27 +131,54 @@ def system_draw(world, entities):
         term.puts(*position, string)
         if revert:
             term.bkcolor('#000000')
-            
-    term.clear()
-    world.reset_light()
-    world.do_fov(*entities[0].position(), 15)
-    positions = { e.position(): e.render() 
-                    for e in sorted(entities, reverse=True) 
-    }
-    for j, row in enumerate(world.world):
-        for i, cell in enumerate(row):
-            lighted = world.lit(i, j)
-            if lighted == 2:
-                if (i, j) in positions.keys():
-                    draw_entity((i, j), *positions[(i, j)])
-                else:
-                    term.puts(i, j, f"[c=#999999]{cell}[/c]")
-            elif lighted == 1:
-                term.puts(i, j, f"[c=#222222]{cell}[/c]")
-    term.refresh()
+    if recalc:
+        term.clear_area(0, 0, world.width, world.height)
+        world.reset_light()
+        world.do_fov(*entities[0].position(), 15)
+        positions = { e.position(): e.render() 
+                        for e in sorted(entities, reverse=True) 
+        }
+        for j, row in enumerate(world.world):
+            for i, cell in enumerate(row):
+                lighted = world.lit(i, j)
+                if lighted == 2:
+                    if (i, j) in positions.keys():
+                        draw_entity((i, j), *positions[(i, j)])
+                    else:
+                        term.puts(i, j, f"[c=#999999]{cell}[/c]")
+                elif lighted == 1:
+                    term.puts(i, j, f"[c=#222222]{cell}[/c]")
+        term.refresh()
 
 def system_alive(entites):
     return 0 in [e.eid for e in entites]
+
+def cache(lines):
+    lines = lines
+    index = 0
+    messagelog = []    
+    def funcwrap(logger):
+        def wrapper(messages):
+            nonlocal index, messagelog, lines
+            messages = textwrap.wrap(messages, term.state(term.TK_WIDTH))
+            index += len(messages)                
+            messagelog += messages
+            if len(messagelog) <= lines:
+                logger(messagelog)
+            else:
+                logger(messagelog[index:index+lines])
+        return wrapper
+    return funcwrap
+
+@cache(5)
+def system_logger(messages):
+    term.clear_area(0, term.state(term.TK_HEIGHT) - len(messages), term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT))
+    for i in range(len(messages)):
+        try:
+            term.puts(0, term.state(term.TK_HEIGHT) - len(messages) + i, messages[i])
+        except:
+            break
+    term.refresh()
 
 def system_action(entities, floortiles, lightedtiles):
     def get_input():
@@ -184,18 +212,21 @@ def system_action(entities, floortiles, lightedtiles):
 
     def take_turn():
         a, (x, y) = None, (0, 0)
+        print(f'{entity} is taking its turn')
         if has(entity, components='ai'):
-            # hero = [e for e in entities if e.eid == 0]
-            # if entity.position() in lightedtiles:
-            #     pass
-                    
-            # notmonster = [e for e in entities 
-            #     if has(e, Position) and not has(e, Ai) and 
-            #         distance(entity, e) == 2]
-            # if any(distance(e) == 2 for e in notmonster):
-            # Don't care about monsters -- they do whatever
+            other = None
+            for e in entities:
+                # print(f'processing {e}: isSame {entity==e}, {has(e, "moveable")}')
+                if entity != e and has(e, 'moveable') and not has(e, 'ai'):
+                    if distance(entity, e)[0] < 7:
+                        other = e
+                        break
+            if not other:
+                # Don't care about monsters outside radius -- they do whatever            
+                x, y = random.randint(-1, 1), random.randint(-1, 1)
+            else:
+                x, y = towards_target(entity, e)
             # the return value will always be a directional x, y value
-            x, y = random.randint(-1, 1), random.randint(-1, 1)
         else:
             # a :- action variable if action is chosen
             a, x, y = get_input()
@@ -205,37 +236,25 @@ def system_action(entities, floortiles, lightedtiles):
         return a, x, y, True
 
     def combat(entity, other):
-        # other = None
-        # find the other entity on the occupied position
-        # for e in entities:
-        #     if entity != e and e.position() == direction:
-        #         # will only be one movable on this tile -- delete
-        #         if has(e, 'moveable'):
-        #             other = e
-        # couldn't find the entity, just move and exit
-        # if other:
-        #     print(entity, other)
-        # if not other:
-        #     move(entity, x, y)
-        #     return
         if loggable(entities=(entity, other), anything=False):
             attacker = entity.information()
-            defender = other.information()
+            defender = other.information().title()
             if has(entity, Equipment):
                 damages = equipment_damage(entity)
             elif has(entity, Damage):
                 damages = natural_damage(entity)
             else:
                 damages = 1
-            print(f"{attacker} dealt {damages} damage to the {defender}")
+            msg = f"{attacker.title()} dealt {damages} damage to the {defender}. "
             cur_hp, max_hp = health_change(other, damages)
-            print(f"{defender.title()} has {cur_hp}/{max_hp} left")
+            msg += f"{defender.title()} has {cur_hp}/{max_hp} left. "
             if cur_hp == 0:
                 other.delete = True
-                print(f"{attacker} has killed the {defender}")
+                msg += f"{attacker.title()} has killed the {defender}."
             # if has(entity, Damage):
             #     dmg = entity.damage()
             #     print(f"{attacker} deals {dmg} damage to {defender}")
+            system_logger(msg)
 
     def move(entity, x, y):
         entity.position.x += x
@@ -254,7 +273,7 @@ def system_action(entities, floortiles, lightedtiles):
                     e.delete = True
                     pickup = True
         if not pickup:
-            print("No item where you stand")
+            system_logger("No item where you stand")
 
     def draw_inventory(entity):
         term.clear()
@@ -385,7 +404,7 @@ def create_player(entities, floors):
         ('backpack', []),
         Equipment(Damage(("1d6", Damage.PHYSICAL)),
                   Damage(("1d6", Damage.PHYSICAL))),
-        Health(),
+        Health(1),
     ])) 
 
 def create_enemy(entities, floors):
@@ -403,7 +422,6 @@ def create_enemy(entities, floors):
         Health(random.randint(3, 12)),
     ])
     entities.append(e)
-    print(len(entities) - 1)
 
 def create_weapon(entities, floors):
     entities.append(Entity(components=[
@@ -411,6 +429,12 @@ def create_weapon(entities, floors):
         Information(name="sword"),
         Position(*random_position(entities, floors)),
         Damage(("1d6", Damage.PHYSICAL)),
+    ]))
+    entities.append(Entity(components=[
+        Render(')', '#004444'),
+        Information(name="spear"),
+        Position(*random_position(entities, floors)),
+        Damage(("2d6", Damage.PHYSICAL))
     ]))
 
 class Tile:
@@ -559,33 +583,36 @@ class Game:
         self.eindex = 0     
         self.entities = []   
         create_player(self.entities, self.dungeon.floors)
-        for i in range(random.randint(5, 7)):
-            create_enemy(self.entities, self.dungeon.floors)
+        # for i in range(random.randint(5, 7)):
+        create_enemy(self.entities, self.dungeon.floors)
         # for i in range(3):
         create_weapon(self.entities, self.dungeon.floors)
 
     def run(self):
         proceed = True
         fov_recalc = True
-        while proceed and system_alive(self.entities):
-            if fov_recalc:
-                system_draw(self.dungeon, self.entities)
-
+        system_draw(fov_recalc, self.dungeon, self.entities)
+        while proceed:
             # read write -- if user presses exit here then quit next loop?
             proceed, fov_recalc = system_action(self.entities, 
                                                 self.dungeon.floors,
                                                 self.dungeon.lighted)
 
-            self.entities = system_remove(self.entities)
-            
+            system_draw(fov_recalc, self.dungeon, self.entities)
+            self.entities = system_remove(self.entities)        
+                   
+            if not system_alive(self.entities):
+                break
+                
+            system_draw(fov_recalc, self.dungeon, self.entities)         
+        # else:            
         # check player alive
+        if not proceed:
+            system_logger('Exit Game')
         else:
-            if not proceed:
-                term.puts(0, 24, 'Exit Game')
-            else:
-                term.puts(0, 24,'You died')
-            term.refresh()
-            term.read()
+            system_logger("You died")
+        term.refresh()
+        term.read()
 
 if __name__ == "__main__":
     # print(tilemap(world))
