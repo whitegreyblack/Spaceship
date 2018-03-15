@@ -126,3 +126,6 @@ saves/
 # game log folder
 log/
 logs/
+
+# c/cpp exe
+*.exe
