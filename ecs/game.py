@@ -597,7 +597,7 @@ class Game:
         while proceed:
             # read write -- if user presses exit here then quit next loop?
             system_draw(fov_recalc, self.dungeon, self.entities)
-            system_logger(messages)
+            # system_logger(messages)
             term.refresh
             proceed, fov_recalc, messages = system_action(self.entities, 
                                                           self.dungeon,
