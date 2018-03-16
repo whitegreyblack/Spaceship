@@ -112,11 +112,12 @@ class Die:
 
     def __repr__(self):
         '''Returns die info for developer'''
-        c=self.__class__.__name__
-        s=self.sides
-        mu=self.multiplier
-        mo=self.modifier
-        return f"{c}(sides={s}, mult={mu}, mod={mo})"
+        # c=self.__class__.__name__
+        # s=self.sides
+        # mu=self.multiplier
+        # mo=self.modifier
+        # return f"{c}(sides={s}, mult={mu}, mod={mo})"
+        return f"{self.__class__.__name__}({self})"
 
     def __str__(self):
         '''Returns die info for end-user'''

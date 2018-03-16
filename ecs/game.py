@@ -2,7 +2,7 @@ from bearlibterminal import terminal as term
 from collections import namedtuple
 from ecs.ecs import (
     Entity, Component, Position, Render, Backpack, Damage, Equipment,
-    Information, Health
+    Information, Attribute
 )
 import math
 import random
@@ -119,8 +119,9 @@ def equipment_armor(entity):
     return entity.body() if has(entity, Equipment) else 0
 
 def health_change(entity, change):
-    entity.cur_hp = max(0, entity.cur_hp - change)
-    return entity.cur_hp, entity.max_hp
+    current_health = entity.attribute.health.cur_hp 
+    entity.attribute.health.cur_hp = max(0, current_health - change)
+    return entity.attribute.health.cur_hp, entity.attribute.health.max_hp
 
 def system_draw(recalc, world, entities):
     def draw_entity(position, background, string):
@@ -159,7 +160,9 @@ def cache(lines):
     def funcwrap(logger):
         def wrapper(messages):
             nonlocal index, messagelog, lines
-            messages = [textwrap.wrap(m, term.state(term.TK_WIDTH)) for m in messages]
+            messages = [
+                textwrap.wrap(m, term.state(term.TK_WIDTH)) for m in messages
+            ]
             print('c', messages)
             index += len(messages)                
             messagelog += messages
@@ -172,10 +175,15 @@ def cache(lines):
 
 @cache(5)
 def system_logger(messages):
-    term.clear_area(0, term.state(term.TK_HEIGHT) - len(messages), term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT))
+    term.clear_area(0, 
+        term.state(term.TK_HEIGHT) - len(messages), 
+        term.state(term.TK_WIDTH), 
+        term.state(term.TK_HEIGHT))
     for i in range(len(messages)):
         try:
-            term.puts(0, term.state(term.TK_HEIGHT) - len(messages) + i, messages[i])
+            term.puts(0, 
+                term.state(term.TK_HEIGHT) - len(messages) + i, 
+                messages[i])
         except:
             break
     term.refresh()
@@ -405,7 +413,7 @@ def create_player(entities, floors):
         ('backpack', []),
         Equipment(Damage(("1d6", Damage.PHYSICAL)),
                   Damage(("1d6", Damage.PHYSICAL))),
-        Health(10),
+        Attribute(strength=10),
     ])) 
 
 def create_enemy(entities, floors):
@@ -420,7 +428,7 @@ def create_enemy(entities, floors):
         Position(*random_position(entities, floors)),
         ('moveable', True),
         ('ai', True),
-        Health(random.randint(3, 12)),
+        Attribute(strength=random.randint(3, 12)),
     ])
     entities.append(e)
 
@@ -598,7 +606,7 @@ class Game:
             # read write -- if user presses exit here then quit next loop?
             system_draw(fov_recalc, self.dungeon, self.entities)
             # system_logger(messages)
-            term.refresh
+            term.refresh()
             proceed, fov_recalc, messages = system_action(self.entities, 
                                                           self.dungeon,
                                                           messages)
@@ -612,9 +620,9 @@ class Game:
         # else:            
         # check player alive
         if not proceed:
-            system_logger('Exit Game')
+            system_logger(['Exit Game'])
         else:
-            system_logger("You died")
+            system_logger(["You died"])
         term.refresh()
         term.read()
 

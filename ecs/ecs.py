@@ -10,12 +10,17 @@ class System:
 class Component:
     def __repr__(self):
         '''Returns stat information for dev'''
-        return f'{self.__class__.__name__}({self})'
+        component_variables = ", ".join(f'{s}={getattr(self, s)}' 
+                                for s in self.__slots__
+                                if s != "unit" and
+                                   bool(hasattr(self, s) and 
+                                   getattr(self, s)))
+        return f'{self}({component_variables})'
+
     def __str__(self):
         '''Returns stat information for user'''
-        return ", ".join(f'{s}={getattr(self, s)}' 
-            for s in self.__slots__
-            if bool(hasattr(self, s) and getattr(self, s)))
+        return f'{self.__class__.__name__}'
+
     @classmethod
     def classname(cls):
         return cls.__name__.lower()
@@ -34,6 +39,7 @@ class Render(Component):
         self.symbol = symbol
         self.foreground = foreground
         self.background = background
+
     def __call__(self):
         return self.background, f"[c={self.foreground}]{self.symbol}[/c]"
 
@@ -42,6 +48,7 @@ class Position(Component):
     def __init__(self, x=0, y=0):
         self.x = x
         self.y = y
+
     def __call__(self):
         return self.x, self.y
 
@@ -52,12 +59,13 @@ class Information(Component):
             raise ValueError("Need at least a name or race")
         for atr, val in zip(['name', 'race', 'gender'], [name, race, gender]):
             setattr(self, atr, val if val else None)
+
     def __call__(self):
         return self.name if self.name else self.race
 
 class Backpack(Component):
     __slots__ = ['unit', 'backpack']
-    def __init__(self, backpack=[None for _ in range(6)]):
+    def __init__(self, backpack=[]):
         self.max = 26
         self.backpack = backpack
 
@@ -77,28 +85,45 @@ class Equipment(Component):
     #         self.less = less
     #         self.more = more
             
-    # class Attribute(Component):
-    #     __slots__ = ['unit', 'strength', 'agility', 'intelligence']
-    #     FLAG = 1 << Component.bitflag
-    #     Component.bitflag += 1
-    #     def __init__(self, strength, agility, intelligence):
-    #         '''
-    #         >>> Attribute(5, 5, 5)
-    #         Attribute(strength=5, agility=5, intelligence=5)
-    #         '''
-    #         self.strength = strength
-    #         self.agility = agility
-    #         self.intelligence = intelligence
+class Attribute(Component):
+    __slots__ = [
+        'unit', 'strength', 'agility', 'intelligence', 'health', 'mana',
+        'armor', 'modifiers',
+    ]
+    class Stat(Component):
+        __slots__ = ['name', 'final', 'current']
+        def __init__(self, name, stat):
+            self.name = name
+            self.final = self.current = stat
 
-    #     def update(self):
-    #         for attr in 'health mana defense'.split():
-    #             if self.unit.has(attr):
-    #                 self.unit.get(attr).update()
+    class Health(Component):
+        __slots__ = ['max_hp', 'cur_hp']
+        def __init__(self, health=0):
+            self.max_hp = self.cur_hp = health
+            
+    class Mana(Component):
+        __slots__ = ['max_mp', 'cur_mp']
+        def __init__(self, mana=0):
+            self.max_mp = self.cur_mp = mana
+
+    class Armor(Component):
+        __slots__ = ['max_armor', 'cur_armor']
+        def __init__(self, armor=0):
+            self.max_armor = self.cur_armor = armor
+
+    def __init__(self, strength=0, agility=0, intelligence=0):
+        self.modifiers = {key: 0 for key in self.__slots__ 
+                                 if key not in ("unit", "modifiers")}
+        self.strength = strength
+        self.agility = agility
+        self.intelligence = intelligence
+
+        self.health = self.Health(self.strength * 2)
+        self.mana = self.Mana(int(self.intelligence * 1.5))
+        self.armor = self.Armor(int(self.agility * .1))
 
 class Damage(Component):
     __slots__ = ['unit', "damages"]
-    # FLAG = 1 << Component.bitflag
-    # Component.bitflag += 1
     PHYSICAL, MAGICAL = range(2)
     def __init__(self, damage=None, damages=None):
         self.damages = {}
@@ -137,13 +162,14 @@ class Damage(Component):
             return str(damage_info.pop())
         return "/".join([str(d) for d in damage_info])
         
-class Health(Component):
-    __slots__ = ['unit', 'max_hp', 'cur_hp']
-    def __init__(self, health=0):
-        self.max_hp = self.cur_hp = health
-    @property
-    def alive(self):
-        return self.cur_hp > 0
+# class Health(Component):
+#     __slots__ = ['unit', 'max_hp', 'cur_hp']
+#     def __init__(self, health=0):
+#         self.max_hp = self.cur_hp = health
+
+#     @property
+#     def alive(self):
+#         return self.cur_hp > 0
 
     #     def update(self):
     #         if self.unit.has_component('attribute'):
@@ -186,12 +212,10 @@ class Health(Component):
     #                 total_damage.append(damage * self.resistance)
     #         return sum(total_damage)
 
-    # class Mana(Component):
-    #     __slots__ = ['unit', 'max_mp', 'cur_mp']
-    #     FLAG = 1 << Component.bitflag
-    #     Component.bitflag += 1
-    #     def __init__(self, mana=0):
-    #         self.max_mp = self.cur_mp = mana
+# class Mana(Component):
+#     __slots__ = ['unit', 'max_mp', 'cur_mp']
+#     def __init__(self, mana=0):
+#         self.max_mp = self.cur_mp = mana
 
     #     def update(self):
     #         if self.unit.has_component('attribute'):
@@ -238,12 +262,12 @@ class Entity:
         return object.__new__(cls)
 
     def __str__(self):
-        if Information.classname() in self.components.keys():
-            return self.information()
         return str(self.eid)
 
     def __repr__(self): 
-        return f"Entity(eid={self})"
+        components = "\n".join(f"{key}: {repr(value)}"
+            for key, value in self.components.items())
+        return f"Entity(eid={self})\n{components}"
 
     def __hash__(self): 
         return self.eid
@@ -255,11 +279,14 @@ class Entity:
         return self.eid < hash(other.eid)
 
     def __getattr__(self, key):
+        # check first level order keys: match eid or components
         if key in self.__slots__:
             return super(Entity, self).__getattr__(key)
+        # check second level order keys in self.components: match comp name
         if key in self.components:
             return self.components[key]
         for component in self.components.values():
+            # check third level order keys in individual components: ex symbol
             if isinstance(component, Component) and key in component.__slots__:
                 return getattr(component, key)
 
