@@ -59,7 +59,6 @@ class Information(Component):
             raise ValueError("Need at least a name or race")
         for atr, val in zip(['name', 'race', 'gender'], [name, race, gender]):
             setattr(self, atr, val if val else None)
-
     def __call__(self):
         return self.name if self.name else self.race
 
@@ -75,16 +74,6 @@ class Equipment(Component):
         for a, v in zip(['left_hand', 'right_hand', 'body'], [lh, rh, body]):
             setattr(self, a, v if v else None)
 
-    # -- Needs Validation --
-    # class Description(Component):
-    #     __slots__ = ['unit', 'name', 'less', 'more']
-    #     FLAG = 1 << Component.bitflag
-    #     Component.bitflag += 1
-    #     def __init__(self, name, less=None, more=None):
-    #         self.name = name
-    #         self.less = less
-    #         self.more = more
-            
 class Attribute(Component):
     __slots__ = [
         'unit', 'strength', 'agility', 'intelligence', 'health', 'mana',

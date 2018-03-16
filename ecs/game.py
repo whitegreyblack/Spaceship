@@ -160,16 +160,15 @@ def cache(lines):
     def funcwrap(logger):
         def wrapper(messages):
             nonlocal index, messagelog, lines
-            messages = [
-                textwrap.wrap(m, term.state(term.TK_WIDTH)) for m in messages
-            ]
-            print('c', messages)
-            index += len(messages)                
-            messagelog += messages
+            current = len(messagelog)
+            for m in messages:
+                for twm in textwrap.wrap(m, term.state(term.TK_WIDTH)):
+                    messagelog.append(twm)
             if len(messagelog) <= lines:
                 logger(messagelog)
             else:
                 logger(messagelog[index:index+lines])
+            index += len(messagelog) - current
         return wrapper
     return funcwrap
 
@@ -181,12 +180,13 @@ def system_logger(messages):
         term.state(term.TK_HEIGHT))
     for i in range(len(messages)):
         try:
+            print(messages)
             term.puts(0, 
                 term.state(term.TK_HEIGHT) - len(messages) + i, 
                 messages[i])
         except:
             break
-    term.refresh()
+    # term.refresh()
 
 def system_action(entities, dungeon, messages):
     def get_input():
@@ -377,7 +377,7 @@ def system_action(entities, dungeon, messages):
                     print('combat', entity, positions[(dx, dy)])
                     combat(entity, positions[(dx, dy)])
         # print(repr(entity), list(entity.components))
-    print(messages)
+    # print(messages)
     return proceed, recompute, messages
 
 def system_remove(entities):
@@ -601,16 +601,17 @@ class Game:
         proceed = True
         fov_recalc = True
         messages = []
-        # system_draw(fov_recalc, self.dungeon, self.entities)
+        system_draw(fov_recalc, self.dungeon, self.entities)
+        term.refresh()
         while proceed:
             # read write -- if user presses exit here then quit next loop?
-            system_draw(fov_recalc, self.dungeon, self.entities)
-            # system_logger(messages)
-            term.refresh()
             proceed, fov_recalc, messages = system_action(self.entities, 
                                                           self.dungeon,
                                                           messages)
             # system_draw(fov_recalc, self.dungeon, self.entities)
+            system_draw(fov_recalc, self.dungeon, self.entities)
+            system_logger(messages)
+            term.refresh()
             self.entities = system_remove(self.entities)        
                    
             if not system_alive(self.entities):
