@@ -1,0 +1,4 @@
+{
+    name: rat,     // info
+    color: brown,  // render
+}

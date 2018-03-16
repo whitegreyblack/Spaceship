@@ -1,7 +1,7 @@
 # component.py
 from bearlibterminal import terminal as term
 import random
-from .die import Die
+from .die import Die, check_sign as check
 
 class System:
     def update(self):
@@ -88,39 +88,72 @@ class Equipment(Component):
 class Attribute(Component):
     __slots__ = [
         'unit', 'strength', 'agility', 'intelligence', 'health', 'mana',
-        'armor', 'modifiers',
+        'armor', 'modifiers', 'attrscore'
     ]
-    class Stat(Component):
-        __slots__ = ['name', 'final', 'current']
-        def __init__(self, name, stat):
-            self.name = name
-            self.final = self.current = stat
-
     class Health(Component):
         __slots__ = ['max_hp', 'cur_hp']
         def __init__(self, health=0):
-            self.max_hp = self.cur_hp = health
-            
+            self.max_hp = self.cur_hp = health * 2
+        def __str__(self):
+            return super().__str__() + f"({int(self.cur_hp)}/{int(self.max_hp)})"
+        def __call__(self):
+            return int(self.cur_hp), int(self.max_hp)
+
     class Mana(Component):
         __slots__ = ['max_mp', 'cur_mp']
         def __init__(self, mana=0):
-            self.max_mp = self.cur_mp = mana
+            self.max_mp = self.cur_mp = mana * 1.5
+        def __str__(self):
+            return super().__str__() + f"({int(self.cur_mp)}/{int(self.max_mp)}"
+        def __call__(self):
+            return int(self.cur_mp), int(self.max_mp)
 
     class Armor(Component):
         __slots__ = ['max_armor', 'cur_armor']
         def __init__(self, armor=0):
-            self.max_armor = self.cur_armor = armor
+            self.max_armor = self.cur_armor = armor * .1
 
     def __init__(self, strength=0, agility=0, intelligence=0):
-        self.modifiers = {key: 0 for key in self.__slots__ 
-                                 if key not in ("unit", "modifiers")}
         self.strength = strength
         self.agility = agility
         self.intelligence = intelligence
 
-        self.health = self.Health(self.strength * 2)
-        self.mana = self.Mana(int(self.intelligence * 1.5))
-        self.armor = self.Armor(int(self.agility * .1))
+        self.modifiers = {key: 0 for key in self.__slots__
+                              if key not in ("unit", "modifiers", "attrscore")}
+        self.stats()
+
+    def __str__(self):
+        attributes = "strength agility intelligence".split()
+        attributes = " ".join(f"{getattr(self, a)}{check(self.modifiers[a])} ({self.attrscore[a]})" 
+                                for a in attributes)
+        return super().__str__() + f"s: {attributes}"
+
+    def stats(self):
+        self.health = self.Health(self.strength + self.modifiers['strength'])
+        self.regen = self.strength / 20
+        self.mana = self.Mana(self.intelligence + self.modifiers['intelligence'])
+        self.gain = self.intelligence // 6
+        self.armor = self.Armor(self.agility + self.modifiers['agility'])
+
+        self.attrscore = {key: (getattr(self, key) + self.modifiers[key]) // 2 - 5 
+                            for key in "strength agility intelligence".split()}
+
+    def update(self):
+        self.health.cur_hp = min(self.health.cur_hp + self.regen, 
+                                self.health.max_hp)
+        self.mana.cur_mp = min(self.mana.cur_mp + self.gain,
+                               self.mana.max_mp)
+    
+    def modify(self, stat=None, stats=None):
+        if not stat and not stats:
+            raise ValueError("Need a stat to modify")
+        if stat and stats:
+            raise ValueError("Cannot supply both arguments in modify")
+        if stat:
+            stats = [stat]
+        for stat, value in stats:
+            self.modifiers[stat] += value
+        self.stats()
 
 class Damage(Component):
     __slots__ = ['unit', "damages"]

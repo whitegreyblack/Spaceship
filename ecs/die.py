@@ -3,6 +3,18 @@ from collections import namedtuple
 import random
 import re
 
+def check_sign(value):
+    '''Converts all values into string representations. If value is 
+    positive, a plus sign is added to the string. If value is zero,
+    then function returns an empty string
+    '''
+    string = ""
+    if value < 0:
+        string = str(value)
+    elif value > 0:
+        string = f"+{value}"
+    return string
+
 class Die:
     '''Die class used in determining a controlled random number. Can be
     used with any attribute, chance mechanic or random event occurance.
@@ -80,18 +92,6 @@ class Die:
         normal parameters
         '''
         return cls(*Die.eval_dice_string(string))
-
-    def check_sign(self, value):
-        '''Converts all values into string representations. If value is 
-        positive, a plus sign is added to the string. If value is zero,
-        then function returns an empty string
-        '''
-        string = ""
-        if value < 0:
-            string = str(value)
-        elif value > 0:
-            string = f"+{value}"
-        return string
     
     def roll(self):
         '''Returns a random value found in between the range roll'''
@@ -121,7 +121,7 @@ class Die:
 
     def __str__(self):
         '''Returns die info for end-user'''
-        return f"{self.multiplier}d{self.sides}{self.check_sign(self.modifier)}"
+        return f"{self.multiplier}d{self.sides}{check_sign(self.modifier)}"
 
 if __name__ == "__main__":
     from doctest import testmod

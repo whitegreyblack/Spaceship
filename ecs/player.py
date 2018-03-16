@@ -22,12 +22,27 @@ def player(info, character):
     # Information(name, race, gender, class)
     e.information = Information(*info)
     # Attributes(strength, agility, intelligence)
-    e.attribute = Attribute(10, 10, 10)
+    e.attribute = Attribute(28, 6, 12)
     # Equipment(left hand, right hand, body)
     e.equipment = Equipment()
     # Backpack(itemlist)
     e.backpack = Backpack(backpack=[weapon()])
     print(repr(e), e.attribute.health.cur_hp)
+    # e.attribute.modify(stat=('strength', 3))
+    print(e.attribute.health.cur_hp, e.attribute.health.max_hp)    
+    print(e.attribute.health)
+    e.attribute.health.cur_hp -= 10
+    print(e.attribute.health.cur_hp, e.attribute.health.max_hp)
+    print(e.attribute.health)
+    e.attribute.update()
+    print(e.attribute.health.cur_hp, e.attribute.health.max_hp)
+    print(e.attribute.health)
+    e.attribute.update()
+    print(e.attribute.health.cur_hp, e.attribute.health.max_hp)
+    print(e.attribute.health)
+    print(e.attribute)
+    e.attribute.modify(('strength', 3))
+    print(e.attribute)    
     return e
 
 if __name__ == "__main__":
