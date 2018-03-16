@@ -1,7 +1,7 @@
 # create player
 from ecs.ecs import Entity
 from ecs.ecs import (
-    Information, Equipment, Backpack, Attribute, Render, Position, Damage
+    Information, Equipment, Inventory, Attribute, Render, Position, Damage
 )
 
 def weapon():
@@ -26,7 +26,7 @@ def player(info, character):
     # Equipment(left hand, right hand, body)
     e.equipment = Equipment()
     # Backpack(itemlist)
-    e.backpack = Backpack(backpack=[weapon()])
+    e.backpack = Inventory(bag=[weapon()])
     print(repr(e), e.attribute.health.cur_hp)
     # e.attribute.modify(stat=('strength', 3))
     print(e.attribute.health.cur_hp, e.attribute.health.max_hp)    
@@ -42,7 +42,7 @@ def player(info, character):
     print(e.attribute.health)
     print(e.attribute)
     e.attribute.modify(('strength', 3))
-    print(e.attribute)    
+    print(e.attribute)
     return e
 
 if __name__ == "__main__":

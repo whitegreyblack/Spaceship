@@ -7,14 +7,23 @@ class System:
     def update(self):
         raise NotImplementedError
 
+'''
+# Component Definitions
+Unit: -> if entity has these components -- it is a unit
+    Render | Information | Position | Equipment | Inventory
+Weapon:
+    Render | Information | Position(optional) | Damage
+Armor:
+    Render | Information | Position(optional) | Defense
+'''
 class Component:
     def __repr__(self):
         '''Returns stat information for dev'''
         component_variables = ", ".join(f'{s}={getattr(self, s)}' 
                                 for s in self.__slots__
-                                if s != "unit" and
-                                   bool(hasattr(self, s) and 
-                                   getattr(self, s)))
+                                if s != "unit" 
+                                and bool(hasattr(self, s) 
+                                and getattr(self, s)))
         return f'{self}({component_variables})'
 
     def __str__(self):
@@ -62,11 +71,29 @@ class Information(Component):
     def __call__(self):
         return self.name if self.name else self.race
 
-class Backpack(Component):
-    __slots__ = ['unit', 'backpack']
-    def __init__(self, backpack=[]):
+class Inventory(Component):
+    __slots__ = ['unit', 'bag']
+    def __init__(self, bag=[]):
         self.max = 26
-        self.backpack = backpack
+        self.bag = bag
+
+def empty(bag): 
+    return len(bag) == 0
+
+def full(bag, size): 
+    return len(bag) == size
+
+def pickup(bag, item, size):
+    if len(bag) < size:
+        return False
+    bag.append(item)
+    return True
+
+def drop(bag, item):
+    if len(bag) == 0:
+        return False
+    bag.remove(item)
+    return True
 
 class Equipment(Component):
     __slots__ = ['unit', 'left_hand', 'right_hand', 'body']
@@ -74,34 +101,26 @@ class Equipment(Component):
         for a, v in zip(['left_hand', 'right_hand', 'body'], [lh, rh, body]):
             setattr(self, a, v if v else None)
 
+def equip(entity, item, part):
+    if getattr(entity.equipment, part):
+        return False
+    setattr(entity.equipment, part)
+    entity.attribute.modify(stats=entity.equipment.part.modifiers)
+    return True
+
+def unequip(self, item, part):
+    item = getattr(entity.equipment, part):
+    if not item:
+        return False
+    setattr(entity.equipment, part, None)
+    entity.attribute.modify(stats=entity.equipment.part.modifiers, remove=True)
+    return True
+
 class Attribute(Component):
     __slots__ = [
         'unit', 'strength', 'agility', 'intelligence', 'health', 'mana',
         'armor', 'modifiers', 'attrscore'
     ]
-    class Health(Component):
-        __slots__ = ['max_hp', 'cur_hp']
-        def __init__(self, health=0):
-            self.max_hp = self.cur_hp = health * 2
-        def __str__(self):
-            return super().__str__() + f"({int(self.cur_hp)}/{int(self.max_hp)})"
-        def __call__(self):
-            return int(self.cur_hp), int(self.max_hp)
-
-    class Mana(Component):
-        __slots__ = ['max_mp', 'cur_mp']
-        def __init__(self, mana=0):
-            self.max_mp = self.cur_mp = mana * 1.5
-        def __str__(self):
-            return super().__str__() + f"({int(self.cur_mp)}/{int(self.max_mp)}"
-        def __call__(self):
-            return int(self.cur_mp), int(self.max_mp)
-
-    class Armor(Component):
-        __slots__ = ['max_armor', 'cur_armor']
-        def __init__(self, armor=0):
-            self.max_armor = self.cur_armor = armor * .1
-
     def __init__(self, strength=0, agility=0, intelligence=0):
         self.strength = strength
         self.agility = agility
@@ -118,11 +137,11 @@ class Attribute(Component):
         return super().__str__() + f"s: {attributes}"
 
     def stats(self):
-        self.health = self.Health(self.strength + self.modifiers['strength'])
+        self.health = Health(self.strength + self.modifiers['strength'])
         self.regen = self.strength / 20
-        self.mana = self.Mana(self.intelligence + self.modifiers['intelligence'])
+        self.mana = Mana(self.intelligence + self.modifiers['intelligence'])
         self.gain = self.intelligence // 6
-        self.armor = self.Armor(self.agility + self.modifiers['agility'])
+        self.armor = Armor(self.agility + self.modifiers['agility'])
 
         self.attrscore = {key: (getattr(self, key) + self.modifiers[key]) // 2 - 5 
                             for key in "strength agility intelligence".split()}
@@ -133,7 +152,7 @@ class Attribute(Component):
         self.mana.cur_mp = min(self.mana.cur_mp + self.gain,
                                self.mana.max_mp)
     
-    def modify(self, stat=None, stats=None):
+    def modify(self, stat=None, stats=None, remove=False):
         if not stat and not stats:
             raise ValueError("Need a stat to modify")
         if stat and stats:
@@ -141,8 +160,34 @@ class Attribute(Component):
         if stat:
             stats = [stat]
         for stat, value in stats:
-            self.modifiers[stat] += value
+            if remove:
+                self.modifiers[stat] += value
+            else:
+                self.modifiers[stat] -= value
         self.stats()
+
+class Health(Component):
+    __slots__ = ['max_hp', 'cur_hp']
+    def __init__(self, health=0):
+        self.max_hp = self.cur_hp = health * 2
+    def __str__(self):
+        return super().__str__() + f"({int(self.cur_hp)}/{int(self.max_hp)})"
+    def __call__(self):
+        return int(self.cur_hp), int(self.max_hp)
+
+class Mana(Component):
+    __slots__ = ['max_mp', 'cur_mp']
+    def __init__(self, mana=0):
+        self.max_mp = self.cur_mp = mana * 1.5
+    def __str__(self):
+        return super().__str__() + f"({int(self.cur_mp)}/{int(self.max_mp)}"
+    def __call__(self):
+        return int(self.cur_mp), int(self.max_mp)
+
+class Armor(Component):
+    __slots__ = ['max_armor', 'cur_armor']
+    def __init__(self, armor=0):
+        self.max_armor = self.cur_armor = armor * .1
 
 class Damage(Component):
     __slots__ = ['unit', "damages"]
