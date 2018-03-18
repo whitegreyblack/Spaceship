@@ -8,7 +8,7 @@ def weapon():
     e = Entity()
     e.render = Render(')')
     e.information = Information(name="sword")
-    e.damage = Damage(("2d5", Damage.PHYSICAL))
+    e.damage = Damage(damages=[("2d5", Damage.PHYSICAL), ("1d6", Damage.MAGICAL)])
     return e
 
 def player(info, character):

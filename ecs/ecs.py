@@ -109,7 +109,7 @@ def equip(entity, item, part):
     return True
 
 def unequip(self, item, part):
-    item = getattr(entity.equipment, part):
+    item = getattr(entity.equipment, part)
     if not item:
         return False
     setattr(entity.equipment, part, None)
