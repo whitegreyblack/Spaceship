@@ -141,6 +141,10 @@ class Attribute(Component):
                                 for a in attributes)
         return super().__str__() + f"s: {attributes}"
 
+    def __call__(self):
+        return (self.strength, self.agility, self.intelligence, 
+            self.modifiers, self.attrscore)
+
     def stats(self):
         self.health = Health(self.strength + self.modifiers['strength'])
         self.mana = Mana(self.intelligence + self.modifiers['intelligence'])

@@ -1,5 +1,6 @@
 from bearlibterminal import terminal as term
 from collections import namedtuple
+from ecs.die import check_sign as check
 from ecs.ecs import (
     Entity, Component, Position, Render, Inventory, Damage, Equipment,
     Information, Attribute
@@ -124,14 +125,23 @@ def health_change(entity, change):
     return entity.attribute.health.cur_hp, entity.attribute.health.max_hp
 
 def system_status(entity):
-    s=entity.attribute.strength
-    a=entity.attribute.agility
-    i=entity.attribute.intelligence
-    hp=entity.attribute.health.cur_hp
-    mp=entity.attribute.mana.cur_mp
-    term.puts(0, 0, f"HP:{hp}/MP:{mp}/S:{s}/A:{a}/I:{i}")
+    s, a, i, mods, attrs = entity.attribute()
+    strmod, strscore = mods['strength'], attrs['strength']
+    agimod, agiscore = mods['agility'], attrs['agility']
+    intmod, intscore = mods['intelligence'], attrs['intelligence']
+    hc=entity.attribute.health.cur_hp
+    hc, hm = entity.attribute.health()
+    mc, mm = entity.attribute.mana()
+    # term.puts(0, 0, f"HP:{hp}/MP:{mp}/S:{s}/A:{a}/I:{i}")
+    term.puts(65, 0, f"{entity.information()}")
+    term.puts(65, 1, f"HP: {hc:2}/{hm:2}")
+    term.puts(65, 2, f"MP: {mc:2}/{mm:2}")
     
-def system_draw(recalc, world, entities):
+    term.puts(65, 4, f"STR: {s}{check(strmod)}({strscore})")
+    term.puts(65, 5, f"AGI: {a}{check(agimod)}({agiscore})")
+    term.puts(65, 6, f"INT: {i}{check(intmod)}({intscore})")
+    
+def system_draw(recalc, world, entity, entities):
     def draw_entity(position, background, string):
         revert = False
         if background != "#000000":
@@ -143,7 +153,7 @@ def system_draw(recalc, world, entities):
     if recalc:
         term.clear_area(0, 1, world.width, world.height)
         world.reset_light()
-        world.do_fov(*entities[0].position(), 15)
+        world.do_fov(*entity.position(), 15)
         positions = { e.position(): e.render() 
                         for e in sorted(entities, reverse=True) 
         }
@@ -152,11 +162,11 @@ def system_draw(recalc, world, entities):
                 lighted = world.lit(i, j)
                 if lighted == 2:
                     if (i, j) in positions.keys():
-                        draw_entity((i, j+1), *positions[(i, j)])
+                        draw_entity((i, j), *positions[(i, j)])
                     else:
-                        term.puts(i, j+1, f"[c=#999999]{cell}[/c]")
+                        term.puts(i, j, f"[c=#999999]{cell}[/c]")
                 elif lighted == 1:
-                    term.puts(i, j+1, f"[c=#222222]{cell}[/c]")
+                    term.puts(i, j, f"[c=#222222]{cell}[/c]")
 
 def system_alive(entites):
     return 0 in [e.eid for e in entites]
@@ -610,19 +620,16 @@ class Game:
         proceed = True
         fov_recalc = True
         messages = []
-        system_status(self.player)
-        system_draw(fov_recalc, self.dungeon, self.entities)
         term.refresh()
         while proceed:
+            system_status(self.player)
+            system_draw(fov_recalc, self.dungeon, self.player, self.entities)
+            system_logger(messages)
+            term.refresh()
             # read write -- if user presses exit here then quit next loop?
             proceed, fov_recalc, messages = system_action(self.entities, 
                                                           self.dungeon,
                                                           messages)
-            # system_draw(fov_recalc, self.dungeon, self.entities)
-            system_status(self.player)
-            system_draw(fov_recalc, self.dungeon, self.entities)
-            system_logger(messages)
-            term.refresh()
             self.entities = system_remove(self.entities)        
                    
             if not system_alive(self.entities):
