@@ -122,25 +122,39 @@ def equipment_armor(entity):
 def health_change(entity, change):
     current_health = entity.attribute.health.cur_hp 
     entity.attribute.health.cur_hp = max(0, current_health - change)
-    return entity.attribute.health.cur_hp, entity.attribute.health.max_hp
+    return entity.attribute.health()
 
 def system_status(entity):
     s, a, i, mods, attrs = entity.attribute()
     strmod, strscore = mods['strength'], attrs['strength']
     agimod, agiscore = mods['agility'], attrs['agility']
     intmod, intscore = mods['intelligence'], attrs['intelligence']
-    hc=entity.attribute.health.cur_hp
     hc, hm = entity.attribute.health()
     mc, mm = entity.attribute.mana()
     # term.puts(0, 0, f"HP:{hp}/MP:{mp}/S:{s}/A:{a}/I:{i}")
     term.puts(65, 0, f"{entity.information()}")
     term.puts(65, 1, f"HP: {hc:2}/{hm:2}")
     term.puts(65, 2, f"MP: {mc:2}/{mm:2}")
-    
     term.puts(65, 4, f"STR: {s}{check(strmod)}({strscore})")
     term.puts(65, 5, f"AGI: {a}{check(agimod)}({agiscore})")
     term.puts(65, 6, f"INT: {i}{check(intmod)}({intscore})")
-    
+    # border between hero and other units
+    term.puts(64, 7, f"{'-'*16}")
+
+def system_enemy_status(world, entity, entities):
+    index = 8
+    term.clear_area(65, 8, 15, 16)
+    lighted = world.lighted
+    entities_in_range = {e for e in entities 
+                   if has(e, [Position, 'ai']) 
+                   and e.position() in lighted}
+    for e in entities_in_range:
+        hc, hm = e.attribute.health()
+        term.puts(65, index, f"{e.information()}")
+        index += 1
+        term.puts(65, index, f"HP: {hc:2}/{hm:2}")
+        index += 1
+
 def system_draw(recalc, world, entity, entities):
     def draw_entity(position, background, string):
         revert = False
@@ -152,8 +166,6 @@ def system_draw(recalc, world, entity, entities):
             term.bkcolor('#000000')
     if recalc:
         term.clear_area(0, 1, world.width, world.height)
-        world.reset_light()
-        world.do_fov(*entity.position(), 15)
         positions = { e.position(): e.render() 
                         for e in sorted(entities, reverse=True) 
         }
@@ -171,6 +183,11 @@ def system_draw(recalc, world, entity, entities):
 def system_alive(entites):
     return 0 in [e.eid for e in entites]
 
+def system_update(entities):
+    for e in entities:
+        if has(e, Attribute):
+            e.attribute.update()
+
 def cache(lines):
     lines = lines
     index = 0
@@ -185,7 +202,7 @@ def cache(lines):
             if len(messagelog) <= lines:
                 logger(messagelog)
             else:
-                logger(messagelog[index:index+lines])
+                logger(messagelog[index:index + lines])
             index += len(messagelog) - current
         return wrapper
     return funcwrap
@@ -193,9 +210,9 @@ def cache(lines):
 @cache(5)
 def system_logger(messages):
     term.clear_area(0, 
-        term.state(term.TK_HEIGHT) - len(messages), 
+        term.state(term.TK_HEIGHT) - 5, 
         term.state(term.TK_WIDTH), 
-        term.state(term.TK_HEIGHT))
+        5)
     for i in range(len(messages)):
         try:
             # print(messages)
@@ -271,16 +288,17 @@ def system_action(entities, dungeon, messages):
                 damages = natural_damage(entity)
             else:
                 damages = 1
-            msg = f"{attacker.title()} dealt {damages} damage to the {defender}. "
+            # msg = f"{attacker.title()} dealt {damages} damage to the {defender}. "
             cur_hp, max_hp = health_change(other, damages)
-            msg += f"{defender.title()} has {cur_hp}/{max_hp} left. "
+            # msg += f"{defender.title()} has {cur_hp}/{max_hp} left. "
             if cur_hp == 0:
                 other.delete = True
-                msg += f"{attacker.title()} has killed the {defender}."
+                msg = f"{attacker.title()} has killed the {defender}."
+                messages.append(msg)
+                
             # if has(entity, Damage):
             #     dmg = entity.damage()
             #     print(f"{attacker} deals {dmg} damage to {defender}")
-            messages.append(msg)
 
     def move(entity, x, y):
         entity.position.x += x
@@ -437,16 +455,17 @@ def create_player(entities, floors):
 def create_enemy(entities, floors):
     goblin = (Information(race="goblin"), 
               Render('g', "#008800"), 
-              Damage(("1d6", Damage.PHYSICAL)))
+              Damage(("1d6", Damage.PHYSICAL)),
+              Attribute(strength=6))
     rat = (Information(race="rat"), 
            Render('r', '#664422'), 
-           Damage(("1d4", Damage.PHYSICAL)))
+           Damage(("1d4", Damage.PHYSICAL)),
+           Attribute(strength=3))
     e = Entity(components=[
         *(rat if random.randint(0, 1) else goblin),
         Position(*random_position(entities, floors)),
         ('moveable', True),
         ('ai', True),
-        Attribute(strength=random.randint(3, 12)),
     ])
     entities.append(e)
 
@@ -531,14 +550,14 @@ class Map:
 
     def do_fov(self, x, y, radius):
         "Calculate lit squares from the given location and radius"
+        self.reset_light()
         self.set_lit(x, y)
-        self.visit = 0
         for oct in range(8):
             self._cast_light(x, y, 1, 1.0, 0.0, radius,
                              self.mult[0][oct], self.mult[1][oct],
-                             self.mult[2][oct], self.mult[3][oct], 0)
+                             self.mult[2][oct], self.mult[3][oct])
 
-    def _cast_light(self, cx, cy, row, start, end, radius, xx, xy, yx, yy, id):
+    def _cast_light(self, cx, cy, row, start, end, radius, xx, xy, yx, yy):
         "Recursive lightcasting function"
         if start < end:
             return
@@ -550,7 +569,6 @@ class Map:
                 dx += 1
                 # Translate the dx, dy coordinates into map coordinates:
                 X, Y = cx + dx * xx + dy * xy, cy + dx * yx + dy * yy
-                self.visit += 1
                 # l_slope and r_slope store the slopes of the left and right
                 # extremities of the square we're considering:
                 l_slope = (dx - 0.5) / (dy + 0.5)
@@ -575,8 +593,8 @@ class Map:
                         if self.blocked(X, Y) and j < radius:
                             # This is a blocking square, start a child scan:
                             blocked = True
-                            self._cast_light(cx, cy, j+1, start, l_slope,
-                                             radius, xx, xy, yx, yy, id+1)
+                            self._cast_light(cx, cy, j + 1, start, l_slope,
+                                             radius, xx, xy, yx, yy)
                             new_start = r_slope
             # Row is scanned; do next row unless last square was blocked:
             if blocked:
@@ -622,9 +640,11 @@ class Game:
         messages = []
         term.refresh()
         while proceed:
+            self.dungeon.do_fov(*self.player.position(), 15)
             system_status(self.player)
+            system_enemy_status(self.dungeon, self.player, self.entities)
             system_draw(fov_recalc, self.dungeon, self.player, self.entities)
-            system_logger(messages)
+            # system_logger(messages)
             term.refresh()
             # read write -- if user presses exit here then quit next loop?
             proceed, fov_recalc, messages = system_action(self.entities, 
@@ -635,8 +655,10 @@ class Game:
             if not system_alive(self.entities):
                 break
 
-        system_logger(messages)
-        term.refresh()
+            system_update(self.entities)
+
+        # system_logger(messages)
+        # term.refresh()
             # system_draw(fov_recalc, self.dungeon, self.entities)         
         # else:            
         # check player alive
