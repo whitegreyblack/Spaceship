@@ -167,12 +167,15 @@ def system_enemy_status(world, entity, entities):
     entities_in_range = {e for e in entities 
                    if has(e, [Position, 'ai']) 
                    and e.position() in lighted}
-    for e in entities_in_range:
+    for e in sorted(entities_in_range, key=lambda p: distance(p, entity)):
         hc, hm = e.attribute.health()
+        health_bars = int((hc / hm) * 15)
+        health_string = f"HP: {hc:2}/{hm:2}"
+        health_string = health_string + ' ' * (15 - len(health_string))
         string = f"[c={e.render.foreground}]{e.information()}[/c]"
-        term.puts(65, index, f"[[{string}]]")
+        term.puts(65, index, string)
         index += 1
-        term.puts(65, index, f"HP: {hc:2}/{hm:2}")
+        plot_bar(65, index, "#880000", "#440000", health_string, health_bars)
         index += 1
 
 def system_draw(recalc, world, entity, entities):
