@@ -124,17 +124,35 @@ def health_change(entity, change):
     entity.attribute.health.cur_hp = max(0, current_health - change)
     return entity.attribute.health()
 
+def plot_bar(x, y, color1, color2, string, bars):
+    length = len(string[:bars])
+    term.bkcolor(color1)
+    term.puts(x, y, string[:bars])
+    term.bkcolor(color2)
+    term.puts(x + length, y, string[bars:])
+    term.bkcolor("#000000")
+
 def system_status(entity):
     s, a, i, mods, attrs = entity.attribute()
     strmod, strscore = mods['strength'], attrs['strength']
     agimod, agiscore = mods['agility'], attrs['agility']
     intmod, intscore = mods['intelligence'], attrs['intelligence']
+    # health status
     hc, hm = entity.attribute.health()
+    health_bars = int((hc / hm) * 15)
+    health_string = f"HP: {hc:2}/{hm:2}"
+    health_string = health_string + ' ' * (15 - len(health_string))
+    # mana status
     mc, mm = entity.attribute.mana()
-    # term.puts(0, 0, f"HP:{hp}/MP:{mp}/S:{s}/A:{a}/I:{i}")
+    mana_bars = int((mc / mm) * 15) if mm != 0 else 0
+    mana_string = f"MP: {mc:2}/{mm:2}"
+    mana_string = mana_string + ' ' * (15 - len(mana_string))
+
     term.puts(65, 0, f"{entity.information()}")
-    term.puts(65, 1, f"HP: {hc:2}/{hm:2}")
-    term.puts(65, 2, f"MP: {mc:2}/{mm:2}")
+    # health 
+    plot_bar(65, 1, "#880000", "#440000", health_string, health_bars)
+    plot_bar(65, 2, "#000088", "#000044", mana_string, mana_bars)
+    term.bkcolor("#000000")
     term.puts(65, 3, f"DMG: ")
     term.puts(65, 4, f"STR: {s}{check(strmod)}({strscore})")
     term.puts(65, 5, f"AGI: {a}{check(agimod)}({agiscore})")
