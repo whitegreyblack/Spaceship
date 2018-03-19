@@ -3,6 +3,11 @@ from bearlibterminal import terminal as term
 import random
 from .die import Die, check_sign as check
 
+def roll(value):
+    if isinstance(value, str):
+        return next(Die.construct(value).roll)
+    return value
+
 class System:
     def update(self):
         raise NotImplementedError
@@ -122,9 +127,9 @@ class Attribute(Component):
         'armor', 'modifiers', 'attrscore'
     ]
     def __init__(self, strength=0, agility=0, intelligence=0):
-        self.strength = strength
-        self.agility = agility
-        self.intelligence = intelligence
+        self.strength = roll(strength)
+        self.agility = roll(agility)
+        self.intelligence = roll(intelligence)
 
         self.modifiers = {key: 0 for key in self.__slots__
                               if key not in ("unit", "modifiers", "attrscore")}
@@ -138,19 +143,15 @@ class Attribute(Component):
 
     def stats(self):
         self.health = Health(self.strength + self.modifiers['strength'])
-        self.regen = self.strength / 20
         self.mana = Mana(self.intelligence + self.modifiers['intelligence'])
-        self.gain = self.intelligence // 6
         self.armor = Armor(self.agility + self.modifiers['agility'])
 
         self.attrscore = {key: (getattr(self, key) + self.modifiers[key]) // 2 - 5 
                             for key in "strength agility intelligence".split()}
 
     def update(self):
-        self.health.cur_hp = min(self.health.cur_hp + self.regen, 
-                                self.health.max_hp)
-        self.mana.cur_mp = min(self.mana.cur_mp + self.gain,
-                               self.mana.max_mp)
+        self.health.update()
+        self.mana.update()
     
     def modify(self, stat=None, stats=None, remove=False):
         if not stat and not stats:
@@ -161,33 +162,56 @@ class Attribute(Component):
             stats = [stat]
         for stat, value in stats:
             if remove:
-                self.modifiers[stat] += value
-            else:
                 self.modifiers[stat] -= value
+            else:
+                self.modifiers[stat] += value
         self.stats()
 
 class Health(Component):
     __slots__ = ['max_hp', 'cur_hp']
-    def __init__(self, health=0):
-        self.max_hp = self.cur_hp = health * 2
+    def __init__(self, strength=0):
+        self.max_hp = self.cur_hp = strength * 2
+        self.regen = strength / 20
     def __str__(self):
         return super().__str__() + f"({int(self.cur_hp)}/{int(self.max_hp)})"
     def __call__(self):
         return int(self.cur_hp), int(self.max_hp)
+    def update(self):
+        self.cur_hp = min(self.cur_hp + self.regen, self.max_hp)
+    @property
+    def alive(self):
+        return self.cur_hp >= 1
+
+class Experience(Component):
+    __slots__ = ['cur_exp', 'cur_lvl', 'next_exp']
+    def __init__(self, level=1):
+        self.level = level
+        self.cur_exp = 0
+    def update(self, exp):
+        self.cur_exp += exp
+        if self.cur_exp >= self.exp_needed:
+            self.level += 1
+            self.cur_exp %= self.next_exp
+    @property
+    def exp_needed(self):
+        return self.level ** 2 * 30
 
 class Mana(Component):
     __slots__ = ['max_mp', 'cur_mp']
-    def __init__(self, mana=0):
-        self.max_mp = self.cur_mp = mana * 1.5
+    def __init__(self, intelligence=0):
+        self.max_mp = self.cur_mp = intelligence * 1.5
+        self.regen = intelligence / 6
     def __str__(self):
         return super().__str__() + f"({int(self.cur_mp)}/{int(self.max_mp)}"
     def __call__(self):
         return int(self.cur_mp), int(self.max_mp)
+    def update(self):
+        self.cur_mp = min(self.cur_mp + self.regen, self.max_mp)
 
 class Armor(Component):
     __slots__ = ['max_armor', 'cur_armor']
-    def __init__(self, armor=0):
-        self.max_armor = self.cur_armor = armor * .1
+    def __init__(self, agility=0):
+        self.max_armor = self.cur_armor = agility * .25 + 3
 
 class Damage(Component):
     __slots__ = ['unit', "damages"]

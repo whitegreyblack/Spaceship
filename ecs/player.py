@@ -1,7 +1,8 @@
 # create player
 from ecs.ecs import Entity
 from ecs.ecs import (
-    Information, Equipment, Inventory, Attribute, Render, Position, Damage
+    Information, Equipment, Inventory, Attribute, Render, Position, Damage,
+    Health, Experience, Armor
 )
 
 def weapon():
@@ -45,5 +46,12 @@ def player(info, character):
     print(e.attribute)
     return e
 
+def calculate(cls, attr):
+    for i in range(100):
+        print(f"{i:2}: {getattr(cls(i), attr)}")
+
 if __name__ == "__main__":
     hero = player(("Grey", "Human"), None)
+    # calculate(Health, 'cur_hp')
+    # calculate(Experience, 'exp_needed')
+    # calculate(Armor, 'max_armor')

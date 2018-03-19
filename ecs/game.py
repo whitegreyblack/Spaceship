@@ -1,7 +1,7 @@
 from bearlibterminal import terminal as term
 from collections import namedtuple
 from ecs.ecs import (
-    Entity, Component, Position, Render, Backpack, Damage, Equipment,
+    Entity, Component, Position, Render, Inventory, Damage, Equipment,
     Information, Attribute
 )
 import math
@@ -123,6 +123,14 @@ def health_change(entity, change):
     entity.attribute.health.cur_hp = max(0, current_health - change)
     return entity.attribute.health.cur_hp, entity.attribute.health.max_hp
 
+def system_status(entity):
+    s=entity.attribute.strength
+    a=entity.attribute.agility
+    i=entity.attribute.intelligence
+    hp=entity.attribute.health.cur_hp
+    mp=entity.attribute.mana.cur_mp
+    term.puts(0, 0, f"HP:{hp}/MP:{mp}/S:{s}/A:{a}/I:{i}")
+    
 def system_draw(recalc, world, entities):
     def draw_entity(position, background, string):
         revert = False
@@ -133,7 +141,7 @@ def system_draw(recalc, world, entities):
         if revert:
             term.bkcolor('#000000')
     if recalc:
-        term.clear_area(0, 0, world.width, world.height)
+        term.clear_area(0, 1, world.width, world.height)
         world.reset_light()
         world.do_fov(*entities[0].position(), 15)
         positions = { e.position(): e.render() 
@@ -144,11 +152,11 @@ def system_draw(recalc, world, entities):
                 lighted = world.lit(i, j)
                 if lighted == 2:
                     if (i, j) in positions.keys():
-                        draw_entity((i, j), *positions[(i, j)])
+                        draw_entity((i, j+1), *positions[(i, j)])
                     else:
-                        term.puts(i, j, f"[c=#999999]{cell}[/c]")
+                        term.puts(i, j+1, f"[c=#999999]{cell}[/c]")
                 elif lighted == 1:
-                    term.puts(i, j, f"[c=#222222]{cell}[/c]")
+                    term.puts(i, j+1, f"[c=#222222]{cell}[/c]")
 
 def system_alive(entites):
     return 0 in [e.eid for e in entites]
@@ -180,7 +188,7 @@ def system_logger(messages):
         term.state(term.TK_HEIGHT))
     for i in range(len(messages)):
         try:
-            print(messages)
+            # print(messages)
             term.puts(0, 
                 term.state(term.TK_HEIGHT) - len(messages) + i, 
                 messages[i])
@@ -405,7 +413,7 @@ def create_player(entities, floors):
     # color -> class type
     # race/name
     # backpack stuff
-    entities.append(Entity(components=[
+    return Entity(components=[
         Position(*random_position(entities, floors)),
         Information(name="Hero", race="Human"),
         Render('a', '#DD8822', '#000088'),
@@ -414,7 +422,7 @@ def create_player(entities, floors):
         Equipment(Damage(("1d6", Damage.PHYSICAL)),
                   Damage(("1d6", Damage.PHYSICAL))),
         Attribute(strength=10),
-    ])) 
+    ])
 
 def create_enemy(entities, floors):
     goblin = (Information(race="goblin"), 
@@ -591,16 +599,18 @@ class Game:
         # entities -- game objects
         self.eindex = 0     
         self.entities = []   
-        create_player(self.entities, self.dungeon.floors)
+        self.player = create_player(self.entities, self.dungeon.floors)
         for i in range(random.randint(5, 7)):
             create_enemy(self.entities, self.dungeon.floors)
         # for i in range(3):
         create_weapon(self.entities, self.dungeon.floors)
+        self.entities.append(self.player)
 
     def run(self):
         proceed = True
         fov_recalc = True
         messages = []
+        system_status(self.player)
         system_draw(fov_recalc, self.dungeon, self.entities)
         term.refresh()
         while proceed:
@@ -609,6 +619,7 @@ class Game:
                                                           self.dungeon,
                                                           messages)
             # system_draw(fov_recalc, self.dungeon, self.entities)
+            system_status(self.player)
             system_draw(fov_recalc, self.dungeon, self.entities)
             system_logger(messages)
             term.refresh()
@@ -617,6 +628,8 @@ class Game:
             if not system_alive(self.entities):
                 break
 
+        system_logger(messages)
+        term.refresh()
             # system_draw(fov_recalc, self.dungeon, self.entities)         
         # else:            
         # check player alive
