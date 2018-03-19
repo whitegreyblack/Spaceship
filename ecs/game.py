@@ -135,6 +135,7 @@ def system_status(entity):
     term.puts(65, 0, f"{entity.information()}")
     term.puts(65, 1, f"HP: {hc:2}/{hm:2}")
     term.puts(65, 2, f"MP: {mc:2}/{mm:2}")
+    term.puts(65, 3, f"DMG: ")
     term.puts(65, 4, f"STR: {s}{check(strmod)}({strscore})")
     term.puts(65, 5, f"AGI: {a}{check(agimod)}({agiscore})")
     term.puts(65, 6, f"INT: {i}{check(intmod)}({intscore})")
@@ -150,7 +151,8 @@ def system_enemy_status(world, entity, entities):
                    and e.position() in lighted}
     for e in entities_in_range:
         hc, hm = e.attribute.health()
-        term.puts(65, index, f"{e.information()}")
+        string = f"[c={e.render.foreground}]{e.information()}[/c]"
+        term.puts(65, index, f"[[{string}]]")
         index += 1
         term.puts(65, index, f"HP: {hc:2}/{hm:2}")
         index += 1
@@ -289,12 +291,15 @@ def system_action(entities, dungeon, messages):
             else:
                 damages = 1
             # msg = f"{attacker.title()} dealt {damages} damage to the {defender}. "
+            print(f"{attacker.title()} dealt {damages} damage to the {defender}. ")
             cur_hp, max_hp = health_change(other, damages)
             # msg += f"{defender.title()} has {cur_hp}/{max_hp} left. "
             if cur_hp == 0:
                 other.delete = True
-                msg = f"{attacker.title()} has killed the {defender}."
-                messages.append(msg)
+                # msg += f"{attacker.title()} has killed the {defender}."
+                print(f"{attacker.title()} has killed the {defender}.")
+
+                # messages.append(msg)
                 
             # if has(entity, Damage):
             #     dmg = entity.damage()
@@ -348,11 +353,8 @@ def system_action(entities, dungeon, messages):
     recompute = False
     proceed = True
     for entity in entities:
-        # print(entity)
         # needs these two components to move -- dead entities don't move
         if has(entity, 'moveable') and not has(entity, 'delete'):
-            # if loggable((entity,)) and not has(entity, 'ai'): 
-            #     print(f"{entity.information()} takes his turn")
             a, x, y, proceed = take_turn()
             if not proceed:
                 break
@@ -483,13 +485,6 @@ def create_weapon(entities, floors):
         Damage(("2d6", Damage.PHYSICAL))
     ]))
 
-class Tile:
-    def __init__(self, ttype):
-        self.ttype = ttype
-    def walkable(self): return self.ttype
-
-WALL, FLOOR, OPEN_DOOR, CLOSED_DOOR = [Tile(i) for i in range(4)]
-
 class Result:
     def __init__(self):
         self.events = []
@@ -613,12 +608,6 @@ def draw_main_menu():
     term.clear()
     return Keyboard.MAIN_MENU[key]
 
-class World:
-    def __init__(self):
-        self.world = None
-        self.entities = set()
-        self.components = {Component.__subclasses__()}
-
 class Game:
     def __init__(self, world:str):
         # world variables
@@ -628,17 +617,17 @@ class Game:
         self.eindex = 0     
         self.entities = []   
         self.player = create_player(self.entities, self.dungeon.floors)
+        self.entities.append(self.player)
+        
         for i in range(random.randint(5, 7)):
             create_enemy(self.entities, self.dungeon.floors)
         # for i in range(3):
         create_weapon(self.entities, self.dungeon.floors)
-        self.entities.append(self.player)
 
     def run(self):
         proceed = True
         fov_recalc = True
         messages = []
-        term.refresh()
         while proceed:
             self.dungeon.do_fov(*self.player.position(), 15)
             system_status(self.player)
@@ -650,9 +639,14 @@ class Game:
             proceed, fov_recalc, messages = system_action(self.entities, 
                                                           self.dungeon,
                                                           messages)
-            self.entities = system_remove(self.entities)        
+            self.entities = system_remove(self.entities)
                    
             if not system_alive(self.entities):
+                system_status(self.player)
+                system_enemy_status(self.dungeon, self.player, self.entities)
+                system_draw(fov_recalc, self.dungeon, self.player, self.entities)
+                # system_logger(messages)
+                term.refresh()
                 break
 
             system_update(self.entities)

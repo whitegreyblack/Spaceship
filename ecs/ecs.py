@@ -175,7 +175,8 @@ class Health(Component):
     __slots__ = ['max_hp', 'cur_hp']
     def __init__(self, strength=0):
         self.max_hp = self.cur_hp = strength * 2
-        self.regen = strength / 20
+        self.regen = strength / 35
+
     def __str__(self):
         return super().__str__() + f"({int(self.cur_hp)}/{int(self.max_hp)})"
     def __call__(self):
@@ -213,13 +214,14 @@ class Mana(Component):
         self.cur_mp = min(self.cur_mp + self.regen, self.max_mp)
 
 class Armor(Component):
-    __slots__ = ['max_armor', 'cur_armor']
+    __slots__ = ['armor']
     def __init__(self, agility=0):
-        self.max_armor = self.cur_armor = agility * .25 + 3
+        self.armor= agility * .25 + 3
 
 class Damage(Component):
     __slots__ = ['unit', "damages"]
     PHYSICAL, MAGICAL = range(2)
+    # piercing/bludgeoning/slashing/bleeding/radiating
     def __init__(self, damage=None, damages=None):
         self.damages = {}
         if not damage and not damages:
