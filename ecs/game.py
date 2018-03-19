@@ -124,12 +124,19 @@ def health_change(entity, change):
     entity.attribute.health.cur_hp = max(0, current_health - change)
     return entity.attribute.health()
 
+def title_bar(x, y, color, string, bars):
+    index = bars // 2 - len(string) // 2
+    term.bkcolor(color)
+    term.puts(x, y, ' ' * bars)
+    term.bkcolor("#000000")
+    term.puts(x + index, y, string)
+
 def plot_bar(x, y, color1, color2, string, bars):
-    length = len(string[:bars])
+    index = len(string[:bars])
     term.bkcolor(color1)
     term.puts(x, y, string[:bars])
     term.bkcolor(color2)
-    term.puts(x + length, y, string[bars:])
+    term.puts(x + index, y, string[bars:])
     term.bkcolor("#000000")
 
 def system_status(entity):
@@ -174,9 +181,8 @@ def system_enemy_status(world, entity, entities):
         health_string = health_string + ' ' * (15 - len(health_string))
         string = f"[c={e.render.foreground}]{e.information()}[/c]"
         term.puts(65, index, string)
-        index += 1
-        plot_bar(65, index, "#880000", "#440000", health_string, health_bars)
-        index += 1
+        plot_bar(65, index+1, "#880000", "#440000", health_string, health_bars)
+        index += 2
 
 def system_draw(recalc, world, entity, entities):
     def draw_entity(position, background, string):
@@ -188,20 +194,20 @@ def system_draw(recalc, world, entity, entities):
         if revert:
             term.bkcolor('#000000')
     if recalc:
+        title_bar(0, 0, "#444444", "Tiphmore", 64)
         term.clear_area(0, 1, world.width, world.height)
-        positions = { e.position(): e.render() 
-                        for e in sorted(entities, reverse=True) 
-        }
+        positions = {e.position(): e.render() 
+                        for e in sorted(entities, reverse=True)}
         for j, row in enumerate(world.world):
             for i, cell in enumerate(row):
                 lighted = world.lit(i, j)
                 if lighted == 2:
                     if (i, j) in positions.keys():
-                        draw_entity((i, j), *positions[(i, j)])
+                        draw_entity((i, j+1), *positions[(i, j)])
                     else:
-                        term.puts(i, j, f"[c=#999999]{cell}[/c]")
+                        term.puts(i, j+1, f"[c=#999999]{cell}[/c]")
                 elif lighted == 1:
-                    term.puts(i, j, f"[c=#222222]{cell}[/c]")
+                    term.puts(i, j+1, f"[c=#222222]{cell}[/c]")
 
 def system_alive(entites):
     return 0 in [e.eid for e in entites]
