@@ -175,7 +175,7 @@ class Health(Component):
     __slots__ = ['max_hp', 'cur_hp']
     def __init__(self, strength=0):
         self.max_hp = self.cur_hp = strength * 2
-        self.regen = strength / 35
+        self.regen = strength / 50
 
     def __str__(self):
         return super().__str__() + f"({int(self.cur_hp)}/{int(self.max_hp)})"
