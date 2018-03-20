@@ -171,9 +171,12 @@ def system_enemy_status(world, entity, entities):
     index = 8
     term.clear_area(65, 8, 15, 16)
     lighted = world.lighted
-    entities_in_range = {e for e in entities 
-                   if has(e, [Position, 'ai']) 
-                   and e.position() in lighted}
+    # entities_in_range = {e for e in entities 
+    #                if has(e, [Position, 'ai']) 
+    #                and e.position() in lighted}
+    entities_in_range = {p.unit for p in Position.items()
+                         if has(p.unit, 'ai') 
+                         and p() in lighted}
     for e in sorted(entities_in_range, key=lambda p: distance(p, entity)):
         hc, hm = e.attribute.health()
         health_bars = int((hc / hm) * 15)
@@ -213,9 +216,11 @@ def system_alive(entites):
     return 0 in [e.eid for e in entites]
 
 def system_update(entities):
-    for e in entities:
-        if has(e, Attribute):
-            e.attribute.update()
+    for a in Attribute.items():
+        a.update()
+    # for e in entities:
+    #     if has(e, Attribute):
+    #         e.attribute.update()
 
 def cache(lines):
     lines = lines
@@ -338,18 +343,20 @@ def system_action(entities, dungeon, messages):
 
     def item_pickup(entity):
         pickup = False
-        for e in entities:
-            is_entity = entity == e
-            is_movable = has(e, 'moveable')
-            same_spot = entity.position() == e.position()
-            if entity != e:
-                if not has(e, 'moveable') and entity.position() == e.position():
-                    e.position = None
-                    entity.backpack.append(e)
-                    e.delete = True
-                    pickup = True
+        for e in 
+        # for e in entities:
+        #     is_entity = entity == e
+        #     is_movable = has(e, 'moveable')
+        #     same_spot = entity.position() == e.position()
+        #     if entity != e:
+        #         if not has(e, 'moveable') and entity.position() == e.position():
+        #             e.position = None
+        #             entity.backpack.append(e)
+        #             e.delete = True
+        #             pickup = True
         if not pickup:
-            messages.append("No item where you stand")
+            # messages.append("No item where you stand")
+            print("No item where you stand")
 
     def draw_inventory(entity):
         term.clear()

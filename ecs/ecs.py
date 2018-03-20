@@ -22,25 +22,47 @@ Armor:
     Render | Information | Position(optional) | Defense
 '''
 class Component:
+    '''Base Parent Class to implement widely used class methods'''
     def __repr__(self):
         '''Returns stat information for dev'''
         component_variables = ", ".join(f'{s}={getattr(self, s)}' 
-                                for s in self.__slots__
-                                if s != "unit" 
-                                and bool(hasattr(self, s) 
-                                and getattr(self, s)))
+                                        for s in self.__slots__
+                                        if s != "unit"
+                                        and bool(hasattr(self, s) 
+                                        and getattr(self, s)))
         return f'{self}({component_variables})'
 
     def __str__(self):
         '''Returns stat information for user'''
         return f'{self.__class__.__name__}'
 
+    def __hash__(self):
+        return hash(self.id)
+
+    def __eq__(self, other):
+        return self.id == other.id
+
+    @classmethod
+    def join(cls, other, *others):
+        return set.intersection(cls.instances, 
+                                other.instances,
+                                *(o.instances for o in others))
     @classmethod
     def classname(cls):
         return cls.__name__.lower()
+    @classmethod
+    def items(cls):
+        return cls.instances
+
+class Ai(Component):
+    __slots__ = ['unit', 'ai']
+    instances = set()
+    def __init__(self):
+        self.ai = True
 
 class Render(Component):
     __slots__ = ['unit', 'symbol', 'foreground', 'background']
+    instances = set()
     def __init__(self, symbol, foreground="#ffffff", background="#000000"):
         '''Render component that holds all information that allows the map
         to be drawn with correct characters and colors
@@ -59,6 +81,7 @@ class Render(Component):
 
 class Position(Component):
     __slots__ = ['unit', 'x', 'y']
+    instances = set()
     def __init__(self, x=0, y=0):
         self.x = x
         self.y = y
@@ -67,6 +90,7 @@ class Position(Component):
         return self.x, self.y
 
 class Information(Component):
+    instances = set()
     __slots__ = ['unit', 'name', 'race', 'gender']
     def __init__(self, name=None, race=None, gender=None):
         if not name and not race:
@@ -77,6 +101,7 @@ class Information(Component):
         return self.name if self.name else self.race
 
 class Inventory(Component):
+    instances = set()
     __slots__ = ['unit', 'bag']
     def __init__(self, bag=[]):
         self.max = 26
@@ -101,6 +126,7 @@ def drop(bag, item):
     return True
 
 class Equipment(Component):
+    instances = set()
     __slots__ = ['unit', 'left_hand', 'right_hand', 'body']
     def __init__(self, lh=None, rh=None, body=None):
         for a, v in zip(['left_hand', 'right_hand', 'body'], [lh, rh, body]):
@@ -122,6 +148,7 @@ def unequip(self, item, part):
     return True
 
 class Attribute(Component):
+    instances = set()
     __slots__ = [
         'unit', 'strength', 'agility', 'intelligence', 'health', 'mana',
         'armor', 'modifiers', 'attrscore'
@@ -172,6 +199,7 @@ class Attribute(Component):
         self.stats()
 
 class Health(Component):
+    instances = set()
     __slots__ = ['max_hp', 'cur_hp']
     def __init__(self, strength=0):
         self.max_hp = self.cur_hp = strength * 2
@@ -188,6 +216,7 @@ class Health(Component):
         return self.cur_hp >= 1
 
 class Experience(Component):
+    instances = set()
     __slots__ = ['cur_exp', 'cur_lvl', 'next_exp']
     def __init__(self, level=1):
         self.level = level
@@ -202,6 +231,7 @@ class Experience(Component):
         return self.level ** 2 * 30
 
 class Mana(Component):
+    instances = set()
     __slots__ = ['max_mp', 'cur_mp']
     def __init__(self, intelligence=0):
         self.max_mp = self.cur_mp = intelligence * 1.5
@@ -214,11 +244,13 @@ class Mana(Component):
         self.cur_mp = min(self.cur_mp + self.regen, self.max_mp)
 
 class Armor(Component):
+    instances = set()
     __slots__ = ['armor']
     def __init__(self, agility=0):
         self.armor= agility * .25 + 3
 
 class Damage(Component):
+    instances = set()
     __slots__ = ['unit', "damages"]
     PHYSICAL, MAGICAL = range(2)
     # piercing/bludgeoning/slashing/bleeding/radiating
@@ -325,7 +357,7 @@ class Damage(Component):
     #     FLAG = 1 << Component.bitflag
     #     Component.bitflag += 1
 print([sc.classname() for sc in Component.__subclasses__()])
-
+print(all([(sc.classname(), hasattr(sc, 'instances')) for sc in Component.__subclasses__()]))
 class Entity:
     '''
     Basic container for entity objects. Holds a list of components which is used
