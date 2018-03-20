@@ -40,6 +40,9 @@ def test_construction_method():
 def test_addon_after(entity):
     entity.delete = True
     assert has(entity, 'delete')
+
+def test_joins():
+    pass
 '''
 # >>> e = Entity(components=[Description('hero'),])
 # >>> e, Entity.compdict

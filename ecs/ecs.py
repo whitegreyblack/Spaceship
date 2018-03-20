@@ -42,8 +42,9 @@ class Component:
     def __eq__(self, other):
         return self.id == other.id
 
-    @classmethod
+    @staticmethod
     def join(cls, other, *others):
+        '''Should either return the entities or entity_ids'''
         return set.intersection(cls.instances, 
                                 other.instances,
                                 *(o.instances for o in others))
@@ -82,9 +83,10 @@ class Render(Component):
 class Position(Component):
     __slots__ = ['unit', 'x', 'y']
     instances = set()
-    def __init__(self, x=0, y=0):
+    def __init__(self, x=0, y=0, moveable=True):
         self.x = x
         self.y = y
+        self.moveable = moveable
 
     def __call__(self):
         return self.x, self.y
@@ -106,6 +108,12 @@ class Inventory(Component):
     def __init__(self, bag=[]):
         self.max = 26
         self.bag = bag
+
+class Delete(Component):
+    instances = set()
+    __slots__ = ['unit', 'delete']
+    def __init__(self):
+        self.delete = True
 
 def empty(bag): 
     return len(bag) == 0
@@ -375,6 +383,7 @@ class Entity:
         Entity.EID += 1
         # self.FLAG = 0
         self.components = dict()
+        self.components['delete'] = False
         if components:
             if not isinstance(components, list):
                 components = [components]

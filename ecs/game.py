@@ -3,7 +3,7 @@ from collections import namedtuple
 from ecs.die import check_sign as check
 from ecs.ecs import (
     Entity, Component, Position, Render, Inventory, Damage, Equipment,
-    Information, Attribute
+    Information, Attribute, Delete
 )
 import math
 import random
@@ -343,7 +343,16 @@ def system_action(entities, dungeon, messages):
 
     def item_pickup(entity):
         pickup = False
-        for e in 
+        for p in Position.items():
+            unit = p.unit
+            same_spot (p.x, p.y) == entity.position()
+            same_entity = entity == unit
+            if not same_entity and same_spot and not p.moveable:
+                unit.p = None
+                entity.backpack.append(unit)
+                unit.delete = True
+                pickup = True
+
         # for e in entities:
         #     is_entity = entity == e
         #     is_movable = has(e, 'moveable')
@@ -388,7 +397,9 @@ def system_action(entities, dungeon, messages):
     proceed = True
     for entity in entities:
         # needs these two components to move -- dead entities don't move
-        if has(entity, 'moveable') and not has(entity, 'delete'):
+        if entity.position.moveable and not has(entity, 'delete'):
+    # for p in Position.items():
+        # if p.moveable and not has(p.unit, 'delete')
             a, x, y, proceed = take_turn()
             if not proceed:
                 break
@@ -467,8 +478,10 @@ def system_remove(entities):
 def random_position(entities, floortiles):
     tiles = list(floortiles)
     random.shuffle(tiles)
-    for e in entities:
-        if has(e, 'moveable'):
+    # for e in entities:
+    #     if has(e, 'moveable'):
+    for p in Position.items():
+        if p.moveable:
             tiles.remove(e.position())
     tile = tiles.pop()
     return tile
@@ -481,7 +494,6 @@ def create_player(entities, floors):
         Position(*random_position(entities, floors)),
         Information(name="Hero", race="Human"),
         Render('a', '#DD8822', '#000088'),
-        ('moveable', True),
         ('backpack', []),
         Equipment(Damage(("1d6", Damage.PHYSICAL)),
                   Damage(("1d6", Damage.PHYSICAL))),
@@ -500,7 +512,6 @@ def create_enemy(entities, floors):
     e = Entity(components=[
         *(rat if random.randint(0, 1) else goblin),
         Position(*random_position(entities, floors)),
-        ('moveable', True),
         ('ai', True),
     ])
     entities.append(e)
@@ -509,13 +520,13 @@ def create_weapon(entities, floors):
     entities.append(Entity(components=[
         Render('[[', '#00AAAA'),
         Information(name="sword"),
-        Position(*random_position(entities, floors)),
+        Position(*random_position(entities, floors), moveable=False),
         Damage(("1d6", Damage.PHYSICAL)),
     ]))
     entities.append(Entity(components=[
         Render(')', '#004444'),
         Information(name="spear"),
-        Position(*random_position(entities, floors)),
+        Position(*random_position(entities, floors), moveable=False),
         Damage(("2d6", Damage.PHYSICAL))
     ]))
 
