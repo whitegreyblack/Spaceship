@@ -50,7 +50,7 @@ class Component(metaclass=MetaIter):
     def __hash__(self):
         return hash(self.entity)
     def __eq__(self, other):
-        return self.entity == other.entity
+        return self.entity == other
     def __repr__(self):
         return f"{self.__class__.__name__}({self.entity})"
     @classmethod
