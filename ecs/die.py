@@ -42,7 +42,7 @@ class Die:
         values are found then init raises ValueErrors and class creation
         is aborted.
         '''
-        if sides < 2:
+        if sides < 0:
             raise ValueError('Number of sides on die must be 2 or more')
 
         if multiplier < 0:

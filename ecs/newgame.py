@@ -9,17 +9,6 @@ import math
 import random
 import textwrap
 
-def has(entity, components=None):
-    def attr(name):
-        try:
-            name = name.classname()
-        except AttributeError:
-            pass
-        return hasattr(entity, name) and getattr(entity, name) is not None
-    if not isinstance(components, list):
-        return attr(components)
-    return all(attr(component) for component in components)
-
 def loggable(entities, anything=False):
     print_info = all(has(e, Information) for e in entities)
     if anything:
@@ -32,9 +21,6 @@ def letter(index):
     if not 0 <= index <= 25:
         raise ValueError("Cannot make index into letter: Index out of range")
     return chr(ord('a') + index)
-
-def is_weapon(entity):
-    return has(entity, Damage)
 
 def distance(entity, other):
     position_e = Position.item(entity)
@@ -53,21 +39,21 @@ def calculate_damage(damage):
         damages[dt] += dmg
     return sum(damages)    
 
-def equipment_damage(entity):
-    if has(entity, Equipment):
-        damage = entity.left_hand()
-        damage += entity.right_hand()
-        return calculate_damage(damage)
-    return 0
+# def equipment_damage(entity):
+#     if has(entity, Equipment):
+#         damage = entity.left_hand()
+#         damage += entity.right_hand()
+#         return calculate_damage(damage)
+#     return 0
 
-def natural_damage(entity):
-    if has(entity, Damage):
-        damage = entity.damage()
-        return calculate_damage(damage)
-    return 0
+# def natural_damage(entity):
+#     if has(entity, Damage):
+#         damage = entity.damage()
+#         return calculate_damage(damage)
+#     return 0
 
-def equipment_armor(entity):
-    return entity.body() if has(entity, Equipment) else 0
+# def equipment_armor(entity):
+#     return entity.body() if has(entity, Equipment) else 0
 
 def health_change(entity, change):
     current_health = entity.attribute.health.cur_hp 
@@ -269,13 +255,28 @@ def take_turn(entity):
             return None, x, y, False
     return a, x, y, True
 
+def entity_damage(entity):
+    # default case
+    print("ENTITY DAMAGE")
+    print(Damage.items)
+    dmg_obj = Damage.item(entity)
+    print("Default", repr(dmg_obj))
+    if entity in Equipment:
+        print('yes')
+
+
 def system_action(dungeon):
 
     def combat(entity, other):
         attacker = Information.item(entity)
         defender = Information.item(other)
+        loggable = attacker and defender
         print(f"{attacker.title} v {defender.title}")
+        att_damage = Damage.item(entity)
+        entity_damage(attacker)
+        print('DM', att_damage)
         Delete(other)
+        
         # if loggable(entities=(entity, other), anything=False):
         #     attacker = entity.information()
         #     defender = other.information().title()
@@ -396,10 +397,10 @@ def system_action(dungeon):
                     if has(entity.equipment, 'left_hand') and entity.equipment.left_hand:
                         print("Unequipping left hand")
                         item = entity.equipment.left_hand
-                        entity.equipment.left_hand = Damage("1d6", Damage.PHYSICAL)
+                        entity.equipment.left_hand = Damage("1d6")
                     elif has(entity.equipment, 'right_hand') and entity.equipment.right_hand:
                         item = entity.equipment.right_hand
-                        entity.equipment.right_hand = Damage("1d6", Damage.PHYSICAL)
+                        entity.equipment.right_hand = Damage("1d6")
                     else:
                         print("Both hands are empty")
                     if item:
@@ -454,18 +455,19 @@ def create_player(entity, floors):
     Information(entity, name="Hero", race="Human")
     Render(entity, '@')
     Attribute(entity, strength=10)
+    Equipment(entity)
 
 def create_enemy(floors):
     entity = Entity()
     if random.randint(0, 1):
         Information(entity, race="goblin")
-        Render(entity, 'g', "#008800")
-        # Damage(entity, ("1d6", Damage.PHYSICAL))
+        Render(entity, 'r', '#664422') 
+        Damage(entity, "fangs", "1d6")
         Attribute(entity, strength=6)
     else:
         Information(entity, race="rat")
-        Render(entity, 'r', '#664422') 
-        # Damage(("1d4", Damage.PHYSICAL)),
+        Render(entity, 'g', "#008800")        
+        Damage("fist", "1d4")
         Attribute(entity, strength=3)
     Position(entity, *random_position(floors)),
     Ai(entity)
@@ -535,7 +537,7 @@ class Game:
                 # # system_logger(messages)
                 term.refresh()
                 proceed = False
-                
+
             system_remove()
 
             # system_update(self.entities)
