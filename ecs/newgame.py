@@ -10,13 +10,64 @@ import math
 import random
 import textwrap
 
-def loggable(entities, anything=False):
-    print_info = all(has(e, Information) for e in entities)
-    if anything:
-        matters = True
-    else:
-        matters = 0 in [e.eid for e in entities]
-    return print_info and matters
+Event = namedtuple('Event', 'string position')
+
+# -- helper functions -- 
+def random_position(floortiles):
+    tiles = list(floortiles)
+    random.shuffle(tiles)
+    for p in Position.items:
+        if p.moveable:
+            tiles.remove(p.at)
+    tile = tiles.pop()
+    return tile
+
+def create_player(entity, floors):
+    Position(entity, *random_position(floors))
+    Information(entity, name="Hero", race="Human")
+    Render(entity, '@')
+    Attribute(entity, strength=10)
+    Equipment(entity)
+    Inventory(entity)
+    Damage(entity, "2d4")
+
+def create_enemy(floors):
+    entity = Entity()
+    # if random.randint(0, 1):
+    Information(entity, race="goblin")
+    Render(entity, 'g', "#008800")     
+    Damage(entity, "1d6")
+    Attribute(entity, strength=6)
+    # else:
+    #     Information(entity, race="rat")
+    #     Render(entity, 'r', '#664422') 
+    #     Damage(entity, "1d4")
+    #     Attribute(entity, strength=3)
+    Position(entity, *random_position(floors)),
+    Ai(entity)
+
+def create_weapon(floors=None):
+    e = Entity()
+    Render(e, '[[', '#00AAAA')
+    Information(e, name="sword")
+    Damage(e, "1d6")
+    if floors:
+        Position(e, *random_position(floors), moveable=False)
+
+    e = Entity()
+    Render(e, ')', '#004444')
+    Information(e, name="spear")
+    Damage(e, '1d8')
+    if floors:
+        Position(e, *random_position(floors), moveable=False)
+
+# def loggable(entities, anything=False):
+#     print_info = all(has(e, Information) for e in entities)
+#     if anything:
+#         matters = True
+#     else:
+#         matters = 0 in [e.eid for e in entities]
+#     return print_info and matters
 
 def letter(index):
     if not 0 <= index <= 25:
@@ -34,11 +85,11 @@ def towards_target(entity, other):
     d, dx, dy = distance(entity, other)
     return int(round(dx / d)), int(round(dy / d))
 
-def calculate_damage(damage):
-    damages = [0 for _ in range(2)]
-    for dt, dmg in damage:
-        damages[dt] += dmg
-    return sum(damages)    
+# def calculate_damage(damage):
+#     damages = [0 for _ in range(2)]
+#     for dt, dmg in damage:
+#         damages[dt] += dmg
+#     return sum(damages)    
 
 # def equipment_damage(entity):
 #     if has(entity, Equipment):
@@ -56,10 +107,10 @@ def calculate_damage(damage):
 # def equipment_armor(entity):
 #     return entity.body() if has(entity, Equipment) else 0
 
-def health_change(entity, change):
-    current_health = entity.attribute.health.cur_hp 
-    entity.attribute.health.cur_hp = max(0, current_health - change)
-    return entity.attribute.health()
+# def health_change(entity, change):
+#     current_health = entity.attribute.health.cur_hp 
+#     entity.attribute.health.cur_hp = max(0, current_health - change)
+#     return entity.attribute.health()
 
 def title_bar(x, y, string, bars, color="#444444"):
     index = bars // 2 - len(string) // 2
@@ -75,6 +126,31 @@ def plot_bar(x, y, color1, color2, string, bars):
     term.bkcolor(color2)
     term.puts(x + index, y, string[bars:])
     term.bkcolor("#000000")
+
+def draw_entity(position, entity):
+    render = Render.item(entity)
+    if render:
+        revert = False
+        background, string = render.string
+        if background != "#000000":
+            term.bkcolor(background)
+            revert = True
+        term.puts(*position, string)
+        if revert:
+            term.bkcolor('#000000')
+
+def draw_main_menu():
+    term.clear()
+    term.puts(0, 0, "Play Game")
+    term.puts(0, 1, "Exit")
+    term.refresh()
+
+    key = term.read()
+    while key not in Keyboard.MAIN_MENU.keys():
+        key = term.read()
+
+    term.clear()
+    return Keyboard.MAIN_MENU[key]
 
 def system_status(entity):
     # print(Attribute.items, Render.items)
@@ -157,18 +233,6 @@ def system_enemy_status(world, entity):
         index += 2
 
 def system_draw(recalc, world):
-    def draw_entity(position, entity):
-        render = Render.item(entity)
-        if render:
-            revert = False
-            background, string = render.string
-            if background != "#000000":
-                term.bkcolor(background)
-                revert = True
-            term.puts(*position, string)
-            if revert:
-                term.bkcolor('#000000')
-
     if recalc:
         title_bar(0, 0, "Tiphmore", 64)
         term.clear_area(0, 1, world.width, world.height)
@@ -199,40 +263,40 @@ def system_update():
         a.health.cur_hp = min(a.health.cur_hp + a.health.regen, a.health.max_hp)
         a.mana.cur_mp = min(a.mana.cur_mp + a.mana.regen, a.mana.max_mp)
 
-def cache(lines):
-    lines = lines
-    index = 0
-    messagelog = []    
-    def funcwrap(logger):
-        def wrapper(messages):
-            nonlocal index, messagelog, lines
-            current = len(messagelog)
-            for m in messages:
-                for twm in textwrap.wrap(m, term.state(term.TK_WIDTH)):
-                    messagelog.append(twm)
-            if len(messagelog) <= lines:
-                logger(messagelog)
-            else:
-                logger(messagelog[index:index + lines])
-            index += len(messagelog) - current
-        return wrapper
-    return funcwrap
+# def cache(lines):
+#     lines = lines
+#     index = 0
+#     messagelog = []    
+#     def funcwrap(logger):
+#         def wrapper(messages):
+#             nonlocal index, messagelog, lines
+#             current = len(messagelog)
+#             for m in messages:
+#                 for twm in textwrap.wrap(m, term.state(term.TK_WIDTH)):
+#                     messagelog.append(twm)
+#             if len(messagelog) <= lines:
+#                 logger(messagelog)
+#             else:
+#                 logger(messagelog[index:index + lines])
+#             index += len(messagelog) - current
+#         return wrapper
+#     return funcwrap
 
-@cache(5)
-def system_logger(messages):
-    term.clear_area(0, 
-        term.state(term.TK_HEIGHT) - 5, 
-        term.state(term.TK_WIDTH), 
-        5)
-    for i in range(len(messages)):
-        try:
-            # print(messages)
-            term.puts(0, 
-                term.state(term.TK_HEIGHT) - len(messages) + i, 
-                messages[i])
-        except:
-            break
-    # term.refresh()
+# @cache(5)
+# def system_logger(messages):
+#     term.clear_area(0, 
+#         term.state(term.TK_HEIGHT) - 5, 
+#         term.state(term.TK_WIDTH), 
+#         5)
+#     for i in range(len(messages)):
+#         try:
+#             # print(messages)
+#             term.puts(0, 
+#                 term.state(term.TK_HEIGHT) - len(messages) + i, 
+#                 messages[i])
+#         except:
+#             break
+    
 def get_input():
     a, (x, y) = None, (0, 0)
     key = term.read()
@@ -349,27 +413,13 @@ def inventory_show(entity):
     term.read()
 
 def system_action(dungeon):
-    # def drop_inventory(entity):
-    #     draw_inventory(entity)
-    #     while 1:
-    #         key = term.read()
-    #         if key == term.TK_ESCAPE:
-    #             break
-    #         elif term.TK_A <= code < term.TK_A + len(entity.backpack):
-    #             selected = code - term.TK_A
-    #             item = entity.backpack.pop(selected)
-    #             item.delete = False
-    #             item.position = Position(*entity.position())
-    #             break
-    #     recompute = True
-
     recompute = False
     proceed = True
     for entity in Entity.instances:
-        # print(Information.item(entity).title)
         # if entity doesnt exist on map or is to be delete -- pass
         if entity not in Position or entity in Delete:
             continue
+
         # if entity has a position and can move
         position = Position.item(entity)
         if position.moveable:
@@ -430,10 +480,8 @@ def system_action(dungeon):
                     position.x += x
                     position.y += y                
                 else:
-                    print('combat', entity, positions[(dx, dy)])
                     combat(entity, positions[(dx, dy)])
-        # print(repr(entity), list(entity.components))
-    # print(messages)
+
     return proceed, recompute, []
 
 def system_remove():
@@ -443,76 +491,8 @@ def system_remove():
         for subclass in Component.__subclasses__():
             if entity in subclass:
                 subclass.remove(entity)
-        # try:
-        #     print(f"Deleting: {e.information()}")
-        # except:
-        #     print(f"Deleting item: {e.eid}")
         Entity.instances.remove(entity)
         print(f"Removing {entity}")
-
-# -- helper functions -- 
-def random_position(floortiles):
-    tiles = list(floortiles)
-    random.shuffle(tiles)
-    for p in Position.items:
-        if p.moveable:
-            tiles.remove(p.at)
-    tile = tiles.pop()
-    return tile
-
-def create_player(entity, floors):
-    Position(entity, *random_position(floors))
-    Information(entity, name="Hero", race="Human")
-    Render(entity, '@')
-    Attribute(entity, strength=10)
-    Equipment(entity)
-    Inventory(entity)
-    Damage(entity, "2d4")
-
-def create_enemy(floors):
-    entity = Entity()
-    # if random.randint(0, 1):
-    Information(entity, race="goblin")
-    Render(entity, 'g', "#008800")     
-    Damage(entity, "1d6")
-    Attribute(entity, strength=6)
-    # else:
-    #     Information(entity, race="rat")
-    #     Render(entity, 'r', '#664422') 
-    #     Damage(entity, "1d4")
-    #     Attribute(entity, strength=3)
-    Position(entity, *random_position(floors)),
-    Ai(entity)
-
-def create_weapon(floors=None):
-    e = Entity()
-    Render(e, '[[', '#00AAAA')
-    Information(e, name="sword")
-    Damage(e, "1d6")
-    if floors:
-        Position(e, *random_position(floors), moveable=False)
-
-    e = Entity()
-    Render(e, ')', '#004444')
-    Information(e, name="spear")
-    Damage(e, '1d8')
-    if floors:
-        Position(e, *random_position(floors), moveable=False)
-
-Event = namedtuple('Event', 'string position')
-
-def draw_main_menu():
-    term.clear()
-    term.puts(0, 0, "Play Game")
-    term.puts(0, 1, "Exit")
-    term.refresh()
-
-    key = term.read()
-    while key not in Keyboard.MAIN_MENU.keys():
-        key = term.read()
-
-    term.clear()
-    return Keyboard.MAIN_MENU[key]
 
 class Game:
     def __init__(self, world:str):
@@ -554,15 +534,12 @@ class Game:
 
             system_update()
 
-        # system_logger(messages)
-        # term.refresh()
-            # system_draw(fov_recalc, self.dungeon, self.entities)         
-        # else:            
-        # check player alive
         if not proceed:
-            system_logger(['Exit Game'])
+            # system_logger(['Exit Game'])
+            print('Exit Game')
         else:
-            system_logger(["You died"])
+            # system_logger(["You died"])
+            print('You died')
         term.refresh()
         term.read()
 
