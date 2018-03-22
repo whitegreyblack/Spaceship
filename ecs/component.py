@@ -202,7 +202,7 @@ class Damage(Component, metaclass=DictIter):
         return next(self.damage.roll())
     @property
     def info(self):
-        return self.damage, self.damage_type
+        return self.damage.ranges
     @classmethod
     def item(cls, key):
         if key in cls.items.keys():

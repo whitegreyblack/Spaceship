@@ -291,34 +291,39 @@ def combat(entity, other):
     if not def_health.alive:
         Delete(other)
 
+def item_pickup(entity):
+    pickup = False
+    # this gets all entities with position components
+    items = [p.entity for p in Position.items 
+                if not p.moveable and p.at == Position.item(entity).at]
+    print('ITEMS', items)
+    if len(items) == 1:
+        item = items.pop()
+        Position.remove(item)
+        print(item, entity)
+        Inventory.item(entity).put_in(item)
+        print(f"You put the {Information.item(item).name} in your bag.")
+        pickup = True
+    if not pickup:
+        # messages.append("No item where you stand")
+        print("No item where you stand")
+
+def draw_inventory(entity):
+    term.clear()
+    for i, item in enumerate(Inventory.item(entity).bag):
+        info = Information.item(item)
+        damage = f"{', '.join(f'{d.info}' for d in Damage.item(item))}"
+        term.puts(0, 
+            i, 
+            f"{letter(i)}. {info.title}: {damage}")
+    term.refresh()
+
+def show_inventory(entity):
+    draw_inventory(entity)
+    term.read()
+    recompute = True
+
 def system_action(dungeon):
-    def item_pickup(entity):
-        pickup = False
-        # this gets all entities with position components
-        items = [p.entity for p in Position.items if not p.moveable]
-        print('ITEMS', items)
-        if len(items) == 1:
-            item = items.pop()
-            Position.remove(item)
-            print(item, entity)
-            Inventory.item(entity).put_in(item)
-            print(f"You put the {Information.item(item).name} in your bag.")
-            pickup = True
-        if not pickup:
-            # messages.append("No item where you stand")
-            print("No item where you stand")
-
-    def draw_inventory(entity):
-        term.clear()
-        for i, item in enumerate(entity.backpack):
-            term.puts(0, i, f"{letter(i)}. {item.name}: {item.damage.info}")
-        term.refresh()
-
-    def show_inventory(entity):
-        draw_inventory(entity)
-        term.read()
-        recompute = True
-        
     def drop_inventory(entity):
         draw_inventory(entity)
         while 1:
@@ -438,36 +443,37 @@ def create_player(entity, floors):
     Attribute(entity, strength=10)
     Equipment(entity)
     Inventory(entity)
-    Damage(entity, "1d4")
+    Damage(entity, "2d4")
 
 def create_enemy(floors):
     entity = Entity()
-    if random.randint(0, 1):
-        Information(entity, race="goblin")
-        Render(entity, 'g', "#008800")     
-        Damage(entity, "1d6")
-        Attribute(entity, strength=6)
-    else:
-        Information(entity, race="rat")
-        Render(entity, 'r', '#664422') 
-        Damage(entity, "1d4")
-        Attribute(entity, strength=3)
+    # if random.randint(0, 1):
+    Information(entity, race="goblin")
+    Render(entity, 'g', "#008800")     
+    Damage(entity, "1d6")
+    Attribute(entity, strength=6)
+    # else:
+    #     Information(entity, race="rat")
+    #     Render(entity, 'r', '#664422') 
+    #     Damage(entity, "1d4")
+    #     Attribute(entity, strength=3)
     Position(entity, *random_position(floors)),
     Ai(entity)
-    print(Ai.items)
 
-def create_weapon(floors):
+def create_weapon(floors=None):
     e = Entity()
     Render(e, '[[', '#00AAAA')
     Information(e, name="sword")
-    Position(e, *random_position(floors), moveable=False)
     Damage(e, "1d6")
-    # entities.append(Entity(components=[
-    #     Render(')', '#004444'),
-    #     Information(name="spear"),
-    #     Position(*random_position(entities, floors), moveable=False),
-    #     Damage(("2d6", Damage.PHYSICAL))
-    # ]))
+    if floors:
+        Position(e, *random_position(floors), moveable=False)
+
+    e = Entity()
+    Render(e, ')', '#004444')
+    Information(e, name="spear")
+    Damage(e, '1d8')
+    if floors:
+        Position(e, *random_position(floors), moveable=False)
 
 Event = namedtuple('Event', 'string position')
 
