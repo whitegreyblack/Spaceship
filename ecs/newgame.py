@@ -3,7 +3,7 @@ from collections import namedtuple
 from ecs.die import check_sign as check
 from ecs.keyboard import Keyboard
 from ecs.component import (Component, Entity, Position, Render, Information, 
-    Attribute, Delete, Equipment, Damage, Ai, Inventory)
+    Attribute, Delete, Equipment, Damage, Ai, Inventory, Attribute, Health)
 from ecs.map import Map, WORLD
 import math
 import random
@@ -148,7 +148,6 @@ def system_draw(recalc, world):
         term.clear_area(0, 1, world.width, world.height)
         positions = dict()
         for position in Position.items:
-            print(position)
             if position.at in positions:
                 if Position.item(positions[position.at]).moveable:
                     continue
@@ -262,19 +261,34 @@ def take_turn(entity):
             return None, x, y, False
     return a, x, y, True
 
-def system_action(dungeon):
+def combat(entity, other):
+    # get all object before processing combat
+    # ----------------------------------------------------------------------
+    # NEEDS :- (INFORMATION | ATTRIBUTES | DAMAGE | ARMOR)
+    # ----------------------------------------------------------------------
+    print("INFORMATION: ", Information.items)
+    print("DAMAGE: ", Damage.items)
+    attacker = Information.item(entity)
+    defender = Information.item(other)
+    loggable = attacker and defender
+    att_damage = Damage.item(entity)
+    def_armour = 0
+    def_health = Attribute.item(other).health
 
-    def combat(entity, other):
-        # get all object before processing combat
-        print(Damage.items)
-        attacker = Information.item(entity)
-        defender = Information.item(other)
-        loggable = attacker and defender
-        print(f"{attacker.title} v {defender.title}")
-        att_damage = Damage.item(entity)
-        def_armor = 0
-        print('DM', att_damage, repr(att_damage), def_armor)
+    print(f"{attacker.title} v {defender.title}")
+    print(Damage.items)
+    print('DM', att_damage, def_armour, def_health)
+    print("ATT", att_damage)
+    print("SUM", sum(att.roll() for att in att_damage))
+
+    if def_armour < random.randint(1, 20): # + primary attribute score
+        total_damage = sum(att.roll() for att in att_damage)
+        def_health.cur_hp -= total_damage
+        print(f"{attacker.title} deals {total_damage} damage to {defender.title}")
+    if not def_health.alive:
         Delete(other)
+
+def system_action(dungeon):
         
         # if loggable(entities=(entity, other), anything=False):
         #     attacker = entity.information()
@@ -344,6 +358,7 @@ def system_action(dungeon):
     recompute = False
     proceed = True
     for entity in Entity.instances:
+        # print(Information.item(entity).title)
         # if entity doesnt exist on map or is to be delete -- pass
         if entity not in Position or entity in Delete:
             continue
@@ -445,6 +460,7 @@ def create_player(entity, floors):
     Attribute(entity, strength=10)
     Equipment(entity)
     Inventory(entity)
+    Damage(entity, "1d4")
 
 def create_enemy(floors):
     entity = Entity()

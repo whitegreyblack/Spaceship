@@ -198,7 +198,6 @@ class Damage(Component, metaclass=DictIter):
                 damages[die.damage_type] += die.roll
             return damages
         return [0, 0]
-    @property
     def roll(self):
         return next(self.damage.roll())
     @property
@@ -229,7 +228,7 @@ class Attribute(Component, metaclass=SetIter):
 
         self.modifiers = {key: 0 for key in self.__slots__
                               if key not in ("unit", "modifiers", "attrscore")}
-        self.stats()
+        self.stats(entity)
         Attribute.items.add(self)
 
     def __str__(self):
@@ -244,8 +243,8 @@ class Attribute(Component, metaclass=SetIter):
         return (self.strength, self.agility, self.intelligence, 
                 self.modifiers, self.attrscore)
 
-    def stats(self):
-        self.health = Health(self.strength + self.modifiers['strength'])
+    def stats(self, e):
+        self.health = Health(e, self.strength + self.modifiers['strength'])
         self.mana = Mana(self.intelligence + self.modifiers['intelligence'])
         self.armor = Armor(self.agility + self.modifiers['agility'])
 
@@ -272,8 +271,9 @@ class Attribute(Component, metaclass=SetIter):
 
 class Health(Component, metaclass=SetIter):
     items = set()
-    __slots__ = ['max_hp', 'cur_hp']
-    def __init__(self, strength=0):
+    __slots__ = ['entity', 'max_hp', 'cur_hp']
+    def __init__(self, entity, strength=0):
+        super().__init__(entity)
         self.max_hp = self.cur_hp = strength * 2
         self.regen = strength / 50
 
@@ -338,7 +338,7 @@ class Entity:
 if __name__ == "__main__":
     e = Entity()
     print(e)
-    Damage(e, "fist", '1d6')
+    Damage(e, '1d6')
     print(Damage.items)
     print(Damage.dmg_instances(e))
     Delete(e)
