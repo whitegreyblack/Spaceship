@@ -4,6 +4,7 @@ from ecs.die import check_sign as check
 from ecs.keyboard import Keyboard
 from ecs.component import (Component, Entity, Position, Render, Information, 
     Attribute, Delete, Equipment, Damage, Ai, Inventory, Attribute, Health)
+from functools import reduce
 from ecs.map import Map, WORLD
 import math
 import random
@@ -84,25 +85,32 @@ def system_status(entity):
     agimod, agiscore = mods['agility'], attrs['agility']
     intmod, intscore = mods['intelligence'], attrs['intelligence']
     
-    # health status
+    # health stat variables
     hc, hm = attribute.health.status
     health_bars = int((hc / hm) * 15)
     health_string = f"HP: {hc:2}/{hm:2}"
     health_string = health_string + ' ' * (15 - len(health_string))
     
-    # mana status
+    # mana stat variables
     mc, mm = attribute.mana()
     mana_bars = int((mc / mm) * 15) if mm != 0 else 0
     mana_string = f"MP: {mc:2}/{mm:2}"
     mana_string = mana_string + ' ' * (15 - len(mana_string))
 
+    # damage ranges
+    damage_range = reduce((lambda x,y: (x[0]+y[0], x[1]+y[1])),
+                          [d.damage.ranges for d in Damage.item(entity)])
+
+    # name of character
     term.puts(65, 0, f"{information.title}")
     
-    # health 
+    # health and mana
     plot_bar(65, 1, "#880000", "#440000", health_string, health_bars)
     plot_bar(65, 2, "#000088", "#000044", mana_string, mana_bars)
     term.bkcolor("#000000")
-    term.puts(65, 3, f"DMG: ")
+
+    # character attributes
+    term.puts(65, 3, f"DMG: {damage_range}")
     term.puts(65, 4, f"STR: {s}{check(strmod)}({strscore})")
     term.puts(65, 5, f"AGI: {a}{check(agimod)}({agiscore})")
     term.puts(65, 6, f"INT: {i}{check(intmod)}({intscore})")
@@ -114,21 +122,29 @@ def system_enemy_status(world, entity):
     index = 9
     term.clear_area(65, 8, 15, 16)
     lighted = world.lighted
-    entities_in_range = {p.entity for p in Position.items
-                         if Ai.item(p.entity) and p.at in lighted}
-    for e in sorted(entities_in_range, key=lambda e: distance(entity, e)):
+    entities_in_range = {
+        p.entity for p in Position.items
+                 if Ai.item(p.entity) and p.at in lighted
+    }
+
+    # we print entities by distance from player entity
+    for e in sorted(entities_in_range, key=lambda e: distance(entity, e))[:5]:
         information = Information.item(e)
         attribute = Attribute.item(e)
         render = Render.item(e)
-        print('BOTH', bool(attribute and render))
-        if not bool(attribute and render):
+        
+        # make sure these objects exist for each entity
+        if not bool(information and attribute and render):
             continue
+
+        # health variables
         hc, hm = attribute.health.status
         health_bars = int((hc / hm) * 15)
         health_string = f"HP: {hc:2}/{hm:2}"
         health_string = health_string + ' ' * (15 - len(health_string))
-        print(health_string)
         string = f"[c={render.foreground}]{information.title}[/c]"
+
+        # output name and health
         term.puts(65, index, string)
         plot_bar(65, index+1, "#880000", "#440000", health_string, health_bars)
         index += 2
@@ -155,6 +171,7 @@ def system_draw(recalc, world):
                 if Position.item(positions[position.at]).moveable:
                     continue
             positions[position.at] = position.entity
+
         # positions = {position.at: position.entity for position in Position.items}
         for j, row in enumerate(world.world):
             for i, cell in enumerate(row):
@@ -248,15 +265,17 @@ def take_turn(entity):
                 if Position.item(e).moveable and distance(entity, e)[0] < 7:
                     other = e
                     break
+
+        # the return value for ai's will always be a directional x, y value
+        # Don't care about monsters outside radius -- they do whatever            
         if not other:
-            # Don't care about monsters outside radius -- they do whatever            
             x, y = random.randint(-1, 1), random.randint(-1, 1)
         else:
             x, y = towards_target(entity, e)
-        # the return value will always be a directional x, y value
     else:
         # a :- action variable if action is chosen
         a, x, y = get_input()
+
         # on escape inputs -- early exit
         if (x, y) == (None, None):
             return None, x, y, False
@@ -267,8 +286,6 @@ def combat(entity, other):
     # ----------------------------------------------------------------------
     # NEEDS :- (INFORMATION | ATTRIBUTES | DAMAGE | ARMOR)
     # ----------------------------------------------------------------------
-    print("INFORMATION: ", Information.items)
-    print("DAMAGE: ", Damage.items)
     attacker = Information.item(entity)
     defender = Information.item(other)
     loggable = attacker and defender
@@ -276,29 +293,25 @@ def combat(entity, other):
     def_armour = 0
     def_health = Attribute.item(other).health
 
-    print(f"{attacker.title} v {defender.title}")
-    print(Damage.items)
-    print('DM', att_damage, def_armour, def_health)
-    print("ATT", att_damage)
-    print("SUM", sum(att.roll() for att in att_damage))
-
     if def_armour < random.randint(1, 20): # + primary attribute score
         total_damage = sum(att.roll() for att in att_damage)
         def_health.cur_hp -= total_damage
         print(f"{attacker.title} deals {total_damage} damage to {defender.title}")
+
     if not def_health.alive:
         Delete(other)
 
-def item_pickup(entity):
+def inventory_pick(entity):
     pickup = False
     # this gets all entities with position components
-    items = [p.entity for p in Position.items 
-                if not p.moveable and p.at == Position.item(entity).at]
-    print('ITEMS', items)
+    items = [
+        p.entity for p in Position.items 
+                 if not p.moveable and p.at == Position.item(entity).at
+    ]
+    # just print single items for now
     if len(items) == 1:
         item = items.pop()
         Position.remove(item)
-        print(item, entity)
         Inventory.item(entity).put_in(item)
         print(f"You put the {Information.item(item).name} in your bag.")
         pickup = True
@@ -306,20 +319,26 @@ def item_pickup(entity):
         # messages.append("No item where you stand")
         print("No item where you stand")
 
+def inventory_drop(entity):
+    draw_inventory(entity)
+    key = term.read()
+    item = None
+    if term.TK_A <= key < term.TK_A + len(Inventory.item(entity).bag):
+        item = Inventory.item(entity).bag.pop(key - term.TK_A)
+        Position(item, *Position.item(entity).at)
+        print(f"You drop the {Information.item(item).name}")
+
 def draw_inventory(entity):
     term.clear()
     for i, item in enumerate(Inventory.item(entity).bag):
         info = Information.item(item)
         damage = f"{', '.join(f'{d.info}' for d in Damage.item(item))}"
-        term.puts(0, 
-            i, 
-            f"{letter(i)}. {info.title}: {damage}")
+        term.puts(0, i, f"{letter(i)}. {info.title}: {damage}")
     term.refresh()
 
-def show_inventory(entity):
+def inventory_show(entity):
     draw_inventory(entity)
     term.read()
-    recompute = True
 
 def system_action(dungeon):
     def drop_inventory(entity):
@@ -351,14 +370,13 @@ def system_action(dungeon):
                 break
             if a:
                 if a == "pickup": 
-                    item_pickup(entity)
+                    inventory_pick(entity)
                 elif a == "inventory":
-                    show_inventory(entity)
+                    inventory_show(entity)
+                    recompute = True
                 elif a == "drop":
-                    item = entity.backpack.pop()
-                    item.position = Position(*entity.position())
-                    item.delete = False
-                    entities.append(item)         
+                    inventory_drop(entity)
+                    recompute = True
                 elif a == "equip":
                     if len(entity.backpack) == 1:
                         item = entity.backpack.pop()

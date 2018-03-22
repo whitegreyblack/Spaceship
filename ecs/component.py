@@ -195,7 +195,7 @@ class Damage(Component, metaclass=DictIter):
         if entity in cls.items.keys():
             damages = [0 for _ in range(2)]
             for die in cls.items[entity]:
-                damages[die.damage_type] += die.roll
+                damages[die.damage_type] += die.roll()
             return damages
         return [0, 0]
     def roll(self):
