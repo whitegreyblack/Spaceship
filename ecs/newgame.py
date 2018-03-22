@@ -85,7 +85,7 @@ def system_status(entity):
     intmod, intscore = mods['intelligence'], attrs['intelligence']
     
     # health status
-    hc, hm = attribute.health()
+    hc, hm = attribute.health.status
     health_bars = int((hc / hm) * 15)
     health_string = f"HP: {hc:2}/{hm:2}"
     health_string = health_string + ' ' * (15 - len(health_string))
@@ -111,21 +111,24 @@ def system_status(entity):
     term.puts(64, 7, f"{'-'*16}")
 
 def system_enemy_status(world, entity):
-    index = 8
+    index = 9
     term.clear_area(65, 8, 15, 16)
     lighted = world.lighted
     entities_in_range = {p.entity for p in Position.items
                          if Ai.item(p.entity) and p.at in lighted}
     for e in sorted(entities_in_range, key=lambda e: distance(entity, e)):
+        information = Information.item(e)
         attribute = Attribute.item(e)
         render = Render.item(e)
-        if not attribute or render:
+        print('BOTH', bool(attribute and render))
+        if not bool(attribute and render):
             continue
-        hc, hm = attribute.health()
+        hc, hm = attribute.health.status
         health_bars = int((hc / hm) * 15)
         health_string = f"HP: {hc:2}/{hm:2}"
         health_string = health_string + ' ' * (15 - len(health_string))
-        string = f"[c={e.render.foreground}]{e.information()}[/c]"
+        print(health_string)
+        string = f"[c={render.foreground}]{information.title}[/c]"
         term.puts(65, index, string)
         plot_bar(65, index+1, "#880000", "#440000", health_string, health_bars)
         index += 2
@@ -167,8 +170,8 @@ def system_draw(recalc, world):
 def system_alive(entity):
     return entity not in Delete
 
-def system_update(entities):
-    for a in Attribute.items():
+def system_update():
+    for a in Attribute.items:
         a.update()
     # for e in entities:
     #     if has(e, Attribute):
@@ -289,31 +292,6 @@ def combat(entity, other):
         Delete(other)
 
 def system_action(dungeon):
-        
-        # if loggable(entities=(entity, other), anything=False):
-        #     attacker = entity.information()
-        #     defender = other.information().title()
-        #     if has(entity, Equipment):
-        #         damages = equipment_damage(entity)
-        #     elif has(entity, Damage):
-        #         damages = natural_damage(entity)
-        #     else:
-        #         damages = 1
-        #     # msg = f"{attacker.title()} dealt {damages} damage to the {defender}. "
-        #     print(f"{attacker.title()} dealt {damages} damage to the {defender}. ")
-        #     cur_hp, max_hp = health_change(other, damages)
-        #     # msg += f"{defender.title()} has {cur_hp}/{max_hp} left. "
-        #     if cur_hp == 0:
-        #         other.delete = True
-        #         # msg += f"{attacker.title()} has killed the {defender}."
-        #         print(f"{attacker.title()} has killed the {defender}.")
-
-                # messages.append(msg)
-                
-            # if has(entity, Damage):
-            #     dmg = entity.damage()
-            #     print(f"{attacker} deals {dmg} damage to {defender}")
-
     def item_pickup(entity):
         pickup = False
         # this gets all entities with position components
@@ -324,7 +302,7 @@ def system_action(dungeon):
             Position.remove(item)
             print(item, entity)
             Inventory.item(entity).put_in(item)
-            print(f"You put in your bag the {Information.item(item).name}.")
+            print(f"You put the {Information.item(item).name} in your bag.")
             pickup = True
         if not pickup:
             # messages.append("No item where you stand")
@@ -527,9 +505,9 @@ class Game:
         messages = []
         while proceed:
             self.dungeon.do_fov(*Position.item(self.player).at, 15)
+            system_draw(fov_recalc, self.dungeon)
             system_status(self.player)
             system_enemy_status(self.dungeon, self.player)
-            system_draw(fov_recalc, self.dungeon)
             term.refresh()
             # read write -- if user presses exit here then quit next loop?
             proceed, fov_recalc, messages = system_action(self.dungeon)
@@ -544,7 +522,7 @@ class Game:
 
             system_remove()
 
-            # system_update(self.entities)
+            system_update()
 
         # system_logger(messages)
         # term.refresh()

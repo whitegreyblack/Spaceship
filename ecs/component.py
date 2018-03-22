@@ -1,5 +1,5 @@
 # component.py
-from .die import Die
+from .die import Die, check_sign as check
 
 def has(entity, *components):
     return all(entity in c for c in components)
@@ -235,21 +235,24 @@ class Attribute(Component, metaclass=SetIter):
         attributes = "strength agility intelligence".split()
         attributes = " ".join(
           f"{getattr(self, a)}{check(self.modifiers[a])} ({self.attrscore[a]})" 
-            for a in attributes)
-        return super().__str__() + f"s: {attributes}"
+            for a in "strength agility intelligence".split())
+        return super().__str__() + f": {attributes}"
 
     @property
     def status(self):
         return (self.strength, self.agility, self.intelligence, 
                 self.modifiers, self.attrscore)
 
-    def stats(self, e):
-        self.health = Health(e, self.strength + self.modifiers['strength'])
+    def stats(self, entity):
+        self.health = Health(entity, 
+                             self.strength + self.modifiers['strength'])
         self.mana = Mana(self.intelligence + self.modifiers['intelligence'])
         self.armor = Armor(self.agility + self.modifiers['agility'])
 
-        self.attrscore = {key: (getattr(self, key) + self.modifiers[key]) // 2 - 5 
-                            for key in "strength agility intelligence".split()}
+        self.attrscore = {
+            key: (getattr(self, key) + self.modifiers[key]) // 2 - 5 
+                for key in "strength agility intelligence".split()
+        }
 
     def update(self):
         self.health.update()
@@ -275,11 +278,12 @@ class Health(Component, metaclass=SetIter):
     def __init__(self, entity, strength=0):
         super().__init__(entity)
         self.max_hp = self.cur_hp = strength * 2
-        self.regen = strength / 50
+        self.regen = strength / 250
 
     def __str__(self):
         return super().__str__() + f"({int(self.cur_hp)}/{int(self.max_hp)})"
-    def __call__(self):
+    @property
+    def status(self):
         return int(self.cur_hp), int(self.max_hp)
     def update(self):
         self.cur_hp = min(self.cur_hp + self.regen, self.max_hp)
