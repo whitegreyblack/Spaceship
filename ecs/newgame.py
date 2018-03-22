@@ -61,7 +61,7 @@ def health_change(entity, change):
     entity.attribute.health.cur_hp = max(0, current_health - change)
     return entity.attribute.health()
 
-def title_bar(x, y, color, string, bars):
+def title_bar(x, y, string, bars, color="#444444"):
     index = bars // 2 - len(string) // 2
     term.bkcolor(color)
     term.puts(x, y, ' ' * bars)
@@ -101,6 +101,10 @@ def system_status(entity):
     damage_range = reduce((lambda x,y: (x[0]+y[0], x[1]+y[1])),
                           [d.damage.ranges for d in Damage.item(entity)])
 
+    spacer = '-' * 16
+    # done with variables -- lets clear the player status screen
+    term.clear_area(64, 0, 16, 7)
+
     # name of character
     term.puts(65, 0, f"{information.title}")
     
@@ -109,14 +113,14 @@ def system_status(entity):
     plot_bar(65, 2, "#000088", "#000044", mana_string, mana_bars)
     term.bkcolor("#000000")
 
-    # character attributes
+    # character attributes: DMG | STR | AGI | INT
     term.puts(65, 3, f"DMG: {damage_range}")
     term.puts(65, 4, f"STR: {s}{check(strmod)}({strscore})")
     term.puts(65, 5, f"AGI: {a}{check(agimod)}({agiscore})")
     term.puts(65, 6, f"INT: {i}{check(intmod)}({intscore})")
     
-    # border between hero and other units
-    term.puts(64, 7, f"{'-'*16}")
+    # border between hero status and other unit statuses
+    term.puts(64, 7, spacer)
 
 def system_enemy_status(world, entity):
     index = 9
@@ -126,6 +130,9 @@ def system_enemy_status(world, entity):
         p.entity for p in Position.items
                  if Ai.item(p.entity) and p.at in lighted
     }
+
+    # clear enemy status area
+    term.clear_area(64, 8, 16, 16)
 
     # we print entities by distance from player entity
     for e in sorted(entities_in_range, key=lambda e: distance(entity, e))[:5]:
@@ -163,7 +170,7 @@ def system_draw(recalc, world):
                 term.bkcolor('#000000')
 
     if recalc:
-        title_bar(0, 0, "#444444", "Tiphmore", 64)
+        title_bar(0, 0, "Tiphmore", 64)
         term.clear_area(0, 1, world.width, world.height)
         positions = dict()
         for position in Position.items:
@@ -296,7 +303,7 @@ def combat(entity, other):
     if def_armour < random.randint(1, 20): # + primary attribute score
         total_damage = sum(att.roll() for att in att_damage)
         def_health.cur_hp -= total_damage
-        print(f"{attacker.title} deals {total_damage} damage to {defender.title}")
+        print(f"{attacker.title} did {total_damage} damage to {defender.title}")
 
     if not def_health.alive:
         Delete(other)
@@ -325,11 +332,12 @@ def inventory_drop(entity):
     item = None
     if term.TK_A <= key < term.TK_A + len(Inventory.item(entity).bag):
         item = Inventory.item(entity).bag.pop(key - term.TK_A)
-        Position(item, *Position.item(entity).at)
+        Position(item, *Position.item(entity).at, moveable=False)
         print(f"You drop the {Information.item(item).name}")
 
 def draw_inventory(entity):
     term.clear()
+    title_bar(0, 0, "Inventory", term.state(term.TK_WIDTH))
     for i, item in enumerate(Inventory.item(entity).bag):
         info = Information.item(item)
         damage = f"{', '.join(f'{d.info}' for d in Damage.item(item))}"
@@ -341,19 +349,19 @@ def inventory_show(entity):
     term.read()
 
 def system_action(dungeon):
-    def drop_inventory(entity):
-        draw_inventory(entity)
-        while 1:
-            key = term.read()
-            if key == term.TK_ESCAPE:
-                break
-            elif term.TK_A <= code < term.TK_A + len(entity.backpack):
-                selected = code - term.TK_A
-                item = entity.backpack.pop(selected)
-                item.delete = False
-                item.position = Position(*entity.position())
-                break
-        recompute = True
+    # def drop_inventory(entity):
+    #     draw_inventory(entity)
+    #     while 1:
+    #         key = term.read()
+    #         if key == term.TK_ESCAPE:
+    #             break
+    #         elif term.TK_A <= code < term.TK_A + len(entity.backpack):
+    #             selected = code - term.TK_A
+    #             item = entity.backpack.pop(selected)
+    #             item.delete = False
+    #             item.position = Position(*entity.position())
+    #             break
+    #     recompute = True
 
     recompute = False
     proceed = True
