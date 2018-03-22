@@ -172,10 +172,8 @@ def system_alive(entity):
 
 def system_update():
     for a in Attribute.items:
-        a.update()
-    # for e in entities:
-    #     if has(e, Attribute):
-    #         e.attribute.update()
+        a.health.cur_hp = min(a.health.cur_hp + a.health.regen, a.health.max_hp)
+        a.mana.cur_mp = min(a.mana.cur_mp + a.mana.regen, a.mana.max_mp)
 
 def cache(lines):
     lines = lines

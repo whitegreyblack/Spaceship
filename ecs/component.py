@@ -254,10 +254,6 @@ class Attribute(Component, metaclass=SetIter):
                 for key in "strength agility intelligence".split()
         }
 
-    def update(self):
-        self.health.update()
-        self.mana.update()
-    
     def modify(self, stat=None, stats=None, remove=False):
         if not stat and not stats:
             raise ValueError("Need a stat to modify")
@@ -285,11 +281,20 @@ class Health(Component, metaclass=SetIter):
     @property
     def status(self):
         return int(self.cur_hp), int(self.max_hp)
-    def update(self):
-        self.cur_hp = min(self.cur_hp + self.regen, self.max_hp)
     @property
     def alive(self):
         return self.cur_hp >= 1
+
+class Mana(Component, metaclass=SetIter):
+    items = set()
+    __slots__ = ['max_mp', 'cur_mp']
+    def __init__(self, intelligence=0):
+        self.max_mp = self.cur_mp = intelligence * 1.5
+        self.regen = intelligence / 6
+    def __str__(self):
+        return super().__str__() + f"({int(self.cur_mp)}/{int(self.max_mp)}"
+    def __call__(self):
+        return int(self.cur_mp), int(self.max_mp)
 
 class Experience(Component, metaclass=SetIter):
     items = set()
@@ -305,19 +310,6 @@ class Experience(Component, metaclass=SetIter):
     @property
     def exp_needed(self):
         return self.level ** 2 * 30
-
-class Mana(Component, metaclass=SetIter):
-    items = set()
-    __slots__ = ['max_mp', 'cur_mp']
-    def __init__(self, intelligence=0):
-        self.max_mp = self.cur_mp = intelligence * 1.5
-        self.regen = intelligence / 6
-    def __str__(self):
-        return super().__str__() + f"({int(self.cur_mp)}/{int(self.max_mp)}"
-    def __call__(self):
-        return int(self.cur_mp), int(self.max_mp)
-    def update(self):
-        self.cur_mp = min(self.cur_mp + self.regen, self.max_mp)
 
 class Armor(Component, metaclass=SetIter):
     items = set()
