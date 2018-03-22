@@ -175,23 +175,21 @@ class Render(Component, metaclass=SetIter):
 PHYSICAL, MAGICAL = range(2)
 class Damage(Component, metaclass=DictIter):
     items = dict()
-    __slots__ = ['unit', "damage", "damage_name", "damage_type"]
-    def __init__(self, entity, damage_name, damage=0, damage_type=PHYSICAL):
+    __slots__ = ['unit', "damage", "damage_type"]
+    def __init__(self, entity, damage=0, damage_type=PHYSICAL):
         super().__init__(entity)
         if isinstance(damage, str):
             self.damage = Die.construct(damage)
         else:
             self.damage = Die(0, 0, damage)
         self.damage_type = damage_type
-        self.damage_name = damage_name
         if entity in Damage:
             Damage.items[entity].append(self)
         else:
             Damage.items[entity] = [self]
     def __repr__(self):
-        dm = self.damage_name
         dmg = self.damage
-        return f"{self.__class__.__name__}({dm}: {dmg})"
+        return f"{self.__class__.__name__}({dmg})"
     @classmethod
     def dmg_instances(cls, entity):
         if entity in cls.items.keys():

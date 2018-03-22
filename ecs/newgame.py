@@ -302,6 +302,7 @@ def system_action(dungeon):
 
     def item_pickup(entity):
         pickup = False
+        # this gets all entities with position components
         items = [p.entity for p in Position.items if not p.moveable]
         print('ITEMS', items)
         if len(items) == 1:
@@ -309,30 +310,8 @@ def system_action(dungeon):
             Position.remove(item)
             print(item, entity)
             Inventory.item(entity).put_in(item)
-            print(f"You put in your bag the {item}.")
+            print(f"You put in your bag the {Information.item(item).name}.")
             pickup = True
-        # for item in items:
-        #     if Position.item(item).at == Position.item(entity).at:
-        #         print(item)               
-                # unit = p.unit
-                # same_spot (p.x, p.y) == entity.position()
-                # same_entity = entity == unit
-                # if not same_entity and same_spot and not p.moveable:
-                #     unit.p = None
-                #     entity.backpack.append(unit)
-                #     unit.delete = True
-                #     pickup = True
-
-        # for e in entities:
-        #     is_entity = entity == e
-        #     is_movable = has(e, 'moveable')
-        #     same_spot = entity.position() == e.position()
-        #     if entity != e:
-        #         if not has(e, 'moveable') and entity.position() == e.position():
-        #             e.position = None
-        #             entity.backpack.append(e)
-        #             e.delete = True
-        #             pickup = True
         if not pickup:
             # messages.append("No item where you stand")
             print("No item where you stand")
@@ -340,7 +319,6 @@ def system_action(dungeon):
     def draw_inventory(entity):
         term.clear()
         for i, item in enumerate(entity.backpack):
-            print(item.name, item.damage.info)
             term.puts(0, i, f"{letter(i)}. {item.name}: {item.damage.info}")
         term.refresh()
 
@@ -473,12 +451,12 @@ def create_enemy(floors):
     if random.randint(0, 1):
         Information(entity, race="goblin")
         Render(entity, 'g', "#008800")     
-        Damage(entity, "fangs", "1d6")
+        Damage(entity, "1d6")
         Attribute(entity, strength=6)
     else:
         Information(entity, race="rat")
         Render(entity, 'r', '#664422') 
-        Damage("fist", "1d4")
+        Damage(entity, "1d4")
         Attribute(entity, strength=3)
     Position(entity, *random_position(floors)),
     Ai(entity)
@@ -487,8 +465,9 @@ def create_enemy(floors):
 def create_weapon(floors):
     e = Entity()
     Render(e, '[[', '#00AAAA')
+    Information(e, name="sword")
     Position(e, *random_position(floors), moveable=False)
-    Damage(e, "sword", "1d6")
+    Damage(e, "1d6")
     # entities.append(Entity(components=[
     #     Render(')', '#004444'),
     #     Information(name="spear"),
