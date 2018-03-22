@@ -80,6 +80,10 @@ class Component:
             if key in cls.items.keys():
                 return cls.items[key].pop()
             return None
+    @classmethod
+    def remove(cls, key):
+        if key in cls.items:
+            cls.items.remove(key)
 
 # [single]
 class Equipment(Component, metaclass=SetIter):
@@ -109,10 +113,10 @@ class Delete(Component, metaclass=SetIter):
 class Position(Component, metaclass=SetIter):
     items = set()
     __slots__ = ['entity', 'x', 'y', 'moveable']
-    def __init__(self, entity, x, y, movable=True):
+    def __init__(self, entity, x, y, moveable=True):
         super().__init__(entity)
         self.x, self.y = x, y
-        self.moveable = movable
+        self.moveable = moveable
         # remove previous instance if new component is instantiated
         if self in Position.items:
             Position.items.remove(self)
@@ -139,6 +143,18 @@ class Information(Component, metaclass=SetIter):
     @property
     def title(self):
         return self.name.title() if self.name else self.race.title()
+
+class Inventory(Component, metaclass=SetIter):
+    items = set()
+    __slots__ = ['entity', 'bag']
+    def __init__(self, entity, bag=[]):
+        super().__init__(entity)
+        self.bag = bag
+        Inventory.items.add(self)
+    def put_in(self, item):
+        self.bag.append(item)
+    def take_out(self, item):
+        self.bag.remove(item)
 
 # [single]
 class Render(Component, metaclass=SetIter):
@@ -195,7 +211,11 @@ class Damage(Component, metaclass=DictIter):
         if key in cls.items.keys():
             return cls.items[key]
         return None
-
+    @classmethod
+    def remove(cls, key):
+        if key in cls.items.keys():
+            cls.items.pop(key)
+        
 # [single]
 class Attribute(Component, metaclass=SetIter):
     items = set()

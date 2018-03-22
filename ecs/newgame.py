@@ -3,7 +3,7 @@ from collections import namedtuple
 from ecs.die import check_sign as check
 from ecs.keyboard import Keyboard
 from ecs.component import (Component, Entity, Position, Render, Information, 
-    Attribute, Delete, Equipment, Damage, Ai)
+    Attribute, Delete, Equipment, Damage, Ai, Inventory)
 from ecs.map import Map, WORLD
 import math
 import random
@@ -146,7 +146,14 @@ def system_draw(recalc, world):
     if recalc:
         title_bar(0, 0, "#444444", "Tiphmore", 64)
         term.clear_area(0, 1, world.width, world.height)
-        positions = {position.at: position.entity for position in Position.items}
+        positions = dict()
+        for position in Position.items:
+            print(position)
+            if position.at in positions:
+                if Position.item(positions[position.at]).moveable:
+                    continue
+            positions[position.at] = position.entity
+        # positions = {position.at: position.entity for position in Position.items}
         for j, row in enumerate(world.world):
             for i, cell in enumerate(row):
                 lighted = world.lit(i, j)
@@ -255,26 +262,18 @@ def take_turn(entity):
             return None, x, y, False
     return a, x, y, True
 
-def entity_damage(entity):
-    # default case
-    print("ENTITY DAMAGE")
-    print(Damage.items)
-    dmg_obj = Damage.item(entity)
-    print("Default", repr(dmg_obj))
-    if entity in Equipment:
-        print('yes')
-
-
 def system_action(dungeon):
 
     def combat(entity, other):
+        # get all object before processing combat
+        print(Damage.items)
         attacker = Information.item(entity)
         defender = Information.item(other)
         loggable = attacker and defender
         print(f"{attacker.title} v {defender.title}")
         att_damage = Damage.item(entity)
-        entity_damage(attacker)
-        print('DM', att_damage)
+        def_armor = 0
+        print('DM', att_damage, repr(att_damage), def_armor)
         Delete(other)
         
         # if loggable(entities=(entity, other), anything=False):
@@ -303,15 +302,26 @@ def system_action(dungeon):
 
     def item_pickup(entity):
         pickup = False
-        for p in Position.items():
-            unit = p.unit
-            same_spot (p.x, p.y) == entity.position()
-            same_entity = entity == unit
-            if not same_entity and same_spot and not p.moveable:
-                unit.p = None
-                entity.backpack.append(unit)
-                unit.delete = True
-                pickup = True
+        items = [p.entity for p in Position.items if not p.moveable]
+        print('ITEMS', items)
+        if len(items) == 1:
+            item = items.pop()
+            Position.remove(item)
+            print(item, entity)
+            Inventory.item(entity).put_in(item)
+            print(f"You put in your bag the {item}.")
+            pickup = True
+        # for item in items:
+        #     if Position.item(item).at == Position.item(entity).at:
+        #         print(item)               
+                # unit = p.unit
+                # same_spot (p.x, p.y) == entity.position()
+                # same_entity = entity == unit
+                # if not same_entity and same_spot and not p.moveable:
+                #     unit.p = None
+                #     entity.backpack.append(unit)
+                #     unit.delete = True
+                #     pickup = True
 
         # for e in entities:
         #     is_entity = entity == e
@@ -432,7 +442,7 @@ def system_remove():
     for entity in remove:
         for subclass in Component.__subclasses__():
             if entity in subclass:
-                subclass.items.remove(entity)
+                subclass.remove(entity)
         # try:
         #     print(f"Deleting: {e.information()}")
         # except:
@@ -456,35 +466,35 @@ def create_player(entity, floors):
     Render(entity, '@')
     Attribute(entity, strength=10)
     Equipment(entity)
+    Inventory(entity)
 
 def create_enemy(floors):
     entity = Entity()
     if random.randint(0, 1):
         Information(entity, race="goblin")
-        Render(entity, 'r', '#664422') 
+        Render(entity, 'g', "#008800")     
         Damage(entity, "fangs", "1d6")
         Attribute(entity, strength=6)
     else:
         Information(entity, race="rat")
-        Render(entity, 'g', "#008800")        
+        Render(entity, 'r', '#664422') 
         Damage("fist", "1d4")
         Attribute(entity, strength=3)
     Position(entity, *random_position(floors)),
     Ai(entity)
+    print(Ai.items)
 
-def create_weapon(entities, floors):
-    entities.append(Entity(components=[
-        Render('[[', '#00AAAA'),
-        Information(name="sword"),
-        Position(*random_position(entities, floors), moveable=False),
-        Damage(("1d6", Damage.PHYSICAL)),
-    ]))
-    entities.append(Entity(components=[
-        Render(')', '#004444'),
-        Information(name="spear"),
-        Position(*random_position(entities, floors), moveable=False),
-        Damage(("2d6", Damage.PHYSICAL))
-    ]))
+def create_weapon(floors):
+    e = Entity()
+    Render(e, '[[', '#00AAAA')
+    Position(e, *random_position(floors), moveable=False)
+    Damage(e, "sword", "1d6")
+    # entities.append(Entity(components=[
+    #     Render(')', '#004444'),
+    #     Information(name="spear"),
+    #     Position(*random_position(entities, floors), moveable=False),
+    #     Damage(("2d6", Damage.PHYSICAL))
+    # ]))
 
 Event = namedtuple('Event', 'string position')
 
@@ -514,14 +524,13 @@ class Game:
         # for i in range(random.randint(5, 7)):
         create_enemy(self.dungeon.floors)
         # # for i in range(3):
-        # create_weapon(self.entities, self.dungeon.floors)
+        create_weapon(self.dungeon.floors)
 
     def run(self):
         proceed = True
         fov_recalc = True
         messages = []
         while proceed:
-            print('p', self.player)
             self.dungeon.do_fov(*Position.item(self.player).at, 15)
             system_status(self.player)
             system_enemy_status(self.dungeon, self.player)
