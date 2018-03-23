@@ -9,7 +9,7 @@ def check_sign(value):
     then function returns an empty string
     '''
     string = ""
-    if value < 0:
+    if value <= 0:
         string = str(value)
     elif value > 0:
         string = f"+{value}"

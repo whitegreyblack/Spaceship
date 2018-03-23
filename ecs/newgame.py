@@ -32,6 +32,7 @@ def create_player(entity, floors):
     Equipment(entity)
     Inventory(entity)
     Damage(entity, "2d4")
+    Armor(entity, 0, 2)
 
 def create_enemy(floors):
     entity = Entity()
@@ -179,33 +180,35 @@ def system_status(entity):
     mana_string = mana_string + ' ' * (15 - len(mana_string))
 
     # armor values
-    armor_values = reduce((lambda x, y: (x[0] + y[0], x[1] + y[1])),
-                         [a.info for a in Armor.item(entity)])
+    to_hit, armor = reduce((lambda x, y: [x[0] + y[0], x[1] + y[1]]),
+                           [a.info for a in Armor.item(entity)])
 
     # damage ranges
-    damage_range = reduce((lambda x, y: (x[0] + y[0], x[1] + y[1])),
-                         [d.damage.ranges for d in Damage.item(entity)])
+    dmg_low, dmg_high= reduce((lambda x, y: (x[0] + y[0], x[1] + y[1])),
+                              [d.damage.ranges for d in Damage.item(entity)])
 
+    index = 0
     spacer = '-' * 16
     # done with variables -- lets clear the player status screen
     term.clear_area(64, 0, 16, 7)
 
     # name of character
-    term.puts(65, 0, f"{information.title}")
+    term.puts(65, index, f"{information.title}")
     
     # health and mana
-    plot_bar(65, 1, "#880000", "#440000", health_string, health_bars)
-    plot_bar(65, 2, "#000088", "#000044", mana_string, mana_bars)
+    plot_bar(65, index + 1, "#880000", "#440000", health_string, health_bars)
+    plot_bar(65, index + 2, "#000088", "#000044", mana_string, mana_bars)
     term.bkcolor("#000000")
 
     # character attributes: DMG | STR | AGI | INT
-    term.puts(65, 3, f"DMG: {damage_range}")
-    term.puts(65, 4, f"STR: {s}{check(strmod)}({strscore})")
-    term.puts(65, 5, f"AGI: {a}{check(agimod)}({agiscore})")
-    term.puts(65, 6, f"INT: {i}{check(intmod)}({intscore})")
+    term.puts(65, index + 3, f"DMG: ({dmg_low}, {dmg_high})")
+    term.puts(65, index + 4, f"AMR: [[{to_hit}, {armor}]]")
+    term.puts(65, index + 5, f"STR: {s}{check(strmod)}({strscore})")
+    term.puts(65, index + 6, f"AGI: {a}{check(agimod)}({agiscore})")
+    term.puts(65, index + 7, f"INT: {i}{check(intmod)}({intscore})")
     
     # border between hero status and other unit statuses
-    term.puts(64, 7, spacer)
+    term.puts(64, 8, spacer)
 
 def system_enemy_status(world, entity):
     index = 9

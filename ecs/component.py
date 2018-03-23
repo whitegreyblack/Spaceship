@@ -295,18 +295,18 @@ class Damage(Component, metaclass=DictIter):
 class Armor(Component, metaclass=DictIter):
     items = dict()
     __slots__ = ['entity', 'to_hit', 'defense']
-    def __init__(self, entity, to_hit, defense):
+    def __init__(self, entity, to_hit=0, defense=0):
         super().__init__(entity)
         self.to_hit = to_hit
         self.defense = defense
-        if entity in Damage:
+        if entity in Armor:
             Armor.items[entity].append(self)
         else:
             Armor.items[entity] = [self]
     def __repr__(self):
         str_to_hit = check(self.to_hit)
         str_defense = check(self.defense)
-        return f"{self.__class__.__name}[{str_to_hit}, {str_defense}]"
+        return f"{self.__class__.__name__}[{str_to_hit}, {str_defense}]"
     @property
     def info(self):
         return self.to_hit, self.defense
