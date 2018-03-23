@@ -2,8 +2,10 @@ from bearlibterminal import terminal as term
 from collections import namedtuple
 from ecs.die import check_sign as check
 from ecs.keyboard import Keyboard
-from ecs.component import (Component, Entity, Position, Render, Information, 
-    Attribute, Delete, Equipment, Damage, Ai, Inventory, Attribute, Health)
+from ecs.component import (
+    Component, Entity, Position, Render, Information, Attribute, Delete, Ai, 
+    Damage, Equipment, Inventory, Attribute, Health, Armor
+)
 from functools import reduce
 from ecs.map import Map, WORLD
 import math
@@ -46,20 +48,23 @@ def create_enemy(floors):
     Position(entity, *random_position(floors)),
     Ai(entity)
 
-def create_weapon(floors=None):
+def create_weapon(floors):
     e = Entity()
     Render(e, '[[', '#00AAAA')
     Information(e, name="sword")
     Damage(e, "1d6")
-    if floors:
-        Position(e, *random_position(floors), moveable=False)
+    Position(e, *random_position(floors), moveable=False)
 
     e = Entity()
     Render(e, ')', '#004444')
     Information(e, name="spear")
     Damage(e, '1d8')
-    if floors:
-        Position(e, *random_position(floors), moveable=False)
+    Position(e, *random_position(floors), moveable=False)
+
+def create_armor(floors):
+    e = Entity()
+    Render(e, ']]', '#00FF00')
+    Information(e, name="chainmail")
 
 # def loggable(entities, anything=False):
 #     print_info = all(has(e, Information) for e in entities)
@@ -173,9 +178,13 @@ def system_status(entity):
     mana_string = f"MP: {mc:2}/{mm:2}"
     mana_string = mana_string + ' ' * (15 - len(mana_string))
 
+    # armor values
+    armor_values = reduce((lambda x, y: (x[0] + y[0], x[1] + y[1])),
+                         [a.info for a in Armor.item(entity)])
+
     # damage ranges
-    damage_range = reduce((lambda x,y: (x[0]+y[0], x[1]+y[1])),
-                          [d.damage.ranges for d in Damage.item(entity)])
+    damage_range = reduce((lambda x, y: (x[0] + y[0], x[1] + y[1])),
+                         [d.damage.ranges for d in Damage.item(entity)])
 
     spacer = '-' * 16
     # done with variables -- lets clear the player status screen
@@ -372,6 +381,15 @@ def combat(entity, other):
     if not def_health.alive:
         Delete(other)
 
+def draw_inventory(entity):
+    term.clear()
+    title_bar(0, 0, "Inventory", term.state(term.TK_WIDTH))
+    for i, item in enumerate(Inventory.item(entity).bag):
+        info = Information.item(item)
+        damage = f"{', '.join(f'{d.info}' for d in Damage.item(item))}"
+        term.puts(1, i + 2, f"{letter(i)}. {info.title}: {damage}")
+    term.refresh()
+
 def inventory_pick(entity):
     pickup = False
     # this gets all entities with position components
@@ -398,15 +416,6 @@ def inventory_drop(entity):
         item = Inventory.item(entity).bag.pop(key - term.TK_A)
         Position(item, *Position.item(entity).at, moveable=False)
         print(f"You drop the {Information.item(item).name}")
-
-def draw_inventory(entity):
-    term.clear()
-    title_bar(0, 0, "Inventory", term.state(term.TK_WIDTH))
-    for i, item in enumerate(Inventory.item(entity).bag):
-        info = Information.item(item)
-        damage = f"{', '.join(f'{d.info}' for d in Damage.item(item))}"
-        term.puts(0, i, f"{letter(i)}. {info.title}: {damage}")
-    term.refresh()
 
 def inventory_show(entity):
     draw_inventory(entity)

@@ -28,59 +28,40 @@ def entities_remove():
         for subclass in Component.__subclasses__():
             if d in subclass:
                 entity = subclass.item(d)
-                if isinstance(subclass.items, set):
-                    subclass.items.remove(entity)
-                else:
-                    for e in entity:
-                        subclass.items.pop(e)
+                if not isinstance(entity, list):
+                    entity = [entity]
+                for e in entity:
+                    subclass.remove(e)
         # remove entity instance from Entity
         Entity.instances.remove(d)
 
-def entities_update():
-    updatables = entities_with(Attribute)
-    for u in updatables:
-        a = Attribute.item(u)
-        pass
-
-class SetIter(type):
-    def __contains__(cls, key):
-        return any(key == instance for instance in cls.items)
-    def __iter__(cls):
-        for item in cls.items:
-            yield item
-        
-class DictIter(type):
-    def __contains__(cls, key):
-        return any(key == instance for instance in cls.items.keys())
-    def __iter__(cls):
-        for item in cls.items.values():
-            yield item
-            
 class Component:
-    # items = set()        
+    '''Component class handles entity instantiation, entity comparisons with 
+    other components, and component.entity hashing
+    '''
     def __init__(self, entity):
         self.entity = entity
-        # self.is_component = True
-        # Component.items.add(self)
     def __hash__(self):
         return hash(self.entity)
     def __eq__(self, other):
         return self.entity == other
     def __repr__(self):
         return f"{self.__class__.__name__}({self.entity})"
-    @classmethod
+
+class SetIter(type):
+    '''SetIter holds class methods used by specific functions that have the
+    items class variable of type set.
+    '''
+    def __contains__(cls, key):
+        return any(key == instance for instance in cls.items)
+    def __iter__(cls):
+        for item in cls.items:
+            yield item
     def item(cls, key):
-        if isinstance(cls.items, set):
-            entity = list(filter(lambda x: key == x, cls.items))
-            if not entity:
-                return None
+        entity = list(filter(lambda x: key == x, cls.items))
+        if entity:
             return entity.pop()
-        else:
-            print('dict')
-            if key in cls.items.keys():
-                return cls.items[key].pop()
-            return None
-    @classmethod
+        return None
     def remove(cls, key):
         if key in cls.items:
             cls.items.remove(key)
@@ -144,6 +125,7 @@ class Information(Component, metaclass=SetIter):
     def title(self):
         return self.name.title() if self.name else self.race.title()
 
+# [single]
 class Inventory(Component, metaclass=SetIter):
     items = set()
     __slots__ = ['entity', 'bag']
@@ -170,49 +152,6 @@ class Render(Component, metaclass=SetIter):
     def string(self):
         return self.background, f"[c={self.foreground}]{self.symbol}[/c]"
 
-# [multiple]
-# piercing/bludgeoning/slashing/bleeding/radiating
-PHYSICAL, MAGICAL = range(2)
-class Damage(Component, metaclass=DictIter):
-    items = dict()
-    __slots__ = ['unit', "damage", "damage_type"]
-    def __init__(self, entity, damage=0, damage_type=PHYSICAL):
-        super().__init__(entity)
-        if isinstance(damage, str):
-            self.damage = Die.construct(damage)
-        else:
-            self.damage = Die(0, 0, damage)
-        self.damage_type = damage_type
-        if entity in Damage:
-            Damage.items[entity].append(self)
-        else:
-            Damage.items[entity] = [self]
-    def __repr__(self):
-        dmg = self.damage
-        return f"{self.__class__.__name__}({dmg})"
-    @classmethod
-    def dmg_instances(cls, entity):
-        if entity in cls.items.keys():
-            damages = [0 for _ in range(2)]
-            for die in cls.items[entity]:
-                damages[die.damage_type] += die.roll()
-            return damages
-        return [0, 0]
-    def roll(self):
-        return next(self.damage.roll())
-    @property
-    def info(self):
-        return self.damage.ranges
-    @classmethod
-    def item(cls, key):
-        if key in cls.items.keys():
-            return cls.items[key]
-        return None
-    @classmethod
-    def remove(cls, key):
-        if key in cls.items.keys():
-            cls.items.pop(key)
-        
 # [single]
 class Attribute(Component, metaclass=SetIter):
     items = set()
@@ -247,7 +186,7 @@ class Attribute(Component, metaclass=SetIter):
         self.health = Health(entity, 
                              self.strength + self.modifiers['strength'])
         self.mana = Mana(self.intelligence + self.modifiers['intelligence'])
-        self.armor = Armor(self.agility + self.modifiers['agility'])
+        # self.armor = Armor(self.agility + self.modifiers['agility'])
 
         self.attrscore = {
             key: (getattr(self, key) + self.modifiers[key]) // 2 - 5 
@@ -311,11 +250,66 @@ class Experience(Component, metaclass=SetIter):
     def exp_needed(self):
         return self.level ** 2 * 30
 
-class Armor(Component, metaclass=SetIter):
-    items = set()
-    __slots__ = ['armor']
-    def __init__(self, agility=0):
-        self.armor= agility * .25 + 3
+class DictIter(type):
+    '''DictIter holds class methods used by specific functions that have the 
+    items class variable of type dictionary.
+    '''
+    def __contains__(cls, key):
+        return any(key == instance for instance in cls.items.keys())
+    def __iter__(cls):
+        for item in cls.items.values():
+            yield item
+    def item(cls, key):
+        if key in cls.items.keys():
+            return cls.items[key]
+        return None
+    def remove(cls, key):
+        if key in cls.items.keys():
+            cls.items.pop(key)
+
+# [multiple]
+# piercing/bludgeoning/slashing/bleeding/radiating
+PHYSICAL, MAGICAL = range(2)
+class Damage(Component, metaclass=DictIter):
+    items = dict()
+    __slots__ = ['unit', "damage", "damage_type"]
+    def __init__(self, entity, damage=0, damage_type=PHYSICAL):
+        super().__init__(entity)
+        if isinstance(damage, str):
+            self.damage = Die.construct(damage)
+        else:
+            self.damage = Die(0, 0, damage)
+        self.damage_type = damage_type
+        if entity in Damage:
+            Damage.items[entity].append(self)
+        else:
+            Damage.items[entity] = [self]
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.damage})"
+    def roll(self):
+        return next(self.damage.roll())
+    @property
+    def info(self):
+        return self.damage.ranges
+
+class Armor(Component, metaclass=DictIter):
+    items = dict()
+    __slots__ = ['entity', 'to_hit', 'defense']
+    def __init__(self, entity, to_hit, defense):
+        super().__init__(entity)
+        self.to_hit = to_hit
+        self.defense = defense
+        if entity in Damage:
+            Armor.items[entity].append(self)
+        else:
+            Armor.items[entity] = [self]
+    def __repr__(self):
+        str_to_hit = check(self.to_hit)
+        str_defense = check(self.defense)
+        return f"{self.__class__.__name}[{str_to_hit}, {str_defense}]"
+    @property
+    def info(self):
+        return self.to_hit, self.defense
 
 class Entity:
     entity_id = 0
@@ -333,17 +327,16 @@ class Entity:
         
 if __name__ == "__main__":
     e = Entity()
-    print(e)
+    Damage(e, 5)
+    print(f"In Damage?: {e in Damage}")
+    print(Damage.item(e))
     Damage(e, '1d6')
     print(Damage.items)
-    print(Damage.dmg_instances(e))
     Delete(e)
-    print('remove')
     entities_remove()
-    print(Damage.items)
-    print(Damage.dmg_instances(e))
+    assert Damage.items == dict()
     Position(e, 2, 3)
-    print(Position.item(e).at)
+    assert Position.item(e).at == (2, 3)
     Information(e, "Grey", "Human")
     print(Information.item(e).title)
     print(Entity.instances)
