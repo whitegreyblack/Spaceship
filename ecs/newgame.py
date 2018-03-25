@@ -165,6 +165,7 @@ def system_status(entity):
     s, a, i, mods, attrs = attribute.status
     strmod, strscore = mods['strength'], attrs['strength']
     agimod, agiscore = mods['agility'], attrs['agility']
+    print(agimod, check(agimod))
     intmod, intscore = mods['intelligence'], attrs['intelligence']
     
     # health stat variables
