@@ -59,7 +59,7 @@ def create_weapon(floors):
     e = Entity()
     Render(e, ')', '#004444')
     Information(e, name="spear")
-    Damage(e, '1d8')
+    Damage(e, 2, '1d8')
     Position(e, *random_position(floors), moveable=False)
 
 def create_armor(floors):
@@ -438,10 +438,11 @@ def draw_inventory(entity):
                 description = "both"
             elif damages:
                 print('damages')
-                description = f"{''.join(f'{d.damage}' for d in Damage.item(item))}"
+                description = f"{''.join(f'{repr(d)}' for d in damages)}"
             else:
-                description = "armor"
-            term.puts(1, i + 2, f"{letter(i)}. {info.name}: {description}")
+                print(armours)
+                description = f"{''.join(f'{repr(a)}' for a in armours)}"
+            term.puts(1, i + 2, f"{letter(i)}. {info.name} {description}")
     term.refresh()
 
 def draw_equipment(entity):

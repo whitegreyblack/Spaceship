@@ -288,7 +288,9 @@ class Damage(Component, metaclass=DictIter):
         else:
             Damage.items[entity] = [self]
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.damage})"
+        print('TOHIT: ', self.to_hit)
+        to_hit = check(self.to_hit, save_zero=True)
+        return f"({to_hit}, {self.damage})"
     def roll(self):
         return next(self.damage.roll())
     @property
@@ -307,9 +309,9 @@ class Armor(Component, metaclass=DictIter):
         else:
             Armor.items[entity] = [self]
     def __repr__(self):
-        str_to_hit = check(self.to_hit)
-        str_defense = check(self.defense)
-        return f"{self.__class__.__name__}[{str_to_hit}, {str_defense}]"
+        str_to_hit = check(self.to_hit, save_zero=True)
+        str_defense = check(self.defense, save_zero=True)
+        return f"[[{str_to_hit}, {str_defense}]]"
     @property
     def info(self):
         return self.to_hit, self.defense
