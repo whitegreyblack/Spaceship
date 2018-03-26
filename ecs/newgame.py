@@ -127,6 +127,19 @@ def title_bar(x, y, string, bars, color="#444444"):
     term.bkcolor("#000000")
     term.puts(x + index, y, string)
 
+def action_bar(x, y, strings, bars, color="#444444"):
+    '''Max actions should be 8? Could do two lines if need be'''
+    length = 0
+    if strings:
+        length = (bars - 2) // len(strings)
+    term.bkcolor(color)
+    term.puts(x, y, ' ' * bars)
+    term.bkcolor("#000000")
+    for i, string in enumerate(strings):
+        # index = bars // 2 - len(string) // 2
+        offset = len(string) // 2
+        term.puts(x + length * i + offset, y, string)
+
 def plot_bar(x, y, color1, color2, string, bars):
     index = len(string[:bars])
     term.bkcolor(color1)
@@ -188,7 +201,6 @@ def system_status(entity):
     # damage ranges
     to_hit, dmg = reduce((lambda x, y: (x[0] + y[0], x[1] + y[1])),
                          [d.info for d in Damage.item(entity)])
-    print(to_hit, dmg)
 
     index = 0
     spacer = '-' * 16
@@ -395,23 +407,41 @@ def combat(entity, other):
 def draw_inventory(entity):
     term.clear()
     title_bar(0, 0, "Inventory", term.state(term.TK_WIDTH))
-    for i, item in enumerate(Inventory.item(entity).bag):
-        info = Information.item(item)
-        # damage = f"{', '.join(f'{d.info}' for d in Damage.item(item))}"
-        # how would weapons be known? weapons have damage instances
-        # armor would have armor instances
-        # so before print we sort:
-        damages = Damage.item(item)
-        armours = Armor.item(item)
-        if bool(damages and armours):
-            print('both')
-            description = "both"
-        elif damages:
-            print('damages')
-            description = f"{''.join(f'{d.damage}' for d in Damage.item(item))}"
-        else:
-            description = "armor"
-        term.puts(1, i + 2, f"{letter(i)}. {info.name}: {description}")
+    inventory = Inventory.item(entity).bag
+    print(inventory)
+    if not inventory or len(inventory) == 0:
+        string = "No items in inventory"
+        term.puts(term.state(term.TK_WIDTH) // 2 - (len(string) // 2), 
+                  term.state(term.TK_HEIGHT) // 2,
+                  string)
+        action_bar(0, 
+                   term.state(term.TK_HEIGHT) - 1, 
+                   [],
+                   term.state(term.TK_WIDTH))
+    else:
+        action_bar(0, term.state(term.TK_HEIGHT)-1, [
+            "[[u]] use",
+            "[[e]] equip",
+            "[[d]] detail",
+            "[[D]] drink",
+        ], term.state(term.TK_WIDTH))
+        for i, item in enumerate(inventory):
+            info = Information.item(item)
+            # damage = f"{', '.join(f'{d.info}' for d in Damage.item(item))}"
+            # how would weapons be known? weapons have damage instances
+            # armor would have armor instances
+            # so before print we sort:
+            damages = Damage.item(item)
+            armours = Armor.item(item)
+            if bool(damages and armours):
+                print('both')
+                description = "both"
+            elif damages:
+                print('damages')
+                description = f"{''.join(f'{d.damage}' for d in Damage.item(item))}"
+            else:
+                description = "armor"
+            term.puts(1, i + 2, f"{letter(i)}. {info.name}: {description}")
     term.refresh()
 
 def draw_equipment(entity):
@@ -472,6 +502,11 @@ def system_action(dungeon):
         # if entity has a position and can move
         position = Position.item(entity)
         if position.moveable:
+            '''
+            end_turn = False
+            while not end_turn:
+                a, x, y, proceed = take_turn(entity)
+            '''
             a, x, y, proceed = take_turn(entity)
             if not proceed:
                 break
