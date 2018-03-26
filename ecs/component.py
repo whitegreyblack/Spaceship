@@ -75,7 +75,9 @@ class Equipment(Component, metaclass=SetIter):
         for a, v in zip(['left_hand', 'right_hand', 'body'], [lh, rh, body]):
             setattr(self, a, v)
         Equipment.items.add(self)
-
+    @property
+    def parts(self):
+        return self.left_hand, self.right_hand, self.body
 # [single]
 class Ai(Component, metaclass=SetIter):
     items = set()

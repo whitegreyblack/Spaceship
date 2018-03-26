@@ -25,8 +25,8 @@ class Keyboard:
         (term.TK_COMMA, 0): "pickup",
         (term.TK_I, 0): "inventory",
         (term.TK_D, 0): "drop",
-        (term.TK_E, 0): "equip",
-        (term.TK_U, 0): "unequip",
+        (term.TK_E, 0): "equipment",
+        # (term.TK_U, 0): "unequip",
         (term.TK_B, 0): "backpack",
     }
     MAIN_MENU = {

@@ -394,6 +394,18 @@ def draw_inventory(entity):
         term.puts(1, i + 2, f"{letter(i)}. {info.title}: {damage}")
     term.refresh()
 
+def draw_equipment(entity):
+    term.clear()
+    title_bar(0, 0, "Equipment", term.state(term.TK_WIDTH))
+    equipment = Equipment.item(entity)
+    if equipment:
+        for i, part in enumerate(equipment.parts):
+            name = ""
+            if part:
+                name = Information.item(item).title
+            term.puts(1, i + 2, f"{letter(i)}. {name}")
+    term.refresh()
+
 def inventory_pick(entity):
     pickup = False
     # this gets all entities with position components
@@ -425,6 +437,10 @@ def inventory_show(entity):
     draw_inventory(entity)
     term.read()
 
+def equipment_show(entity):
+    draw_equipment(entity)
+    term.read()
+
 def system_action(dungeon):
     recompute = False
     proceed = True
@@ -445,39 +461,42 @@ def system_action(dungeon):
                 elif a == "inventory":
                     inventory_show(entity)
                     recompute = True
+                elif a == "equipment":
+                    equipment_show(entity)
+                    recompute = True
                 elif a == "drop":
                     inventory_drop(entity)
                     recompute = True
-                elif a == "equip":
-                    if len(entity.backpack) == 1:
-                        item = entity.backpack.pop()
-                        if not entity.equipment.left_hand:
-                            print("current damage:", entity.equipment.left_hand)
-                            print("equipping left hand with item")
-                            entity.equipment.left_hand = item.damage
-                            print("current damage:", entity.equipment.left_hand)
-                        elif not entity.equipment.right_hand:
-                            print("current damage:", entity.equipment.right_hand)
-                            print("equipping right hand with item")  
-                            entity.equipment.right_hand = item.damage
-                            print("current damage:", entity.equipment.right_hand)
-                        else:
-                            print("Both hands are full")
-                            entity.backpack.append(item)
-                        entity.equipment.left_hand
-                elif a == "unequip":
-                    item = None
-                    if has(entity.equipment, 'left_hand') and entity.equipment.left_hand:
-                        print("Unequipping left hand")
-                        item = entity.equipment.left_hand
-                        entity.equipment.left_hand = Damage("1d6")
-                    elif has(entity.equipment, 'right_hand') and entity.equipment.right_hand:
-                        item = entity.equipment.right_hand
-                        entity.equipment.right_hand = Damage("1d6")
-                    else:
-                        print("Both hands are empty")
-                    if item:
-                        entity.backpack.append(item)
+                # elif a == "equip":
+                #     if len(entity.backpack) == 1:
+                #         item = entity.backpack.pop()
+                #         if not entity.equipment.left_hand:
+                #             print("current damage:", entity.equipment.left_hand)
+                #             print("equipping left hand with item")
+                #             entity.equipment.left_hand = item.damage
+                #             print("current damage:", entity.equipment.left_hand)
+                #         elif not entity.equipment.right_hand:
+                #             print("current damage:", entity.equipment.right_hand)
+                #             print("equipping right hand with item")  
+                #             entity.equipment.right_hand = item.damage
+                #             print("current damage:", entity.equipment.right_hand)
+                #         else:
+                #             print("Both hands are full")
+                #             entity.backpack.append(item)
+                #         entity.equipment.left_hand
+                # elif a == "unequip":
+                #     item = None
+                #     if has(entity.equipment, 'left_hand') and entity.equipment.left_hand:
+                #         print("Unequipping left hand")
+                #         item = entity.equipment.left_hand
+                #         entity.equipment.left_hand = Damage("1d6")
+                #     elif has(entity.equipment, 'right_hand') and entity.equipment.right_hand:
+                #         item = entity.equipment.right_hand
+                #         entity.equipment.right_hand = Damage("1d6")
+                #     else:
+                #         print("Both hands are empty")
+                #     if item:
+                #         entity.backpack.append(item)
                 continue
 
             recompute = True
