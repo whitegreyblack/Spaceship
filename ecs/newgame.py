@@ -24,6 +24,7 @@ def random_position(floortiles):
     tile = tiles.pop()
     return tile
 
+# -- Object creation functions --
 def create_player(entity, floors):
     Position(entity, *random_position(floors))
     Information(entity, name="Hero", race="Human")
@@ -40,7 +41,7 @@ def create_enemy(floors):
     Render(entity, 'g', "#008800")     
     Damage(entity, 1, "1d6")
     Attribute(entity, strength=6)
-    Position(entity, *random_position(floors)),
+    Position(entity, *random_position(floors))
     Ai(entity)
 
     entity = Entity()
@@ -48,7 +49,7 @@ def create_enemy(floors):
     Render(entity, 'r', '#664422') 
     Damage(entity, 0, "1d4")
     Attribute(entity, strength=3)
-    Position(entity, *random_position(floors)),
+    Position(entity, *random_position(floors))
     Ai(entity)
 
 def create_weapon(floors):
@@ -236,7 +237,6 @@ def system_status(entity):
 
 def system_enemy_status(world, entity):
     index = 9
-    term.clear_area(65, 8, 15, 16)
     lighted = world.lighted
     entities_in_range = {
         p.entity for p in Position.items
@@ -270,26 +270,39 @@ def system_enemy_status(world, entity):
 
 def system_draw(recalc, world):
     if recalc:
-        title_bar(0, 0, "Tiphmore", 64)
-        term.clear_area(0, 1, world.width, world.height)
+        width_offset = 0
+        height_offset = 1
         positions = dict()
+
+        title_bar(0, 0, "Tiphmore", 64)
+        term.clear_area(0, 
+                        1, 
+                        term.state(term.TK_WIDTH), 
+                        term.state(term.TK_HEIGHT))
+
+        # renders the map according to priority -- movable entities to the front
         for position in Position.items:
             if position.at in positions:
                 if Position.item(positions[position.at]).moveable:
                     continue
             positions[position.at] = position.entity
 
-        # positions = {position.at: position.entity for position in Position.items}
+        # go through map array and color if location is lighted/seen
         for j, row in enumerate(world.world):
             for i, cell in enumerate(row):
                 lighted = world.lit(i, j)
+                color = "#222222"
                 if lighted == 2:
                     if (i, j) in positions.keys():
-                        draw_entity((i, j + 1), positions[(i, j)])
-                    else:
-                        term.puts(i, j + 1, f"[c=#999999]{cell}[/c]")
-                elif lighted == 1:
-                    term.puts(i, j + 1, f"[c=#222222]{cell}[/c]")
+                        draw_entity((i + width_offset, j + height_offset), 
+                                    positions[(i, j)])
+                        continue
+                    color = "#999999"
+
+                if lighted:
+                    term.puts(i + width_offset, 
+                              j + height_offset, 
+                              f"[c={color}]{cell}[/c]")
 
 def system_alive(entity):
     return entity not in Delete

@@ -38,6 +38,11 @@ def entities_remove():
 class Component:
     '''Component class handles entity instantiation, entity comparisons with 
     other components, and component.entity hashing
+
+    For singular objects:
+        if Component.item(Entity_ID) is called => Object of type Component
+    For multiple objects:
+        if Component.items() is called => Set() || Dict() of type Component
     '''
     def __init__(self, entity):
         self.entity = entity
