@@ -272,15 +272,15 @@ def system_draw(recalc, world):
     if recalc:
         width_offset = 0
         height_offset = 1
-        positions = dict()
 
-        title_bar(0, 0, "Tiphmore", 64)
         term.clear_area(0, 
-                        1, 
+                        0, 
                         term.state(term.TK_WIDTH), 
                         term.state(term.TK_HEIGHT))
+        title_bar(0, 0, "Tiphmore", 64)
 
         # renders the map according to priority -- movable entities to the front
+        positions = dict()
         for position in Position.items:
             if position.at in positions:
                 if Position.item(positions[position.at]).moveable:
