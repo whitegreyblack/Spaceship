@@ -274,9 +274,10 @@ class DictIter(type):
 PHYSICAL, MAGICAL = range(2)
 class Damage(Component, metaclass=DictIter):
     items = dict()
-    __slots__ = ['unit', "damage", "damage_type"]
-    def __init__(self, entity, damage=0, damage_type=PHYSICAL):
+    __slots__ = ['unit', "to_hit", "damage", "damage_type"]
+    def __init__(self, entity, to_hit=0, damage=0, damage_type=PHYSICAL):
         super().__init__(entity)
+        self.to_hit = to_hit
         if isinstance(damage, str):
             self.damage = Die.construct(damage)
         else:
@@ -292,7 +293,7 @@ class Damage(Component, metaclass=DictIter):
         return next(self.damage.roll())
     @property
     def info(self):
-        return self.damage.ranges
+        return self.to_hit, str(self.damage)
 
 class Armor(Component, metaclass=DictIter):
     items = dict()
@@ -324,7 +325,6 @@ class Entity:
         return f"Entity<{self.entity_id}>"
     @classmethod
     def who(cls, key):
-        print(cls, key, cls.instances)
         return list(filter(lambda x: key == x.entity_id, cls.instances))
         
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ from collections import namedtuple
 import random
 import re
 
-def check_sign(value):
+def check_sign(value, save_zero=True):
     '''Converts all values into string representations. If value is 
     positive, a plus sign is added to the string. If value is zero,
     then function returns an empty string
@@ -11,7 +11,7 @@ def check_sign(value):
     string = ""
     if value < 0:
         string = str(value)
-    elif value >= 0:
+    elif value > 0:
         string = f"+{value}"
     return string
 
@@ -112,11 +112,6 @@ class Die:
 
     def __repr__(self):
         '''Returns die info for developer'''
-        # c=self.__class__.__name__
-        # s=self.sides
-        # mu=self.multiplier
-        # mo=self.modifier
-        # return f"{c}(sides={s}, mult={mu}, mod={mo})"
         return f"{self.__class__.__name__}({self})"
 
     def __str__(self):

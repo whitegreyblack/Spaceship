@@ -31,7 +31,7 @@ def create_player(entity, floors):
     Attribute(entity, strength=10)
     Equipment(entity)
     Inventory(entity)
-    Damage(entity, "2d4")
+    Damage(entity, 1, "2d4")
     Armor(entity, 0, 2)
 
 def create_enemy(floors):
@@ -39,7 +39,7 @@ def create_enemy(floors):
     # if random.randint(0, 1):
     Information(entity, race="goblin")
     Render(entity, 'g', "#008800")     
-    Damage(entity, "1d6")
+    Damage(entity, 1, "1d6")
     Attribute(entity, strength=6)
     # else:
     #     Information(entity, race="rat")
@@ -53,7 +53,7 @@ def create_weapon(floors):
     e = Entity()
     Render(e, '[[', '#00AAAA')
     Information(e, name="sword")
-    Damage(e, "1d6")
+    Damage(e, 1, "1d6")
     Position(e, *random_position(floors), moveable=False)
 
     e = Entity()
@@ -65,7 +65,9 @@ def create_weapon(floors):
 def create_armor(floors):
     e = Entity()
     Render(e, ']]', '#00FF00')
+    Position(e, *random_position(floors), moveable=False)
     Information(e, name="chainmail")
+    Armor(e, 1, 2)
 
 # def loggable(entities, anything=False):
 #     print_info = all(has(e, Information) for e in entities)
@@ -165,7 +167,6 @@ def system_status(entity):
     s, a, i, mods, attrs = attribute.status
     strmod, strscore = mods['strength'], attrs['strength']
     agimod, agiscore = mods['agility'], attrs['agility']
-    print(agimod, check(agimod))
     intmod, intscore = mods['intelligence'], attrs['intelligence']
     
     # health stat variables
@@ -185,8 +186,9 @@ def system_status(entity):
                            [a.info for a in Armor.item(entity)])
 
     # damage ranges
-    dmg_low, dmg_high= reduce((lambda x, y: (x[0] + y[0], x[1] + y[1])),
-                              [d.damage.ranges for d in Damage.item(entity)])
+    to_hit, dmg = reduce((lambda x, y: (x[0] + y[0], x[1] + y[1])),
+                         [d.info for d in Damage.item(entity)])
+    print(to_hit, dmg)
 
     index = 0
     spacer = '-' * 16
@@ -202,7 +204,7 @@ def system_status(entity):
     term.bkcolor("#000000")
 
     # character attributes: DMG | STR | AGI | INT
-    term.puts(65, index + 3, f"DMG: ({dmg_low}, {dmg_high})")
+    term.puts(65, index + 3, f"DMG: ({check(to_hit)}, {dmg})")
     term.puts(65, index + 4, f"AMR: [[{to_hit}, {armor}]]")
     term.puts(65, index + 5, f"STR: {s}{check(strmod)}({strscore})")
     term.puts(65, index + 6, f"AGI: {a}{check(agimod)}({agiscore})")
@@ -373,14 +375,19 @@ def combat(entity, other):
     attacker = Information.item(entity)
     defender = Information.item(other)
     loggable = attacker and defender
-    att_damage = Damage.item(entity)
+    att_damages = Damage.item(entity)
     def_armour = 0
     def_health = Attribute.item(other).health
+    total_damage = 0
+    for damage in att_damages:
+        if def_armour < random.randint(1, 20) + damage.to_hit: 
+            damage_dealt = damage.roll()
+            def_health.cur_hp -= damage_dealt
+            total_damage += damage_dealt
+            print(f"{attacker.title} did {damage_dealt} damage to {defender.title}")
 
-    if def_armour < random.randint(1, 20): # + primary attribute score
-        total_damage = sum(att.roll() for att in att_damage)
-        def_health.cur_hp -= total_damage
-        print(f"{attacker.title} did {total_damage} damage to {defender.title}")
+    if len(att_damages) > 1:
+        print(f"{attacker.title} did {total_damage} total damage")
 
     if not def_health.alive:
         Delete(other)
@@ -390,8 +397,21 @@ def draw_inventory(entity):
     title_bar(0, 0, "Inventory", term.state(term.TK_WIDTH))
     for i, item in enumerate(Inventory.item(entity).bag):
         info = Information.item(item)
-        damage = f"{', '.join(f'{d.info}' for d in Damage.item(item))}"
-        term.puts(1, i + 2, f"{letter(i)}. {info.title}: {damage}")
+        # damage = f"{', '.join(f'{d.info}' for d in Damage.item(item))}"
+        # how would weapons be known? weapons have damage instances
+        # armor would have armor instances
+        # so before print we sort:
+        damages = Damage.item(item)
+        armours = Armor.item(item)
+        if bool(damages and armours):
+            print('both')
+            description = "both"
+        elif damages:
+            print('damages')
+            description = f"{''.join(f'{d.damage}' for d in Damage.item(item))}"
+        else:
+            description = "armor"
+        term.puts(1, i + 2, f"{letter(i)}. {info.name}: {description}")
     term.refresh()
 
 def draw_equipment(entity):
@@ -540,6 +560,7 @@ class Game:
         create_enemy(self.dungeon.floors)
         # # for i in range(3):
         create_weapon(self.dungeon.floors)
+        create_armor(self.dungeon.floors)
 
     def run(self):
         proceed = True
