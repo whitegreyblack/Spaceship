@@ -77,7 +77,8 @@ class Equipment(Component, metaclass=SetIter):
         Equipment.items.add(self)
     @property
     def parts(self):
-        return self.left_hand, self.right_hand, self.body
+        return[(s, getattr(self, s)) for s in ['left_hand', 'right_hand', 'body']]
+
 # [single]
 class Ai(Component, metaclass=SetIter):
     items = set()
@@ -287,10 +288,12 @@ class Damage(Component, metaclass=DictIter):
             Damage.items[entity].append(self)
         else:
             Damage.items[entity] = [self]
-    def __repr__(self):
-        print('TOHIT: ', self.to_hit)
+    def __str__(self):
         to_hit = check(self.to_hit, save_zero=True)
         return f"({to_hit}, {self.damage})"
+    def __repr__(self):
+        to_hit = check(self.to_hit, save_zero=True)
+        return f"{self.__class__.__name__} ({to_hit}, {self.damage})"
     def roll(self):
         return next(self.damage.roll())
     @property
@@ -308,10 +311,14 @@ class Armor(Component, metaclass=DictIter):
             Armor.items[entity].append(self)
         else:
             Armor.items[entity] = [self]
-    def __repr__(self):
+    def __str__(self):
         str_to_hit = check(self.to_hit, save_zero=True)
         str_defense = check(self.defense, save_zero=True)
         return f"[[{str_to_hit}, {str_defense}]]"
+    def __repr__(self):
+        str_to_hit = check(self.to_hit, save_zero=True)
+        str_defense = check(self.defense, save_zero=True)
+        return f"{self.__class__.__name__} {self}"
     @property
     def info(self):
         return self.to_hit, self.defense

@@ -1,42 +1,8 @@
 {
-    "unit": {
-        "Information:Component": [
-            "name", "race", "gender", "class"
-        ],
-        "Attributes:Component": {
-            "strength": "1d5",
-            "agility": "1d5",
-            "intelligence": "1d5",
-            "Health:Component": {
-                "health": "(strength + strmod) * 2",
-                "regen": "(strength + strmod) / 20"
-            },
-            "Mana:Component": {
-                "mana": "(intelligence + intmod) * 1.5",
-                "regen": "(intelligence + intmod) / 6"
-            },
-            "Armor:Component": {
-                "base": 0,
-                "armor": "((agility + agimod) + base) * .1"
-            },
-            "Damage:Component": {
-                "damage": "primary attribute",
-                "damage type": "physical"
-            }
-        },
-        "Render:Component": [
-            "symbol", 
-            "foreground", 
-            "background"
-        ],
-        "Position:Component": ["x", "y"],
-        "Inventory:Component": {
-            "bag": []
-        },
-        "Equipment:Component": {
-            "body": "None",
-            "left": "None",
-            "right": "None"
-        }
-    }
+    "items": [{
+        "render": {"symbol": "[[", "fg": "#00AAAA"},
+        "information": {"name": "sword"},
+        "Position": {"moveable": 0}},
+    {
+    }]
 }

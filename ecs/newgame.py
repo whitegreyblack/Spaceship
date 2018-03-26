@@ -36,29 +36,31 @@ def create_player(entity, floors):
 
 def create_enemy(floors):
     entity = Entity()
-    # if random.randint(0, 1):
     Information(entity, race="goblin")
     Render(entity, 'g', "#008800")     
     Damage(entity, 1, "1d6")
     Attribute(entity, strength=6)
-    # else:
-    #     Information(entity, race="rat")
-    #     Render(entity, 'r', '#664422') 
-    #     Damage(entity, "1d4")
-    #     Attribute(entity, strength=3)
+    Position(entity, *random_position(floors)),
+    Ai(entity)
+
+    entity = Entity()
+    Information(entity, race="rat")
+    Render(entity, 'r', '#664422') 
+    Damage(entity, 0, "1d4")
+    Attribute(entity, strength=3)
     Position(entity, *random_position(floors)),
     Ai(entity)
 
 def create_weapon(floors):
     e = Entity()
     Render(e, '[[', '#00AAAA')
-    Information(e, name="sword")
+    Information(e, name="sword", race="one-handed weapons")
     Damage(e, 1, "1d6")
     Position(e, *random_position(floors), moveable=False)
 
     e = Entity()
     Render(e, ')', '#004444')
-    Information(e, name="spear")
+    Information(e, name="spear", race="two-handed weapons")
     Damage(e, 2, '1d8')
     Position(e, *random_position(floors), moveable=False)
 
@@ -66,8 +68,15 @@ def create_armor(floors):
     e = Entity()
     Render(e, ']]', '#00FF00')
     Position(e, *random_position(floors), moveable=False)
-    Information(e, name="chainmail")
+    Information(e, name="chainmail", race="body armors")
     Armor(e, 1, 2)
+
+    e = Entity()
+    Render(e, ']]', '#00AAAA')
+    Position(e, *random_position(floors), moveable=False)
+    Information(e, name='shield', race="shields")
+    Damage(e, 0, '1d6')
+    Armor(e, 2, 3)
 
 # def loggable(entities, anything=False):
 #     print_info = all(has(e, Information) for e in entities)
@@ -408,7 +417,6 @@ def draw_inventory(entity):
     term.clear()
     title_bar(0, 0, "Inventory", term.state(term.TK_WIDTH))
     inventory = Inventory.item(entity).bag
-    print(inventory)
     if not inventory or len(inventory) == 0:
         string = "No items in inventory"
         term.puts(term.state(term.TK_WIDTH) // 2 - (len(string) // 2), 
@@ -434,15 +442,14 @@ def draw_inventory(entity):
             damages = Damage.item(item)
             armours = Armor.item(item)
             if bool(damages and armours):
-                print('both')
-                description = "both"
+                damage = f"{''.join(f'{d}' for d in damages)}"
+                armour = f"{''.join(f'{a}' for a in armours)}"
+                description = f"{armour}{damage}"
             elif damages:
-                print('damages')
-                description = f"{''.join(f'{repr(d)}' for d in damages)}"
+                description = f"{''.join(f'{d}' for d in damages)}"
             else:
-                print(armours)
-                description = f"{''.join(f'{repr(a)}' for a in armours)}"
-            term.puts(1, i + 2, f"{letter(i)}. {info.name} {description}")
+                description = f"{''.join(f'{a}' for a in armours)}"
+            term.puts(1, i + 2, f"{letter(i)}. {info.name:15} {description}")
     term.refresh()
 
 def draw_equipment(entity):
@@ -450,11 +457,11 @@ def draw_equipment(entity):
     title_bar(0, 0, "Equipment", term.state(term.TK_WIDTH))
     equipment = Equipment.item(entity)
     if equipment:
-        for i, part in enumerate(equipment.parts):
-            name = ""
-            if part:
+        for i, (part, item) in enumerate(equipment.parts):
+            name = "-"
+            if item:
                 name = Information.item(item).title
-            term.puts(1, i + 2, f"{letter(i)}. {name}")
+            term.puts(1, i + 2, f"{letter(i)}. {part.title():15}: {name}")
     term.refresh()
 
 def inventory_pick(entity):
