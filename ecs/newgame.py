@@ -222,7 +222,7 @@ def system_status(entity):
     mana_string = mana_string + ' ' * (15 - len(mana_string))
 
     # armor values
-    equipment = list(Equipment.item(entity))
+    equipment = Equipment.item(entity)
     armors = [base_armor for base_armor in Armor.item(entity)]
     if equipment:
         for i, (_, item) in enumerate(equipment.parts):
@@ -264,7 +264,6 @@ def system_status(entity):
     term.bkcolor("#000000")
 
     # character attributes: DMG | STR | AGI | INT
-    # term.puts(65, index + 3, f"DMG: ({to_att}, {dmg})")
     term.puts(65, index + 4, f"AMR: [[{to_def}, {armor}]]")
     term.puts(65, index + 5, f"STR: {s}{check(strmod)}({strscore})")
     term.puts(65, index + 6, f"AGI: {a}{check(agimod)}({agiscore})")
@@ -524,9 +523,34 @@ def draw_inventory(inventory):
             "[[d]] detail",
             "[[D]] drink",
         ], term.state(term.TK_WIDTH))
-        for i, item in enumerate(inventory.bag):
-            info, description = item_description(item)
-            term.puts(1, i + 2, f"{letter(i)}. {info.name:15} {description}")
+
+        item_categories = dict()
+        for item in inventory.bag:
+            info = Information.item(item)
+            if info.race in item_categories.keys():
+                item_categories[info.race].append(item)
+            else:
+                item_categories[info.race] = [item]
+
+        category = 0
+        x_offset = 2
+        y_offset = 1
+        item_index = 0
+        item_offset = 2        
+        for key, items in item_categories.items():
+            if items:
+                term.puts(x_offset, 
+                          category + item_index + y_offset, 
+                          key)
+                category += 1
+                for index, item in enumerate(items):
+                    info, description = item_description(item)
+                    char = letter(item_index)
+                    term.puts(x_offset + item_offset, 
+                              category + item_index + y_offset, 
+                              f"{char}. {info.name:15} {description}")
+                    item_index += 1
+                
     term.refresh()
 
 def draw_equipment(equipment):
