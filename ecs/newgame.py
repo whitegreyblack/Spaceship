@@ -16,6 +16,9 @@ Event = namedtuple('Event', 'string position')
 
 # -- helper functions -- 
 def random_position(floortiles):
+    '''Returns a random location using a given set of points reduced by the
+    positions already occupied by movable entities on the map
+    '''
     tiles = list(floortiles)
     random.shuffle(tiles)
     for p in Position.items:
@@ -88,11 +91,13 @@ def create_armor(floors):
 #     return print_info and matters
 
 def letter(index):
+    '''Converts an integer value between 0 and 25 to an alphabetical letter'''
     if not 0 <= index <= 25:
         raise ValueError("Cannot make index into letter: Index out of range")
     return chr(ord('a') + index)
 
 def distance(entity, other):
+    '''Helper function to calculate distance using euclidean formula'''
     position_e = Position.item(entity)
     position_o = Position.item(other)
     dx = position_o.x - position_e.x
@@ -100,6 +105,7 @@ def distance(entity, other):
     return math.sqrt(dx ** 2 + dy ** 2), dx, dy
 
 def towards_target(entity, other):
+    '''Helper function to return closest space torwards a targert'''
     d, dx, dy = distance(entity, other)
     return int(round(dx / d)), int(round(dy / d))
 
@@ -131,6 +137,7 @@ def towards_target(entity, other):
 #     return entity.attribute.health()
 
 def title_bar(x, y, string, bars, color="#444444"):
+    '''Creates a x-axis bar with string at the specified coordinates'''
     index = bars // 2 - len(string) // 2
     term.bkcolor(color)
     term.puts(x, y, ' ' * bars)
@@ -151,6 +158,7 @@ def action_bar(x, y, strings, bars, color="#444444"):
         term.puts(x + length * i + offset, y, string)
 
 def plot_bar(x, y, color1, color2, string, bars):
+    '''Creates a x-axis bar graph used to show percentages'''
     index = len(string[:bars])
     term.bkcolor(color1)
     term.puts(x, y, string[:bars])
@@ -159,28 +167,36 @@ def plot_bar(x, y, color1, color2, string, bars):
     term.bkcolor("#000000")
 
 def draw_entity(position, entity):
+    '''Draws entity using its render component if it exists'''
+    # get the entity draw properties
     render = Render.item(entity)
     if render:
         revert = False
         background, string = render.string
+        
+        # change background if it is not black
         if background != "#000000":
             term.bkcolor(background)
             revert = True
+
         term.puts(*position, string)
+
+        # change background back to black if it was changed
         if revert:
             term.bkcolor('#000000')
 
 def draw_main_menu():
+    '''Simple main menu that will be improved later'''
     term.clear()
     term.puts(0, 0, "Play Game")
     term.puts(0, 1, "Exit")
     term.refresh()
 
+    # make sure the key read in is recognized by our keyboard
     key = term.read()
     while key not in Keyboard.MAIN_MENU.keys():
         key = term.read()
 
-    term.clear()
     return Keyboard.MAIN_MENU[key]
 
 def system_status(entity):
@@ -270,9 +286,11 @@ def system_enemy_status(world, entity):
 
 def system_draw(recalc, world):
     if recalc:
+        # map offset depending on where map will be drawn
         width_offset = 0
         height_offset = 1
 
+        # clear entire screen -- make sure this is the first draw system
         term.clear_area(0, 
                         0, 
                         term.state(term.TK_WIDTH), 
@@ -293,12 +311,14 @@ def system_draw(recalc, world):
                 lighted = world.lit(i, j)
                 color = "#222222"
                 if lighted == 2:
+                    # we found an entity -- draw it to screen instead of a tile
                     if (i, j) in positions.keys():
                         draw_entity((i + width_offset, j + height_offset), 
                                     positions[(i, j)])
                         continue
                     color = "#999999"
 
+                # if there are no entities then draw the tile properties
                 if lighted:
                     term.puts(i + width_offset, 
                               j + height_offset, 
@@ -402,6 +422,7 @@ def take_turn(entity):
     return a, x, y, True
 
 def combat(entity, other):
+    '''Processes components used in determining combat logic'''
     # get all object before processing combat
     # ----------------------------------------------------------------------
     # NEEDS :- (INFORMATION | ATTRIBUTES | DAMAGE | ARMOR)
@@ -427,6 +448,7 @@ def combat(entity, other):
         Delete(other)
 
 def draw_inventory(entity):
+    '''Displays items in inventory'''
     term.clear()
     title_bar(0, 0, "Inventory", term.state(term.TK_WIDTH))
     inventory = Inventory.item(entity).bag
@@ -466,6 +488,7 @@ def draw_inventory(entity):
     term.refresh()
 
 def draw_equipment(entity):
+    '''Displays items in equipment'''
     term.clear()
     title_bar(0, 0, "Equipment", term.state(term.TK_WIDTH))
     equipment = Equipment.item(entity)
@@ -478,6 +501,7 @@ def draw_equipment(entity):
     term.refresh()
 
 def inventory_pick(entity):
+    '''Places item at location of entity into entity inventory if it exists'''
     pickup = False
     # this gets all entities with position components
     items = [
@@ -496,6 +520,7 @@ def inventory_pick(entity):
         print("No item where you stand")
 
 def inventory_drop(entity):
+    '''Places item from entity invnetory into entity location if it exists'''
     draw_inventory(entity)
     key = term.read()
     item = None
@@ -505,14 +530,17 @@ def inventory_drop(entity):
         print(f"You drop the {Information.item(item).name}")
 
 def inventory_show(entity):
+    '''Displays inventory and waits for user input to determine next command'''
     draw_inventory(entity)
     term.read()
 
 def equipment_show(entity):
+    '''Displays equipment and waits for user input to determine next command'''
     draw_equipment(entity)
     term.read()
 
 def system_action(dungeon):
+    '''Iterates through each entity of the entity list that can take action'''
     recompute = False
     proceed = True
     for entity in Entity.instances:
@@ -593,6 +621,7 @@ def system_action(dungeon):
     return proceed, recompute, []
 
 def system_remove():
+    '''Deletes self and components of the Delete entity'''
     # return [e for e in entities if not has(e, Delete)]
     remove = [d.entity for d in Delete.items]
     for entity in remove:
@@ -603,6 +632,10 @@ def system_remove():
         print(f"Removing {entity}")
 
 class Game:
+    '''Holds the variables used in processing the game
+    - Player :- Entity()
+    - Dungeon :- Map()
+    '''
     def __init__(self, world:str):
         # world variables
         self.dungeon = Map(world)
