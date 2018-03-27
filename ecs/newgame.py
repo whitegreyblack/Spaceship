@@ -200,6 +200,7 @@ def draw_main_menu():
     return Keyboard.MAIN_MENU[key]
 
 def system_status(entity):
+    '''Draws player information to screen'''
     # print(Attribute.items, Render.items)
     attribute = Attribute.item(entity)
     information = Information.item(entity)
@@ -252,6 +253,7 @@ def system_status(entity):
     term.puts(64, 8, spacer)
 
 def system_enemy_status(world, entity):
+    '''Draws enemy information to screen if they are viewable by player'''
     index = 9
     lighted = world.lighted
     entities_in_range = {
@@ -285,6 +287,7 @@ def system_enemy_status(world, entity):
         index += 2
 
 def system_draw(recalc, world):
+    '''Draws the world to screen if recalc is true'''
     if recalc:
         # map offset depending on where map will be drawn
         width_offset = 0
@@ -430,7 +433,18 @@ def combat(entity, other):
     attacker = Information.item(entity)
     defender = Information.item(other)
     loggable = attacker and defender
-    att_damages = Damage.item(entity)
+    att_damages = []
+    att_equipment = Equipment.item(entity)
+    if att_equipment:
+        for p, v in att_equipment.parts:
+            if v:
+                damage_instance = Damage.item(v)
+                if damage_instance:
+                    att_damages.append(damage_instance)
+
+    if not att_damages:
+        att_damages = Damage.item(entity)
+        
     def_armour = 0
     def_health = Attribute.item(other).health
     total_damage = 0
@@ -447,12 +461,11 @@ def combat(entity, other):
     if not def_health.alive:
         Delete(other)
 
-def draw_inventory(entity):
+def draw_inventory(inventory):
     '''Displays items in inventory'''
     term.clear()
     title_bar(0, 0, "Inventory", term.state(term.TK_WIDTH))
-    inventory = Inventory.item(entity).bag
-    if not inventory or len(inventory) == 0:
+    if not inventory or len(inventory.bag) == 0:
         string = "No items in inventory"
         term.puts(term.state(term.TK_WIDTH) // 2 - (len(string) // 2), 
                   term.state(term.TK_HEIGHT) // 2,
@@ -487,17 +500,20 @@ def draw_inventory(entity):
             term.puts(1, i + 2, f"{letter(i)}. {info.name:15} {description}")
     term.refresh()
 
-def draw_equipment(entity):
+def draw_equipment(equipment):
     '''Displays items in equipment'''
     term.clear()
     title_bar(0, 0, "Equipment", term.state(term.TK_WIDTH))
-    equipment = Equipment.item(entity)
     if equipment:
         for i, (part, item) in enumerate(equipment.parts):
             name = "-"
             if item:
                 name = Information.item(item).title
             term.puts(1, i + 2, f"{letter(i)}. {part.title():15}: {name}")
+    else:
+        term.puts(term.state(term.TK_WIDTH) // 2,
+                  term.state(term.TK_HEIGHT) // 2,
+                  "No equipment")
     term.refresh()
 
 def inventory_pick(entity):
@@ -531,13 +547,21 @@ def inventory_drop(entity):
 
 def inventory_show(entity):
     '''Displays inventory and waits for user input to determine next command'''
-    draw_inventory(entity)
+    inventory = Inventory.item(entity)
+    draw_inventory(inventory)
     term.read()
 
 def equipment_show(entity):
     '''Displays equipment and waits for user input to determine next command'''
-    draw_equipment(entity)
-    term.read()
+    equipment = Equipment.item(entity)
+    draw_equipment(equipment)
+    key = term.read()
+    if term.TK_A <= key < term.TK_A + len(equipment.parts):
+        print(equipment.parts[key - term.TK_A])
+        inventory = Inventory.item(entity)
+        if inventory:
+            draw_inventory(inventory)
+            term.read()
 
 def system_action(world):
     '''Iterates through each entity of the entity list that can take action'''
@@ -642,7 +666,7 @@ class Game:
         self.player = Entity()
         # entities -- game objects
         self.eindex = 0     
-        create_player(entity, self.player, floors=self.dungeon.floors)
+        create_player(entity=self.player, floors=self.dungeon.floors)
         
         # for i in range(random.randint(5, 7)):
         create_enemy(floors=self.dungeon.floors)
