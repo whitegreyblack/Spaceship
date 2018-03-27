@@ -222,15 +222,36 @@ def system_status(entity):
     mana_string = mana_string + ' ' * (15 - len(mana_string))
 
     # armor values
-    to_hit, armor = reduce((lambda x, y: [x[0] + y[0], x[1] + y[1]]),
-                           [a.info for a in Armor.item(entity)])
+    equipment = list(Equipment.item(entity))
+    armors = [base_armor for base_armor in Armor.item(entity)]
+    if equipment:
+        for i, (_, item) in enumerate(equipment.parts):
+            armor = Armor.item(item)
+            if armor:
+                armors += armor
+    to_def, armor = reduce((lambda x, y: [x[0] + y[0], x[1] + y[1]]),
+                           [a.info for a in armors])
 
     # damage ranges
-    to_hit, dmg = reduce((lambda x, y: (x[0] + y[0], x[1] + y[1])),
-                         [d.info for d in Damage.item(entity)])
+    # equipment = Equipment.item(entity)
+    # damages = []
+    # if equipment:
+    #     for i, (part, item) in enumerate(equipment.parts):
+    #         damage = Damage.item(item)
+    #         if damage:
+    #             damages += damage
+        
+    # if not damages:
+    #     to_att, dmg = reduce((lambda x, y: (x[0] + y[0], x[1] + y[1])),
+    #                          [d.info for d in Damage.item(entity)])
+    # else:
+    #     to_att, dmg = reduce((lambda x, y: (x[0] + y[0], x[1] + y[1])),
+    #                          [d.info for d in damages])
 
-    index = 0
+    # variables used in spacing and formatting
     spacer = '-' * 16
+    index = 0
+
     # done with variables -- lets clear the player status screen
     term.clear_area(64, 0, 16, 7)
 
@@ -243,8 +264,8 @@ def system_status(entity):
     term.bkcolor("#000000")
 
     # character attributes: DMG | STR | AGI | INT
-    term.puts(65, index + 3, f"DMG: ({check(to_hit)}, {dmg})")
-    term.puts(65, index + 4, f"AMR: [[{to_hit}, {armor}]]")
+    # term.puts(65, index + 3, f"DMG: ({to_att}, {dmg})")
+    term.puts(65, index + 4, f"AMR: [[{to_def}, {armor}]]")
     term.puts(65, index + 5, f"STR: {s}{check(strmod)}({strscore})")
     term.puts(65, index + 6, f"AGI: {a}{check(agimod)}({agiscore})")
     term.puts(65, index + 7, f"INT: {i}{check(intmod)}({intscore})")
@@ -328,48 +349,53 @@ def system_draw(recalc, world):
                               f"[c={color}]{cell}[/c]")
 
 def system_alive(entity):
+    '''Checks if entity is alive by running entity id against Delete items'''
     return entity not in Delete
 
 def system_update():
+    '''Updates variables in health and mana for all entities with an 
+    attribute component by iterating and updating inner components.
+    '''
     for a in Attribute.items:
         a.health.cur_hp = min(a.health.cur_hp + a.health.regen, a.health.max_hp)
         a.mana.cur_mp = min(a.mana.cur_mp + a.mana.regen, a.mana.max_mp)
 
 # def cache(lines):
-#     lines = lines
-#     index = 0
-#     messagelog = []    
-#     def funcwrap(logger):
-#         def wrapper(messages):
-#             nonlocal index, messagelog, lines
-#             current = len(messagelog)
-#             for m in messages:
-#                 for twm in textwrap.wrap(m, term.state(term.TK_WIDTH)):
-#                     messagelog.append(twm)
-#             if len(messagelog) <= lines:
-#                 logger(messagelog)
-#             else:
-#                 logger(messagelog[index:index + lines])
-#             index += len(messagelog) - current
-#         return wrapper
-#     return funcwrap
+    #     lines = lines
+    #     index = 0
+    #     messagelog = []    
+    #     def funcwrap(logger):
+    #         def wrapper(messages):
+    #             nonlocal index, messagelog, lines
+    #             current = len(messagelog)
+    #             for m in messages:
+    #                 for twm in textwrap.wrap(m, term.state(term.TK_WIDTH)):
+    #                     messagelog.append(twm)
+    #             if len(messagelog) <= lines:
+    #                 logger(messagelog)
+    #             else:
+    #                 logger(messagelog[index:index + lines])
+    #             index += len(messagelog) - current
+    #         return wrapper
+    #     return funcwrap
 
 # @cache(5)
-# def system_logger(messages):
-#     term.clear_area(0, 
-#         term.state(term.TK_HEIGHT) - 5, 
-#         term.state(term.TK_WIDTH), 
-#         5)
-#     for i in range(len(messages)):
-#         try:
-#             # print(messages)
-#             term.puts(0, 
-#                 term.state(term.TK_HEIGHT) - len(messages) + i, 
-#                 messages[i])
-#         except:
-#             break
+    # def system_logger(messages):
+    #     term.clear_area(0, 
+    #         term.state(term.TK_HEIGHT) - 5, 
+    #         term.state(term.TK_WIDTH), 
+    #         5)
+    #     for i in range(len(messages)):
+    #         try:
+    #             # print(messages)
+    #             term.puts(0, 
+    #                 term.state(term.TK_HEIGHT) - len(messages) + i, 
+    #                 messages[i])
+    #         except:
+    #             break
     
 def get_input():
+    '''Returns a validated 3 tuple action determined by key pressed'''
     a, (x, y) = None, (0, 0)
     key = term.read()
     shifted = term.state(term.TK_SHIFT)
@@ -399,6 +425,7 @@ def get_input():
     return a, x, y
 
 def take_turn(entity):
+    '''Processes ai and player actions into a 4 tuple variable'''
     a, (x, y) = None, (0, 0)
     if entity in Ai:
         other = None
@@ -430,9 +457,11 @@ def combat(entity, other):
     # ----------------------------------------------------------------------
     # NEEDS :- (INFORMATION | ATTRIBUTES | DAMAGE | ARMOR)
     # ----------------------------------------------------------------------
+    # info on entities entering combat
     attacker = Information.item(entity)
     defender = Information.item(other)
     loggable = attacker and defender
+
     att_damages = []
     att_equipment = Equipment.item(entity)
     if att_equipment:
@@ -461,6 +490,20 @@ def combat(entity, other):
     if not def_health.alive:
         Delete(other)
 
+def item_description(entity):
+    info = Information.item(entity)
+    damages = Damage.item(entity)
+    armours = Armor.item(entity)
+    if bool(damages and armours):
+        damage = f"{''.join(f'{d}' for d in damages)}"
+        armour = f"{''.join(f'{a}' for a in armours)}"
+        description = f"{armour}{damage}"
+    elif damages:
+        description = f"{''.join(f'{d}' for d in damages)}"
+    else:
+        description = f"{''.join(f'{a}' for a in armours)}"        
+    return info, description
+
 def draw_inventory(inventory):
     '''Displays items in inventory'''
     term.clear()
@@ -481,22 +524,8 @@ def draw_inventory(inventory):
             "[[d]] detail",
             "[[D]] drink",
         ], term.state(term.TK_WIDTH))
-        for i, item in enumerate(inventory):
-            info = Information.item(item)
-            # damage = f"{', '.join(f'{d.info}' for d in Damage.item(item))}"
-            # how would weapons be known? weapons have damage instances
-            # armor would have armor instances
-            # so before print we sort:
-            damages = Damage.item(item)
-            armours = Armor.item(item)
-            if bool(damages and armours):
-                damage = f"{''.join(f'{d}' for d in damages)}"
-                armour = f"{''.join(f'{a}' for a in armours)}"
-                description = f"{armour}{damage}"
-            elif damages:
-                description = f"{''.join(f'{d}' for d in damages)}"
-            else:
-                description = f"{''.join(f'{a}' for a in armours)}"
+        for i, item in enumerate(inventory.bag):
+            info, description = item_description(item)
             term.puts(1, i + 2, f"{letter(i)}. {info.name:15} {description}")
     term.refresh()
 
@@ -506,10 +535,13 @@ def draw_equipment(equipment):
     title_bar(0, 0, "Equipment", term.state(term.TK_WIDTH))
     if equipment:
         for i, (part, item) in enumerate(equipment.parts):
-            name = "-"
+            name, description = "-", ""
             if item:
-                name = Information.item(item).title
-            term.puts(1, i + 2, f"{letter(i)}. {part.title():15}: {name}")
+                info, description = item_description(item)
+                name = info.name
+            term.puts(1, 
+                      i + 2, 
+                      f"{letter(i)}. {part.title():15}: {name} {description}")
     else:
         term.puts(term.state(term.TK_WIDTH) // 2,
                   term.state(term.TK_HEIGHT) // 2,
@@ -557,11 +589,15 @@ def equipment_show(entity):
     draw_equipment(equipment)
     key = term.read()
     if term.TK_A <= key < term.TK_A + len(equipment.parts):
-        print(equipment.parts[key - term.TK_A])
+        part, _ = equipment.parts[key - term.TK_A]
         inventory = Inventory.item(entity)
         if inventory:
             draw_inventory(inventory)
-            term.read()
+            items = len(inventory.bag)
+            key = term.read()
+            if items and term.TK_A <= key < term.TK_A + items:
+                item = inventory.bag.pop(key - term.TK_A)
+                setattr(equipment, part, item)
 
 def system_action(world):
     '''Iterates through each entity of the entity list that can take action'''
@@ -583,6 +619,8 @@ def system_action(world):
             a, x, y, proceed = take_turn(entity)
             if not proceed:
                 break
+
+            # action variable is set -- determine correct action
             if a:
                 if a == "pickup": 
                     inventory_pick(entity)
@@ -627,18 +665,24 @@ def system_action(world):
                 #         entity.backpack.append(item)
                 continue
 
+            # x, y is set -- calculate new position to move to
             recompute = True
             dx, dy = position.x + x, position.y + y
 
+            # determine if new position is occupied
             if (dx, dy) in world.floors:
                 positions = {position.at: position.entity 
                              for position in Position.items
                                  if entity != position.entity
                                  and position.moveable
                                  and position.entity not in Delete}
+
+                # free space -- entity can move there
                 if (dx, dy) not in positions.keys():
                     position.x += x
                     position.y += y                
+
+                # entity exists on that position -- fight it
                 else:
                     combat(entity, positions[(dx, dy)])
 
