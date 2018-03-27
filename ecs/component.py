@@ -42,7 +42,7 @@ class Component:
     For singular objects:
         if Component.item(Entity_ID) is called => Object of type Component
     For multiple objects:
-        if Component.items() is called => Set() || Dict() of type Component
+        if Component.items() is called => Set() || Dict() of type Component 
     '''
     def __init__(self, entity):
         self.entity = entity
@@ -307,26 +307,24 @@ class Damage(Component, metaclass=DictIter):
 
 class Armor(Component, metaclass=DictIter):
     items = dict()
-    __slots__ = ['entity', 'to_hit', 'defense']
-    def __init__(self, entity, to_hit=0, defense=0):
+    __slots__ = ['entity', 'to_hit', 'armor']
+    def __init__(self, entity, to_hit=0, armor=0):
         super().__init__(entity)
         self.to_hit = to_hit
-        self.defense = defense
+        self.armor = armor
         if entity in Armor:
             Armor.items[entity].append(self)
         else:
             Armor.items[entity] = [self]
     def __str__(self):
         str_to_hit = check(self.to_hit, save_zero=True)
-        str_defense = check(self.defense, save_zero=True)
-        return f"[[{str_to_hit}, {str_defense}]]"
+        str_armor = check(self.armor, save_zero=True)
+        return f"[[{str_to_hit}, {str_armor}]]"
     def __repr__(self):
-        str_to_hit = check(self.to_hit, save_zero=True)
-        str_defense = check(self.defense, save_zero=True)
         return f"{self.__class__.__name__} {self}"
     @property
     def info(self):
-        return self.to_hit, self.defense
+        return self.to_hit, self.armor
 
 class Entity:
     entity_id = 0

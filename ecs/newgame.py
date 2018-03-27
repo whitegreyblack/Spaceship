@@ -35,14 +35,14 @@ def create_player(entity, floors):
     Attribute(entity, strength=10)
     Equipment(entity)
     Inventory(entity)
-    Damage(entity, 1, "2d4")
-    Armor(entity, 0, 2)
+    Damage(entity, to_hit=1, damage="2d4")
+    Armor(entity, to_hit=0, armor=2)
 
 def create_enemy(floors):
     entity = Entity()
     Information(entity, race="goblin")
     Render(entity, 'g', "#008800")     
-    Damage(entity, 1, "1d6")
+    Damage(entity, to_hit=1, damage="1d6")
     Attribute(entity, strength=6)
     Position(entity, *random_position(floors))
     Ai(entity)
@@ -50,7 +50,7 @@ def create_enemy(floors):
     entity = Entity()
     Information(entity, race="rat")
     Render(entity, 'r', '#664422') 
-    Damage(entity, 0, "1d4")
+    Damage(entity, to_hit=0, damage="1d4")
     Attribute(entity, strength=3)
     Position(entity, *random_position(floors))
     Ai(entity)
@@ -59,13 +59,13 @@ def create_weapon(floors):
     e = Entity()
     Render(e, '[[', '#00AAAA')
     Information(e, name="sword", race="one-handed weapons")
-    Damage(e, 1, "1d6")
+    Damage(e, to_hit=1, damage="1d6")
     Position(e, *random_position(floors), moveable=False)
 
     e = Entity()
     Render(e, ')', '#004444')
     Information(e, name="spear", race="two-handed weapons")
-    Damage(e, 2, '1d8')
+    Damage(e, to_hit=2, damage='1d8')
     Position(e, *random_position(floors), moveable=False)
 
 def create_armor(floors):
@@ -73,14 +73,14 @@ def create_armor(floors):
     Render(e, ']]', '#00FF00')
     Position(e, *random_position(floors), moveable=False)
     Information(e, name="chainmail", race="body armors")
-    Armor(e, 1, 2)
+    Armor(e, to_hit=1, armor=2)
 
     e = Entity()
     Render(e, ']]', '#00AAAA')
     Position(e, *random_position(floors), moveable=False)
     Information(e, name='shield', race="shields")
-    Damage(e, 0, '1d6')
-    Armor(e, 2, 3)
+    Damage(e, to_hit=0, damage='1d6')
+    Armor(e, to_hit=2, armor=3)
 
 # def loggable(entities, anything=False):
 #     print_info = all(has(e, Information) for e in entities)
@@ -539,7 +539,7 @@ def equipment_show(entity):
     draw_equipment(entity)
     term.read()
 
-def system_action(dungeon):
+def system_action(world):
     '''Iterates through each entity of the entity list that can take action'''
     recompute = False
     proceed = True
@@ -606,7 +606,7 @@ def system_action(dungeon):
             recompute = True
             dx, dy = position.x + x, position.y + y
 
-            if (dx, dy) in dungeon.floors:
+            if (dx, dy) in world.floors:
                 positions = {position.at: position.entity 
                              for position in Position.items
                                  if entity != position.entity
@@ -636,20 +636,19 @@ class Game:
     - Player :- Entity()
     - Dungeon :- Map()
     '''
-    def __init__(self, world:str):
+    def __init__(self, world: str):
         # world variables
         self.dungeon = Map(world)
         self.player = Entity()
         # entities -- game objects
         self.eindex = 0     
-        create_player(self.player, self.dungeon.floors)
-        # self.entities.append(self.player)
+        create_player(entity, self.player, floors=self.dungeon.floors)
         
         # for i in range(random.randint(5, 7)):
-        create_enemy(self.dungeon.floors)
+        create_enemy(floors=self.dungeon.floors)
         # # for i in range(3):
-        create_weapon(self.dungeon.floors)
-        create_armor(self.dungeon.floors)
+        create_weapon(floors=self.dungeon.floors)
+        create_armor(floors=self.dungeon.floors)
 
     def run(self):
         proceed = True
@@ -657,17 +656,17 @@ class Game:
         messages = []
         while proceed:
             self.dungeon.do_fov(*Position.item(self.player).at, 15)
-            system_draw(fov_recalc, self.dungeon)
-            system_status(self.player)
-            system_enemy_status(self.dungeon, self.player)
+            system_draw(recalc=fov_recalc, world=self.dungeon)
+            system_status(entity=self.player)
+            system_enemy_status(world=self.dungeon, entity=self.player)
             term.refresh()
             # read write -- if user presses exit here then quit next loop?
-            proceed, fov_recalc, messages = system_action(self.dungeon)
+            proceed, fov_recalc, messages = system_action(world=self.dungeon)
                    
-            if not system_alive(self.player):
-                system_status(self.player)
-                system_enemy_status(self.dungeon, self.player)
-                system_draw(fov_recalc, self.dungeon)
+            if not system_alive(entity=self.player):
+                system_status(entity=self.player)
+                system_enemy_status(world=elf.dungeon, entity=self.player)
+                system_draw(recalc=fov_recalc, world=self.dungeon)
                 # # system_logger(messages)
                 term.refresh()
                 proceed = False
@@ -695,7 +694,7 @@ if __name__ == "__main__":
     #     print(random_position())
     term.open()
     if draw_main_menu() == "pressed play":
-        g = Game(WORLD)
+        g = Game(world=WORLD)
         g.run()
     # term.close()
     # print(COMPONENTS)
