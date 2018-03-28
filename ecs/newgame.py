@@ -48,13 +48,13 @@ def create_enemy(floors):
     Position(entity, *random_position(floors))
     Ai(entity)
 
-    entity = Entity()
-    Information(entity, race="rat")
-    Render(entity, 'r', '#664422') 
-    Damage(entity, to_hit=0, damage="1d4")
-    Attribute(entity, strength=3)
-    Position(entity, *random_position(floors))
-    Ai(entity)
+    # entity = Entity()
+    # Information(entity, race="rat")
+    # Render(entity, 'r', '#664422') 
+    # Damage(entity, to_hit=0, damage="1d4")
+    # Attribute(entity, strength=3)
+    # Position(entity, *random_position(floors))
+    # Ai(entity)
 
 def create_weapon(floors):
     e = Entity()
@@ -473,10 +473,12 @@ def combat(entity, other):
     '''Processes components used in determining combat logic'''
 
     # get combatant info variables
-    attacker = Information.item(entity)
-    defender = Information.item(other)
-    loggable = attacker and defender
-    print(attacker.title, defender.title)
+    iatt = Information.item(entity)
+    idef = Information.item(other)
+    loggable = bool(iatt and idef)
+
+    ratt = Render.item(entity)
+    rdef = Render.item(entity)
 
     # calculate damage instances for attacker
     att_damages = []
@@ -515,22 +517,44 @@ def combat(entity, other):
     def_health = Attribute.item(other).health
     total_damage = 0
 
+    # define combat strings
+    attacked = "[c={}]{}[/c] hits [c={}]{}[/c] for {} damage. ({} -> {})"
+
+    # finally process the damage output from attacker and apply to defender
+    '''
+    for damage in att_damages:
+        if damage is all physical
+        elif damagie is all magical
+        else:
+            magic damage = []
+            physical damage = []
+            split(damage, magical, physical)
+    '''
     for damage in att_damages:
         print(def_to_hit, def_armor, damage.to_hit, damage.damage)
         if def_to_hit < random.randint(1, 20) + damage.to_hit: 
             damage_dealt = damage.roll()
             def_health.cur_hp -= damage_dealt
             total_damage += damage_dealt
-            print(f"{attacker.title} did {damage_dealt} damage to {defender.title}")
+            term.puts(0, term.state(term.TK_HEIGHT) - 1,
+                      attacked.format(ratt.foreground, iatt.title,
+                                      rdef.foreground, idef.title,
+                                      damage_dealt,
+                                      def_health.cur_hp + damage_dealt,
+                                      def_health.cur_hp))
+
+            # print(f"{iatt.title} did {damage_dealt} damage to {defender.title}")
         else:
-            print(f"{attacker.title} missed his attack on {defender.title})")
+            # print(f"{iatt.title} missed his attack on {defender.title})")
+            ...
 
     if len(att_damages) > 1:
-        print(f"{attacker.title} did {total_damage} total damage")
+        print(f"{iatt.title} did {total_damage} total damage")
 
     if not def_health.alive:
         Delete(other)
-
+    term.refresh()
+    term.read()
 def item_description(entity):
     info = Information.item(entity)
     damages = Damage.item(entity)
