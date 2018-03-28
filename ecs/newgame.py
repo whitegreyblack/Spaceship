@@ -35,8 +35,9 @@ def create_player(entity, floors):
     Attribute(entity, strength=10)
     Equipment(entity)
     Inventory(entity)
-    Damage(entity, to_hit=1, damage="2d4")
+    Damage(entity, to_hit=1, damage="1d4")
     Armor(entity, to_hit=0, armor=2)
+    
 
 def create_enemy(floors):
     entity = Entity()
@@ -57,15 +58,16 @@ def create_enemy(floors):
 
 def create_weapon(floors):
     e = Entity()
-    Render(e, '[[', '#00AAAA')
+    Render(e, '(', '#00AAAA')
     Information(e, name="sword", race="one-handed weapons")
     Damage(e, to_hit=1, damage="1d6")
     Position(e, *random_position(floors), moveable=False)
 
     e = Entity()
-    Render(e, ')', '#004444')
+    Render(e, '(', '#004444')
     Information(e, name="spear", race="two-handed weapons")
     Damage(e, to_hit=2, damage='1d8')
+    Damage(e, to_hit=3, damage='2d10')
     Position(e, *random_position(floors), moveable=False)
 
 def create_armor(floors):
@@ -76,7 +78,7 @@ def create_armor(floors):
     Armor(e, to_hit=1, armor=2)
 
     e = Entity()
-    Render(e, ']]', '#00AAAA')
+    Render(e, '[', '#00AAAA')
     Position(e, *random_position(floors), moveable=False)
     Information(e, name='shield', race="shields")
     Damage(e, to_hit=0, damage='1d6')
@@ -147,13 +149,18 @@ def title_bar(x, y, string, bars, color="#444444"):
 def action_bar(x, y, strings, bars, color="#444444"):
     '''Max actions should be 8? Could do two lines if need be'''
     length = 0
+
+    # determine string offset depending on number of strings
     if strings:
         length = (bars - 2) // len(strings)
+
+    # background 
     term.bkcolor(color)
     term.puts(x, y, ' ' * bars)
     term.bkcolor("#000000")
+
+    # print each action
     for i, string in enumerate(strings):
-        # index = bars // 2 - len(string) // 2
         offset = len(string) // 2
         term.puts(x + length * i + offset, y, string)
 
@@ -198,6 +205,18 @@ def draw_main_menu():
         key = term.read()
 
     return Keyboard.MAIN_MENU[key]
+
+def draw_create_menu():
+    gender_index = 0
+    genders = ['Male', 'Female']
+    race_index = 0
+    races = ['Dwarf', 'Human', 'Elf']
+    term.clear()
+    title_bar(0, 0, 'Creation Menu', term.state(term.TK_WIDTH))
+    term.refresh()
+    key = term.read()
+    g = Game(world=WORLD)
+    g.run()
 
 def system_status(entity):
     '''Draws player information to screen'''
@@ -452,15 +471,14 @@ def take_turn(entity):
 
 def combat(entity, other):
     '''Processes components used in determining combat logic'''
-    # get all object before processing combat
-    # ----------------------------------------------------------------------
-    # NEEDS :- (INFORMATION | ATTRIBUTES | DAMAGE | ARMOR)
-    # ----------------------------------------------------------------------
-    # info on entities entering combat
+
+    # get combatant info variables
     attacker = Information.item(entity)
     defender = Information.item(other)
     loggable = attacker and defender
+    print(attacker.title, defender.title)
 
+    # calculate damage instances for attacker
     att_damages = []
     att_equipment = Equipment.item(entity)
     if att_equipment:
@@ -472,16 +490,40 @@ def combat(entity, other):
 
     if not att_damages:
         att_damages = Damage.item(entity)
-        
-    def_armour = 0
+
+    print(att_damages)
+    
+    # calculate defense instances for defender
+    def_armors = []
+    def_equipment = Equipment.item(other)
+    if def_equipment:
+        for p, v in def_equipment.parts:
+            if v:
+                armor_instance = Armor.item(v)
+                if armor_instance:
+                    def_armors.append(armor_instance)
+        if not def_armors:
+            armor_instance = Armor.item(entity)
+            if armor_instance:
+                def_armors.append(armor_instance)
+    
+    def_to_hit, def_armor = 0, 0
+    if def_armors:
+        def_to_hit, def_armor = reduce((lambda x, y: [x[0] + y[0], x[1] + y[1]]),
+                                       [a.info for a in def_armors])
+
     def_health = Attribute.item(other).health
     total_damage = 0
+
     for damage in att_damages:
-        if def_armour < random.randint(1, 20) + damage.to_hit: 
+        print(def_to_hit, def_armor, damage.to_hit, damage.damage)
+        if def_to_hit < random.randint(1, 20) + damage.to_hit: 
             damage_dealt = damage.roll()
             def_health.cur_hp -= damage_dealt
             total_damage += damage_dealt
             print(f"{attacker.title} did {damage_dealt} damage to {defender.title}")
+        else:
+            print(f"{attacker.title} missed his attack on {defender.title})")
 
     if len(att_damages) > 1:
         print(f"{attacker.title} did {total_damage} total damage")
@@ -492,21 +534,23 @@ def combat(entity, other):
 def item_description(entity):
     info = Information.item(entity)
     damages = Damage.item(entity)
-    armours = Armor.item(entity)
-    if bool(damages and armours):
+    armors = Armor.item(entity)
+    if bool(damages and armors):
         damage = f"{''.join(f'{d}' for d in damages)}"
-        armour = f"{''.join(f'{a}' for a in armours)}"
-        description = f"{armour}{damage}"
+        armor = f"{''.join(f'{a}' for a in armors)}"
+        description = f"{armor}{damage}"
     elif damages:
         description = f"{''.join(f'{d}' for d in damages)}"
     else:
-        description = f"{''.join(f'{a}' for a in armours)}"        
+        description = f"{''.join(f'{a}' for a in armors)}"        
     return info, description
 
 def draw_inventory(inventory):
     '''Displays items in inventory'''
     term.clear()
     title_bar(0, 0, "Inventory", term.state(term.TK_WIDTH))
+
+    # displays a different screen if the inventory is empty/nonexistant
     if not inventory or len(inventory.bag) == 0:
         string = "No items in inventory"
         term.puts(term.state(term.TK_WIDTH) // 2 - (len(string) // 2), 
@@ -524,6 +568,7 @@ def draw_inventory(inventory):
             "[[D]] drink",
         ], term.state(term.TK_WIDTH))
 
+        # splits items into item categories
         item_categories = dict()
         for item in inventory.bag:
             info = Information.item(item)
@@ -532,12 +577,16 @@ def draw_inventory(inventory):
             else:
                 item_categories[info.race] = [item]
 
+        # display variables
         category = 0
         x_offset = 2
         y_offset = 1
         item_index = 0
-        item_offset = 2        
+        item_offset = 2
+
+        # puts items onto screen seperated by categories
         for key, items in item_categories.items():
+            # only shows categories if there exists an item(s) in the list
             if items:
                 term.puts(x_offset, 
                           category + item_index + y_offset, 
@@ -546,17 +595,18 @@ def draw_inventory(inventory):
                 for index, item in enumerate(items):
                     info, description = item_description(item)
                     char = letter(item_index)
+                    item_index += 1
                     term.puts(x_offset + item_offset, 
                               category + item_index + y_offset, 
                               f"{char}. {info.name:15} {description}")
-                    item_index += 1
-                
     term.refresh()
 
 def draw_equipment(equipment):
     '''Displays items in equipment'''
     term.clear()
     title_bar(0, 0, "Equipment", term.state(term.TK_WIDTH))
+
+    # if equipment exists then show first screen with equipment parts
     if equipment:
         for i, (part, item) in enumerate(equipment.parts):
             name, description = "-", ""
@@ -567,6 +617,7 @@ def draw_equipment(equipment):
                       i + 2, 
                       f"{letter(i)}. {part.title():15}: {name} {description}")
     else:
+        # secondary screen to show no equipment for entity
         term.puts(term.state(term.TK_WIDTH) // 2,
                   term.state(term.TK_HEIGHT) // 2,
                   "No equipment")
@@ -593,11 +644,12 @@ def inventory_pick(entity):
 
 def inventory_drop(entity):
     '''Places item from entity invnetory into entity location if it exists'''
-    draw_inventory(entity)
+    inventory = Inventory.item(entity)
+    draw_inventory(inventory)
     key = term.read()
     item = None
-    if term.TK_A <= key < term.TK_A + len(Inventory.item(entity).bag):
-        item = Inventory.item(entity).bag.pop(key - term.TK_A)
+    if term.TK_A <= key < term.TK_A + len(inventory.bag):
+        item = inventory.bag.pop(key - term.TK_A)
         Position(item, *Position.item(entity).at, moveable=False)
         print(f"You drop the {Information.item(item).name}")
 
@@ -732,13 +784,13 @@ class Game:
         # world variables
         self.dungeon = Map(world)
         self.player = Entity()
+        
         # entities -- game objects
         self.eindex = 0     
         create_player(entity=self.player, floors=self.dungeon.floors)
         
         # for i in range(random.randint(5, 7)):
         create_enemy(floors=self.dungeon.floors)
-        # # for i in range(3):
         create_weapon(floors=self.dungeon.floors)
         create_armor(floors=self.dungeon.floors)
 
@@ -756,15 +808,14 @@ class Game:
             proceed, fov_recalc, messages = system_action(world=self.dungeon)
                    
             if not system_alive(entity=self.player):
-                system_status(entity=self.player)
-                system_enemy_status(world=elf.dungeon, entity=self.player)
                 system_draw(recalc=fov_recalc, world=self.dungeon)
+                system_status(entity=self.player)
+                system_enemy_status(world=self.dungeon, entity=self.player)
                 # # system_logger(messages)
                 term.refresh()
-                proceed = False
+                break
 
             system_remove()
-
             system_update()
 
         if not proceed:
@@ -786,6 +837,7 @@ if __name__ == "__main__":
     #     print(random_position())
     term.open()
     if draw_main_menu() == "pressed play":
+        # draw_create_menu()
         g = Game(world=WORLD)
         g.run()
     # term.close()

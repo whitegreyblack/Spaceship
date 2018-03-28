@@ -344,7 +344,7 @@ if __name__ == "__main__":
     Damage(e, 5)
     print(f"In Damage?: {e in Damage}")
     print(Damage.item(e))
-    Damage(e, '1d6')
+    Damage(e, 2, '1d6')
     print(Damage.items)
     Delete(e)
     entities_remove()
