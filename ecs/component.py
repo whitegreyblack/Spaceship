@@ -324,6 +324,16 @@ class Armor(Component, metaclass=DictIter):
     def info(self):
         return self.to_hit, self.armor
 
+class Resistance(Component, metaclass=DictIter):
+    items = dict()
+    __slots__ = ['entity', 'resistance', 'resistance_type']
+    def __init__(self, entity, resistance, resistance_type):
+        super().__init__(entiy)
+        self.resistance = resistance
+        self.resistance_type = resistance_type
+    def __str__(self):
+        return f"{self.resistance_type}: {self.resistance}"
+
 class Entity:
     entity_id = 0
     instances = set()

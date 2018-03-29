@@ -14,6 +14,8 @@ import textwrap
 
 Event = namedtuple('Event', 'string position')
 
+double_property_reducer = lambda x, y: (x[0] + y[0], x[1] + y[1])
+
 # -- helper functions -- 
 def random_position(floortiles):
     '''Returns a random location using a given set of points reduced by the
@@ -119,25 +121,30 @@ def total_damage(entity, damage_type):
         damages = [d.damage.ranges 
                    for d in all_damages if d.damage_type == damage_type]
         if damages:
-            return reduce(lambda x, y: (x[0] + y[0], x[1] + y[1]), damages)
-    return None
+            return reduce(double_property_reducer, damages)
+    return 0, 0
 
-def total_armor(entity, armor_type):
-    '''Gets armorvalues dependent on armor type'''
-    pass
+def total_armor(entity):
+    '''Gets armor values dependent on armor type'''
+    armors = Armor.item(entity)
+    # map and reduce all armor into armor type that we want
+    if armors:
+        return reduce(double_property_reducer, [a.info for a in armors])
+    return 0, 0
 
-# def calculate_damage(damage):
-#     damages = [0 for _ in range(2)]
-#     for dt, dmg in damage:
-#         damages[dt] += dmg
-#     return sum(damages)    
+def equipment_armor(entity):
+    '''Returns armor to_hit and armor value from equipped items'''
+    equipment = Equipment.item(entity)
+    if equipment:
+        # get all instances of armor for every equipped item
+        all_armor_instances = []
+        for _, equipped_item in equipment.parts:
+            all_armor_instances += Armor.item(equipped_item)
 
-# def equipment_damage(entity):
-#     if has(entity, Equipment):
-#         damage = entity.left_hand()
-#         damage += entity.right_hand()
-#         return calculate_damage(damage)
-#     return 0
+        # make sure list is not empty before reducing
+        if all_armor_instances:
+            return reduce(double_property_reducer, all_armor_instances)
+    return 0, 0
 
 # def natural_damage(entity):
 #     if has(entity, Damage):
@@ -255,7 +262,7 @@ def system_status(entity):
     mana_string = f"MP: {mc:2}/{mm:2}"
     mana_string = mana_string + ' ' * (15 - len(mana_string))
 
-    # armor values
+    # armor values := BASE_ARMOR + EQ_ARMOR
     equipment = Equipment.item(entity)
     armors = [base_armor for base_armor in Armor.item(entity)]
     if equipment:
@@ -263,8 +270,7 @@ def system_status(entity):
             armor = Armor.item(item)
             if armor:
                 armors += armor
-    to_def, armor = reduce((lambda x, y: [x[0] + y[0], x[1] + y[1]]),
-                           [a.info for a in armors])
+    to_def, armor = reduce(double_property_reducer, [a.info for a in armors])
 
     # damage ranges
     # equipment = Equipment.item(entity)
@@ -276,10 +282,10 @@ def system_status(entity):
     #             damages += damage
         
     # if not damages:
-    #     to_att, dmg = reduce((lambda x, y: (x[0] + y[0], x[1] + y[1])),
+    #     to_att, dmg = reduce(double_property_reducer,
     #                          [d.info for d in Damage.item(entity)])
     # else:
-    #     to_att, dmg = reduce((lambda x, y: (x[0] + y[0], x[1] + y[1])),
+    #     to_att, dmg = reduce(double_property_reducer,
     #                          [d.info for d in damages])
 
     # variables used in spacing and formatting
@@ -526,7 +532,7 @@ def combat(entity, other):
     
     def_to_hit, def_armor = 0, 0
     if def_armors:
-        def_to_hit, def_armor = reduce((lambda x, y: [x[0] + y[0], x[1] + y[1]]),
+        def_to_hit, def_armor = reduce(double_property_reducer,
                                        [a.info for a in def_armors])
 
     def_health = Attribute.item(other).health
