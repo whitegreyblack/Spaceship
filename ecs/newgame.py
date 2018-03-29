@@ -111,6 +111,21 @@ def towards_target(entity, other):
     d, dx, dy = distance(entity, other)
     return int(round(dx / d)), int(round(dy / d))
 
+def total_damage(entity, damage_type):
+    '''Gets damage ranges dependent on damage type'''
+    all_damages = Damage.item(entity)
+    # we still don't know if physical damage exists -- have to filter, reduce
+    if all_damages:
+        damages = [d.damage.ranges 
+                   for d in all_damages if d.damage_type == damage_type]
+        if damages:
+            return reduce(lambda x, y: (x[0] + y[0], x[1] + y[1]), damages)
+    return None
+
+def total_armor(entity, armor_type):
+    '''Gets armorvalues dependent on armor type'''
+    pass
+
 # def calculate_damage(damage):
 #     damages = [0 for _ in range(2)]
 #     for dt, dmg in damage:

@@ -269,8 +269,8 @@ class DictIter(type):
             yield item
     def item(cls, key):
         if key in cls.items.keys():
-            return cls.items[key]
-        return None
+            return [item for item in cls.items[key]]
+        return []
     def remove(cls, key):
         if key in cls.items.keys():
             cls.items.pop(key)
@@ -294,11 +294,9 @@ class Damage(Component, metaclass=DictIter):
         else:
             Damage.items[entity] = [self]
     def __str__(self):
-        to_hit = check(self.to_hit, save_zero=True)
-        return f"({to_hit}, {self.damage})"
+        return f"({check(self.to_hit, save_zero=True)}, {self.damage})"
     def __repr__(self):
-        to_hit = check(self.to_hit, save_zero=True)
-        return f"{self.__class__.__name__} ({to_hit}, {self.damage})"
+        return f"{self.__class__.__name__} {self}"
     def roll(self):
         return next(self.damage.roll())
     @property
