@@ -124,7 +124,7 @@ def total_damage(entity, damage_type):
             return reduce(double_property_reducer, damages)
     return 0, 0
 
-def total_armor(entity):
+def base_armor(entity):
     '''Gets armor values dependent on armor type'''
     armors = Armor.item(entity)
     # map and reduce all armor into armor type that we want
@@ -137,15 +137,18 @@ def equipment_armor(entity):
     equipment = Equipment.item(entity)
     if equipment:
         # get all instances of armor for every equipped item
-        all_armor_instances = []
+        armor = []
         for _, equipped_item in equipment.parts:
-            all_armor_instances += Armor.item(equipped_item)
+            armor.append(base_armor(equipped_item))
 
         # make sure list is not empty before reducing
-        if all_armor_instances:
-            return reduce(double_property_reducer, all_armor_instances)
+        if armor:
+            return reduce(double_property_reducer, armor)
     return 0, 0
 
+def total_armor(entity):
+    return reduce(double_property_reducer, 
+                  [base_armor(entity), equipment_armor(entity)])
 # def natural_damage(entity):
 #     if has(entity, Damage):
 #         damage = entity.damage()
@@ -263,14 +266,16 @@ def system_status(entity):
     mana_string = mana_string + ' ' * (15 - len(mana_string))
 
     # armor values := BASE_ARMOR + EQ_ARMOR
-    equipment = Equipment.item(entity)
-    armors = [base_armor for base_armor in Armor.item(entity)]
-    if equipment:
-        for i, (_, item) in enumerate(equipment.parts):
-            armor = Armor.item(item)
-            if armor:
-                armors += armor
-    to_def, armor = reduce(double_property_reducer, [a.info for a in armors])
+    base_armor = 0, 0
+    to_def, armor = 0, 0
+    # equipment = Equipment.item(entity)
+    # armors = [base_armor for base_armor in Armor.item(entity)]
+    # if equipment:
+    #     for i, (_, item) in enumerate(equipment.parts):
+    #         armor = Armor.item(item)
+    #         if armor:
+    #             armors += armor
+    # to_def, armor = reduce(double_property_reducer, [a.info for a in armors])
 
     # damage ranges
     # equipment = Equipment.item(entity)
