@@ -113,13 +113,23 @@ def towards_target(entity, other):
     d, dx, dy = distance(entity, other)
     return int(round(dx / d)), int(round(dy / d))
 
-def total_damage(entity, damage_type):
+def base_damage(entity, damage_type):
     '''Gets damage ranges dependent on damage type'''
     all_damages = Damage.item(entity)
     # we still don't know if physical damage exists -- have to filter, reduce
     if all_damages:
         damages = [d.damage.ranges 
                    for d in all_damages if d.damage_type == damage_type]
+        if damages:
+            return reduce(double_property_reducer, damages)
+    return 0, 0
+
+def equipment_damage(entity, damage_type):
+    '''Returns equipment damage values dependent on damage type'''
+    equipment = Equipment.item(entity)
+    if equipment:
+        damages = [base_damage(equipped_item, damage_type) 
+                   for _, equipped_item in equipment.parts]
         if damages:
             return reduce(double_property_reducer, damages)
     return 0, 0
