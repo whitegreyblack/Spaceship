@@ -134,7 +134,7 @@ def equipment_damage(entity, damage_type):
             return reduce(double_property_reducer, damages)
     return 0, 0
 
-def total_damage(entity, damage_type)
+def total_damage(entity, damage_type):
     '''Returns both base and equipment damage values of specific type'''
     damages = [base_damage(entity, damage_type), 
                equipment_damage(entity, damage_type)]
