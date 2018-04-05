@@ -12,8 +12,16 @@ import math
 import random
 import textwrap
 
-Event = namedtuple('Event', 'string position')
+# define combat strings
+attacked = "[c={}]{}[/c] hits [c={}]{}[/c] for {} damage. ({} -> {})"
 
+# define simple objects
+physical_damage = namedtuple("Physical_Damage", "to_hit value")
+physical_armor = namedtuple("Physical_Armor", "to_hit value")
+magical_damage = namedtuple("Magical_Damage", "to_hit value")
+magical_armor = namedtuple("Magical_Armor", "to_hit value")
+
+# define simple functions
 double_property_reducer = lambda x, y: (x[0] + y[0], x[1] + y[1])
 
 # -- helper functions -- 
@@ -29,7 +37,26 @@ def random_position(floortiles):
     tile = tiles.pop()
     return tile
 
-# -- Object creation functions --
+def letter(index):
+    '''Converts an integer value between 0 and 25 to an alphabetical letter'''
+    if not 0 <= index <= 25:
+        raise ValueError("Cannot make index into letter: Index out of range")
+    return chr(ord('a') + index)
+
+def distance(entity, other):
+    '''Helper function to calculate distance using euclidean formula'''
+    position_e = Position.item(entity)
+    position_o = Position.item(other)
+    dx = position_o.x - position_e.x
+    dy = position_o.y - position_e.y
+    return math.sqrt(dx ** 2 + dy ** 2), dx, dy
+
+def towards_target(entity, other):
+    '''Helper function to return closest space torwards a targert'''
+    d, dx, dy = distance(entity, other)
+    return int(round(dx / d)), int(round(dy / d))
+
+# -- Object creation helper functions --
 def create_player(entity, floors):
     Position(entity, *random_position(floors))
     Information(entity, name="Hero", race="Human")
@@ -39,7 +66,6 @@ def create_player(entity, floors):
     Inventory(entity)
     Damage(entity, to_hit=1, damage="1d4")
     Armor(entity, to_hit=0, armor=2)
-    
 
 def create_enemy(floors):
     entity = Entity()
@@ -85,33 +111,6 @@ def create_armor(floors):
     Information(e, name='shield', race="shields")
     Damage(e, to_hit=0, damage='1d6')
     Armor(e, to_hit=2, armor=3)
-
-# def loggable(entities, anything=False):
-#     print_info = all(has(e, Information) for e in entities)
-#     if anything:
-#         matters = True
-#     else:
-#         matters = 0 in [e.eid for e in entities]
-#     return print_info and matters
-
-def letter(index):
-    '''Converts an integer value between 0 and 25 to an alphabetical letter'''
-    if not 0 <= index <= 25:
-        raise ValueError("Cannot make index into letter: Index out of range")
-    return chr(ord('a') + index)
-
-def distance(entity, other):
-    '''Helper function to calculate distance using euclidean formula'''
-    position_e = Position.item(entity)
-    position_o = Position.item(other)
-    dx = position_o.x - position_e.x
-    dy = position_o.y - position_e.y
-    return math.sqrt(dx ** 2 + dy ** 2), dx, dy
-
-def towards_target(entity, other):
-    '''Helper function to return closest space torwards a targert'''
-    d, dx, dy = distance(entity, other)
-    return int(round(dx / d)), int(round(dy / d))
 
 def base_damage(entity, damage_type):
     '''Gets damage ranges dependent on damage type'''
@@ -166,19 +165,6 @@ def total_armor(entity):
     '''Returns total to hit and armor values from base and equipment armor'''
     return reduce(double_property_reducer, 
                   [base_armor(entity), equipment_armor(entity)])
-# def natural_damage(entity):
-#     if has(entity, Damage):
-#         damage = entity.damage()
-#         return calculate_damage(damage)
-#     return 0
-
-# def equipment_armor(entity):
-#     return entity.body() if has(entity, Equipment) else 0
-
-# def health_change(entity, change):
-#     current_health = entity.attribute.health.cur_hp 
-#     entity.attribute.health.cur_hp = max(0, current_health - change)
-#     return entity.attribute.health()
 
 def title_bar(x, y, string, bars, color="#444444"):
     '''Creates a x-axis bar with string at the specified coordinates'''
@@ -413,6 +399,17 @@ def system_alive(entity):
     '''Checks if entity is alive by running entity id against Delete items'''
     return entity not in Delete
 
+def system_remove():
+    '''Deletes self and components of the Delete entity'''
+    # return [e for e in entities if not has(e, Delete)]
+    remove = [d.entity for d in Delete.items]
+    for entity in remove:
+        for subclass in Component.__subclasses__():
+            if entity in subclass:
+                subclass.remove(entity)
+        Entity.instances.remove(entity)
+        print(f"Removing {entity}")
+
 def system_update():
     '''Updates variables in health and mana for all entities with an 
     attribute component by iterating and updating inner components.
@@ -523,82 +520,32 @@ def combat(entity, other):
     ratt = Render.item(entity)
     rdef = Render.item(entity)
 
-    # calculate damage instances for attacker
-    att_damages = []
-    att_equipment = Equipment.item(entity)
-    if att_equipment:
-        for p, v in att_equipment.parts:
-            if v:
-                damage_instance = Damage.item(v)
-                if damage_instance:
-                    att_damages.append(damage_instance)
-
-    if not att_damages:
-        att_damages = Damage.item(entity)
-
-    print(att_damages)
-    
-    # calculate defense instances for defender
-    def_armors = []
-    def_equipment = Equipment.item(other)
-    if def_equipment:
-        for p, v in def_equipment.parts:
-            if v:
-                armor_instance = Armor.item(v)
-                if armor_instance:
-                    def_armors.append(armor_instance)
-        if not def_armors:
-            armor_instance = Armor.item(entity)
-            if armor_instance:
-                def_armors.append(armor_instance)
-    
-    def_to_hit, def_armor = 0, 0
-    if def_armors:
-        def_to_hit, def_armor = reduce(double_property_reducer,
-                                       [a.info for a in def_armors])
-
-    def_health = Attribute.item(other).health
-    total_damage = 0
-
-    # define combat strings
-    attacked = "[c={}]{}[/c] hits [c={}]{}[/c] for {} damage. ({} -> {})"
+    damage = physical_damage(*total_damage(entity, 0))
+    magic = magical_damage(*total_damage(entity, 1))
+    armor = physical_armor(*total_armor(entity))
+    health = Attribute.item(other).health
 
     # finally process the damage output from attacker and apply to defender
-    '''
-    for damage in att_damages:
-        if damage is all physical
-        elif damagie is all magical
-        else:
-            magic damage = []
-            physical damage = []
-            split(damage, magical, physical)
-    '''
-    for damage in att_damages:
-        print(def_to_hit, def_armor, damage.to_hit, damage.damage)
-        if def_to_hit < random.randint(1, 20) + damage.to_hit: 
-            damage_dealt = damage.roll()
-            def_health.cur_hp -= damage_dealt
-            total_damage += damage_dealt
-            term.puts(0, term.state(term.TK_HEIGHT) - 1,
-                      attacked.format(ratt.foreground, iatt.title,
-                                      rdef.foreground, idef.title,
-                                      damage_dealt,
-                                      def_health.cur_hp + damage_dealt,
-                                      def_health.cur_hp))
+    if armor.to_hit < random.randint(1, 20) + damage.to_hit:
+        damage_dealt = damage.value - armor.value
+        health.cur_hp -= damage_dealt
+        term.puts(0, term.state(term.TK_HEIGHT) - 1,
+                  attacked.format(ratt.foreground, 
+                                  iatt.title,
+                                  rdef.foreground, 
+                                  idef.title,
+                                  damage_dealt, 
+                                  health.cur_hp + damage_dealt,
+                                  health.cur_hp))
 
-            # print(f"{iatt.title} did {damage_dealt} damage to {defender.title}")
-        else:
-            # print(f"{iatt.title} missed his attack on {defender.title})")
-            ...
-
-    if len(att_damages) > 1:
-        print(f"{iatt.title} did {total_damage} total damage")
-
-    if not def_health.alive:
+    if not health.alive:
         Delete(other)
-    term.refresh()
-    term.read()
+
+    # term.refresh()
+    # term.read()
+
 def item_description(entity):
+    '''Returns info about an entity of type item'''
     info = Information.item(entity)
     damages = Damage.item(entity)
     armors = Armor.item(entity)
@@ -830,17 +777,6 @@ def system_action(world):
                     combat(entity, positions[(dx, dy)])
 
     return proceed, recompute, []
-
-def system_remove():
-    '''Deletes self and components of the Delete entity'''
-    # return [e for e in entities if not has(e, Delete)]
-    remove = [d.entity for d in Delete.items]
-    for entity in remove:
-        for subclass in Component.__subclasses__():
-            if entity in subclass:
-                subclass.remove(entity)
-        Entity.instances.remove(entity)
-        print(f"Removing {entity}")
 
 class Game:
     '''Holds the variables used in processing the game
