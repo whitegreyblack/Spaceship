@@ -1,16 +1,21 @@
 from bearlibterminal import terminal as term
 from collections import namedtuple
-from ecs.die import check_sign as check
-from ecs.keyboard import Keyboard
+from functools import reduce
+import textwrap
+import random
+import math
+
 from ecs.component import (
     Component, Entity, Position, Render, Information, Attribute, Delete, Ai, 
     Damage, Equipment, Inventory, Attribute, Health, Armor
 )
-from functools import reduce
+from ecs.die import check_sign as check
+from ecs.keyboard import Keyboard
 from ecs.map import Map, WORLD
-import math
-import random
-import textwrap
+
+# define global game variables
+WIDTH = term.state(term.TK_HEIGHT)
+HEIGHT = term.state(term.TK_WIDTH)
 
 # define combat strings
 attacked = "[c={}]{}[/c] hits [c={}]{}[/c] for {} damage. ({} -> {})"
@@ -166,7 +171,7 @@ def total_armor(entity):
     return reduce(double_property_reducer, 
                   [base_armor(entity), equipment_armor(entity)])
 
-def title_bar(x, y, string, bars, color="#444444"):
+def title_bar(x, y, bars, string, color="#444444"):
     '''Creates a x-axis bar with string at the specified coordinates'''
     index = bars // 2 - len(string) // 2
     term.bkcolor(color)
@@ -174,7 +179,7 @@ def title_bar(x, y, string, bars, color="#444444"):
     term.bkcolor("#000000")
     term.puts(x + index, y, string)
 
-def action_bar(x, y, strings, bars, color="#444444"):
+def action_bar(x, y, bars, strings, color="#444444"):
     '''Max actions should be 8? Could do two lines if need be'''
     length = 0
 
@@ -240,7 +245,7 @@ def draw_create_menu():
     race_index = 0
     races = ['Dwarf', 'Human', 'Elf']
     term.clear()
-    title_bar(0, 0, 'Creation Menu', term.state(term.TK_WIDTH))
+    title_bar(x=0, y=0, bars=WIDTH, string='Creation Menu')
     term.refresh()
     key = term.read()
     g = Game(world=WORLD)
@@ -248,10 +253,12 @@ def draw_create_menu():
 
 def system_status(entity):
     '''Draws player information to screen'''
-    # print(Attribute.items, Render.items)
+
     attribute = Attribute.item(entity)
     information = Information.item(entity)
     s, a, i, mods, attrs = attribute.status
+
+    # attribute bonuses
     strmod, strscore = mods['strength'], attrs['strength']
     agimod, agiscore = mods['agility'], attrs['agility']
     intmod, intscore = mods['intelligence'], attrs['intelligence']
@@ -333,19 +340,17 @@ def system_enemy_status(world, entity):
 
 def system_draw(recalc, world):
     '''Draws the world to screen if recalc is true'''
+
     if recalc:
         # map offset depending on where map will be drawn
         width_offset = 0
         height_offset = 1
 
         # clear entire screen -- make sure this is the first draw system
-        term.clear_area(0, 
-                        0, 
-                        term.state(term.TK_WIDTH), 
-                        term.state(term.TK_HEIGHT))
-        title_bar(0, 0, "Tiphmore", 64)
+        term.clear_area(0, 0, WIDTH, HEIGHT)
+        title_bar(x=0, y=0, bars=64, string="Tiphmore")
 
-        # renders the map according to priority -- movable entities to the front
+        # renders the map according to priority - movable entities to the front
         positions = dict()
         for position in Position.items:
             if position.at in positions:
@@ -358,6 +363,7 @@ def system_draw(recalc, world):
             for i, cell in enumerate(row):
                 lighted = world.lit(i, j)
                 color = "#222222"
+                
                 if lighted == 2:
                     # we found an entity -- draw it to screen instead of a tile
                     if (i, j) in positions.keys():
@@ -400,8 +406,10 @@ def system_update():
     attribute component by iterating and updating inner components.
     '''
     for a in Attribute.items:
-        a.health.cur_hp = min(a.health.cur_hp + a.health.regen, a.health.max_hp)
-        a.mana.cur_mp = min(a.mana.cur_mp + a.mana.regen, a.mana.max_mp)
+        a.health.cur_hp = min(a.health.cur_hp + a.health.regen, 
+                              a.health.max_hp)
+        a.mana.cur_mp = min(a.mana.cur_mp + a.mana.regen, 
+                            a.mana.max_mp)
 
 # def cache(lines):
     #     lines = lines
@@ -440,23 +448,28 @@ def system_update():
 def get_input():
     '''Returns a validated 3 tuple action determined by key pressed'''
     a, (x, y) = None, (0, 0)
+
+    # do while loop in a pythonic way?
     key = term.read()
     shifted = term.state(term.TK_SHIFT)
-    notexit = key != Keyboard.ESCAPE
-    notarrows = key not in Keyboard.ARROWS.keys()
-    notkeypad = key not in Keyboard.KEYPAD.keys()
-    notkeyboard = (key, shifted) not in Keyboard.KEYBOARD.keys()
 
-    while notexit and notarrows and notkeypad and notkeyboard:
+    # simplify booleans
+    not_exit = key != Keyboard.ESCAPE
+    not_arrows = key not in Keyboard.ARROWS.keys()
+    not_keypad = key not in Keyboard.KEYPAD.keys()
+    not_keyboard = (key, shifted) not in Keyboard.KEYBOARD.keys()
+
+    # loop until valid key is entered
+    while not_exit and not_arrows and not_keypad and not_keyboard:
         key = term.read()
         shifted = term.state(term.TK_SHIFT)
+        
+        not_exit = key != Keyboard.ESCAPE
+        not_arrows = key not in Keyboard.ARROWS.keys()
+        not_keypad = key not in Keyboard.KEYPAD.keys()
+        not_keyboard = (key, shifted) not in Keyboard.KEYBOARD.keys()
 
-        notexit = key != Keyboard.ESCAPE
-        notarrows = key not in Keyboard.ARROWS.keys()
-        notkeypad = key not in Keyboard.KEYPAD.keys()
-        notkeyboard = (key, shifted) not in Keyboard.KEYBOARD.keys()
-
-    # we finally get the right key value after parsing invalid keys
+    # finally get the right key value after parsing invalid keys
     if key == Keyboard.ESCAPE:
         x, y, = None, None
     elif key in Keyboard.ARROWS.keys():
@@ -469,9 +482,13 @@ def get_input():
 
 def take_turn(entity):
     '''Processes ai and player actions into a 4 tuple variable'''
+
+    # default action/position return value
     a, (x, y) = None, (0, 0)
+
     if entity in Ai:
         other = None
+
         # checks if ai entity is within view distance of player?chase:random
         for e in Entity.instances:
             if entity != e and e not in Ai and e in Position:
@@ -492,6 +509,7 @@ def take_turn(entity):
         # on escape inputs -- early exit
         if (x, y) == (None, None):
             return None, x, y, False
+
     return a, x, y, True
 
 def combat(entity, other):
@@ -531,9 +549,12 @@ def combat(entity, other):
 
 def item_description(entity):
     '''Returns info about an entity of type item'''
-    info = Information.item(entity)
+
+    # make sure entity has at least one of the two components
     damages = Damage.item(entity)
     armors = Armor.item(entity)
+
+    # description changes if entity has variable components 
     if bool(damages and armors):
         damage = f"{''.join(f'{d}' for d in damages)}"
         armor = f"{''.join(f'{a}' for a in armors)}"
@@ -542,30 +563,24 @@ def item_description(entity):
         description = f"{''.join(f'{d}' for d in damages)}"
     else:
         description = f"{''.join(f'{a}' for a in armors)}"        
-    return info, description
+
+    return Information.item(entity), description
 
 def draw_inventory(inventory):
     '''Displays items in inventory'''
     term.clear()
-    title_bar(0, 0, "Inventory", term.state(term.TK_WIDTH))
+    title_bar(x=0, y=0, bars=WIDTH, string="Inventory")
 
     # displays a different screen if the inventory is empty/nonexistant
     if not inventory or len(inventory.bag) == 0:
         string = "No items in inventory"
-        term.puts(term.state(term.TK_WIDTH) // 2 - (len(string) // 2), 
-                  term.state(term.TK_HEIGHT) // 2,
-                  string)
-        action_bar(0, 
-                   term.state(term.TK_HEIGHT) - 1, 
-                   [],
-                   term.state(term.TK_WIDTH))
+        term.puts(WIDTH // 2 - (len(string) // 2), HEIGHT // 2,string)
+        action_bar(0, HEIGHT - 1, [], WIDTH)
     else:
-        action_bar(0, term.state(term.TK_HEIGHT)-1, [
-            "[[u]] use",
-            "[[e]] equip",
-            "[[d]] detail",
-            "[[D]] drink",
-        ], term.state(term.TK_WIDTH))
+        action_bar(0, HEIGHT - 1, WIDTH, ["[[u]] use",
+                                          "[[e]] equip",
+                                          "[[d]] detail",
+                                          "[[D]] drink",])
 
         # splits items into item categories
         item_categories = dict()
@@ -587,13 +602,14 @@ def draw_inventory(inventory):
         for key, items in item_categories.items():
             # only shows categories if there exists an item(s) in the list
             if items:
-                term.puts(x_offset, 
-                          category + item_index + y_offset, 
-                          key)
+                y_position = category + item_index + y_offset
+                term.puts(x_offset, y_position, key)
                 category += 1
+                
                 for index, item in enumerate(items):
                     info, description = item_description(item)
                     char = letter(item_index)
+
                     item_index += 1
                     term.puts(x_offset + item_offset, 
                               category + item_index + y_offset, 
@@ -603,7 +619,7 @@ def draw_inventory(inventory):
 def draw_equipment(equipment):
     '''Displays items in equipment'''
     term.clear()
-    title_bar(0, 0, "Equipment", term.state(term.TK_WIDTH))
+    title_bar(x=0, y=0, bars=WIDTH, string="Equipment")
 
     # if equipment exists then show first screen with equipment parts
     if equipment:
@@ -612,14 +628,11 @@ def draw_equipment(equipment):
             if item:
                 info, description = item_description(item)
                 name = info.name
-            term.puts(1, 
-                      i + 2, 
-                      f"{letter(i)}. {part.title():15}: {name} {description}")
+            eqp_str = f"{letter(i)}. {part.title():15}: {name} {description}"
+            term.puts(1, i + 2, eqp_str)
     else:
         # secondary screen to show no equipment for entity
-        term.puts(term.state(term.TK_WIDTH) // 2,
-                  term.state(term.TK_HEIGHT) // 2,
-                  "No equipment")
+        term.puts(WIDTH // 2, HEIGHT // 2, "No equipment")
     term.refresh()
 
 def inventory_pick(entity):
@@ -627,10 +640,10 @@ def inventory_pick(entity):
     pickup = False
     # this gets all entities with position components
     items = [
-        p.entity 
-            for p in Position.items 
-                if not p.moveable and p.at == Position.item(entity).at
+        p.entity for p in Position.items 
+                 if not p.moveable and p.at == Position.item(entity).at
     ]
+    
     # just print single items for now
     if len(items) == 1:
         item = items.pop()
@@ -638,8 +651,9 @@ def inventory_pick(entity):
         Inventory.item(entity).put_in(item)
         print(f"You put the {Information.item(item).name} in your bag.")
         pickup = True
+
+    # no items on entity position
     if not pickup:
-        # messages.append("No item where you stand")
         print("No item where you stand")
 
 def inventory_drop(entity):
@@ -778,33 +792,23 @@ class Game:
         fov_recalc = True
         messages = []
 
+        # run main loop until exit status is recieved
         while proceed:
             self.dungeon.do_fov(*Position.item(self.player).at, 15)
-            system_draw(recalc=fov_recalc, world=self.dungeon)
-            system_status(entity=self.player)
-            system_enemy_status(world=self.dungeon, entity=self.player)
-            term.refresh()
+            system_draw_all(fov_recalc, self.dungeon, self.player)
+
             # read write -- if user presses exit here then quit next loop?
             proceed, fov_recalc, messages = system_action(world=self.dungeon)
 
             # check if player is still alive 
             if not system_alive(entity=self.player):
-                system_draw(recalc=fov_recalc, world=self.dungeon)
-                system_status(entity=self.player)
-                system_enemy_status(world=self.dungeon, entity=self.player)
-                # # system_logger(messages)
-                term.refresh()
+                system_draw_all(fov_recalc, self.dungeon, self.player)
                 break
 
             system_remove()
             system_update()
 
-        if not proceed:
-            # system_logger(['Exit Game'])
-            print('Exit Game')
-        else:
-            # system_logger(["You died"])
-            print('You died')
+        print('Exit Game' if not proceed else 'You died')
         term.refresh()
         term.read()
 
