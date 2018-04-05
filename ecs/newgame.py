@@ -106,7 +106,7 @@ def create_armor(floors):
     Armor(e, to_hit=1, armor=2)
 
     e = Entity()
-    Render(e, '[', '#00AAAA')
+    Render(e, '[[', '#00AAAA')
     Position(e, *random_position(floors), moveable=False)
     Information(e, name='shield', race="shields")
     Damage(e, to_hit=0, damage='1d6')
@@ -258,43 +258,20 @@ def system_status(entity):
     
     # health stat variables
     hc, hm = attribute.health.status
-    health_bars = int((hc / hm) * 15)
+    health_bars = int((max(0, hc) / hm) * 15)
     health_string = f"HP: {hc:2}/{hm:2}"
     health_string = health_string + ' ' * (15 - len(health_string))
-    
+
     # mana stat variables
     mc, mm = attribute.mana()
-    mana_bars = int((mc / mm) * 15) if mm != 0 else 0
+    mana_bars = int((max(0, mc) / mm) * 15) if mm != 0 else 0
     mana_string = f"MP: {mc:2}/{mm:2}"
     mana_string = mana_string + ' ' * (15 - len(mana_string))
 
     # armor values := BASE_ARMOR + EQ_ARMOR
-    base_armor = 0, 0
-    to_def, armor = 0, 0
-    # equipment = Equipment.item(entity)
-    # armors = [base_armor for base_armor in Armor.item(entity)]
-    # if equipment:
-    #     for i, (_, item) in enumerate(equipment.parts):
-    #         armor = Armor.item(item)
-    #         if armor:
-    #             armors += armor
-    # to_def, armor = reduce(double_property_reducer, [a.info for a in armors])
-
-    # damage ranges
-    # equipment = Equipment.item(entity)
-    # damages = []
-    # if equipment:
-    #     for i, (part, item) in enumerate(equipment.parts):
-    #         damage = Damage.item(item)
-    #         if damage:
-    #             damages += damage
-        
-    # if not damages:
-    #     to_att, dmg = reduce(double_property_reducer,
-    #                          [d.info for d in Damage.item(entity)])
-    # else:
-    #     to_att, dmg = reduce(double_property_reducer,
-    #                          [d.info for d in damages])
+    armor = physical_armor(*total_armor(entity))
+    armor_to_hit = check(armor.to_hit, save_zero=True)
+    armor_value = check(armor.value, save_zero=True)
 
     # variables used in spacing and formatting
     spacer = '-' * 16
@@ -303,16 +280,16 @@ def system_status(entity):
     # done with variables -- lets clear the player status screen
     term.clear_area(64, 0, 16, 7)
 
-    # name of character
+    # name of player character
     term.puts(65, index, f"{information.title}")
     
-    # health and mana
+    # health and mana bars -- visual ui
     plot_bar(65, index + 1, "#880000", "#440000", health_string, health_bars)
     plot_bar(65, index + 2, "#000088", "#000044", mana_string, mana_bars)
     term.bkcolor("#000000")
 
     # character attributes: DMG | STR | AGI | INT
-    term.puts(65, index + 4, f"AMR: [[{to_def}, {armor}]]")
+    term.puts(65, index + 4, f"AMR: [[{armor_to_hit}, {armor_value}]]")
     term.puts(65, index + 5, f"STR: {s}{check(strmod)}({strscore})")
     term.puts(65, index + 6, f"AGI: {a}{check(agimod)}({agiscore})")
     term.puts(65, index + 7, f"INT: {i}{check(intmod)}({intscore})")
@@ -394,6 +371,11 @@ def system_draw(recalc, world):
                     term.puts(i + width_offset, 
                               j + height_offset, 
                               f"[c={color}]{cell}[/c]")
+
+def system_draw_all(recalc, world, entity):
+    system_draw(recalc, world)
+    system_status(entity)
+    system_enemy_status(world, entity)
 
 def system_alive(entity):
     '''Checks if entity is alive by running entity id against Delete items'''
@@ -694,6 +676,10 @@ def system_action(world):
     recompute = False
     proceed = True
     for entity in Entity.instances:
+
+        # boolean to control to next entity
+        next_entity = False
+
         # if entity doesnt exist on map or is to be delete -- pass
         if entity not in Position or entity in Delete:
             continue
@@ -701,80 +687,59 @@ def system_action(world):
         # if entity has a position and can move
         position = Position.item(entity)
         if position.moveable:
-            '''
-            end_turn = False
-            while not end_turn:
+
+            # loop until next_entity is false -- only happens on a move command
+            while not next_entity:
+                # let entity take a move or action turn
                 a, x, y, proceed = take_turn(entity)
-            '''
-            a, x, y, proceed = take_turn(entity)
+
+                # exit early during take_turn function and propagate exit value
+                if not proceed:
+                    break
+
+                # action variable is set -- determine correct action
+                if a:
+                    if a == "pickup": 
+                        inventory_pick(entity)
+                    elif a == "inventory":
+                        inventory_show(entity)
+                        recompute = True
+                        system_draw_all(recompute, world, entity)
+                        term.refresh()
+                    elif a == "equipment":
+                        equipment_show(entity)
+                        recompute = True
+                        system_draw_all(recompute, world, entity)
+                        term.refresh()
+                    elif a == "drop":
+                        inventory_drop(entity)
+                    continue
+
+                # x, y is set -- calculate new position to move to
+                recompute = True
+                next_entity = True
+                dx, dy = position.x + x, position.y + y
+
+                # determine if new position is occupied
+                if (dx, dy) in world.floors:
+                    positions = {position.at: position.entity 
+                                for position in Position.items
+                                    if entity != position.entity
+                                    and position.moveable
+                                    and position.entity not in Delete}
+
+                    # free space -- entity can move there
+                    if (dx, dy) not in positions.keys():
+                        position.x += x
+                        position.y += y                
+
+                    # entity exists on that position -- fight it
+                    else:
+                        combat(entity, positions[(dx, dy)])
+
+            # check again for proceed outside of the while loop
             if not proceed:
                 break
-
-            # action variable is set -- determine correct action
-            if a:
-                if a == "pickup": 
-                    inventory_pick(entity)
-                elif a == "inventory":
-                    inventory_show(entity)
-                    recompute = True
-                elif a == "equipment":
-                    equipment_show(entity)
-                    recompute = True
-                elif a == "drop":
-                    inventory_drop(entity)
-                    recompute = True
-                # elif a == "equip":
-                #     if len(entity.backpack) == 1:
-                #         item = entity.backpack.pop()
-                #         if not entity.equipment.left_hand:
-                #             print("current damage:", entity.equipment.left_hand)
-                #             print("equipping left hand with item")
-                #             entity.equipment.left_hand = item.damage
-                #             print("current damage:", entity.equipment.left_hand)
-                #         elif not entity.equipment.right_hand:
-                #             print("current damage:", entity.equipment.right_hand)
-                #             print("equipping right hand with item")  
-                #             entity.equipment.right_hand = item.damage
-                #             print("current damage:", entity.equipment.right_hand)
-                #         else:
-                #             print("Both hands are full")
-                #             entity.backpack.append(item)
-                #         entity.equipment.left_hand
-                # elif a == "unequip":
-                #     item = None
-                #     if has(entity.equipment, 'left_hand') and entity.equipment.left_hand:
-                #         print("Unequipping left hand")
-                #         item = entity.equipment.left_hand
-                #         entity.equipment.left_hand = Damage("1d6")
-                #     elif has(entity.equipment, 'right_hand') and entity.equipment.right_hand:
-                #         item = entity.equipment.right_hand
-                #         entity.equipment.right_hand = Damage("1d6")
-                #     else:
-                #         print("Both hands are empty")
-                #     if item:
-                #         entity.backpack.append(item)
-                continue
-
-            # x, y is set -- calculate new position to move to
-            recompute = True
-            dx, dy = position.x + x, position.y + y
-
-            # determine if new position is occupied
-            if (dx, dy) in world.floors:
-                positions = {position.at: position.entity 
-                             for position in Position.items
-                                 if entity != position.entity
-                                 and position.moveable
-                                 and position.entity not in Delete}
-
-                # free space -- entity can move there
-                if (dx, dy) not in positions.keys():
-                    position.x += x
-                    position.y += y                
-
-                # entity exists on that position -- fight it
-                else:
-                    combat(entity, positions[(dx, dy)])
 
     return proceed, recompute, []
 
