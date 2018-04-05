@@ -372,10 +372,13 @@ def system_draw(recalc, world):
                               j + height_offset, 
                               f"[c={color}]{cell}[/c]")
 
-def system_draw_all(recalc, world, entity):
+def system_draw_all(recalc, world, entity, refresh=True):
     system_draw(recalc, world)
     system_status(entity)
     system_enemy_status(world, entity)
+
+    if refresh:
+        term.refresh()
 
 def system_alive(entity):
     '''Checks if entity is alive by running entity id against Delete items'''
@@ -433,7 +436,7 @@ def system_update():
     #                 messages[i])
     #         except:
     #             break
-    
+
 def get_input():
     '''Returns a validated 3 tuple action determined by key pressed'''
     a, (x, y) = None, (0, 0)
@@ -624,8 +627,9 @@ def inventory_pick(entity):
     pickup = False
     # this gets all entities with position components
     items = [
-        p.entity for p in Position.items 
-                 if not p.moveable and p.at == Position.item(entity).at
+        p.entity 
+            for p in Position.items 
+                if not p.moveable and p.at == Position.item(entity).at
     ]
     # just print single items for now
     if len(items) == 1:
@@ -698,19 +702,18 @@ def system_action(world):
                     break
 
                 # action variable is set -- determine correct action
+                # only specific to certain actions that modify view screen
                 if a:
                     if a == "pickup": 
                         inventory_pick(entity)
                     elif a == "inventory":
+                        recompute = True
                         inventory_show(entity)
-                        recompute = True
                         system_draw_all(recompute, world, entity)
-                        term.refresh()
                     elif a == "equipment":
-                        equipment_show(entity)
                         recompute = True
+                        equipment_show(entity)
                         system_draw_all(recompute, world, entity)
-                        term.refresh()
                     elif a == "drop":
                         inventory_drop(entity)
                     continue
@@ -722,20 +725,22 @@ def system_action(world):
 
                 # determine if new position is occupied
                 if (dx, dy) in world.floors:
-                    positions = {position.at: position.entity 
-                                for position in Position.items
-                                    if entity != position.entity
-                                    and position.moveable
-                                    and position.entity not in Delete}
+                    positions = {
+                        position.at: position.entity 
+                            for position in Position.items
+                            if entity != position.entity
+                            and position.moveable
+                            and position.entity not in Delete
+                    }
 
                     # free space -- entity can move there
                     if (dx, dy) not in positions.keys():
                         position.x += x
-                        position.y += y                
+                        position.y += y
 
                     # entity exists on that position -- fight it
                     else:
-                        combat(entity, positions[(dx, dy)])
+                        combat(entity, other=positions[(dx, dy)])
 
             # check again for proceed outside of the while loop
             if not proceed:
@@ -745,10 +750,13 @@ def system_action(world):
 
 class Game:
     '''Holds the variables used in processing the game
-    - Player :- Entity()
-    - Dungeon :- Map()
+    Player := Entity()
+    Dungeon := Map()
     '''
+
     def __init__(self, world: str):
+        '''Initializes all game objects used to run the game'''
+
         # world variables
         self.dungeon = Map(world)
         self.player = Entity()
@@ -763,9 +771,13 @@ class Game:
         create_armor(floors=self.dungeon.floors)
 
     def run(self):
+        '''Main driver loop to play game'''
+
+        # loop variables
         proceed = True
         fov_recalc = True
         messages = []
+
         while proceed:
             self.dungeon.do_fov(*Position.item(self.player).at, 15)
             system_draw(recalc=fov_recalc, world=self.dungeon)
@@ -774,7 +786,8 @@ class Game:
             term.refresh()
             # read write -- if user presses exit here then quit next loop?
             proceed, fov_recalc, messages = system_action(world=self.dungeon)
-                   
+
+            # check if player is still alive 
             if not system_alive(entity=self.player):
                 system_draw(recalc=fov_recalc, world=self.dungeon)
                 system_status(entity=self.player)
