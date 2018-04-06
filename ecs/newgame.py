@@ -14,8 +14,11 @@ from ecs.keyboard import Keyboard
 from ecs.map import Map, WORLD
 
 # define global game variables
-WIDTH = term.state(term.TK_HEIGHT)
-HEIGHT = term.state(term.TK_WIDTH)
+WIDTH, HEIGHT = 0, 0
+def init_globals():
+    global WIDTH, HEIGHT
+    WIDTH = term.state(term.TK_WIDTH)
+    HEIGHT = term.state(term.TK_HEIGHT)
 
 # define combat strings
 attacked = "[c={}]{}[/c] hits [c={}]{}[/c] for {} damage. ({} -> {})"
@@ -379,6 +382,8 @@ def system_draw(recalc, world):
                               f"[c={color}]{cell}[/c]")
 
 def system_draw_all(recalc, world, entity, refresh=True):
+    term.clear()
+
     system_draw(recalc, world)
     system_status(entity)
     system_enemy_status(world, entity)
@@ -525,14 +530,14 @@ def combat(entity, other):
 
     damage = physical_damage(*total_damage(entity, 0))
     magic = magical_damage(*total_damage(entity, 1))
-    armor = physical_armor(*total_armor(entity))
+    armor = physical_armor(*total_armor(other))
     health = Attribute.item(other).health
 
     # finally process the damage output from attacker and apply to defender
     if armor.to_hit < random.randint(1, 20) + damage.to_hit:
         damage_dealt = damage.value - armor.value
         health.cur_hp -= damage_dealt
-        term.puts(0, term.state(term.TK_HEIGHT) - 1,
+        term.puts(0, HEIGHT - 1,
                   attacked.format(ratt.foreground, 
                                   iatt.title,
                                   rdef.foreground, 
@@ -540,6 +545,7 @@ def combat(entity, other):
                                   damage_dealt, 
                                   health.cur_hp + damage_dealt,
                                   health.cur_hp))
+        term.refresh()
 
     if not health.alive:
         Delete(other)
@@ -574,8 +580,10 @@ def draw_inventory(inventory):
     # displays a different screen if the inventory is empty/nonexistant
     if not inventory or len(inventory.bag) == 0:
         string = "No items in inventory"
-        term.puts(WIDTH // 2 - (len(string) // 2), HEIGHT // 2,string)
-        action_bar(0, HEIGHT - 1, [], WIDTH)
+        print(WIDTH, len(string))
+        print(WIDTH // 2 - (len(string) // 2), HEIGHT // 2)
+        term.puts(WIDTH // 2 - (len(string) // 2), HEIGHT // 2, string)
+        action_bar(0, HEIGHT - 1, WIDTH, [])
     else:
         action_bar(0, HEIGHT - 1, WIDTH, ["[[u]] use",
                                           "[[e]] equip",
@@ -604,7 +612,6 @@ def draw_inventory(inventory):
             if items:
                 y_position = category + item_index + y_offset
                 term.puts(x_offset, y_position, key)
-                category += 1
                 
                 for index, item in enumerate(items):
                     info, description = item_description(item)
@@ -614,6 +621,8 @@ def draw_inventory(inventory):
                     term.puts(x_offset + item_offset, 
                               category + item_index + y_offset, 
                               f"{char}. {info.name:15} {description}")
+                category += 1
+
     term.refresh()
 
 def draw_equipment(equipment):
@@ -821,6 +830,7 @@ if __name__ == "__main__":
     # for i in range(3):
     #     print(random_position())
     term.open()
+    init_globals()
     if draw_main_menu() == "pressed play":
         # draw_create_menu()
         g = Game(world=WORLD)
