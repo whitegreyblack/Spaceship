@@ -580,11 +580,16 @@ def draw_inventory(inventory):
     # displays a different screen if the inventory is empty/nonexistant
     if not inventory or len(inventory.bag) == 0:
         string = "No items in inventory"
-        print(WIDTH, len(string))
-        print(WIDTH // 2 - (len(string) // 2), HEIGHT // 2)
         term.puts(WIDTH // 2 - (len(string) // 2), HEIGHT // 2, string)
         action_bar(0, HEIGHT - 1, WIDTH, [])
     else:
+        # display variables
+        category = 0
+        x_offset = 2
+        y_offset = 1
+        item_index = 0
+        item_offset = 2
+        
         action_bar(0, HEIGHT - 1, WIDTH, ["[[u]] use",
                                           "[[e]] equip",
                                           "[[d]] detail",
@@ -599,20 +604,14 @@ def draw_inventory(inventory):
             else:
                 item_categories[info.race] = [item]
 
-        # display variables
-        category = 0
-        x_offset = 2
-        y_offset = 1
-        item_index = 0
-        item_offset = 2
-
         # puts items onto screen seperated by categories
-        for key, items in item_categories.items():
+        for key, items in sorted(item_categories.items(), key=lambda x: x[0]):
             # only shows categories if there exists an item(s) in the list
             if items:
                 y_position = category + item_index + y_offset
                 term.puts(x_offset, y_position, key)
                 
+                # print each item within the category
                 for index, item in enumerate(items):
                     info, description = item_description(item)
                     char = letter(item_index)
