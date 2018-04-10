@@ -43,6 +43,7 @@ def random_position(floortiles):
         if p.moveable:
             tiles.remove(p.at)
     tile = tiles.pop()
+    print(tile)
     return tile
 
 def letter(index):
@@ -585,7 +586,7 @@ def draw_inventory(inventory):
     else:
         # display variables
         category = 0
-        x_offset = 2
+        x_offset = 0
         y_offset = 1
         item_index = 0
         item_offset = 2
@@ -609,7 +610,9 @@ def draw_inventory(inventory):
             # only shows categories if there exists an item(s) in the list
             if items:
                 y_position = category + item_index + y_offset
-                term.puts(x_offset, y_position, key)
+                term.puts(x_offset + item_offset, 
+                          y_position, 
+                          f"[c=#bbbbbb][[{key}]][/c]")
                 
                 # print each item within the category
                 for index, item in enumerate(items):
