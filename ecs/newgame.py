@@ -544,8 +544,8 @@ def combat(entity, other):
                                   rdef.foreground, 
                                   idef.title,
                                   damage_dealt, 
-                                  health.cur_hp + damage_dealt,
-                                  health.cur_hp))
+                                  int(health.cur_hp + damage_dealt),
+                                  int(health.cur_hp)))
         term.refresh()
 
     if not health.alive:
