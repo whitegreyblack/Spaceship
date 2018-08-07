@@ -35,12 +35,14 @@ class Point:
     def __eq__(self, other):
         other_is_point = isinstance(other, Point)
         other_is_iter = is_valid_iter(other)
+
         if not (other_is_point or other_is_iter):
             raise ValueError
+
         return other == (self._x, self._y)
 
     def __add__(self, other):
-        '''Should only be vector?'''
+        '''Should only add a vector?'''
         other_is_vector = isinstance(other, vector.Vector)
         other_is_iter = is_valid_iter(other)
 
@@ -64,3 +66,10 @@ class Point:
     def from_tuple(cls, pair):
         '''Helper class to create a Point from a tuple'''
         return Point(*pair)
+    
+    @staticmethod
+    def move(a, b):
+        return Point(a, b)
+
+if __name__ == "__main__":
+    print(__file__)
