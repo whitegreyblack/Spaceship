@@ -4,11 +4,14 @@ import random
 import re
 
 def check_sign(value, save_zero=False):
-    '''Converts all values into string representations. If value is 
+    '''Converts all int values into string representations. If value is 
     positive, a plus sign is added to the string. If value is zero,
-    then function returns an empty string
+    then function returns an empty string when save_zero is false else it
+    returns the zero as a string.
     '''
     string = ""
+    if not isinstance(value, int):
+        raise ValueError("value is not of type: int")
     if value < 0:
         string = str(value)
     elif value > 0 or save_zero:
