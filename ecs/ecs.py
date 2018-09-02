@@ -1,7 +1,7 @@
 # component.py
 from bearlibterminal import terminal as term
 import random
-from .die import Die, check_sign as check
+from die import Die, check_sign as check
 
 def roll(value):
     if isinstance(value, str):
@@ -99,7 +99,7 @@ class Information(Component):
     def __init__(self, name=None, race=None, gender=None):
         if not name and not race:
             raise ValueError("Need at least a name or race")
-        for atr, val in zip(__slots__[1:], [name, race, gender]):
+        for atr, val in zip(self.__slots__[1:], [name, race, gender]):
             setattr(self, atr, val if val else None)
 
     def __call__(self):
@@ -142,7 +142,7 @@ class Equipment(Component):
     instances = set()
     __slots__ = ['unit', 'left_hand', 'right_hand', 'body']
     def __init__(self, left=None, right=None, body=None):
-        for a, v in zip(__slots__[1:], [left, right, body]):
+        for a, v in zip(self.__slots__[1:], [left, right, body]):
             setattr(self, a, v if v else None)
 
     def equip(entity, item, part):
