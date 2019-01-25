@@ -21,15 +21,17 @@ Weapon:
 Armor:
     Render | Information | Position(optional) | Defense
 '''
-class Component:
+class Component(object):
     '''Base Parent Class to implement widely used class methods'''
     def __repr__(self):
         '''Returns stat information for dev'''
-        component_variables = ", ".join(f'{s}={getattr(self, s)}' 
-                                        for s in self.__slots__
-                                        if s != "unit"
-                                        and bool(hasattr(self, s) 
-                                        and getattr(self, s)))
+        component_variables = ", ".join(
+            f'{s}={getattr(self, s)}' 
+                for s in self.__slots__
+                    if s != "unit"
+                        and bool(hasattr(self, s) 
+                        and getattr(self, s))
+        )
         return f'{self}({component_variables})'
 
     def __str__(self):
@@ -208,20 +210,37 @@ class Attribute(Component):
 
 class Health(Component):
     instances = set()
-    __slots__ = ['max_hp', 'cur_hp']
+    __slots__ = ['max_hp', 'cur_hp', 'regen', 'regen_counter']
     def __init__(self, strength=0):
         self.max_hp = self.cur_hp = strength * 2
-        self.regen = strength / 50
+
+        # let's calculate regen like money. 
+        # Precision 2 and store the value before adding to health
+        self.regen = int((strength / 50) * 100)
+        self.regen_counter = 0
+        print("Regen", self.regen)
 
     def __str__(self):
         return super().__str__() + f"({int(self.cur_hp)}/{int(self.max_hp)})"
+
     def __call__(self):
         return int(self.cur_hp), int(self.max_hp)
+
     def update(self):
-        self.cur_hp = min(self.cur_hp + self.regen, self.max_hp)
+        hp_gain = (self.regen_counter + self.regen)
+        print('hp', hp_gain, hp_gain // 100)
+        self.regen_counter = hp_gain % 100
+        print('remainder', self.regen_counter)
+        self.cur_hp = min(self.cur_hp + hp_gain // 100, self.max_hp)
+
+    def take_damage(self, damage):
+        if damage < 0:
+            raise Exception("Damage value cannot be negative")
+        self.cur_hp += -damage
+
     @property
     def alive(self):
-        return self.cur_hp >= 1
+        return self.cur_hp > 0
 
 class Experience(Component):
     instances = set()

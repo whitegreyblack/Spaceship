@@ -33,16 +33,12 @@ def player(info, character):
     e.backpack = Inventory(bag=[weapon()])
     print(repr(e), e.attribute.health.cur_hp)
     # e.attribute.modify(stat=('strength', 3))
-    print(e.attribute.health.cur_hp, e.attribute.health.max_hp)    
     print(e.attribute.health)
-    e.attribute.health.cur_hp -= 10
-    print(e.attribute.health.cur_hp, e.attribute.health.max_hp)
+    e.attribute.health.take_damage(10)
     print(e.attribute.health)
     e.attribute.update()
-    print(e.attribute.health.cur_hp, e.attribute.health.max_hp)
     print(e.attribute.health)
     e.attribute.update()
-    print(e.attribute.health.cur_hp, e.attribute.health.max_hp)
     print(e.attribute.health)
     print(e.attribute)
     e.attribute.modify(('strength', 3))
@@ -55,6 +51,7 @@ def calculate(cls, attr):
 
 if __name__ == "__main__":
     hero = player(("Grey", "Human"), None)
+    print(hero)
     # calculate(Health, 'cur_hp')
     # calculate(Experience, 'exp_needed')
     # calculate(Armor, 'max_armor')

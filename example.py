@@ -33,7 +33,7 @@ map_symbols = {
 }
 
 class Component:
-    mask = 0x0
+    counter = mask = 1
     def __str__(self):
         if isinstance(self, tuple(Component.__subclasses__())):
             parent = type(self).__base__.__name__
@@ -51,23 +51,23 @@ class Component:
         self.unit = unit
 
 class Position(Component):
-    mask = 0x1
+    Component.counter = mask = Component.counter << 1
     # __slots__ = ['x', 'y', 'z', 'unit']
     def __init__(self, x=0, y=0, z=0):
         self.speed = random.randint(0, 5)
         self.x, self.y, self.z = x, y, z
         
 class Render(Component):
-    mask = 0x2
+    Component.counter = mask = Component.counter << 1
     # __slots__ = ['char', 'fore', 'back', 'unit']
     def __init__(self, c, f, b):
         self.char, self.fore, self.back = c, f, b
 
 class Controller(Component):
-    mask = 0x3
+    Component.counter = mask = Component.counter << 1
 
 class Stats(Component):
-    mask = 0x4
+    Component.counter = mask = Component.counter << 1
 
     def __init__(self, s):
         self.str = s
