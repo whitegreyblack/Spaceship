@@ -193,6 +193,7 @@ def main():
     unit = init_enemy()
     entities = [hero, unit]
     term.open()
+
     term.puts(0, 0, world)
     for e in entities:
         term.puts(e.position.x, e.position.y, e.render.char)

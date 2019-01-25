@@ -1,6 +1,6 @@
 # create player
-from ecs.ecs import Entity
-from ecs.ecs import (
+from ecs import Entity
+from ecs import (
     Information, Equipment, Inventory, Attribute, Render, Position, Damage,
     Health, Experience, Armor
 )
@@ -55,3 +55,4 @@ if __name__ == "__main__":
     # calculate(Health, 'cur_hp')
     # calculate(Experience, 'exp_needed')
     # calculate(Armor, 'max_armor')
+

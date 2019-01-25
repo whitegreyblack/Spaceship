@@ -1,7 +1,7 @@
 # component.py
 from bearlibterminal import terminal as term
 import random
-from .die import Die, check_sign as check
+from die import Die, check_sign as check
 
 def roll(value):
     if isinstance(value, str):
@@ -53,6 +53,7 @@ class Component(object):
     @classmethod
     def classname(cls):
         return cls.__name__.lower()
+
     @classmethod
     def items(cls):
         return cls.instances
@@ -96,17 +97,20 @@ class Position(Component):
 class Information(Component):
     instances = set()
     __slots__ = ['unit', 'name', 'race', 'gender']
+
     def __init__(self, name=None, race=None, gender=None):
         if not name and not race:
             raise ValueError("Need at least a name or race")
-        for atr, val in zip(['name', 'race', 'gender'], [name, race, gender]):
+        for atr, val in zip(self.__slots__[1:], [name, race, gender]):
             setattr(self, atr, val if val else None)
+
     def __call__(self):
         return self.name if self.name else self.race
 
 class Inventory(Component):
     instances = set()
     __slots__ = ['unit', 'bag']
+
     def __init__(self, bag=[]):
         self.max = 26
         self.bag = bag
@@ -114,48 +118,49 @@ class Inventory(Component):
 class Delete(Component):
     instances = set()
     __slots__ = ['unit', 'delete']
+
     def __init__(self):
         self.delete = True
 
-def empty(bag): 
-    return len(bag) == 0
+    def empty(bag): 
+        return len(bag) == 0
 
-def full(bag, size): 
-    return len(bag) == size
+    def full(bag, size): 
+        return len(bag) == size
 
-def pickup(bag, item, size):
-    if len(bag) < size:
-        return False
-    bag.append(item)
-    return True
+    def pickup(bag, item, size):
+        if len(bag) < size:
+            return False
+        bag.append(item)
+        return True
 
-def drop(bag, item):
-    if len(bag) == 0:
-        return False
-    bag.remove(item)
-    return True
+    def drop(bag, item):
+        if len(bag) == 0:
+            return False
+        bag.remove(item)
+        return True
 
 class Equipment(Component):
     instances = set()
     __slots__ = ['unit', 'left_hand', 'right_hand', 'body']
-    def __init__(self, lh=None, rh=None, body=None):
-        for a, v in zip(['left_hand', 'right_hand', 'body'], [lh, rh, body]):
+    def __init__(self, left=None, right=None, body=None):
+        for a, v in zip(self.__slots__[1:], [left, right, body]):
             setattr(self, a, v if v else None)
 
-def equip(entity, item, part):
-    if getattr(entity.equipment, part):
-        return False
-    setattr(entity.equipment, part)
-    entity.attribute.modify(stats=entity.equipment.part.modifiers)
-    return True
+    def equip(entity, item, part):
+        if getattr(entity.equipment, part):
+            return False
+        setattr(entity.equipment, part)
+        entity.attribute.modify(stats=entity.equipment.part.modifiers)
+        return True
 
-def unequip(self, item, part):
-    item = getattr(entity.equipment, part)
-    if not item:
-        return False
-    setattr(entity.equipment, part, None)
-    entity.attribute.modify(stats=entity.equipment.part.modifiers, remove=True)
-    return True
+    def unequip(self, item, part):
+        item = getattr(entity.equipment, part)
+        if not item:
+            return False
+        setattr(entity.equipment, part, None)
+        entity.attribute.modify(stats=entity.equipment.part.modifiers, remove=True)
+        return True
 
 class Attribute(Component):
     instances = set()
@@ -174,7 +179,8 @@ class Attribute(Component):
 
     def __str__(self):
         attributes = "strength agility intelligence".split()
-        attributes = " ".join(f"{getattr(self, a)}{check(self.modifiers[a])} ({self.attrscore[a]})" 
+        attributes = " ".join(
+                f"{getattr(self, a)}{check(self.modifiers[a])} ({self.attrscore[a]})" 
                                 for a in attributes)
         return super().__str__() + f"s: {attributes}"
 
