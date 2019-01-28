@@ -2,16 +2,17 @@
 import random
 import operator
 from bearlibterminal import terminal as term
+from spaceship.ecs.map import Map
+
 length = 100
-world = '''
+WORLD = '''
 ################################
 #....#....#....#....#..........#
 #...................#..........#
 #....#....#....#....+.....#....#
 #...................#..........#
 #....#....#....#....#..........#
-################################
-'''[1:]
+################################'''[1:]
 
 WHITE = "#ffffff"
 BLACK = "#000000"
@@ -56,12 +57,28 @@ class Position(Component):
     def __init__(self, x=0, y=0, z=0):
         self.speed = random.randint(0, 5)
         self.x, self.y, self.z = x, y, z
+    def __str__(self):
+        return f"Position: ({self.x}, {self.y})"
+    def move(self, x, y):
+        self.x += x
+        self.y += y
         
 class Render(Component):
     Component.counter = mask = Component.counter << 1
     # __slots__ = ['char', 'fore', 'back', 'unit']
-    def __init__(self, c, f, b):
+    def __init__(self, c, f=None, b=None):
         self.char, self.fore, self.back = c, f, b
+    @property
+    def char(self):
+        c = self._c
+        if self.fore:
+            c = f"[color={self.fore}]{c}[/color]"
+        if self.back:
+            c = f"[bkcolr={self.back}]{c}[/bkcolor]"
+        return c
+    @char.setter
+    def char(self, c):
+        self._c = c
 
 class Controller(Component):
     Component.counter = mask = Component.counter << 1
@@ -151,9 +168,12 @@ class Tile(Entity):
     
 def TurnSystem(entities):
     component='position'
-    movables = sorted((e for e in entities 
-                         if hasattr(e, component) and getattr(e, component)),
-                      key=operator.attrgetter('position.speed'))
+    movables = sorted(
+        (e for e in entities 
+            if hasattr(e, component) and getattr(e, component)
+        ),
+        key=operator.attrgetter('position.speed')
+    )
 
     for e in movables:
         print(e, e.position.speed)
@@ -162,8 +182,10 @@ def TurnSystem(entities):
 
 def DamageSystem(entities):
     component = 'stats'
-    damageables = list(e for e in entities 
-                         if hasattr(e, component) and getattr(e, component))
+    damageables = [
+        e for e in entities 
+            if hasattr(e, component) and getattr(e, component)
+    ]
     removables = []
     for e in damageables:
         h = e.stats.health
@@ -178,27 +200,53 @@ def DamageSystem(entities):
     return entities
 
 def init_player():
-    return Hero(position=Position(16, 4, 0),
-                render=Render('@', WHITE, BLACK),
-                stats=Stats(3))
+    return Hero(
+        position=Position(16, 4, 0),
+        render=Render('@', ORANGE, BLACK),
+        stats=Stats(3)
+    )
 
 def init_enemy():
-    return Hero(position=Position(10, 2, 0),
-                render=Render('@', WHITE, BLACK),
-                stats=Stats(1))
+    return Hero(
+        position=Position(10, 2, 0),
+        render=Render('@', WHITE, BLACK),
+        stats=Stats(1)
+    )
 
 
 def main():
+    room = Map(WORLD)
     hero = init_player()
     unit = init_enemy()
     entities = [hero, unit]
     term.open()
-
-    term.puts(0, 0, world)
+    # term.puts(0, 0, WORLD)
+    room.do_fov(hero.position.x, hero.position.y, 25) 
+    for x, y, c in room.lighted:
+        term.puts(x, y, c)
     for e in entities:
         term.puts(e.position.x, e.position.y, e.render.char)
     term.refresh()
-    term.read()
+    while True:
+        ch = term.read()
+        if ch in (term.TK_LEFT, term.TK_RIGHT, term.TK_UP, term.TK_DOWN):
+            if ch == term.TK_LEFT:
+                hero.position.move(-1, 0)
+            if ch == term.TK_RIGHT:
+                hero.position.move(1, 0)
+            if ch == term.TK_UP:
+                hero.position.move(0, -1)
+            if ch == term.TK_DOWN:
+                hero.position.move(0, 1)
+        if ch == term.TK_CLOSE or ch == term.TK_ESCAPE:
+            break
+        term.clear()
+        room.do_fov(hero.position.x, hero.position.y, 25) 
+        for x, y, c in room.lighted:
+            term.puts(x, y, c)
+        for e in entities[::-1]:
+            term.puts(e.position.x, e.position.y, e.render.char)
+        term.refresh()
     term.close()
 
 if __name__ == "__main__":

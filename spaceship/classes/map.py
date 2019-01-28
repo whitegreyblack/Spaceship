@@ -84,19 +84,23 @@ class Map:
         self.__items = {}
 
     def build(self) -> None:
-        raise NotImplementedError("cannot build the base map class -- use a child map object")
+        raise NotImplementedError(
+            "cannot build the base map class -- use a child map object"
+        )
 
     def __str__(self) -> str:
-        return "{}: ({}, {})".format(self.__class__.__name__, self.width, self.height)
+        return f"{self.__class__.__name__}: ({self.width}, {self.height})"
 
     def __repr__(self) -> str:
         return "\n".join("".join(row) for row in self.data)
                 
-    ###########################################################################
-    # Level Initialization, Setup, Terraform and Evaluation                   #
-    ###########################################################################
+    ##########################################################################
+    # Level Initialization, Setup, Terraform and Evaluation                  #
+    ##########################################################################
     def dimensions(self) -> None:
-        '''takes in a string map and returns a 2D list map and map dimensions'''
+        '''
+        Takes in a string map and returns a 2D list map and map dimensions
+        '''
         if hasattr(self, 'data'):
             self.height = len(self.data)
             self.width = max(len(col) for col in self.data)
@@ -104,7 +108,8 @@ class Map:
             raise AttributeError("No self.data")
 
     def create_tile_map(self) -> None:
-        '''Instantiates the tile map and fills the map with tile objects
+        '''
+        Instantiates the tile map and fills the map with tile objects
         This function should only be called once during __init__
         '''
         self.check_data()
@@ -117,7 +122,7 @@ class Map:
                 try:
                     chars, hexcodes = self.chars[char]
                 except KeyError:
-                    raise KeyError("Evaluate Map: {} not in keys".format(char))
+                    raise KeyError(f"Evaluate Map: {char} not in keys")
 
                 block_mov = char in self.chars_block_move
                 block_lit = char not in self.chars_block_light
@@ -147,9 +152,9 @@ class Map:
                 raise AttributeError("No self.{}".format(attr))
         return True
 
-    ###########################################################################
-    # Connected Map/Dungeon Functions and Properties                          #
-    ###########################################################################
+    ##########################################################################
+    # Connected Map/Dungeon Functions and Properties                         #
+    ##########################################################################
     @property
     def stairs_up(self) -> Union[Tuple[int, int], None]:
         '''Returns the position of the up stairs character on map.
@@ -202,9 +207,9 @@ class Map:
     def sublevel(self, sublevel) -> None:
         self.__sublevel = sublevel
 
-    ###########################################################################
-    #  Singular Map Functions                                                 #
-    ###########################################################################
+    ##########################################################################
+    #  Singular Map Functions                                                #
+    ##########################################################################
     def square(self, x, y) -> object:
         # return self.data[y][x]
         return self.tilemap[y][x]
