@@ -50,6 +50,7 @@ class Component(object):
         return set.intersection(cls.instances, 
                                 other.instances,
                                 *(o.instances for o in others))
+
     @classmethod
     def classname(cls):
         return cls.__name__.lower()
@@ -101,6 +102,7 @@ class Information(Component):
     def __init__(self, name=None, race=None, gender=None):
         if not name and not race:
             raise ValueError("Need at least a name or race")
+
         for atr, val in zip(self.__slots__[1:], [name, race, gender]):
             setattr(self, atr, val if val else None)
 

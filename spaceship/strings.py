@@ -203,6 +203,10 @@ race_goblin="""
 race_troll="""
 """[1:]
 
+RACE_STRINGS = (race_human, race_beast, race_elven, race_orcen, race_dwarf,
+    race_ishtahari, race_ork, race_goblin, race_troll
+)
+
 knight="""
 Warriors of noble heritage, knights make up the elite troops within a military. Their heavy armor and equipment allows 
 them to take significant damage without injury and deal high damage in return. They are often seen on the front lines of
@@ -265,6 +269,11 @@ weapons and combat but can be skilled in ranged combat as well. With enough expe
 of upgrading their class statuses to the Knight and Paladin class.
 """[1:]
 
+CLASS_STRINGS = (knight, barbarian, class_cleric, class_druid, fighter, 
+    paladin, ranger, sorcerer, rogue, class_archer, class_wizard, 
+    class_squire
+)
+
 """
 Lancer, 
 Archer, Squire, Mystic, Bard, Summoner, Chemist, Dragoon, Geomancer, Monk, Ninja, Samurai, Theif
@@ -275,7 +284,7 @@ pikeman, halberdier, spearman, assassin, trapper, warden, arbiter, enforcer, bla
 
 subrace_descriptions=[
     [
-        "Citizen servents residing in the Rodash Empire", 
+        "Citizen servents residing in the Rodash Empire",
         "Travelers who wander the continent of Auriel", 
         "Humans living outside of the borders of the Rodash Empire",
         "Sadukar are those who live in the Icy Gaze north of the Empire",
