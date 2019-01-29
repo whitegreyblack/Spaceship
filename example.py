@@ -1,4 +1,4 @@
-# example.py 
+# example.py using the ecs package
 import random
 import operator
 from bearlibterminal import terminal as term
@@ -60,18 +60,23 @@ class Component:
 class Position(Component):
     Component.counter = mask = Component.counter << 1
     # __slots__ = ['x', 'y', 'z', 'unit']
-    def __init__(self, x=0, y=0, z=0):
+    def __init__(self, x=0, y=0, z=0, moveable=True):
         self.speed = random.randint(0, 5)
         self.x, self.y, self.z = x, y, z
+        self.moveable = moveable
     def __str__(self):
         return f"Position: ({self.x}, {self.y})"
     def __iter__(self):
         return iter((self.x, self.y))
+    def __eq__(self, other):
+        print('eq')
+        return (self.x, self.y) == (other.x, other.y)
     def move(self, x, y):
-        self.x += x
-        self.y += y
+        if self.moveable:
+            self.x += x
+            self.y += y
     def copy(self):
-        return Position(self.x, self.y)
+        return Position(self.x, self.y, moveable=self.moveable)
         
 class Render(Component):
     Component.counter = mask = Component.counter << 1
@@ -84,7 +89,7 @@ class Render(Component):
         if self.fore:
             c = f"[color={self.fore}]{c}[/color]"
         if self.back:
-            c = f"[bkcolr={self.back}]{c}[/bkcolor]"
+            c = f"[bkcolor={self.back}]{c}[/bkcolor]"
         return c
     @char.setter
     def char(self, c):
@@ -98,7 +103,7 @@ class Stats(Component):
 
     def __init__(self, s):
         self.str = s
-        self.health = s * 3
+        self.health = s
 
     @property
     def health(self):
@@ -220,14 +225,18 @@ def init_player():
 
 
 def init_enemy():
-    return Unit(Position(10, 2, 0), Render('@', WHITE, BLACK), Stats(1))
+    return Unit(Position(10, 2, 0), Render('@', GREEN, BLACK), Stats(1))
+
+
+def init_enemy_static():
+    return Unit(Position(11, 2, moveable=False), Render('@', GREEN, BLACK), Stats(1))
 
 
 def main():
     room = Map(WORLD)
     hero = init_player()
     unit = init_enemy()
-    entities = [hero, unit]
+    entities = [hero, unit, init_enemy_static()]
     moves = {
         term.TK_LEFT: (-1, 0),
         term.TK_RIGHT: (1, 0),
@@ -243,7 +252,7 @@ def main():
         term.puts(e.position.x, e.position.y, e.render.char)
     term.refresh()
     affected = None
-    blocked = False
+    blocked = None
     stop = False
     while True:
         for e in entities:
@@ -253,23 +262,29 @@ def main():
                     # create a temp position obj to check next if position is blocked
                     p = e.position.copy()
                     p.move(*moves[ch])
-                    if not room.blocked(*p):
+                    units_on_pos = any(p == x.position for x in entities if x != e)
+                    print(units_on_pos)
+                    if not room.blocked(*p) and not units_on_pos:
                         e.position.move(*moves[ch])
                         # movement is complete. Now unit experiences whatever 
                         # tile type. The unit moved onto. Ex. floor does 
                         # nothing Trap does some effects like damage or other
                         affected = room.affects(e)
                     else:
-                        blocked = True
+                        if units_on_pos:
+                            blocked = "You cannot move there. Your path is blocked by someone."
+                        else:
+                            blocked = "You cannot move there. Your path is blocked by something."
                 if ch == term.TK_CLOSE or ch == term.TK_ESCAPE:
                     stop = True
                     break
             else:
                 p = e.position.copy()
-                x, y = random.randint(-1, 2), random.randint(-1, 2)
-                p.move(x, y)
-                if not room.blocked(*p):
-                    e.position.move(x, y)
+                if p.moveable:
+                    x, y = random.randint(-1, 2), random.randint(-1, 2)
+                    p.move(x, y)
+                    if not room.blocked(*p):
+                        e.position.move(x, y)
         if stop:
             break
         term.clear()
@@ -279,8 +294,8 @@ def main():
         for e in entities[::-1]:
             term.puts(e.position.x, e.position.y, e.render.char)
         if blocked:
-            term.puts(0, 24, "You cannot move there. Your path is blocked.")
-            blocked = False
+            term.puts(0, 24, blocked)
+            blocked = None
         if affected:
             term.puts(0, 24, affected)
 
