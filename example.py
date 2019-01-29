@@ -10,7 +10,7 @@ WORLD = '''
 #....#....#....#....#..........#
 #...................#..........#
 #....#....#....#....+.....#....#
-#...................#..........#
+#...........^.......#..........#
 #....#....#....#....#..........#
 ################################'''[1:]
 
@@ -35,6 +35,8 @@ map_symbols = {
 
 class Component:
     counter = mask = 1
+    def __init__(self):
+        self.entity = None
     def __str__(self):
         if isinstance(self, tuple(Component.__subclasses__())):
             parent = type(self).__base__.__name__
@@ -97,6 +99,16 @@ class Stats(Component):
     def __init__(self, s):
         self.str = s
         self.health = s * 3
+
+    @property
+    def health(self):
+        return self._health
+
+    @health.setter
+    def health(self, value):
+        self._health = value
+        # if self._health <= 0:
+        #     del self.entity
     
 class Entity:
     obj_id = 0
@@ -146,6 +158,7 @@ class Unit(Entity):
     def __init__(self, *components):
         super().__init__()
         for component in components:
+            component.entity = self
             setattr(self, component.name, component)
 
 
@@ -190,9 +203,9 @@ def DamageSystem(entities):
     ]
     removables = []
     for e in damageables:
-        h = e.stats.health
-        e.stats.health = random.randint(0, 1)
-        print(h, e.stats.health)
+        # h = e.stats.health
+        # e.stats.health = random.randint(0, 1)
+        # print(h, e.stats.health)
         if e.stats.health <= 0:
             removables.append(e)
     
@@ -229,6 +242,7 @@ def main():
     for e in entities:
         term.puts(e.position.x, e.position.y, e.render.char)
     term.refresh()
+    affected = None
     blocked = False
     stop = False
     while True:
@@ -241,6 +255,10 @@ def main():
                     p.move(*moves[ch])
                     if not room.blocked(*p):
                         e.position.move(*moves[ch])
+                        # movement is complete. Now unit experiences whatever 
+                        # tile type. The unit moved onto. Ex. floor does 
+                        # nothing Trap does some effects like damage or other
+                        affected = room.affects(e)
                     else:
                         blocked = True
                 if ch == term.TK_CLOSE or ch == term.TK_ESCAPE:
@@ -261,9 +279,22 @@ def main():
         for e in entities[::-1]:
             term.puts(e.position.x, e.position.y, e.render.char)
         if blocked:
-            term.puts(0, 24, "path is blocked")
+            term.puts(0, 24, "You cannot move there. Your path is blocked.")
             blocked = False
+        if affected:
+            term.puts(0, 24, affected)
+
+        entities = DamageSystem(entities)
+        if hero not in entities:
+            term.clear_area(0, 24, 79, 24)
+            if affected:
+                term.puts(0, 23, affected)
+            term.puts(0, 24, "You die.")
+            term.refresh()
+            term.read()
+            break
         term.refresh()
+        
     term.close()
 
 if __name__ == "__main__":

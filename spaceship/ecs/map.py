@@ -52,6 +52,9 @@ ROOM = """
 
 UNSEEN, SEEN, LIGHTED = range(3)
 
+def is_trap(tile: chr):
+    return tile == '^'
+
 class Map:
     mult = [
             [1,  0,  0, -1, -1,  0,  0,  1],
@@ -90,10 +93,17 @@ class Map:
         '''Returns tile information at target coordinates'''
         return self.world[y][x]
 
+    def affects(self, unit: object):
+        """Does things to units depending on their position in the map"""
+        tile = self.square(*unit.position)
+        if is_trap(tile):
+            unit.stats.health -= 1
+            return f'You step on a trap. You take damage ({unit.stats.health+1}->{unit.stats.health}).'
+
     def blocked(self, x: int, y: int):
         return (not 0 <= x < self.width or not 0 <= y < self.height
                 or self.world[y][x] in ("#", '+'))
-                
+ 
     def lit(self, x: int, y: int) -> int:
         '''Returns light level of tile at target coordinates'''
         return self.light[y][x]
@@ -156,6 +166,7 @@ class Map:
                 break
 
 if __name__ == "__main__":
+    "Implement example program using curses"
     import curses
     from collections import namedtuple
 
