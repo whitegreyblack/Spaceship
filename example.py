@@ -44,6 +44,10 @@ class Component:
         subclasses = "\n\t   ".join([s.__name__ for s in self.subclasses()])
         return f'{type(self).__name__}: {subclasses}'
 
+    @property
+    def name(self):
+        return self.__class__.__name__.lower()
+
     def subclasses(self):
         for s in Component.__subclasses__():
             yield s
@@ -137,24 +141,18 @@ class Entity:
     def mask(self, component):
         self.obj_mask |= component.mask
 
-class Hero(Entity):
-    stats = None
-    position = None
-    render  = None
-    controller = None
-
-    def __init__(self, position=None, render=None, controller=None, stats=None):
-        super().__init__()
-        for component in [position, render, controller, stats]:
-            if component:
-                self.components = component
-        
 class Unit(Entity):
-    health = None
-    position = None
-    render = None
     controller = None
-    
+    def __init__(self, *components):
+        super().__init__()
+        for component in components:
+            setattr(self, component.name, component)
+
+
+class Hero(Unit):
+    controller = Controller()
+
+
 def walk(world, unit):
     x, y = random.randint(-1, 1), random.randint(-1, 1)
     try:
@@ -203,19 +201,13 @@ def DamageSystem(entities):
 
     return entities
 
+
 def init_player():
-    return Hero(
-        position=Position(16, 4, 0),
-        render=Render('@', ORANGE, BLACK),
-        stats=Stats(3)
-    )
+    return Hero(Position(16, 4, 0), Render('@', ORANGE, BLACK), Stats(3))
+
 
 def init_enemy():
-    return Hero(
-        position=Position(10, 2, 0),
-        render=Render('@', WHITE, BLACK),
-        stats=Stats(1)
-    )
+    return Unit(Position(10, 2, 0), Render('@', WHITE, BLACK), Stats(1))
 
 
 def main():
@@ -238,17 +230,29 @@ def main():
         term.puts(e.position.x, e.position.y, e.render.char)
     term.refresh()
     blocked = False
+    stop = False
     while True:
-        ch = term.read()
-        if ch in moves.keys():
-            # create a temp position obj to check next if position is blocked
-            p = hero.position.copy()
-            p.move(*moves[ch])
-            if not room.blocked(*p):
-                hero.position.move(*moves[ch])
+        for e in entities:
+            if e.controller:
+                ch = term.read()
+                if ch in moves.keys():
+                    # create a temp position obj to check next if position is blocked
+                    p = e.position.copy()
+                    p.move(*moves[ch])
+                    if not room.blocked(*p):
+                        e.position.move(*moves[ch])
+                    else:
+                        blocked = True
+                if ch == term.TK_CLOSE or ch == term.TK_ESCAPE:
+                    stop = True
+                    break
             else:
-                blocked = True
-        if ch == term.TK_CLOSE or ch == term.TK_ESCAPE:
+                p = e.position.copy()
+                x, y = random.randint(-1, 2), random.randint(-1, 2)
+                p.move(x, y)
+                if not room.blocked(*p):
+                    e.position.move(x, y)
+        if stop:
             break
         term.clear()
         room.do_fov(hero.position.x, hero.position.y, 25) 
