@@ -59,9 +59,13 @@ class Position(Component):
         self.x, self.y, self.z = x, y, z
     def __str__(self):
         return f"Position: ({self.x}, {self.y})"
+    def __iter__(self):
+        return iter((self.x, self.y))
     def move(self, x, y):
         self.x += x
         self.y += y
+    def copy(self):
+        return Position(self.x, self.y)
         
 class Render(Component):
     Component.counter = mask = Component.counter << 1
@@ -219,6 +223,12 @@ def main():
     hero = init_player()
     unit = init_enemy()
     entities = [hero, unit]
+    moves = {
+        term.TK_LEFT: (-1, 0),
+        term.TK_RIGHT: (1, 0),
+        term.TK_UP: (0, -1),
+        term.TK_DOWN:(0, 1)
+    }
     term.open()
     # term.puts(0, 0, WORLD)
     room.do_fov(hero.position.x, hero.position.y, 25) 
@@ -227,17 +237,17 @@ def main():
     for e in entities:
         term.puts(e.position.x, e.position.y, e.render.char)
     term.refresh()
+    blocked = False
     while True:
         ch = term.read()
-        if ch in (term.TK_LEFT, term.TK_RIGHT, term.TK_UP, term.TK_DOWN):
-            if ch == term.TK_LEFT:
-                hero.position.move(-1, 0)
-            if ch == term.TK_RIGHT:
-                hero.position.move(1, 0)
-            if ch == term.TK_UP:
-                hero.position.move(0, -1)
-            if ch == term.TK_DOWN:
-                hero.position.move(0, 1)
+        if ch in moves.keys():
+            # create a temp position obj to check next if position is blocked
+            p = hero.position.copy()
+            p.move(*moves[ch])
+            if not room.blocked(*p):
+                hero.position.move(*moves[ch])
+            else:
+                blocked = True
         if ch == term.TK_CLOSE or ch == term.TK_ESCAPE:
             break
         term.clear()
@@ -246,6 +256,9 @@ def main():
             term.puts(x, y, c)
         for e in entities[::-1]:
             term.puts(e.position.x, e.position.y, e.render.char)
+        if blocked:
+            term.puts(0, 24, "path is blocked")
+            blocked = False
         term.refresh()
     term.close()
 
