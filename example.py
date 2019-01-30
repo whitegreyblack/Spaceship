@@ -30,6 +30,7 @@ class Component:
     counter = mask = 1
     def __init__(self):
         self.entity = None
+
     def __str__(self):
         if isinstance(self, tuple(Component.__subclasses__())):
             parent = type(self).__base__.__name__
@@ -50,24 +51,38 @@ class Component:
     def chain(self, unit):
         self.unit = unit
 
+    def copy(self):
+        c = self.__class__()
+        c.entity = self.entity
+        return c
+
 class Position(Component):
     Component.counter = mask = Component.counter << 1
-    # __slots__ = ['x', 'y', 'z', 'unit']
+    attrs = ('x', 'y', 'moveable')
+    
     def __init__(self, x=0, y=0, moveable=True):
-        self.speed = random.randint(0, 5)
-        self.x, self.y= x, y
+        self.x, self.y = x, y
         self.moveable = moveable
+    
     def __str__(self):
         return f"Position: ({self.x}, {self.y})"
+    
     def __iter__(self):
         return iter((self.x, self.y))
+    
     def __eq__(self, other):
         return (self.x, self.y) == (other.x, other.y)
+    
     def move(self, x, y):
         if self.moveable:
             self.x += x
             self.y += y
+
     def copy(self):
+        """
+        Returns a new Position instance with the same property values as the 
+        current instance being copied.
+        """
         return Position(self.x, self.y, moveable=self.moveable)
         
 class Render(Component):
@@ -75,6 +90,7 @@ class Render(Component):
     # __slots__ = ['char', 'fore', 'back', 'unit']
     def __init__(self, c, f=None, b=None):
         self.char, self.fore, self.back = c, f, b
+
     @property
     def char(self):
         c = self._c
@@ -83,6 +99,7 @@ class Render(Component):
         if self.back:
             c = f"[bkcolor={self.back}]{c}[/bkcolor]"
         return c
+
     @char.setter
     def char(self, c):
         self._c = c
@@ -108,8 +125,10 @@ class Stats(Component):
         #     del self.entity
     
 class Entity:
+    """Base entity class. All other 'unit' classes derive from this."""
     obj_id = 0
     obj_mask = 0
+
     def __init__(self): 
         self.obj_id = Entity.obj_id
         Entity.obj_id += 1
@@ -152,6 +171,7 @@ class Entity:
 
 class Unit(Entity):
     controller = None
+    
     def __init__(self, *components):
         super().__init__()
         for component in components:
@@ -237,40 +257,63 @@ def random_enemy_move():
 @click.command()
 @click.option('--size', default="r", help="size of room")
 def main(size):
+    """
+    Runs a basic loop using blt and several game objects representing a subset
+    of actions available in the full application.
+    """
+    term.open()
+
     turns = 0
+
+    # basic game objects
     room = Map(EXAMPLES[size.upper()])
     floors = iter(room.floors)
     hero = init_player(floors)
-    unit = init_enemy(floors)
-    entities = [hero, unit, init_enemy_static(floors)]
+    entities = [hero, init_enemy(floors), init_enemy_static(floors)]
+
+    # our current action list, limited to movements only
     moves = {
         term.TK_LEFT: (-1, 0),
         term.TK_RIGHT: (1, 0),
         term.TK_UP: (0, -1),
         term.TK_DOWN:(0, 1)
     }
-    term.open()
+
     # term.puts(0, 0, WORLD)
     room.do_fov(hero.position.x, hero.position.y, 7) 
+
     for x, y, c in room.tiles:
         term.puts(x, y, c)
+
     for e in entities:
         if room.lit(*e.position) == 2:
             term.puts(*e.position, e.render.char)
+
     term.puts(0, 24, str(turns))
     term.refresh()
     affected = None
     blocked = None
     stop = False
+
+    # game loop
     while True:
         for e in entities:
+            # differentiate actions based on controller components
             if e.controller:
                 ch = term.read()
+
+                # action keys allow character to move
                 if ch in moves.keys():
-                    # create a temp position obj to check next if position is blocked
+                    # create a temp position object to check if position is 
+                    # blocked
                     p = e.position.copy()
                     p.move(*moves[ch])
-                    units_on_pos = any(p == x.position for x in entities if x != e)
+                    units_on_pos = any(
+                        p == x.position for x in entities if x != e
+                    )
+
+                    # if no map object or unit object in the position we wnat
+                    # to move to, finally move the real entity.
                     if not room.blocked(*p) and not units_on_pos:
                         e.position.move(*moves[ch])
                         # movement is complete. Now unit experiences whatever 
@@ -279,9 +322,12 @@ def main(size):
                         affected = room.affects(e)
                     else:
                         if units_on_pos:
-                            blocked = "You cannot move there. Your path is blocked by someone."
+                            blocked = "You cannot move there. \
+                                Your path is blocked by someone."
                         else:
-                            blocked = "You cannot move there. Your path is blocked by something."
+                            blocked = "You cannot move there. \
+                                Your path is blocked by something."
+
                 if ch == term.TK_CLOSE or ch == term.TK_ESCAPE:
                     stop = True
                     break
@@ -293,10 +339,13 @@ def main(size):
                         e.position = p.copy()
         if stop:
             break
+
         term.clear()
         room.do_fov(hero.position.x, hero.position.y, 7) 
+
         for x, y, c in room.tiles:
             term.puts(x, y, c)
+        
         for e in entities[::-1]:
             if room.lit(*e.position) == 2:
                 term.puts(*e.position, e.render.char)
@@ -304,20 +353,26 @@ def main(size):
         if blocked:
             term.puts(0, 24, blocked)
             blocked = None
+        
         if affected:
             term.puts(0, 24, affected)
+        
         term.puts(0, 24, str(turns))
         entities = DamageSystem(entities)
+        
         if hero not in entities:
             term.clear_area(0, 24, 79, 24)
+        
             if affected:
                 term.puts(0, 23, affected)
             term.puts(0, 24, "You die.")
             term.refresh()
             term.read()
             break
+        
         term.refresh()
         turns += 1
+    
     term.close()
 
 if __name__ == "__main__":
