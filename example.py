@@ -1,8 +1,9 @@
 # example.py using the ecs package
+import click
 import random
 import operator
 from bearlibterminal import terminal as term
-from spaceship.ecs.map import Map, WORLD
+from spaceship.ecs.map import Map, EXAMPLES
 
 length = 100
 
@@ -52,9 +53,9 @@ class Component:
 class Position(Component):
     Component.counter = mask = Component.counter << 1
     # __slots__ = ['x', 'y', 'z', 'unit']
-    def __init__(self, x=0, y=0, z=0, moveable=True):
+    def __init__(self, x=0, y=0, moveable=True):
         self.speed = random.randint(0, 5)
-        self.x, self.y, self.z = x, y, z
+        self.x, self.y= x, y
         self.moveable = moveable
     def __str__(self):
         return f"Position: ({self.x}, {self.y})"
@@ -211,28 +212,37 @@ def DamageSystem(entities):
     return entities
 
 
-def init_player():
-    return Hero(Position(16, 4, 0), Render('@', ORANGE, BLACK), Stats(3))
+def init_player(floors):
+    p = next(floors)
+    print(p)
+    return Hero(Position(*p), Render('@', ORANGE, BLACK), Stats(3))
 
 
-def init_enemy():
-    return Unit(Position(10, 2, 0), Render('@', GREEN, BLACK), Stats(1))
+def init_enemy(floors):
+    p = next(floors)
+    print(p)
+    return Unit(Position(*p), Render('@', GREEN, BLACK), Stats(1))
 
 
-def init_enemy_static():
-    return Unit(Position(11, 2, moveable=False), Render('@', GREEN, BLACK), Stats(1))
+def init_enemy_static(floors):
+    p = next(floors)
+    print(p)
+    return Unit(Position(*p, moveable=False), Render('@', GREEN, BLACK), Stats(1))
 
 
 def random_enemy_move():
     x, y = random.randint(-1, 2), random.randint(-1, 2)
     return x, y
 
-
-def main():
-    room = Map(WORLD)
-    hero = init_player()
-    unit = init_enemy()
-    entities = [hero, unit, init_enemy_static()]
+@click.command()
+@click.option('--size', default="r", help="size of room")
+def main(size):
+    turns = 0
+    room = Map(EXAMPLES[size.upper()])
+    floors = iter(room.floors)
+    hero = init_player(floors)
+    unit = init_enemy(floors)
+    entities = [hero, unit, init_enemy_static(floors)]
     moves = {
         term.TK_LEFT: (-1, 0),
         term.TK_RIGHT: (1, 0),
@@ -245,7 +255,9 @@ def main():
     for x, y, c in room.tiles:
         term.puts(x, y, c)
     for e in entities:
-        term.puts(e.position.x, e.position.y, e.render.char)
+        if room.lit(*e.position) == 2:
+            term.puts(*e.position, e.render.char)
+    term.puts(0, 24, str(turns))
     term.refresh()
     affected = None
     blocked = None
@@ -286,17 +298,15 @@ def main():
         for x, y, c in room.tiles:
             term.puts(x, y, c)
         for e in entities[::-1]:
-            print(e, e.position, room.lit(*e.position))
             if room.lit(*e.position) == 2:
-                term.puts(e.position.x, e.position.y, e.render.char)
-        print()
+                term.puts(*e.position, e.render.char)
 
         if blocked:
             term.puts(0, 24, blocked)
             blocked = None
         if affected:
             term.puts(0, 24, affected)
-
+        term.puts(0, 24, str(turns))
         entities = DamageSystem(entities)
         if hero not in entities:
             term.clear_area(0, 24, 79, 24)
@@ -307,7 +317,7 @@ def main():
             term.read()
             break
         term.refresh()
-        
+        turns += 1
     term.close()
 
 if __name__ == "__main__":
