@@ -2,17 +2,9 @@
 import random
 import operator
 from bearlibterminal import terminal as term
-from spaceship.ecs.map import Map
+from spaceship.ecs.map import Map, WORLD
 
 length = 100
-WORLD = '''
-################################
-#....#....#....#....#..........#
-#...................#..........#
-#....#....#....#....+.....#....#
-#...........^.......#..........#
-#....#....#....#....#..........#
-################################'''[1:]
 
 WHITE = "#ffffff"
 BLACK = "#000000"
@@ -69,7 +61,6 @@ class Position(Component):
     def __iter__(self):
         return iter((self.x, self.y))
     def __eq__(self, other):
-        print('eq')
         return (self.x, self.y) == (other.x, other.y)
     def move(self, x, y):
         if self.moveable:
@@ -232,6 +223,11 @@ def init_enemy_static():
     return Unit(Position(11, 2, moveable=False), Render('@', GREEN, BLACK), Stats(1))
 
 
+def random_enemy_move():
+    x, y = random.randint(-1, 2), random.randint(-1, 2)
+    return x, y
+
+
 def main():
     room = Map(WORLD)
     hero = init_player()
@@ -245,8 +241,8 @@ def main():
     }
     term.open()
     # term.puts(0, 0, WORLD)
-    room.do_fov(hero.position.x, hero.position.y, 25) 
-    for x, y, c in room.lighted:
+    room.do_fov(hero.position.x, hero.position.y, 7) 
+    for x, y, c in room.tiles:
         term.puts(x, y, c)
     for e in entities:
         term.puts(e.position.x, e.position.y, e.render.char)
@@ -263,7 +259,6 @@ def main():
                     p = e.position.copy()
                     p.move(*moves[ch])
                     units_on_pos = any(p == x.position for x in entities if x != e)
-                    print(units_on_pos)
                     if not room.blocked(*p) and not units_on_pos:
                         e.position.move(*moves[ch])
                         # movement is complete. Now unit experiences whatever 
@@ -281,18 +276,21 @@ def main():
             else:
                 p = e.position.copy()
                 if p.moveable:
-                    x, y = random.randint(-1, 2), random.randint(-1, 2)
-                    p.move(x, y)
+                    p.move(*random_enemy_move())
                     if not room.blocked(*p):
-                        e.position.move(x, y)
+                        e.position = p.copy()
         if stop:
             break
         term.clear()
-        room.do_fov(hero.position.x, hero.position.y, 25) 
-        for x, y, c in room.lighted:
+        room.do_fov(hero.position.x, hero.position.y, 7) 
+        for x, y, c in room.tiles:
             term.puts(x, y, c)
         for e in entities[::-1]:
-            term.puts(e.position.x, e.position.y, e.render.char)
+            print(e, e.position, room.lit(*e.position))
+            if room.lit(*e.position) == 2:
+                term.puts(e.position.x, e.position.y, e.render.char)
+        print()
+
         if blocked:
             term.puts(0, 24, blocked)
             blocked = None
