@@ -1,14 +1,18 @@
 from collections import namedtuple
-from namedlist import namedlist
+from math import inf, sqrt
 from random import choice, randint, shuffle
-from math import sqrt, inf
-from .map import Map
-from .utils import blender
-from ..tools import bresenhams
+
+import click
+from namedlist import namedlist
+
+from spaceship.tools import bresenhams
+from spaceship.classes.map import Map
+from spaceship.classes.utils import blender
 
 box = namedtuple("Box", "x1 y1 x2 y2")
 point = namedtuple("Point", "x y")
 charmap = namedtuple("Charmap", "chars hexcode")
+
 class DungeonCharmap:
     # GRASS=charmap([",", ";"], ("#56ab2f", "#a8e063"))
     GRASS=charmap([",", ";"], ("#008800", "#008800"))
@@ -84,7 +88,9 @@ class Cave(Map):
                     if z in q.keys() and 0 < graph[u][z] < q[z]: 
                         p[z] = u
                         q[z] = graph[u][z]
+
                 q.pop(u)
+
                 if choice([0, 1]) == 1 and q.keys():
                     u = min(k for k in q.keys())
                     for z in graph[u].keys():
@@ -321,7 +327,14 @@ class Cave(Map):
     def current_level():
         return self.levels
     
+
+@click.command()
+@click.option('--width', default=80, help="width of cave")
+@click.option('--height', default=25, help="height of cave")
+@click.option('--runs', default=1, help="number of generated caves")
+def cli(width, height, runs):
+    for _ in range(runs):
+        print(repr(Cave(width, height)))
+
 if __name__ == "__main__":
-    cave = Cave(66, 22)
-    print(cave.__repr__())
-    print(cave)
+    cli()
