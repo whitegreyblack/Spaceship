@@ -234,21 +234,24 @@ def DamageSystem(entities):
 
 def init_player(floors):
     p = next(floors)
-    print(p)
     return Hero(Position(*p), Render('@', ORANGE, BLACK), Stats(3))
 
 
 def init_enemy(floors):
     p = next(floors)
-    print(p)
     return Unit(Position(*p), Render('@', GREEN, BLACK), Stats(1))
 
 
 def init_enemy_static(floors):
     p = next(floors)
-    print(p)
-    return Unit(Position(*p, moveable=False), Render('@', GREEN, BLACK), Stats(1))
+    return Unit(
+        Position(*p, moveable=False), 
+        Render('@', GREEN, BLACK), 
+        Stats(1)
+    )
 
+def within(width, height, ux, uy):
+    return 0 <= ux < width and 0 <= uy < height
 
 def random_enemy_move():
     x, y = random.randint(-1, 2), random.randint(-1, 2)
@@ -262,6 +265,9 @@ def main(size):
     of actions available in the full application.
     """
     term.open()
+    
+    width, height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
+    print(term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT))
 
     turns = 0
 
@@ -282,11 +288,13 @@ def main(size):
     # term.puts(0, 0, WORLD)
     room.do_fov(hero.position.x, hero.position.y, 7) 
 
-    for x, y, c in room.tiles:
+    for x, y, c in room.output(*hero.position, width//2, height//2):
         term.puts(x, y, c)
 
     for e in entities:
-        if room.lit(*e.position) == 2:
+        inbounds = within(width, height, *e.position)
+        visible = room.lit(*e.position) == room.FULL_VISIBLE
+        if inbounds and visible:
             term.puts(*e.position, e.render.char)
 
     term.puts(0, 24, str(turns))
@@ -341,13 +349,15 @@ def main(size):
             break
 
         term.clear()
-        room.do_fov(hero.position.x, hero.position.y, 7) 
+        room.do_fov(hero.position.x, hero.position.y, 7)
 
-        for x, y, c in room.tiles:
+        for x, y, c in room.output(*hero.position, width//2, height//2):
             term.puts(x, y, c)
         
         for e in entities[::-1]:
-            if room.lit(*e.position) == 2:
+            inbounds = within(width, height, *e.position)
+            visible = room.lit(*e.position) == room.FULL_VISIBLE
+            if inbounds and visible:
                 term.puts(*e.position, e.render.char)
 
         if blocked:
@@ -365,6 +375,7 @@ def main(size):
         
             if affected:
                 term.puts(0, 23, affected)
+
             term.puts(0, 24, "You die.")
             term.refresh()
             term.read()
@@ -376,33 +387,4 @@ def main(size):
     term.close()
 
 if __name__ == "__main__":
-    # print(Component())
-
-    # p = Hero(position=Position(2, 3, 1),
-    #          render=Render('@', WHITE, BLACK),
-    #          stats=Stats(3))
-
-    # print(p)
-    # print(repr(p))
-    # print(p.stats.str, p.stats.health)
-
-    # o = Hero()
-    # o.components = Stats(3)
-    # o.components = Position(2, 3, 1)
-    # o.components = Render('@', '#ffffff', '#000000')
-
-    # q = Unit()
-    # q.components = Position(2, 2, 1)
-    # q.components = Render('@', WHITE, BLACK)
-
-    # t = Tile()
-    # e = Entity()
-
-    # position = Position(0, 0, 0)
-
-    # entities = [p, e, t, o, q]
-    # while len(entities) > 3:
-    #     entities = TurnSystem(entities)
-    #     entities = DamageSystem(entities)
-    # print(entities)
     main()
