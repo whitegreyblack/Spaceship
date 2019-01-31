@@ -1,12 +1,11 @@
 from random import shuffle, choice, randint
 from collections import namedtuple
 from PIL import Image
-from collections import namedtuple
-from .map import Map
-from .utils import blender
-from .unit import Unit
-from .neutrals import neutrals
-from ..strings import IMG_PATH
+from spaceship.classes.map import Map
+from spaceship.classes.utils import blender
+from spaceship.classes.unit import Unit
+from spaceship.classes.neutrals import neutrals
+from spaceship.strings import IMG_PATH
 # cities.py
 '''
 Shadowbarrow
@@ -109,24 +108,17 @@ class City(Map):
         self.map_img = map_img
         self.map_cfg = map_cfg
         width, height = self.parse_img() # <== creates initial data map
-        self.parse_cfg()
 
         super().__init__(width, height, self.__class__.__name__)
+
+        self.parse_cfg()
+
 
         self.create_tile_map()
         # print(repr(self))
 
-    # def __repr__(self):
-    #     return "{}:\n{}\n{}".format(
-    #         self.map_id,
-    #         self.print_map(),
-    #         self.print_units())
-
     def __str__(self):
-        return "{}:\n{}\n{}".format(
-            self.map_id,
-            self.print_map(),
-            self.print_units())
+        return f"{self.map_id}:\n{self.print_map()}\n{self.print_units()}"
 
     # Unique to city map
     def parse_img(self):
@@ -174,6 +166,7 @@ class City(Map):
                 pixels = img.load()
                 w, h = img.size
         except FileNotFoundError:
+            print('file not found')
             with Image.open(IMG_PATH + 'sample.png') as img:
                 pixels = img.load()
                 w, h = img.size
@@ -269,7 +262,8 @@ class City(Map):
                                     x=i, 
                                     y=j,
                                     ch=character,
-                                    fg=color))
+                                    fg=color)
+                                )
                                                                         
         except FileNotFoundError:
             # not explicitely needed -- can just pass instead of printing
@@ -288,7 +282,7 @@ class City(Map):
             return self.stats
 
 if __name__ == "__main__":
-    img = "./spaceship/assets/maps/shadowbarrow.png"
-    cfg = "./spaceship/assets/maps/shadowbarrow.cfg"
-    test = City("shadowbarrow", img, cfg, 80, 25)
+    img = "./spaceship/assets/shadowbarrow.png"
+    cfg = "./spaceship/assets/shadowbarrow.cfg"
+    test = City("shadowbarrow", img, cfg)
     print(test)

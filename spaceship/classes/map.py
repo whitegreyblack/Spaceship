@@ -526,6 +526,7 @@ class Map:
 
     def units_add(self, units) -> None:
         '''Adds a list of units to the current unit list'''
+        print('units', units)
         self.__units += units
 
     def unit_remove(self, unit) -> None:
