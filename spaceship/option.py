@@ -111,7 +111,7 @@ if __name__ == "__main__":
                 else:
                     opt = "[[+]] " + opt
                     
-            term.puts(term.state(term.TK_WIDTH)//5, height, opt)
+            term.puts(term.state(term.TK_WIDTH) // 5, height, opt)
             height += 1
 
             if expanded:
