@@ -9,7 +9,7 @@ import os
     class: Manager,
     node: {
         class: OptionGroup,
-        node: [
+        options: [
             {
                 class: Option,
                 name: str
@@ -49,10 +49,9 @@ class OptionManager(object):
         """Takes in a json object representing manager state"""
         # should this be able to add current object state values in addition to the data?
         options = []
-        for node in data:
-            print(data['class'])
-            classtype = OptionFactory.classes[data['class']]
-            options.append(classtype.unserialize(data['node']))
+        module = module_info()
+        classname = getattr(module, data['class'])
+        options.append(classname.unserialize(data['options']))
         return cls(options)
 
     def serialize(self, data):
@@ -67,7 +66,7 @@ class OptionManager(object):
 """
 class OptionGroup(object):
     gid = 0
-    def __init__(self, name, options=None):
+    def __init__(self, name=None, options=None):
         self.gid = OptionGroup.gid
         OptionGroup.gid += 1
 
@@ -76,12 +75,21 @@ class OptionGroup(object):
         self.index = 0
         if self.options:
             self.value = self.options[self.index]
+    
+    def __repr__(self):
+        options = ''
+        if self.options:
+            options = "\n".join(repr(o) for o in self.options)
+        return f"{self.__class__.__name__}({options})"
 
     @classmethod
     def unserialize(cls, data):
-        classtype = OptionFactory.classes[data['class']]
-        options.append(classtype.unserialize(data['node']))
-        return cls(data['name'])
+        # module = module_info()
+        # classname = getattr(module, data['class'])
+        # options = []
+        # for option in data['options']:
+        #     options.append(classname.unserialize(option['options'])
+        return cls()
 
 """
 |------- option               > [value] | [options,...,options]
@@ -128,31 +136,50 @@ class ListOption(Option):
         self.index = (self.index - 1) % len(self.options)
         self.value = self.options[self.index]
 
+def file_basename(filename=None):
+    if not filename:
+        filename = __file__
+    return os.path.splitext(os.path.basename(filename))[0]
+
+def module_info(filename=None):
+    return using(f"{__package__}.{file_basename(filename)}")
+
 class OptionFactory(object):
     @staticmethod
     def unserialize(data):
         """Takes in a json object representing manager state"""
-        # should this be able to add current object state values in addition to the data?
-        module = using(f"{__package__}.{os.path.splitext(os.path.basename(__file__))[0]}")
+        # takes in 
+        objects = []
+        module = module_info()
         print(module.__name__)
         classtype = getattr(module, data['class'])
         print(classtype)
-        # return classtype.unserialize(data['node'])
+        print(data)
+        for manager in data:
+            objects.append(getattr(module, manager['class']).unserialize(data['options']))
+        return objects
 
 if __name__ == "__main__":
     o = {
         'class': 'OptionManager',
-        'node': [
+        'options': [
         {
             'class': 'OptionGroup',
             'name': 'header 1',
-            'node': {
-
-            }
-        }, 
-        {
-        'class': 'OptionGroup'
-        }]
+            'options': {}
+        }
+        # {
+        # 'class': 'OptionGroup'
+        # }
+        ]
     }
-    options = OptionFactory.unserialize(o)
+    p = {
+        'class': 'OptionGroup',
+        'name': 'header 1',
+        'options': {}
+    }
+    # can create more than 1 manager
+    # options = OptionFactory.unserialize(o)
     # print(options)
+    manager = OptionManager.unserialize(p)
+    print(manager)
