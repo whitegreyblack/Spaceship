@@ -4,36 +4,13 @@ from importlib import import_module as using
 import json
 import os
 
-"""
-{
-    class: Manager,
-    node: {
-        class: OptionGroup,
-        options: [
-            {
-                class: Option,
-                name: str
-                options: [
-                    str, str, str
-                ]
-            },
-            {
-                class: Option,
-                name: str
-                options: [
-                    str, str, str
-                ]
-            }
-        },
-    }
-}
-"""
+
 class OptionManager(object):
     def __init__(self, options=None):
         self.options = options if options else list()
 
     def __repr__(self):
-        options = "\n".join(repr(o) for o in self.options)
+        options = ", ".join(repr(o) for o in self.options)
         return f"{self.__class__.__name__}({options})"
 
     def add_option(self, option):
@@ -47,11 +24,11 @@ class OptionManager(object):
     @classmethod
     def unserialize(cls, data):
         """Takes in a json object representing manager state"""
-        # should this be able to add current object state values in addition to the data?
-        options = []
         module = module_info()
-        classname = getattr(module, data['class'])
-        options.append(classname.unserialize(data['options']))
+        options = []
+        for group in data.get('options', []):
+            classname = getattr(module, group['class'])
+            options.append(classname.unserialize(group))
         return cls(options)
 
     def serialize(self, data):
@@ -66,12 +43,9 @@ class OptionManager(object):
 """
 class OptionGroup(object):
     gid = 0
-    def __init__(self, name=None, options=None):
-        self.gid = OptionGroup.gid
-        OptionGroup.gid += 1
-
-        self.name = name if name else f"OptionGroup {self.gid}"
+    def __init__(self, groupname, options=None):
         self.options = options
+        self.groupname = groupname
         self.index = 0
         if self.options:
             self.value = self.options[self.index]
@@ -80,31 +54,32 @@ class OptionGroup(object):
         options = ''
         if self.options:
             options = "\n".join(repr(o) for o in self.options)
-        return f"{self.__class__.__name__}({options})"
+        return f"{self.__class__.__name__}[{self.groupname}]({options})"
 
     @classmethod
     def unserialize(cls, data):
-        # module = module_info()
-        # classname = getattr(module, data['class'])
-        # options = []
-        # for option in data['options']:
-        #     options.append(classname.unserialize(option['options'])
-        return cls()
+        module = module_info()
+        options = []
+        for option in data.get('options', []):
+            classname = getattr(module, option['class'])
+            options.append(classname.unserialize(option))
+        return cls(data['name'], options)
 
 """
 |------- option               > [value] | [options,...,options]
 """
 class Option(object):
-    def __init__(self, name, options, default=-1):
+    def __init__(self, name, options, default=None):
         self.name = name
         self.options = options
         self.index = default if default else 0
-        if self.options:
-            self.value = self.options[self.index]
     
+    @property
+    def value(self):
+        return self.options[self.index]
+
     def select(self):
         self.index = (self.index + 1) % len(self.options)
-        self.value = self.options[self.index]
 
     @classmethod
     def unserialize(self, data):
@@ -115,15 +90,19 @@ class Option(object):
 """
 class BoolOption(Option):
     def __init__(self, name, default=False):
-        self.name = name
-        self.value = False
+        super().__init__(name, ['True', 'False'], 1)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.value})"
 
     def select(self):
         self.value = not self.value
 
     @classmethod
-    def unserialize(self, data):
-        return cls(data['name'], data['options'], data['default'])
+    def unserialize(cls, data):
+        name = data['name']
+        default = data.get('default', False)
+        return cls(name, default)
 
 
 """                             [option 1]
@@ -148,38 +127,33 @@ class OptionFactory(object):
     @staticmethod
     def unserialize(data):
         """Takes in a json object representing manager state"""
-        # takes in 
-        objects = []
         module = module_info()
-        print(module.__name__)
-        classtype = getattr(module, data['class'])
-        print(classtype)
-        print(data)
-        for manager in data:
-            objects.append(getattr(module, manager['class']).unserialize(data['options']))
-        return objects
+        objects = []
+        classname = getattr(module, data['class'])
+        for options in data.get('options', []):
+            subclass = getattr(module, options['class'])
+            objects.append(subclass.unserialize(options))
+        return classname(objects)
 
 if __name__ == "__main__":
     o = {
         'class': 'OptionManager',
         'options': [
-        {
-            'class': 'OptionGroup',
-            'name': 'header 1',
-            'options': {}
-        }
-        # {
-        # 'class': 'OptionGroup'
-        # }
-        ]
-    }
-    p = {
-        'class': 'OptionGroup',
-        'name': 'header 1',
-        'options': {}
+            {
+                'class': 'OptionGroup',
+                'name': 'yes no questions',
+                'options': [{
+                    'class': 'BoolOption',
+                    'name': 'typeable?'
+                }]
+            },
+            {
+                'class': 'OptionGroup',
+                'name': 'subgroup 2'
+            }]
     }
     # can create more than 1 manager
-    # options = OptionFactory.unserialize(o)
-    # print(options)
-    manager = OptionManager.unserialize(p)
+    options = OptionFactory.unserialize(o)
+    print(options)
+    manager = OptionManager.unserialize(o)
     print(manager)
