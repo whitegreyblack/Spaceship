@@ -46,38 +46,41 @@ def cavern(width, height, passes=2):
     # smoothing algo
     # every floor cell with with fewer than 4 adjacent floor cells becomes a wall
     # every wall cell with six or more adjacent wall cells becomes a floor
-
+    
     m = probability_matrix(width, height)
     n = copy.deepcopy(m)
-
+    
     for _ in range(passes):
         print()
         matrix_to_term(m)
         evaluate_matrix(m)
-
+        
+        # iterate through each neighbor
         for j, row in enumerate(m):
             for i, col in enumerate(row):
                 v = 0
                 t = 0
                 # floor
                 for x, y in eight_square():
+                    # check bounds before moving on
                     xb = 0 <= i + x < width
                     yb = 0 <= j + y < height
                     if not (xb and yb):
                         continue
                     c = m[j+y][i+x]
                     t += 1
+                    # spot on map is a floor(0) or wall(1)
                     if m[j][i] == 0:
                         v += c == 0
                     else:
                         v += c == 1
                 if m[j][i] == 0:
-                    if t < 8 or (t == 8 and v < 4):
+                    if t < 7 or (t == 8 and v > 7): # t<7|(t=8&&v>5)
                         n[j][i] = 1
                 else:
                     if t < 8:
                         continue
-                    elif t == 8 and v > 5:
+                    elif t == 8 and v < 6:
                         n[j][i] = 0
 
         m, n = n, copy.deepcopy(n)
@@ -102,7 +105,7 @@ def matrix_to_term(m):
         print(''.join(change(c) for c in row))
 
 if __name__ == "__main__":
-    m = cavern(25, 10, 5)
+    m = cavern(80, 25, 12)
     matrix_to_term(m)
     # after random build. Fill non-travelable islands
     # def fill(m):
