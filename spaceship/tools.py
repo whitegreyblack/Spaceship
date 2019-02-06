@@ -1,5 +1,6 @@
-# -*- coding: utf-8 -*-
-# utiltools : functions for 2D graphics manipulations and transformation
+"""
+tools.py: graphical and transformation functions
+"""
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../')
 
@@ -132,6 +133,7 @@ def bresenhams(start, end):
         points.reverse()
     return points
 
+
 def scroll(position, screen, worldmap):
     '''
     @position: current position of player 1D axis
@@ -149,9 +151,14 @@ def scroll(position, screen, worldmap):
     else:
         return position - halfscreen
 
+
 def toInt(hexval):
     try:
         return int(hexval, 16)
     except TypeError:
         print("TOINT ERROR:", hexval)
         raise
+
+
+if __name__ == "__main__":
+    help(__name__)
