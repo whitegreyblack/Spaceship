@@ -132,3 +132,6 @@ logs/
 
 # c/cpp exe
 *.exe
+
+# profile
+profiler.txt

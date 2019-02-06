@@ -15,3 +15,4 @@ def stats_out():
 if __name__ == "__main__":
     cProfile.run('profile_game()', filename='profiler.txt')
     stats_out()
+

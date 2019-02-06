@@ -5,11 +5,13 @@ import textwrap
 if __name__ == "__main__":
     printer = pprint.PrettyPrinter(width=79)
 
+    lines = []
     for strs in (strings.RACE_STRINGS, strings.CLASS_STRINGS):
         for s in strs:
             for t in textwrap.wrap(s, 79):
-                print(t)
-            print()
+                lines.append(t)
+            lines.append('\n')
+    print('\n'.join(lines))
     """
     high level overview of main:
         setup/config stuff:

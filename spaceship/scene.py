@@ -16,14 +16,13 @@ class Scene:
         self.scenes = {}
         self.ret = {
             'scene': '',
-            'kwargs': None,
+            'kwargs': dict(),
         }
         self.setup()
 
     def add_args(self, **kwargs):
         if self.ret['kwargs'] is None:
             self.ret['kwargs'] = { k: v for k, v in kwargs.items() }
-
         else:
             self.ret['kwargs'].update({ k: v for k, v in kwargs.items() })
             

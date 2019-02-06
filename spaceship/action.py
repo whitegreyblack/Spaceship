@@ -1,9 +1,10 @@
-# -*- coding=utf-8 -*-
-"""Movement.py covers key-value pairs in bearlibterminal associated with 
-movement actions. Key constants are seperated into two lists to differentiate 
-between arrow and numpad keys. The key-value pair matches a bearlibterminal 
-key to a two element tuple determining x, y directions
-
+"""
+Movement.py: covers key-value pairs in bearlibterminal associated with 
+             movement actions. Key constants are seperated into two lists to 
+             differentiate between arrow and numpad keys. The key-value pair 
+             matches a bearlibterminal key to a two element tuple determining 
+             x, y directions
+------------------------------------------------------------------------------
     Movement:
         <,^,v,>: Movement keys -> (x,y)
     Actions:
@@ -25,16 +26,21 @@ key to a two element tuple determining x, y directions
             d -> [D]rop item
             e -> eat item
             l -> look
-
-TODO: Might combine the movement keys into one dictionary
-      Rename filename into actions.py with movement as a sub category in the file
-      Add action key-value dictionaries alongside a combined movement dictionary
+------------------------------------------------------------------------------
+TODO: Might combine the movement keys into one dictionary.
+      Rename filename into actions.py with movement as a sub category in the 
+      file.
+      Add action key-value dictionaries alongside a combined movement 
+      dictionary.
 """
 from collections import namedtuple
 from bearlibterminal import terminal as term
 from spaceship.classes.point import spaces, Point
 import spaceship.strings as strings
+
+
 keypress = namedtuple("Keypress", "x y char action")
+
 
 # handles processing input into keypress commands for player
 commands_player = {
@@ -51,7 +57,7 @@ commands_player = {
     (term.TK_KP_7, 0): keypress(-1, -1, None, "move"),
     (term.TK_KP_8, 0): keypress(0, -1, None, "move"),
     (term.TK_KP_9, 0): keypress(1, -1, None, "move"),
-
+    
     (term.TK_A, 0): keypress(None, None, "a", "attack"),
     (term.TK_O, 0): keypress(None, None, "o", "open"),
     (term.TK_C, 0): keypress(None, None, "c", "close"),
@@ -72,6 +78,7 @@ commands_player = {
     (term.TK_PERIOD, 1): keypress(None, None, ">", "enter"),
 }
 
+
 # handles processing ai 'input' into keypress commands
 commands_ai = {
     'wait': keypress(0, 0, None, "move"),
@@ -87,16 +94,20 @@ commands_ai = {
     }
 }
 
+
 def enter_map(unit, world, constructor):
-    '''Enter map command: determines which kind of world to create when
-    entering an area based on teh world enterable and dungeon dicts.
-    If world is already created just load world as current area
-    '''
+    """
+    Enter map command: determines which kind of world to create when entering 
+    an area based on teh world enterable and dungeon dicts. If world is 
+    already created just load world as current area.
+    """
     def map_enterance(x, y, area):
-        '''Helper function to determine start position when entering wild'''
+        """
+        Helper function to determine start position when entering wild
+        """
         return Point(x=max(int(area.width * x - 1), 0), 
                      y=max(int(area.height * y - 1), 0))
-
+    
     log = ""
     if not world.location_exists(*unit.world):
         # map type should be a city
@@ -104,10 +115,13 @@ def enter_map(unit, world, constructor):
             fileloc = world.cities[unit.world].replace(' ', '_').lower()
             full_path = strings.IMG_PATH + fileloc
             img, cfg = full_path + ".png", full_path + ".cfg"
-
-            area = constructor['city'](map_id=fileloc,
-                                           map_img=img,
-                                           map_cfg=cfg)
+            
+            # call the constructor. this could be any of the map subclasses
+            area = constructor['city'](
+                map_id=fileloc,
+                map_img=img,
+                map_cfg=cfg
+            )
             
             # on cities enter map in the middle
             unit.local = Point(area.width // 2, area.height // 2)
@@ -118,17 +132,17 @@ def enter_map(unit, world, constructor):
             area = constructor['cave']()
             unit.local = Point(*area.stairs_up)
             log = strings.enter_map_cave.format(world.dungeons[unit.world])
-       
+        
         # map type should be in the wilderness
         else:
             tile = world.square(*unit.world)
             area = constructor['wild'][tile.tile_type]()
             unit.local = map_enterance(*unit.get_position_on_enter(), area)
             log = strings.enter_map_wild
-
+        
         area.parent = world
         world.location_create(*unit.world, area)
-
+    
     else:
         # area already been built -- retrieve from world map_data
         # player position is different on map enter depending on map area
@@ -148,23 +162,25 @@ def enter_map(unit, world, constructor):
         else:
             unit.local = map_enterance(*unit.get_position_on_enter(), area)
             log = strings.enter_map_wild
-
+    
     area.parent.unit_remove(unit)
     area.units_add([unit])
     unit.descend()
     return unit, area, [log]
 
+
 def go_down_stairs(unit, area, constructor):
-    '''Go Down command: Checks player position to the downstairs position
+    """
+    Go Down command: Checks player position to the downstairs position
     in the current area. If they match then create a dungeon with the
     player starting position at the upstairs of the new area
-    '''
+    """
     log = "You cannot go downstairs without stairs."
     if area.stairs_down and unit.local == area.stairs_down:
         if not area.sublevel:
             area.sublevel = constructor()
             area.sublevel.parent = area
-
+        
         area.unit_remove(unit)
         area = area.sublevel
         area.units_add([unit])
@@ -174,48 +190,52 @@ def go_down_stairs(unit, area, constructor):
         
     return unit, area, [log]
 
+
 def go_up_stairs(unit, area, maptypes):
-    '''Go Up command: Checks player position to the upstairs position
+    """
+    Go Up command: Checks player position to the upstairs position
     in the current area. Then determine the parent area 
     and reset position according to the type of parent
-    '''
+    """
     log = strings.go_up_error
     ascend = False
-
+    
     if area.map_type == maptypes.CAVE:
         # Every child map has a parent map
         if unit.local == area.stairs_up:
             ascend = True
-
+    
     elif area.map_type in (maptypes.CITY, maptypes.WILD):
         ascend = True
-
+    
     if ascend:
         area.unit_remove(unit)
         print(area.__class__.__name__)
         area = area.parent
         print(area.__class__.__name__)
-
+        
         area.units_add([unit])
         unit.ascend()  
-
+        
         if unit.height == 1:
             log = strings.go_up_travel
         else:
             log = strings.go_up_stairs
-
+    
     return unit, area, [log]
 
-def interact_door(key, area, logger):
-    '''Top level function in working with doors. Should work with both opening
-    and closing doors given the key passed in as a parameter.
-    '''
-    dlog = strings.door[key]
 
+def interact_door(key, area, logger):
+    """
+    Top level function in working with doors. Should work with both opening
+    and closing doors given the key passed in as a parameter.
+    """
+    dlog = strings.door[key]
+    
     log = ""
     doors = []
     door = None
-
+    
     for point in spaces(unit.local):
         if point != unit.local and area.square(*point).char == dlog['char']:
             doors.append(point)
@@ -226,10 +246,10 @@ def interact_door(key, area, logger):
         door = doors.pop()
     else:
         logger(dlog['many'], refresh=True)
-
+        
         code = term.read()
         shifted = term.state(term.TK_SHIFTED)
-
+        
         try:
             dx, dy, _, act = commands_player[(code, shifted)]
         except KeyError:
@@ -239,7 +259,7 @@ def interact_door(key, area, logger):
                 door = unit.local + Point(dx, dy)
             else:
                 log = dlog['error']
-
+    
     if door:
         if dlog['char'] == '/':
             area.close_door(*door)
@@ -249,19 +269,21 @@ def interact_door(key, area, logger):
     
     return unit, area, [log]
 
+
 def close_door(unit, area, logger):
-    '''Close door command: handles closing doors in a one unit distance
-    from the player. Cases can range from no doors, single door, multiple 
-    doors, with multiple doors asking for input direction
-    '''
+    """
+    Close door command: handles closing doors in a one unit distance from the
+    player. Cases can range from no doors, single door, multiple doors, with 
+    multiple doors asking for input direction.
+    """
     log = ""
     doors = []
     door = None
-
+    
     for point in spaces(unit.local):
         if point != unit.local and area.square(*point).char == '/':
             doors.append(point)
-
+    
     if not doors:
         log = strings.close_door_none
     elif len(doors) == 1:
@@ -271,7 +293,7 @@ def close_door(unit, area, logger):
         
         code = term.read()
         shifted = term.state(term.TK_SHIFT)
-
+        
         try:
             dx, dy, _, act = commands_player[(code, shifted)]
         except KeyError:
@@ -281,25 +303,27 @@ def close_door(unit, area, logger):
                 door = unit.local + Point(dx, dy)
             else:
                 log = strings.close_door_error
-        
+    
     if door:
         area.close_door(*door)
         log = strings.close_door_act
-
+    
     return unit, area, [log]
 
+
 def open_door(unit, area, logger):
-    '''Open door command: handles opening doors in a one unit distance from
-    the player. Cases can range from no doors, single door, multiple 
-    doors, with multiple doors asking for input direction
-    '''
+    """
+    Open door command: handles opening doors in a one unit distance from the 
+    player. Cases can range from no doors, single door, multiple doors, with 
+    multiple doors asking for input direction
+    """
     log = ""
     doors = []
     door = None
-
+    
     for point in spaces(unit.local):
         if point != unit.local and area.square(*point).char == '+':
-            doors.append(point)    
+            doors.append(point)
     
     if not doors:
         log = strings.open_door_none
@@ -307,10 +331,10 @@ def open_door(unit, area, logger):
         door = doors.pop()
     else:
         logger(strings.open_door_many, refresh=True)
-
+        
         code = term.read()
         shifted = term.state(term.TK_SHIFT)
-
+        
         try:
             dx, dy, _, act = commands_player[(code, shifted)]
         except KeyError:
@@ -320,19 +344,21 @@ def open_door(unit, area, logger):
                 door = unit.local + Point(dx, dy)
             else:
                 log = strings.open_door_error
-        
+    
     if door:
         area.open_door(*door)
-        log = strings.open_door_act      
+        log = strings.open_door_act
     
     return unit, area, [log]
-	
+
+
 def drop_item(unit, area, clearer, drawer, gamelog, screenlog):
-    '''Dropping items will always be dropped from inventory
-    If an item is equipped it CANNOT be dropped unless it is unequipped.
-    When an item is unequipped the item will be added back to the inventory
-    Then the player may drop the item from there
-    '''
+    """
+    Dropping items will always be dropped from inventory. If an item is 
+    equipped it CANNOT be dropped unless it is unequipped. When an item is 
+    unequipped the item will be added back to the inventory. Then the player 
+    may drop the item after.
+    """
     def drop(item):
         nonlocal log
         unit.item_remove(item)
@@ -343,46 +369,49 @@ def drop_item(unit, area, clearer, drawer, gamelog, screenlog):
             item_name = item
         log = "You drop the {} onto the ground.".format(item_name)
         log += " Your backpack feels lighter."
-
-    log = ""    
+    
+    log = ""
     index, row = 0, 0
     items = [item for _, inv in unit.inventory for item in inv]
     clearer()
     index, row = drawer(items, index, row)
-
+    
     while True:
         if items:
             screenlog(strings.cmd_drop_query)
-
+        
         if log:
             gamelog(log)
             log = ""
-
+        
         term.refresh()
-
+        
         code = term.read()
         if code == term.TK_ESCAPE:
             log = ""
             break
-
+        
         elif term.TK_A <= code < term.TK_A + len(items):
             drop(items[code - term.TK_A])
             items = [item for _, inv in unit.inventory for item in inv]
             clearer()
             index, row = 0, 0
             index, row = drawer(items, index, row)
-	
+    
     return unit, area, [log]
-	
+
+
 def pickup_item(unit, area, clearer, drawer, logger):
-    '''Pickup item command: handles item pickup from local map on the tile the
+    """
+    Pickup item command: handles item pickup from local map on the tile the
     unit is currently standing on. Cases can range from no items, single item,
     multiple items, with multiple items opening up a gui to choose items from
-    '''
+    """
     def pickup(item):
-        '''Pickup can fail if inventory is full.
-        Check to see if action succeeded before choosing log messages.
-        '''
+        """
+        Pickup can fail if inventory is full. Check to see if action succeeded 
+        before choosing log messages.
+        """
         nonlocal log
         if unit.item_add(item):
             area.item_remove(*unit.local, item)
@@ -392,9 +421,10 @@ def pickup_item(unit, area, clearer, drawer, logger):
         else:
             log = "Cannot pick up {}. Your backpack is full.".format(
                 item.name if hasattr(item, 'name') else item)
-            
+    
     log = ""
     items = [item for item in area.items_at(*unit.local)]
+    
     if not items:
         log = "No items on the ground where you stand."
     elif len(items) == 1:
@@ -410,11 +440,11 @@ def pickup_item(unit, area, clearer, drawer, logger):
             if log:
                 logger(log, refresh=True)
                 log = ""
-
+            
             code = term.read()
             if code == term.TK_ESCAPE:
                 break
-
+            
             elif term.TK_A <= code < term.TK_A + len(items):
                 item = items[code - term.TK_A]
                 pickup(item)
@@ -424,14 +454,16 @@ def pickup_item(unit, area, clearer, drawer, logger):
                 clearer()
                 index, row = 0, 0
                 index, row = drawer(items, index, row)
-            
+    
     return unit, area, [log]
 
+
 def use_item(unit, area, clearer, drawer, logger, screenlog, updater):
-    '''Use item command: handles item usage from player inventory for items that
+    """
+    Use item command: handles item usage from player inventory for items that
     are currently usable. If no items are usable then places a no-item-usable
     message on screen. Else places the usable items into a list onto screen.
-    '''
+    """
     def use(item):
         nonlocal log
         unit.item_use(item)
@@ -441,10 +473,10 @@ def use_item(unit, area, clearer, drawer, logger, screenlog, updater):
             item_name = item
         log = strings.cmd_use_item.format(item_name)
         updater()
-
+    
     log = ""
     items = list(unit.inventory_prop('use'))
-
+    
     clearer()
     index, row = 0, 0
     index, row = drawer(items, index, row)
@@ -453,7 +485,7 @@ def use_item(unit, area, clearer, drawer, logger, screenlog, updater):
             screenlog(strings.cmd_use_query)
         else:
             screenlog(strings.cmd_use_none)
-
+        
         if log:
             logger(log)
             log = ""
@@ -467,29 +499,31 @@ def use_item(unit, area, clearer, drawer, logger, screenlog, updater):
             use(items[code - 4])
             items = list(self.player.inventory_prop('use'))
 
+
 def converse(unit, area, logger):
-    '''Converse action: handles finding units surrounding the given unit and 
+    """
+    Converse action: handles finding units surrounding the given unit and 
     talks to them. Cases can range from no units, a single unit, and multiple
     units, with multiple units asking for input direction.
-    '''
+    """
     log = ""
     units = []
     other = None
-
+    
     for point in spaces(unit.local):
         if point != unit.local and area.unit_at(*point):
             units.append(point)
-
+    
     if not units:
         log = strings.converse_none
     elif len(units) == 1:
         other = units.pop()
     else:
         logger(strings.converse_many, refresh=True)
-
+        
         code = term.read()
         shifted = term.state(term.TK_SHIFT)
-
+        
         try:
             dx, dy, _, act = commands_player[(code, shifted)]
         except KeyError:
@@ -505,8 +539,10 @@ def converse(unit, area, logger):
     
     return unit, area, [log]
 
+
 def eat_item(unit, area, clearer, drawer, logger, screenlog):
-    """Eating action: handles eating items from inventory. Currently only 
+    """
+    Eating action: handles eating items from inventory. Currently only 
     supports eating items with an eating component. This might change in 
     the future.
     """
@@ -517,10 +553,10 @@ def eat_item(unit, area, clearer, drawer, logger, screenlog):
             item_name = item.name
         else:
             item_name = item
-
+    
     log = ""
     items = list(unit.inventory_prop('eat'))
-
+    
     clearer()
     index, row = 0, 0
     index, row = drawer(items, index, row, strings.cmd_use_none)
@@ -544,11 +580,13 @@ def eat_item(unit, area, clearer, drawer, logger, screenlog):
             items = list(unit.inventory_prop('eat'))
             index, row = 0, 0
             index, row = drawer(items, index, row, strings.cmd_use_none)
-
-    return unit, area, [log]
     
+    return unit, area, [log]
+
+
 def menu_action(unit, items, area, strs, eraser, drawer, logger, fns):
-    """Abstract action function that handles actions using screen menu draw 
+    """
+    Abstract action function that handles actions using screen menu draw 
     functions. Takes in several parameters which may or may not be needed to 
     complete run the function.
     """
@@ -574,3 +612,4 @@ def menu_action(unit, items, area, strs, eraser, drawer, logger, fns):
             items = get_items()
             index, row = 0, 0
             index, row = drawer(items, index, row, strs.none)
+

@@ -71,6 +71,17 @@ def line(start, stop):
     return []
 
 
+def line_eq(x1, y1, x2, y2, v):
+    m = (y2 - y1) / (x2 - x1)
+    b = y1 - m * x1
+    return m * v + b
+
+
+def lerp(a, b, n):
+    """Linear interpolation"""
+    return (1 - n) * a + n * b
+
+
 def movement(pos, change, factor, low, high):
     '''takes a 1d position and change parameters and returns a new position'''
     updated = pos + change * factor

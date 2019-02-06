@@ -1,22 +1,13 @@
-# import os
-# import sys
-import shelve
-import random
-import textwrap
-from time import sleep, time
-from collections import namedtuple
+"""
+name.py: creates an application for name input
+"""
+
 from bearlibterminal import terminal as term
-# sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
-import spaceship.strings as strings
-from .screen_functions import *
-from .action import commands_player
-from .gamelog import GameLogger
-from .scene import Scene
-from .classes.wild import wilderness
-from .classes.player import Player
-from .classes.world import World
-from .classes.city import City
-from .classes.cave import Cave
+
+from spaceship.scene import Scene
+from spaceship.screen_functions import toChr, center
+
+valid_chars = '1234567890!@#$%^&&*()-=_+,./<>?";[]{}\|~`'
 
 class Name(Scene):
     def __init__(self, sid='name_menu'):
@@ -30,21 +21,25 @@ class Name(Scene):
         self.fifth = self.width // 5
         self.yhalf = self.height // 2
         self.final_name = 'Grey'
+        self.ret['kwargs'].update({'name': self.final_name})
         self.invalid = False
 
     def draw_text(self):
         term.puts(
             x=center(self.direction_name, self.xhalf * 2), 
             y=self.yhalf - 5, 
-            s=self.direction_name)
+            s=self.direction_name
+        )
         term.puts(
             x=center(self.direction_exit[2:], self.xhalf * 2), 
             y=self.yhalf + 4, 
-            s=self.direction_exit)
+            s=self.direction_exit
+        )
         term.puts(
             x=center(self.direction_exit_program[2:], self.xhalf * 2), 
             y=self.yhalf + 8, 
-            s=self.direction_exit_program)
+            s=self.direction_exit_program
+        )
 
     def draw_border(self):
         # for k in range(SCREEN_WIDTH):
@@ -76,9 +71,14 @@ class Name(Scene):
         term.puts(hor_hi, ver_hi, "{}".format(toChr('255D')))
 
     def random_name(self):
+        """Builds a string from a random name generator. TODO"""
         return 'Grey'
 
     def draw(self):
+        """
+        Handles writing to terminal. Also does input handling for some reason
+        Probably refactor later and put input handling elsewhere. TODO
+        """
         term.clear()
         self.draw_border()
         self.draw_text()
@@ -89,11 +89,12 @@ class Name(Scene):
             s=self.final_name)
         
         if self.invalid:
+            inputchr = chr(term.state(term.TK_WCHAR))
             term.puts(
                 self.xhalf - self.fifth + 1, 
                 self.yhalf + 1, 
-                '[c=red]{} is not a valid character[/c]'.format(
-                    chr(term.state(term.TK_WCHAR))))
+                f"[c=red]{inputchr} is not a valid character[/c]"
+            )
 
         self.invalid = False
         term.refresh()
@@ -102,6 +103,7 @@ class Name(Scene):
         if key == term.TK_ESCAPE:
             if term.state(term.TK_SHIFT):
                 # shift escape -> to desktop
+                # add a connector
                 self.ret['scene'] = 'exit_desktop'
 
             # elif not self.final_name:
@@ -109,7 +111,7 @@ class Name(Scene):
                 self.ret['scene'] = 'create_menu'
 
             # else:
-            #     self.final_name = self.final_name[0:len(self.final_name) - 1]
+            #     self.final_name = self.final_name[0:len(self.final_name)-1]
             #     self.ret = 'start_game'
             self.final_name = ''
             self.proceed = False
@@ -128,8 +130,7 @@ class Name(Scene):
 
         elif term.check(term.TK_WCHAR) and len(self.final_name) < 30:
             # make sure these characters are not included in names
-            if chr(term.state(term.TK_WCHAR)) not in (
-                '1234567890!@#$%^&&*()-=_+,./<>?";[]{}\|~`'):
+            if chr(term.state(term.TK_WCHAR)) not in (valid_chars):
                 self.final_name += chr(term.state(term.TK_WCHAR))
             else:
                 self.invalid = True
@@ -138,3 +139,4 @@ if __name__ == "__main__":
     term.open()
     n = Name()
     n.run()
+    print(f"You picked '{n.ret['kwargs']['name']}' as your name")
