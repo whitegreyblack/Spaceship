@@ -30,7 +30,7 @@ lint: lint-flake lint-pep8
 	@echo "Done checking"
 
 test:
-	py.test --verbose --color=yes --cov=$(SOURCE) $(TESTS)
+	pytest --verbose --color=yes --cov=$(SOURCE) $(TESTS)
 	if [ -a picturfy-img.png ] ; then rm picturfy-img.png ; fi;
 	if [ -a assets/picturfy-img.png ] ; then rm assets/picturfy-img.png ; fi
 	
