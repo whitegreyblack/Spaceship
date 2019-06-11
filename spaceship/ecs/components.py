@@ -1,10 +1,11 @@
 # components.py
 from collections import namedtuple, Iterable
-from .ecs import Component
-from .die import Die
+from ecs.ecs import Component
+from ecs.die import Die
 import random
 import re
-'''
+
+"""
 Entities: name, id
     Tile: render, position
         Floor, Wall, Door
@@ -29,7 +30,7 @@ Component List:
         Total
         Current
         Refresh
-'''
+"""
 
 class Strength(Component):
     def __init__(self, unit, strength):
@@ -89,26 +90,31 @@ class Experience:
 
         return exp
 
-'''
+"""
 Strength, measuring physical power
 Dexterity, measuring agility
 Constitution, measuring endurance
 Intelligence, measuring reasoning and memory
 Wisdom, measuring perception and insight
 Charisma, measuring force of personality
-'''
+"""
 
 class Stats(Component):
-    '''Stats componenet used in unit classes. Creates a valid stats object 
-        using a die string or container of integers or die strings as stat 
-        parameters instead of normal integer values. These stat values will 
-        be binded to the stats in the given order.
-        >>> s = Stats(unit(5, 1), (1, 2, 3, 4, 5, 6))
-        >>> s
-        Stats(unit=Unit(max_hp=5, level=1), str=1, con=2, agi=3, int=4, wis=5, luc=6)
-        >>> s = Stats(unit(5, 1), "1d6 1d6 1d6 1d6 1d6 1d6")
-        >>> s = Stats(unit(5, 1), "1d6 1d6 1d6 1d6 1d6 1d6".split())
-        '''
+    """
+    Stats componenet used in unit classes. Creates a valid stats object using 
+    a die string or container of integers or die strings as stat parameters 
+    instead of normal integer values. These stat values will be binded to the 
+    stats in the given order.
+    
+    >>> s = Stats(unit(5, 1), (1, 2, 3, 4, 5, 6))
+    
+    >>> s
+    Stats(unit=Unit(max_hp=5, level=1), str=1, con=2, agi=3, int=4, wis=5, luc=6)
+    
+    >>> s = Stats(unit(5, 1), "1d6 1d6 1d6 1d6 1d6 1d6")
+    
+    >>> s = Stats(unit(5, 1), "1d6 1d6 1d6 1d6 1d6 1d6".split())
+    """
     __slots__ = ['unit', 'str', 'con', 'agi', 'int', 'wis', 'luc']
     def __init__(self, unit, stats):
 

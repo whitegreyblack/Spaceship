@@ -280,15 +280,15 @@ class Map:
                     yield x - cam_x, y - cam_y, c
 
 if __name__ == "__main__":
-    "Implement example program using curses"
+    # Implement example program using curses
     import curses
     from collections import namedtuple
 
     instructions = {
-        curses.KEY_DOWN: (1, 0),
-        curses.KEY_UP: (-1, 0),
-        curses.KEY_LEFT: (0, -1),
-        curses.KEY_RIGHT: (0, 1),
+        curses.KEY_DOWN: (0, 1), # 258
+        curses.KEY_UP: (0, -1), # 259
+        curses.KEY_LEFT: (-1, 0), # 260
+        curses.KEY_RIGHT: (1, 0), # 261
         49: (-1, 1),
         50: (0, 1),
         51: (1, 1),
@@ -301,16 +301,23 @@ if __name__ == "__main__":
     }
 
     def example(screen):
+        """
+        Initializes map and character objects then calls a do while loop to
+        run the game.
+        """
         curses.curs_set(0)
         position = namedtuple("Position", "x y")
         player = position(40, 12)
-        m = Map(WORLD)
+        m = Map(DUNGEON)
 
+        # calculates fov
         m.do_fov(*player, 25)
+        # adds character for every square character can see
         for x, y, c in m.lighted:
-            if x > 79 or y > 23:
+            if x > 79 or y > 24:
                 continue
             screen.addch(y, x, c)
+        # adds character
         screen.addch(player.y, player.x, '@')
         screen.refresh()
         while True:
@@ -330,5 +337,5 @@ if __name__ == "__main__":
                 screen.addch(y, x, c)
             screen.addch(player.y, player.x, '@')
             screen.addstr(23, 0, str(ch))
-
     curses.wrapper(example)
+
