@@ -1,7 +1,8 @@
 # components.py
-from collections import namedtuple, Iterable
-from ecs.ecs import Component
-from ecs.die import Die
+from collections.abc import Iterable
+from collections import namedtuple
+from component import Component
+from die import Die
 import random
 import re
 
