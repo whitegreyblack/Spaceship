@@ -12,7 +12,7 @@ class EntityComponent:
     entity: object
     component: object
 
-class Manager(object):
+class ComponentManager(object):
     def __init__(self):
         self.components = []
 
