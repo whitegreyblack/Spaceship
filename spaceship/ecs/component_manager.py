@@ -13,15 +13,34 @@ class EntityComponent:
     component: object
 
 class ComponentManager(object):
-    def __init__(self):
-        self.components = []
+
+    __slots__ = ['ctype', 'components']
+
+    def __init__(self, ctype):
+        self.ctype = ctype.__name__
+        self.components = dict()
+
+    def __str__(self):
+        l = len(self.components.keys())
+        return f"{self.__class__.__name__}(components={l})"
 
     def add(self, entity, component):
-        entity_component = EntityComponent(entity, component)
-        self.components.append(entity_component)
+        if type(component).__name__ is not self.ctype:
+            raise ValueError("Invalid component type added.")
+        self.components[entity.id] = component
 
-    def remove(self, entity):
-        self.components.remove()
-        
+    def remove(self, entity) -> bool:
+        if entity.id in self.components:
+            del self.components[entity.id]
+            return True
+        return False
+
     def find(self, entity):
-        ...
+        if entity.id in self.components:
+            return self.components[entity.id]
+        return None
+
+if __name__ == "__main__":
+    from util import dprint, gso
+    c = ComponentManager()
+    print(dprint(c))

@@ -4,16 +4,13 @@ from bearlibterminal import terminal as term
 from PIL import Image, ImageDraw
 from functools import lru_cache
 from random import randint, choice, shuffle
-from spaceship.tools import bresenhams
 from math import hypot
 from copy import deepcopy
 from textwrap import wrap
 from namedlist import namedlist
 from collections import namedtuple
-from spaceship.tools import scroll
 
-"""Maps file holds template functions that return randomized data maps used\
-in creating procedural worlds"""
+"""Maps file holds utility methods used commonly in the project"""
 
 # Key-value pairs are mapped from characters to color tuples
 # used when converting maps into color images

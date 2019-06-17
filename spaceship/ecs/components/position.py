@@ -2,16 +2,17 @@
 
 """Position component"""
 
-from component import Component
+from dataclasses import dataclass
 
+from .component import Component
+
+
+@dataclass
 class Position(Component):
-    __slots__ = ['x', 'y']
-    def __init__(self, x=0, y=0):
-        self.x = x
-        self.y = y
+    x: int = 0
+    y: int = 0
 
 if __name__ == "__main__":
-    from util import dprint, gso
+    from ecs.util import dprint, gso
     p = Position(0, 0)
-    print(p, repr(p), dprint(p), gso(p))
-
+    print(dprint(p))

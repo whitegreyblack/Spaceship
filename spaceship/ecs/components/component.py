@@ -2,21 +2,23 @@
 
 """Base component class"""
 
+from dataclasses import dataclass
+
+
+@dataclass
 class Component(object):
     """
     Base component class that defines subclass agnostic methods
     """
     __slots__ = []
+
     def __repr__(self):
-        print(self.__slots__)
         attributes = [ 
             f"{s}={getattr(self, s)}"
                 for s in self.__slots__
-                    if bool(hasattr(self, s) and getattr(self, s))
+                    if bool(hasattr(self, s) and getattr(self, s) is not None)
         ]
-        print(attributes)
         attr_string = ", ".join(attributes)
-        print(attr_string)
         return f"{self}({attr_string})"
 
     def __str__(self):
@@ -43,7 +45,6 @@ class Component(object):
         return cls.instances
 
 if __name__ == "__main__":
-    from util import dprint, gso
+    from ecs.util import dprint
     c = Component()
-    print(repr(c))
-    print(dprint(c), gso(c))
+    print(dprint(c))

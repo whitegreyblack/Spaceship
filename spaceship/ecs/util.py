@@ -5,7 +5,7 @@
 from sys import getsizeof as gso
 
 def dprint(obj):
-    return f"{id(obj)} {hex(id(obj))} {gso(obj)} bytes {obj}"
+    return f"{id(obj)} {hex(id(obj))} {gso(obj)} bytes {repr(obj)}"
 
 def size(obj):
     try:
