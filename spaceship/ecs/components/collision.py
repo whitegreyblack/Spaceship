@@ -1,6 +1,6 @@
-# health.py
+# collision.py
 
-"""Health component"""
+"""Collision component"""
 
 from dataclasses import dataclass
 
@@ -8,11 +8,10 @@ from .component import Component
 
 
 @dataclass
-class Health(Component):
-    max_hp: int = 1
-    cur_hp: int = 1
+class Collision(Component):
+    collided_entity_id: int
 
 if __name__ == "__main__":
     from ecs.util import dprint
-    h = Health()
-    print(dprint(h))
+    c = Collision(1)
+    print(dprint(c))

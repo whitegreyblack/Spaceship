@@ -11,6 +11,7 @@ from .component import Component
 class Position(Component):
     x: int = 0
     y: int = 0
+    moveable: bool = True
 
 if __name__ == "__main__":
     from ecs.util import dprint, gso

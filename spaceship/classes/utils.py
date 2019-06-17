@@ -319,7 +319,7 @@ def dimensions(data, array=False):
         data = [[col for col in row] for row in data.split('\n')]
     height = len(data)
     width = max(len(col) for col in data)
-    return data, height, width
+    return data, width, height
 
 def gradient(x, y, characters, colors):
     """Returns a more realistic map color gradient"""

@@ -4,13 +4,8 @@
 
 # TODO: should we allow duplicate entity?
 
-from dataclasses import dataclass
-from dataclasses import field
+from dataclasses import dataclass, field
 
-@dataclass
-class EntityComponent:
-    entity: object
-    component: object
 
 class ComponentManager(object):
 

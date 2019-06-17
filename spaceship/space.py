@@ -62,6 +62,14 @@ def eight_square():
             if (x, y) != (0, 0):
                 yield x, y
 
+def nine_square():
+    """
+    Yields x, y values indicating cardinal directions on a grid including 0, 0
+    """
+    for x in range(-1, 2):
+        for y in range(-1 ,2):
+            yield x, y
+
 def transform_lake(square, neighbors, hills):
     """
     Counts number of neighbors and landtypes around the current square and
