@@ -24,25 +24,29 @@ class Component(object):
     def __str__(self):
         return f'{self.__class__.__name__}'
 
-    def __hash__(self):
-        return hash(self.id)
-
-    def __eq__(self, other):
-        return self.id == other.id
-
-    @staticmethod
-    def join(cls, other, *others):
-        return set.intersection(cls.instances, 
-                                other.instances,
-                                *(o.instances for o in others))
-
     @classmethod
     def classname(cls):
         return cls.__name__.lower()
 
-    @classmethod
-    def items(cls):
-        return cls.instances
+    # def __hash__(self):
+    #     return hash(self.id)
+
+    # def __eq__(self, other):
+    #     return self.id == other.id
+
+    # @staticmethod
+    # def join(cls, other, *others):
+    #     return set.intersection(cls.instances, 
+    #                             other.instances,
+    #                             *(o.instances for o in others))
+
+    # @property
+    # def classname(self):
+    #     return self.__name__.lower()
+
+    # @classmethod
+    # def items(cls):
+    #     return cls.instances
 
 if __name__ == "__main__":
     from ecs.util import dprint

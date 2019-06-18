@@ -95,8 +95,8 @@ class Map:
 
 def render_logs(logger):
     messages = [logger.header, logger.world]
-    for msg in logger.messages:
-        messages.append(msg.string)
+    for i, msg in enumerate(logger.messages):
+        messages.append('...' if i else '>>> ' + msg.string)
         msg.lifetime -= 1
     print('\n'.join(messages))
 
@@ -124,7 +124,7 @@ def translate_move_input(getch, library, moveset):
 def create_managers():
     # create a player entity with components
     managers = {
-        k.__name__.lower(): ComponentManager(k)
+        k.classname(): ComponentManager(k)
             for k in (
                 Position, 
                 Render, 
@@ -149,14 +149,17 @@ def create_player(managers):
     entity = managers['entity'].create()
     managers['position'].add(entity, Position(3, 1))
     managers['render'].add(entity, Render())
-    managers['health'].add(entity, Health())
+    managers['health'].add(entity, Health(10, 10))
     managers['information'].add(entity, Information("You"))
     return entity
 
-def create_unit(managers):
+def create_unit(managers, world):
     npc_type_index = random.randint(0,len(npcs_render_types)-1)
     entity = managers['entity'].create()
-    managers['position'].add(entity, Position(1, random.randint(1, 5)))
+    managers['position'].add(entity, Position(
+        random.randint(1, world.width-2),
+        random.randint(1, world.height-2)
+    ))
     print(npcs_render_types[npc_type_index])
     managers['render'].add(entity, Render(*npcs_render_types[npc_type_index]))
     managers['ai'].add(entity, AI())
@@ -168,7 +171,7 @@ def setup(mapstring, npcs=2):
     managers = create_managers()
     player = create_player(managers)
     for _ in range(npcs):
-        create_unit(managers)
+        create_unit(managers, world)
     return player, world, managers
 
 def render_units(managers):
@@ -190,16 +193,18 @@ def render_world(world, logger, managers):
         render = managers['render'].find(entity)
         health = managers['health'].find(entity)
         ai = managers['ai'].find(entity)
+        # if non-player entity, show only when alive
         if position and render and health and health.cur_hp > 0:
             worldcopy[position.y][position.x] = render.string + colorama.Style.RESET_ALL
+        # if player entity, print no matter what
         elif position and render and not ai:
             worldcopy[position.y][position.x] = render.char
     logger.world = '\n'.join(''.join(row) for row in worldcopy)
 
-def render_header(logger, health):
+def render_header(logger, managers, health):
     logger.header = f"HP: {health.cur_hp}/{health.max_hp}"
 
 def render(world, logger, managers, health):
-    render_header(logger, health)
+    render_header(logger, managers, health)
     render_world(world, logger, managers)
     render_logs(logger)

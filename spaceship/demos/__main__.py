@@ -114,11 +114,16 @@ def collision_system(logger, managers):
         collider = managers['entity'].find(entity_id)
         collider_ai = managers['ai'].find(collider)    
         collider_info = managers['information'].find(collider)
+        collider_health = managers['health'].find(collider)
+        if collider_health.cur_hp < 1:
+            continue
+
         collidee_entity = managers['entity'].find(collision.collided_entity_id)
+        collidee_info = managers['information'].find(collidee_entity)
         collidee_health = managers['health'].find(collidee_entity)
         if collidee_health.cur_hp < 1:
             continue
-        collidee_info = managers['information'].find(collidee_entity)
+
         collidee_hitpoints = collidee_health.cur_hp
         collidee_health.cur_hp -= 1
         ai = False
@@ -126,7 +131,7 @@ def collision_system(logger, managers):
             ai = True
         logger.messages.append(
             utils.Message(
-                f"{collider_info.name} hit{'s' if ai else ''} {collidee_info.name} for 1 damage",
+                f"{collider_info.name.capitalize()} hit{'s' if ai else ' the'} {collidee_info.name} for 1 damage",
                 1
             )
         )
@@ -140,18 +145,15 @@ def graveyard_system(logger, managers):
         if health.cur_hp < 1:
             entities_to_remove.append(entity)
             ai = managers['ai'].find(entity)
-            if not ai and info.name == "You":
-                logger.messages.append(utils.Message(f"{info.name} died", 1))
     for entity in entities_to_remove:
         for manager in managers.values():
             manager.remove(entity)
     
-
 def main_msvcrt(msvcrt):
     getch = msvcrt.getch
     logger = utils.Logger()
     mapstring = utils.LARGE_DUNGEON
-    player, world, managers = utils.setup(mapstring, 1)
+    player, world, managers = utils.setup(mapstring, 10)
     player_health = managers['health'].find(player)
 
     # uses msvcrt getch() command
@@ -160,32 +162,26 @@ def main_msvcrt(msvcrt):
     logger = utils.clean_logs(logger)
 
     while managers['entity'].find(player.id):
-        time.sleep(.01) # helps with refresh flashes
         input_system(world.array, logger, getch, managers)
         move_system(world.array, logger, managers)
+        # os.system('cls')
+        # utils.render(world, logger, managers, player_health)
         collision_system(logger, managers)
-        utils.render_header(logger, player_health)
-        utils.render_world(world, logger, managers)
-        graveyard_system(logger, managers)
-        utils.render_header(logger, player_health)
+        
+        # utils.render_header(logger, player_health)
+        # utils.render_world(world, logger, managers)
         os.system('cls')
-        utils.render_logs(logger)
+        utils.render(world, logger, managers, player_health)
+        
+        graveyard_system(logger, managers)
+        
+        # utils.render_header(logger, player_health)
+        
+        # utils.render_header(logger, player_health)
+        # utils.render_world(world, logger, managers)
+        # utils.render_logs(logger)
         logger = utils.clean_logs(logger)
-
-""" 
-# helper loop to get char from msvcrt getch() 
-    i = getch()
-    while i:
-        print(i, type(i), ord(i))
-        if i == b'\x03' or i == b'q':
-            break
-        if i == b'\xe0':
-            i = getch()
-            print(i, type(i), ord(i))
-            if i == b'P':
-                print('special key down')
-        i = getch()
-"""
+        time.sleep(.005) # helps with refresh flashes
 
 def main_curses(screen, curses):
     getch = screen.getch
