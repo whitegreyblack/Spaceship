@@ -5,51 +5,15 @@
 import copy
 import os
 import random
-from dataclasses import dataclass, field
 
 import colorama
 
 from classes.utils import dimensions
-from ecs.component_manager import ComponentManager
-from ecs.components.ai import AI
-from ecs.components.collision import Collision
-from ecs.components.health import Health
-from ecs.components.information import Information
-from ecs.components.movement import Movement
-from ecs.components.position import Position
-from ecs.components.render import Render
-from ecs.entity_manager import EntityManager
-
-SMALL_DUNGEON = """
-#######
-#.....#
-#######"""[1:]
-
-LONG_DUNGEON = """
-###########                                                        
-#...#.....#                                                        
-###.#.....#########################################################
-#.................................................................#
-###################################################################"""[1:]
-
-LARGE_DUNGEON = """
-################################################################
-#....#....#....#....#..........##....#....#....#....#..........#
-#...................#..........##...................#..........#
-#....#....#....#..........#....##....#....#....#....#.....#....#
-#..............................................................#
-#....#....#....#....#................#....#....#....#..........#
-#....#....#....#....#..........##....#....#....#....#..........#
-#..............................................................#
-#....#....#....#..........#....##....#....#....#....#.....#....#
-#..............................................................#
-#..............................................................#
-#..............................................................#
-#..............................................................#
-#..............................................................#
-#..............................................................#
-#..............................................................#
-################################################################"""[1:]
+from ecs import Entity
+from ecs.common import Map
+from ecs.components import (AI, Collision, Health, Information, Movement,
+                            Position, Render)
+from ecs.managers import ComponentManager, EntityManager
 
 direction = {
     (0, -1): 'north',
@@ -61,7 +25,7 @@ direction = {
 npcs_render_types = [
     ('b', colorama.Fore.BLACK, 'white'),
     ('g', colorama.Fore.GREEN, 'white'),
-    ('r', colorama.Fore.YELLOW, 'white')
+    ('r', colorama.Fore.BLUE, 'white')
 ]
 
 npc_info = [
@@ -75,23 +39,6 @@ messages = {
     "blocked": "You try to move {} but there is someone in your way",
     "blocked_env": "You try to move {} but there is something in your way"
 }
-
-@dataclass
-class Message:
-    string: str
-    lifetime: int
-
-@dataclass
-class Logger:
-    world: str = None
-    header: str = ""
-    messages: list = field(default_factory=list)
-
-@dataclass
-class Map:
-    array: list
-    width: int
-    height: int
 
 def render_logs(logger):
     messages = [logger.header, logger.world]
@@ -160,7 +107,6 @@ def create_unit(managers, world):
         random.randint(1, world.width-2),
         random.randint(1, world.height-2)
     ))
-    print(npcs_render_types[npc_type_index])
     managers['render'].add(entity, Render(*npcs_render_types[npc_type_index]))
     managers['ai'].add(entity, AI())
     managers['information'].add(entity, Information(npc_info[npc_type_index]))

@@ -11,6 +11,7 @@ import click
 
 import demos.utils as utils
 from classes.utils import dimensions
+from ecs.common import Logger, Message
 from space import eight_square, nine_square
 
 map_y_offset = 1
@@ -77,7 +78,7 @@ def move_system(world, logger, managers):
             if not entity_ai:
                 direction = utils.direction[(entity_movement.x, entity_movement.y)]
                 message = utils.messages['blocked_env'].format(direction)
-                logger.messages.append(utils.Message(message, 1))
+                logger.messages.append(Message(message, 1))
             continue
 
         # check other units
@@ -96,7 +97,7 @@ def move_system(world, logger, managers):
                 #     x, y = entity_movement.x, entity_movement.y
                 #     direction = utils.direction[(x, y)]
                 #     message = utils.messages['blocked'].format(direction)
-                #     logger.messages.append(utils.Message(message, 1))
+                #     logger.messages.append(Message(message, 1))
                 unit_blocked = True
                 break
         
@@ -107,7 +108,7 @@ def move_system(world, logger, managers):
             # if not entity_ai:
             #     direction = utils.direction[(entity_movement.x, entity_movement.y)]
             #     message = utils.messages['move'].format(direction)
-            #     logger.messages.append(utils.Message(message, 1))
+            #     logger.messages.append(Message(message, 1))
 
 def collision_system(logger, managers):
     for entity_id, collision in managers['collision'].components.items():
@@ -130,7 +131,7 @@ def collision_system(logger, managers):
         if collider_ai:
             ai = True
         logger.messages.append(
-            utils.Message(
+            Message(
                 f"{collider_info.name.capitalize()} hit{'s' if ai else ' the'} {collidee_info.name} for 1 damage",
                 1
             )
@@ -151,7 +152,7 @@ def graveyard_system(logger, managers):
     
 def main_msvcrt(msvcrt):
     getch = msvcrt.getch
-    logger = utils.Logger()
+    logger = Logger()
     mapstring = utils.LARGE_DUNGEON
     player, world, managers = utils.setup(mapstring, 10)
     player_health = managers['health'].find(player)
@@ -181,11 +182,11 @@ def main_msvcrt(msvcrt):
         # utils.render_world(world, logger, managers)
         # utils.render_logs(logger)
         logger = utils.clean_logs(logger)
-        time.sleep(.005) # helps with refresh flashes
+        time.sleep(.015) # helps with refresh flashes
 
 def main_curses(screen, curses):
     getch = screen.getch
-    logger = utils.Logger()
+    logger = Logger()
     mapstring = utils.LARGE_DUNGEON
     player, world, managers = utils.setup(mapstring, npcs=1)
     player_health = managers['health'].find(player)
@@ -194,7 +195,7 @@ def main_curses(screen, curses):
 
     # do while
     screen.clear()
-    utils.render_header(logger, player_health)
+    utils.render_header(logger, managers, player_health)
     screen.addstr(0, 0, logger.header)
     screen.addstr(map_y_offset, map_x_offset, mapstring)
     units = utils.render_units(managers)
