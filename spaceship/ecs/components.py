@@ -33,8 +33,9 @@ class AI(Component):
 
 @dataclass
 class Collision(Component):
-    entity_id: int
-
+    entity_id: int = -1
+    x: int = 0
+    y: int = 0
 
 @dataclass
 class Effect(Component):

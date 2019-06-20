@@ -5,7 +5,7 @@
 import time
 
 from ecs.common import Logger, Map
-from ecs.components import Information, Position, Render
+from ecs import Movement, Collision
 from ecs.managers import ComponentManager, EntityManager
 from ecs.systems import CollisionSystem, MovementSystem
 
@@ -51,14 +51,17 @@ class Engine(object):
         if not manager:
             raise Exception(f"No component of type name: {component}")
         manager.add(entity, self.components[component](*args))
-        if hasattr(self, component + '_system'):
-            system = getattr(self, component + '_system')
-            system.process()
+        # if hasattr(self, component + '_system'):
+        #     system = getattr(self, component + '_system')
+        #     system.process()
     def find_entity(self, entity_id):
         return self.entity_manager.find(entity_id)
     def run(self):
         self.render_system.process()
         while self.running:
+            self.update()
+            self.render_system.process()
+            self.graveyard_system.process()
             for system in (
                 self.input_system, 
                 self.render_system, 
@@ -66,6 +69,24 @@ class Engine(object):
             ):
                 system.process()
             # time.sleep(.15)
+    def update(self):
+        entity_index = 0
+        print('llooping', self.entity_manager.entities)
+        while entity_index < len(self.entity_manager.entities):
+            entity = self.entity_manager.entities[entity_index]
+            result = self.input_system.process_entity(entity)
+            if result:
+                entity_index += 1
+            self.graveyard_system.process()
+            # # self.add_component(action, x, y)
+            # movement = Movement(x, y)
+            # result = self.movement_system.process_move(entity, movement)
+            # if not result:
+            #     action, x, y = self.add_component(action, x, y)
+            #     collision = Collision(x=x, y=y)
+            #     result = self.CollisionSystem.process_collision(entity, collision)
+            #     if result:
+            #         entity_index += 1
 
 if __name__ == '__main__':
     from ecs.util import dprint

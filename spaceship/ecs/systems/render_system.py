@@ -2,14 +2,11 @@
 
 """Render system class"""
 
-from ..common import Message
-from .system import System
 import time
 
-# define colors
-colors = {
-    'red': None
-}
+from ..common import Message
+from .system import System
+
 
 class RenderSystem(System):
     def render_map(self, redraw=False):
@@ -24,10 +21,10 @@ class RenderSystem(System):
 
     def render_unit(self, position, render):
         self.engine.screen.addch(
-                position.y + self.engine.map_y_offset, 
-                position.x + self.engine.map_x_offset, 
-                render.char
-            )
+            position.y + self.engine.map_y_offset, 
+            position.x + self.engine.map_x_offset, 
+            render.char
+        )
 
     def render_units(self, redraw=True):
         position_manager = self.engine.position_manager
@@ -71,7 +68,8 @@ class RenderSystem(System):
 
         self.render_map(False)
         
-        while any(e.ticks > 0 for e in self.engine.effect_manager.components.values()):
+        effects = self.engine.effect_manager.components.values()
+        while any(e.ticks > 0 for e in effects):
             self.render_units(False)
             self.render_effects(True)
             time.sleep(0.1)

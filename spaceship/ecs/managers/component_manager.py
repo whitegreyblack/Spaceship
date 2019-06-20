@@ -31,7 +31,8 @@ class ComponentManager(object):
         return False
 
     def find(self, entity):
-        if entity.id in self.components:
+        print(self.ctype, entity, self.components)
+        if entity.id in self.components.keys():
             return self.components[entity.id]
         return None
 

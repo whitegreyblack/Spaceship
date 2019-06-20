@@ -13,4 +13,3 @@ def size(obj):
     except:
         class_name = obj.__class__.__name__
     return f"Size of {class_name}: {gso(obj)} bytes"
-

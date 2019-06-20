@@ -13,11 +13,16 @@ import click
 import examples.utils as utils
 from classes.map import LARGE_DUNGEON, LONG_DUNGEON, SMALL_DUNGEON
 from classes.utils import dimensions
-from ecs import Engine, Logger, Map, Message
-from ecs.components import (AI, Health, Information, Position, Render,
-                            components)
+from ecs import (
+    AI, Collision, Effect, Engine, Experience, Health, Information, Logger,
+    Map, Message, Movement, Position, Render, components)
 from ecs.systems import systems
 from space import eight_square, nine_square
+
+# define colors
+colors = {
+    'red': None
+}
 
 keyboard = {
     curses.KEY_DOWN: (0, 1), # 258
@@ -78,7 +83,7 @@ def ecs_setup(screen, npcs=1):
                 for position in engine.position_manager.components.values()
         ))
         space = open_spaces.pop()
-        engine.position_manager.add(computer, Position(*space))
+        engine.position_manager.add(computer, Position(2, 1))
         engine.render_manager.add(computer, Render('g'))
         engine.ai_manager.add(computer, AI())
         engine.information_manager.add(computer, Information("goblin"))

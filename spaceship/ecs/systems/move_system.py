@@ -4,6 +4,8 @@
 
 import time
 
+from ecs import Collision
+
 from ..common import Message
 from .system import System
 
@@ -28,10 +30,11 @@ class MovementSystem(System):
             # not blocked by environment
             if self.engine.world.array[y][x] in ('#', '+'):
                 if not entity_ai:
-                    continue 
+                    # continue
+                    return False
 
             # not blocked by units
-            unit_blocked = False
+            # unit_blocked = False
             for other_id, other_position in position_manager.components.items():
                 if other_id == entity.id:
                     continue
@@ -42,7 +45,8 @@ class MovementSystem(System):
                 )
                 if future_position_blocked:
                     self.engine.add_component(entity, 'collision', other_id)
-
+                    # return False
+                    return self.engine.collision_system.process()
                     # self.engine.logger.messages.append(
                     #     Message("Unit hits another", 1
 
@@ -52,9 +56,33 @@ class MovementSystem(System):
                     # direction = utils.direction[(x, y)]
                     # message = utils.messages['blocked'].format(direction)
                     # logger.messages.append(Message(message, 1))
-                    unit_blocked = True
-                    break
+                    # unit_blocked = True
+                    # break
             
-            if not unit_blocked:
-                self.move(entity_position, entity_movement)
+            # if not unit_blocked:
+            self.move(entity_position, entity_movement)
         movement_manager.components.clear()
+        return True
+
+    def process_movement(self, entity):
+        print(
+            entity, 
+            self.engine.position_manager.components.keys(),
+            self.engine.position_manager.components.items())
+        position = self.engine.position_manager.find(entity)
+        movement = self.engine.movement_manager.find(entity)
+
+        x = position.x + movement.x
+        y = position.y + movement.y
+
+        if self.engine.world.array[y][x] in ('#', '+'):
+            self.engine.collision_manager.add(entity, Collision(x=x, y=y))
+            return self.engine.collision_system.process_collision(entity)
+        positions = self.engine.position_manager.components.items()
+        for eid, p in positions:
+            if (p.x, p.y) == (x, y):
+                self.engine.collision_manager.add(entity, Collision(eid))
+                return self.engine.collision_system.process_collision(entity)
+        self.move(position, movement)
+        print('---', entity, 'moved')
+        return True

@@ -5,6 +5,7 @@
 import random
 import time
 
+from ecs import Movement
 from space import eight_square, nine_square
 
 from ..common import Message
@@ -44,8 +45,22 @@ class InputSystem(System):
             position = positions.find(entity)
             if not position:
                 continue
-            if not ai:
-                x, y = self.direction_from_input()
-            else:
-                x, y = self.direction_from_random(entity)
-            self.engine.add_component(entity, 'movement', x, y)
+            while 1:
+                if not ai:
+                    x, y = self.direction_from_input()
+                else:
+                    x, y = self.direction_from_random(entity)
+                self.engine.add_component(entity, 'movement', x, y)
+                result = self.engine.movement_system.process()
+                if result:
+                    break
+                # print(result)
+    
+    def process_entity(self, entity):
+        ai = self.engine.ai_manager.find(entity)
+        if ai:
+            x, y = self.direction_from_random(entity)
+        else:
+            x, y = self.direction_from_input()
+        self.engine.movement_manager.add(entity, Movement(x, y))
+        return self.engine.movement_system.process_movement(entity)
