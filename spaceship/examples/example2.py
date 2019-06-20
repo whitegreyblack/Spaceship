@@ -169,7 +169,6 @@ class Start(Scene):
         #             self.process_turn()
 
         if self.turn_inc:
-            self.turns += 1
             self.turn_inc = False
 
         # if isinstance(self.location, World):

@@ -48,9 +48,12 @@ class Engine(object):
         self.keyboard = keyboard
     def add_component(self, entity, component, *args):
         manager = getattr(self, component + '_manager')
+        if not manager:
+            raise Exception(f"No component of type name: {component}")
         manager.add(entity, self.components[component](*args))
-        system = getattr(self, component + '_system')
-        system.process()
+        if hasattr(self, component + '_system'):
+            system = getattr(self, component + '_system')
+            system.process()
     def find_entity(self, entity_id):
         return self.entity_manager.find(entity_id)
     def run(self):
@@ -62,7 +65,7 @@ class Engine(object):
                 self.graveyard_system
             ):
                 system.process()
-            time.sleep(.15)
+            # time.sleep(.15)
 
 if __name__ == '__main__':
     from ecs.util import dprint

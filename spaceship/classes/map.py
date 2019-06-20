@@ -7,7 +7,7 @@ from random import randint, choice, shuffle
 from bearlibterminal import terminal as term
 # from spaceship.classes.monsters import Rat
 # from spaceship.classes.bat import Bat
-from tools import scroll
+# from tools import scroll
 
 '''
 The largest difference between World and City map tiles is that you can
@@ -78,7 +78,7 @@ LARGE_DUNGEON = """
 #....#....#....#..........#....##....#....#....#....#.....#....#
 #..............................................................#
 #..............................................................#
-#..............................................................#
+#.....<..................................................>.....#
 #..............................................................#
 #..............................................................#
 #..............................................................#

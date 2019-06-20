@@ -2,6 +2,8 @@
 
 """Movement system class"""
 
+import time
+
 from ..common import Message
 from .system import System
 
@@ -41,11 +43,11 @@ class MovementSystem(System):
                 if future_position_blocked:
                     self.engine.add_component(entity, 'collision', other_id)
 
-                    self.engine.logger.messages.append(
-                        Message("Unit hits another", 1
+                    # self.engine.logger.messages.append(
+                    #     Message("Unit hits another", 1
 
-                        )
-                    )
+                    #     )
+                    # )
                     # x, y = entity_movement.x, entity_movement.y
                     # direction = utils.direction[(x, y)]
                     # message = utils.messages['blocked'].format(direction)

@@ -3,9 +3,11 @@
 """Input system"""
 
 import random
+import time
 
 from space import eight_square, nine_square
 
+from ..common import Message
 from .system import System
 
 
@@ -16,8 +18,8 @@ class InputSystem(System):
         if char == ord('q') or char == 27:
             self.engine.running = False
             return None, None
-        if char in self.engine.keyboard.keys():
-            return self.engine.keyboard.get(char)
+        self.engine.logger.add(Message(f"{char}, {repr(char)}, {chr(char)}"))
+        return self.engine.keyboard.get(char, (0, 0))
 
     def direction_from_random(self, entity):
         position = self.engine.position_manager.find(entity)

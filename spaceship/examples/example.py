@@ -1,240 +1,389 @@
-# world.py
-
-"""World created using ecs systems and msvcrt getch for input"""
-
-import copy
-import os
-import random
-import time
-
+# example.py using the ecs package
 import click
+import random
+import operator
+from bearlibterminal import terminal as term
+from ecs.map import Map, EXAMPLES
 
-import demos.utils as utils
-from classes.utils import dimensions
-from ecs.common import Logger, Message
-from space import eight_square, nine_square
+length = 100
 
-map_y_offset = 1
-map_x_offset = 0
+WHITE = "#ffffff"
+BLACK = "#000000"
+PURPLE = "#8800CC"
+YELLOW = "#DDDD00"
+ORANGE = "#FF8800"
+GREEN = "#00BB00"
+BLUE = "#0000BB"
+RED = "#BB0000"
 
-library = None
-moveset = None
+map_symbols = {
+    '=': ('#003366', '#000000'),
+    '.': ('#996633', '#000000'),
+    'T': ('#006633', '#000000'),
+    '&': ('#006633', '#000000'),
+    '-': ('#006699', '#000000'),
+    '~': ('#665533', '#000000'),
+    '^': ('#BBBBBB', '#000000'),
+}
 
-""" -- heuristic pathfinding
-player = em.find_entity(0)
-position = pm.find(player)
+class Component:
+    counter = mask = 1
+    def __init__(self):
+        self.entity = None
 
-for e in em.entities:
-    ai = am.find(e)
-    pos = pm.find(e)
-    if not pos and not ai:
-        continue
-    if pos and not ai:
-        x, y = utils.translate_move_input(getch, library)
-    elif pos and ai:
-        possible_spaces = []
-        for x, y in nine_square():
-            # calculate distances to player
-            d = distance(pos.x+x, pos.y+y, position.x, position.y)
-            if world[pos.y+y][pos.x+x] not in ('#', '+'):
-                possible_spaces.append((x, y, d))
-        index = randint(0, len(possible_spaces)-1)
-        possible_spaces.sort(key=lambda x: x[2])
-        x, y, _ = possible_spaces[0]
-"""
+    def __str__(self):
+        if isinstance(self, tuple(Component.__subclasses__())):
+            parent = type(self).__base__.__name__
+            child = type(self).__name__
+            return f'{parent}: {child}'
 
-def input_system(world, logger, move, managers):
-    for entity in managers['entity'].entities:
-        entity_ai = managers['ai'].find(entity)
-        entity_position = managers['position'].find(entity)
+        subclasses = "\n\t   ".join([s.__name__ for s in self.subclasses()])
+        return f'{type(self).__name__}: {subclasses}'
 
-        # necessary components not found or unmovable
-        if not entity_position or not entity_position.moveable:
-            continue
+    @property
+    def name(self):
+        return self.__class__.__name__.lower()
 
-        # get x, y for either player or computer
-        if not entity_ai:
-            x, y = utils.translate_move_input(move, library, moveset)
-        elif entity_ai:
-            possible_spaces = []
-            for x, y in nine_square():
-                cell = world[entity_position.y+y][entity_position.x+x] 
-                if cell not in ('#', '+'):
-                    possible_spaces.append((x, y))
-            index = random.randint(0, len(possible_spaces)-1)
-            x, y = possible_spaces[index]
-        utils.create_movement(managers, entity, x, y)
+    def subclasses(self):
+        for s in Component.__subclasses__():
+            yield s
 
-def move_system(world, logger, managers):
-    for entity_id, entity_movement in managers['movement'].components.items():
-        entity = managers['entity'].find(entity_id)
-        entity_position = managers['position'].find(entity)
-        entity_ai = managers['ai'].find(entity)
-        x = entity_position.x + entity_movement.x
-        y = entity_position.y + entity_movement.y
+    def chain(self, unit):
+        self.unit = unit
 
-        # check environment
-        if world[y][x] in ('#', '+'):
-            if not entity_ai:
-                direction = utils.direction[(entity_movement.x, entity_movement.y)]
-                message = utils.messages['blocked_env'].format(direction)
-                logger.messages.append(Message(message, 1))
-            continue
+    def copy(self):
+        c = self.__class__()
+        c.entity = self.entity
+        return c
 
-        # check other units
-        unit_blocked = False
-        for other_entity_id, other_position in managers['position'].components.items():
-            if other_entity_id == entity.id:
-                continue
-            # NOTE: should be using the future positions of other units. 
-            #     : Maybe create a local position manager to compare future position to?
-            future_position_blocked = (
-                (x, y) == (other_position.x, other_position.y)
-            )
-            if future_position_blocked:
-                utils.create_collision(managers, entity, other_entity_id)
-                # if not entity_ai:
-                #     x, y = entity_movement.x, entity_movement.y
-                #     direction = utils.direction[(x, y)]
-                #     message = utils.messages['blocked'].format(direction)
-                #     logger.messages.append(Message(message, 1))
-                unit_blocked = True
-                break
-        
-        # all checks pass -- move position
-        if not unit_blocked:
-            entity_position.x += entity_movement.x
-            entity_position.y += entity_movement.y
-            # if not entity_ai:
-            #     direction = utils.direction[(entity_movement.x, entity_movement.y)]
-            #     message = utils.messages['move'].format(direction)
-            #     logger.messages.append(Message(message, 1))
-
-def collision_system(logger, managers):
-    for entity_id, collision in managers['collision'].components.items():
-        collider = managers['entity'].find(entity_id)
-        collider_ai = managers['ai'].find(collider)    
-        collider_info = managers['information'].find(collider)
-        collider_health = managers['health'].find(collider)
-        if collider_health.cur_hp < 1:
-            continue
-
-        collidee_entity = managers['entity'].find(collision.collided_entity_id)
-        collidee_info = managers['information'].find(collidee_entity)
-        collidee_health = managers['health'].find(collidee_entity)
-        if collidee_health.cur_hp < 1:
-            continue
-
-        collidee_hitpoints = collidee_health.cur_hp
-        collidee_health.cur_hp -= 1
-        ai = False
-        if collider_ai:
-            ai = True
-        logger.messages.append(
-            Message(
-                f"{collider_info.name.capitalize()} hit{'s' if ai else ' the'} {collidee_info.name} for 1 damage",
-                1
-            )
-        )
-    managers['collision'].components.clear()
-
-def graveyard_system(logger, managers):
-    entities_to_remove = []
-    for entity_id, health in managers['health'].components.items():
-        entity = managers['entity'].find(entity_id)
-        info = managers['information'].find(entity)
-        if health.cur_hp < 1:
-            entities_to_remove.append(entity)
-            ai = managers['ai'].find(entity)
-    for entity in entities_to_remove:
-        for manager in managers.values():
-            manager.remove(entity)
+class Position(Component):
+    Component.counter = mask = Component.counter << 1
+    attrs = ('x', 'y', 'moveable')
     
-def main_msvcrt(msvcrt):
-    getch = msvcrt.getch
-    logger = Logger()
-    mapstring = utils.LARGE_DUNGEON
-    player, world, managers = utils.setup(mapstring, 10)
-    player_health = managers['health'].find(player)
+    def __init__(self, x=0, y=0, moveable=True):
+        self.x, self.y = x, y
+        self.moveable = moveable
+    
+    def __str__(self):
+        return f"Position: ({self.x}, {self.y})"
+    
+    def __iter__(self):
+        return iter((self.x, self.y))
+    
+    def __eq__(self, other):
+        return (self.x, self.y) == (other.x, other.y)
+    
+    def move(self, x, y):
+        if self.moveable:
+            self.x += x
+            self.y += y
 
-    # uses msvcrt getch() command
-    os.system('cls')
-    utils.render(world, logger, managers, player_health)
-    logger = utils.clean_logs(logger)
-
-    while managers['entity'].find(player.id):
-        input_system(world.array, logger, getch, managers)
-        move_system(world.array, logger, managers)
-        # os.system('cls')
-        # utils.render(world, logger, managers, player_health)
-        collision_system(logger, managers)
+    def copy(self):
+        """
+        Returns a new Position instance with the same property values as the 
+        current instance being copied.
+        """
+        return Position(self.x, self.y, moveable=self.moveable)
         
-        # utils.render_header(logger, player_health)
-        # utils.render_world(world, logger, managers)
-        os.system('cls')
-        utils.render(world, logger, managers, player_health)
-        
-        graveyard_system(logger, managers)
-        
-        # utils.render_header(logger, player_health)
-        
-        # utils.render_header(logger, player_health)
-        # utils.render_world(world, logger, managers)
-        # utils.render_logs(logger)
-        logger = utils.clean_logs(logger)
-        time.sleep(.015) # helps with refresh flashes
+class Render(Component):
+    Component.counter = mask = Component.counter << 1
+    # __slots__ = ['char', 'fore', 'back', 'unit']
+    def __init__(self, c, f=None, b=None):
+        self.char, self.fore, self.back = c, f, b
 
-def main_curses(screen, curses):
-    getch = screen.getch
-    logger = Logger()
-    mapstring = utils.LARGE_DUNGEON
-    player, world, managers = utils.setup(mapstring, npcs=1)
-    player_health = managers['health'].find(player)
+    @property
+    def char(self):
+        c = self._c
+        if self.fore:
+            c = f"[color={self.fore}]{c}[/color]"
+        if self.back:
+            c = f"[bkcolor={self.back}]{c}[/bkcolor]"
+        return c
 
-    curses.curs_set(0) # turn of curses blinking
+    @char.setter
+    def char(self, c):
+        self._c = c
 
-    # do while
-    screen.clear()
-    utils.render_header(logger, managers, player_health)
-    screen.addstr(0, 0, logger.header)
-    screen.addstr(map_y_offset, map_x_offset, mapstring)
-    units = utils.render_units(managers)
-    for x, y, c in units:
-        screen.addch(y + map_y_offset, x + map_x_offset, c)
-    screen.refresh()
+class Controller(Component):
+    Component.counter = mask = Component.counter << 1
 
-    while player.id in managers['entity'].ids:
-        move_system(world.array, logger, getch, managers)
-        screen.clear()
-        collision_system(logger, managers)
-        utils.render_header(logger, player_health)
-        screen.addstr(0, 0, logger.header)
-        graveyard_system(logger, managers)
-        screen.addstr(map_y_offset, map_x_offset, mapstring)
-        for x, y, c in utils.render_units(managers):
-            screen.addch(y + map_y_offset, x + map_x_offset, c)
-        for y, message in enumerate(logger.messages):
-            message.lifetime -= 1
-            screen.addstr(world.height + map_y_offset + y, 0, message.string)
-        screen.refresh()
-        utils.clean_logs(logger)
+class Stats(Component):
+    Component.counter = mask = Component.counter << 1
+
+    def __init__(self, s):
+        self.str = s
+        self.health = s
+
+    @property
+    def health(self):
+        return self._health
+
+    @health.setter
+    def health(self, value):
+        self._health = value
+        # if self._health <= 0:
+        #     del self.entity
+    
+class Entity:
+    """Base entity class. All other 'unit' classes derive from this."""
+    obj_id = 0
+    obj_mask = 0
+
+    def __init__(self): 
+        self.obj_id = Entity.obj_id
+        Entity.obj_id += 1
+
+    def __str__(self):
+        return f"{type(self).__name__}({self.obj_id})"
+
+    def __repr__(self):
+        components = ", ".join([c for c in self.components])
+        return f"{self}{(': (' + components + ')') if components else ''}"
+
+    def __hash__(self):
+        return self.obj_id
+
+    def __eq__(self, other):
+        return self.obj_id == hash(other.obj_id)
+
+    @property
+    def components(self):
+        for component in self.__dict__:
+            if isinstance(getattr(self, component), Component):
+                yield component
+
+    @components.setter
+    def components(self, component):
+        name = type(component).__name__.lower()
+        if hasattr(self, name) and getattr(self, name):
+            raise ValueError('Cannot add a second component of same type')
+        setattr(self, name, component)
+        self.mask = component
+        component.chain(self)
+
+    @property
+    def mask(self):
+        return self.obj_mask
+
+    @mask.setter
+    def mask(self, component):
+        self.obj_mask |= component.mask
+
+class Unit(Entity):
+    controller = None
+    
+    def __init__(self, *components):
+        super().__init__()
+        for component in components:
+            component.entity = self
+            setattr(self, component.name, component)
+
+
+class Hero(Unit):
+    controller = Controller()
+
+
+def walk(world, unit):
+    x, y = random.randint(-1, 1), random.randint(-1, 1)
+    try:
+       tile = world[y+unit.y][x+unit.x]
+    except IndexError:
+        x, y = 0, 0
+    else:
+        if tile == ".":
+            return x, y
+        else:
+            return 0, 0
+       
+class Tile(Entity):
+    render = None
+    
+def TurnSystem(entities):
+    component='position'
+    movables = sorted(
+        (e for e in entities 
+            if hasattr(e, component) and getattr(e, component)
+        ),
+        key=operator.attrgetter('position.speed')
+    )
+
+    for e in movables:
+        print(e, e.position.speed)
+
+    return entities
+
+def DamageSystem(entities):
+    component = 'stats'
+    damageables = [
+        e for e in entities 
+            if hasattr(e, component) and getattr(e, component)
+    ]
+    removables = []
+    for e in damageables:
+        # h = e.stats.health
+        # e.stats.health = random.randint(0, 1)
+        # print(h, e.stats.health)
+        if e.stats.health <= 0:
+            removables.append(e)
+    
+    for e in removables:
+        entities.remove(e)
+
+    return entities
+
+
+def init_player(floors):
+    p = next(floors)
+    return Hero(Position(*p), Render('@', ORANGE, BLACK), Stats(3))
+
+
+def init_enemy(floors):
+    p = next(floors)
+    return Unit(Position(*p), Render('@', GREEN, BLACK), Stats(1))
+
+
+def init_enemy_static(floors):
+    p = next(floors)
+    return Unit(
+        Position(*p, moveable=False), 
+        Render('@', GREEN, BLACK), 
+        Stats(1)
+    )
+
+def within(width, height, ux, uy):
+    return 0 <= ux < width and 0 <= uy < height
+
+def random_enemy_move():
+    x, y = random.randint(-1, 2), random.randint(-1, 2)
+    return x, y
 
 @click.command()
-@click.option('-c', '--curses', 'curses', is_flag=True, default=False)
-def preload(curses):
-    global moveset, library
-    if curses:
-        from demos.util_curses import curses, moveset as curses_moveset
-        library = 'curses'
-        moveset = curses_moveset
-        curses.wrapper(main_curses, curses)
-    else:
-        from demos.util_msvcrt import msvcrt, moveset as msvcrt_moveset
-        import colorama
-        colorama.init()
-        library = 'msvcrt'
-        moveset = msvcrt_moveset
-        main_msvcrt(msvcrt)
+@click.option('--size', default="r", help="size of room")
+def main(size):
+    """
+    Runs a basic loop using blt and several game objects representing a subset
+    of actions available in the full application.
+    """
+    term.open()
+    
+    width, height = term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT)
+    print(term.state(term.TK_WIDTH), term.state(term.TK_HEIGHT))
+
+    turns = 0
+
+    # basic game objects
+    room = Map(EXAMPLES[size.upper()])
+    floors = iter(room.floors)
+    hero = init_player(floors)
+    entities = [hero, init_enemy(floors), init_enemy_static(floors)]
+
+    # our current action list, limited to movements only
+    moves = {
+        term.TK_LEFT: (-1, 0),
+        term.TK_RIGHT: (1, 0),
+        term.TK_UP: (0, -1),
+        term.TK_DOWN:(0, 1)
+    }
+
+    # term.puts(0, 0, WORLD)
+    room.do_fov(hero.position.x, hero.position.y, 7) 
+
+    for x, y, c in room.output(*hero.position, width//2, height//2):
+        term.puts(x, y, c)
+
+    for e in entities:
+        inbounds = within(width, height, *e.position)
+        visible = room.lit(*e.position) == room.FULL_VISIBLE
+        if inbounds and visible:
+            term.puts(*e.position, e.render.char)
+
+    term.puts(0, 24, f"turns: {turns}")
+    term.refresh()
+    affected = None
+    blocked = None
+    stop = False
+
+    # game loop
+    while True:
+        for e in entities:
+            # differentiate actions based on controller components
+            if e.controller:
+                ch = term.read()
+
+                # action keys allow character to move
+                if ch in moves.keys():
+                    # create a temp position object to check if position is 
+                    # blocked
+                    p = e.position.copy()
+                    p.move(*moves[ch])
+                    units_on_pos = any(
+                        p == x.position for x in entities if x != e
+                    )
+
+                    # if no map object or unit object in the position we wnat
+                    # to move to, finally move the real entity.
+                    if not room.blocked(*p) and not units_on_pos:
+                        e.position.move(*moves[ch])
+                        # movement is complete. Now unit experiences whatever 
+                        # tile type. The unit moved onto. Ex. floor does 
+                        # nothing Trap does some effects like damage or other
+                        affected = room.affects(e)
+                    else:
+                        if units_on_pos:
+                            blocked = "You cannot move there. \
+                                Your path is blocked by someone."
+                        else:
+                            blocked = "You cannot move there. \
+                                Your path is blocked by something."
+
+                if ch == term.TK_CLOSE or ch == term.TK_ESCAPE:
+                    stop = True
+                    break
+            else:
+                p = e.position.copy()
+                if p.moveable:
+                    p.move(*random_enemy_move())
+                    if not room.blocked(*p):
+                        e.position = p.copy()
+        if stop:
+            break
+
+        term.clear()
+        room.do_fov(hero.position.x, hero.position.y, 7)
+
+        for x, y, c in room.output(*hero.position, width//2, height//2):
+            term.puts(x, y, c)
+        
+        for e in entities[::-1]:
+            inbounds = within(width, height, *e.position)
+            visible = room.lit(*e.position) == room.FULL_VISIBLE
+            if inbounds and visible:
+                term.puts(*e.position, e.render.char)
+
+        if blocked:
+            term.puts(0, 24, blocked)
+            blocked = None
+        
+        if affected:
+            term.puts(0, 24, affected)
+        
+        term.puts(0, 24, f"turns: {turns}")
+        entities = DamageSystem(entities)
+        
+        if hero not in entities:
+            term.clear_area(0, 24, 79, 24)
+        
+            if affected:
+                term.puts(0, 23, affected)
+
+            term.puts(0, 24, "You die.")
+            term.refresh()
+            term.read()
+            break
+        
+        term.refresh()
+    
+    term.close()
 
 if __name__ == "__main__":
-    preload()
+    main()
