@@ -5,6 +5,18 @@
 from dataclasses import dataclass, field
 from classes.utils import dimensions
 
+
+@dataclass
+class Event:
+    ...
+
+@dataclass
+class CollisionEvent(Event):
+    collider: int
+    collidee: int = -1
+    x: int = 0
+    y: int = 0
+
 @dataclass
 class Message:
     string: str
@@ -15,8 +27,8 @@ class Logger:
     world: str = None
     header: str = ""
     messages: list = field(default_factory=list)
-    def add(self, message):
-        self.messages.append(message)
+    def add(self, message, lifetime=1):
+        self.messages.append(Message(message, lifetime))
 
 @dataclass
 class Map:

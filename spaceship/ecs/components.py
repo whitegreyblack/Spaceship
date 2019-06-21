@@ -37,6 +37,7 @@ class Collision(Component):
     x: int = 0
     y: int = 0
 
+
 @dataclass
 class Effect(Component):
     char: str

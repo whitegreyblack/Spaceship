@@ -47,24 +47,38 @@ class CollisionSystem(System):
         collision_manager.components.clear()
         return True
 
+    def process_collision_entity(self, entity, collision):
+        collidee = self.engine.entity_manager.find(collision.entity_id)
+        position = self.engine.position_manager.find(collidee)
+        health = self.engine.health_manager.find(collidee)
+        health.cur_hp -= 1
+        self.engine.graveyard_system.process()
+        effect = Effect(char='*')
+        # if entity == self.engine.player:
+        #     self.engine.logger.add("You bump into a unit")
+        return Effect(char='*'), position.x, position.y
+
+    def process_collision_environment(self, entity, collision):
+        effect = Effect(char='X')
+        position = self.engine.position_manager.find(entity)
+        movement = self.engine.movement_manager.find(entity)
+        # if entity == self.engine.player:
+        #     self.engine.logger.add("You bump into a wall")
+        return Effect(char='X'), position.x + movement.x, position.y + movement.y
+
     def process_collision(self, entity):
+        environment_collision = False
         collision = self.engine.collision_manager.find(entity)
-        if collision.entity_id > 0:
-            collidee = self.engine.entity_manager.find(collision.entity_id)
-            health = self.engine.health_manager.find(collidee)
-            health.cur_hp -= 1
-            self.engine.effect_manager.add(collidee, Effect(char='X'))
-            self.engine.logger.add(
-                Message("You bump into a unit")
-            )
-            self.engine.render_system.process()
-            print(self.engine.collision_manager.remove(entity))
-            return True
+        if collision.entity_id > -1:
+            effect, x, y = self.process_collision_entity(entity, collision)
         else:
-            self.engine.effect_manager.add(None, Effect(char='X'))
-            self.engine.logger.add(
-                Message("You hit the environment")
-            )
-            self.engine.render_system.process()
-            self.engine.collision_manager.remove(entity)
-            return True
+            effect, x, y = self.process_collision_environment(entity, collision)
+            environment_collision = True
+        if entity == self.engine.player:
+            self.engine.render_system.render_effect(x, y, effect)
+        self.engine.render_system.process()
+        # self.engine.graveyard_system.process()
+        self.engine.collision_manager.remove(entity)
+        if entity == self.engine.player:
+            return not environment_collision
+        return True

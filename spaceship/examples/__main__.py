@@ -82,8 +82,10 @@ def ecs_setup(screen, npcs=1):
             (position.x, position.y)
                 for position in engine.position_manager.components.values()
         ))
+        if not open_spaces:
+            break
         space = open_spaces.pop()
-        engine.position_manager.add(computer, Position(2, 1))
+        engine.position_manager.add(computer, Position(*space))
         engine.render_manager.add(computer, Render('g'))
         engine.ai_manager.add(computer, AI())
         engine.information_manager.add(computer, Information("goblin"))

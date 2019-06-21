@@ -7,6 +7,7 @@ import time
 from ..common import Message
 from .system import System
 
+redraw = 0
 
 class RenderSystem(System):
     def render_map(self, redraw=False):
@@ -40,40 +41,44 @@ class RenderSystem(System):
         if redraw:
             self.redraw()
 
-    def render_effect(self, position, effect, redraw=True):
+    def render_effect(self, x, y, effect, redraw=True):
         self.engine.screen.addch(
-            position.y + self.engine.map_y_offset,
-            position.x + self.engine.map_x_offset,
+            y + self.engine.map_y_offset,
+            x + self.engine.map_x_offset,
             effect.char
         )
         if redraw:
             self.redraw()
+            time.sleep(.05)
 
     def render_effects(self, redraw=True):
         effect_manager = self.engine.effect_manager
         for eid, effect in effect_manager.components.items():
-            entity = self.engine.entity_manager.find(eid)
-            position = self.engine.position_manager.find(entity)
-            self.render_effect(position, effect, False)
-            effect.ticks -= 1
-        if redraw:
-            self.redraw()
+            if effect.ticks > 0:
+                entity = self.engine.entity_manager.find(eid)
+                position = self.engine.position_manager.find(entity)
+                movement = self.engine.movement_manager.find(entity)
+                x, y = position.x, position.y
+                if movement:
+                    x, y = x + movement.x, y + movement.y
+                self.render_effect(x, y, effect, False)
+                effect.ticks -= 1
+            if redraw:
+                self.redraw()
+                time.sleep(1)
 
     def redraw(self):
+        global redraw
+        redraw += 1
         self.engine.screen.refresh()
+        print(redraw)
 
     def process(self):
-        self.engine.screen.clear()
+        self.engine.screen.erase()
         self.engine.screen.border()
 
         self.render_map(False)
-        
-        effects = self.engine.effect_manager.components.values()
-        while any(e.ticks > 0 for e in effects):
-            self.render_units(False)
-            self.render_effects(True)
-            time.sleep(0.1)
-
+        self.render_effects(True)
         self.render_units(False)
 
         map_offset_y = self.engine.map_y_offset
@@ -83,7 +88,7 @@ class RenderSystem(System):
         for y, log in enumerate(self.engine.logger.messages):
             # stop if lines reach end of the line 
             # could also index messages by height of window
-            if map_offset_y + y > self.engine.world.height - 2:
+            if map_offset_y + y > self.engine.height - 2:
                 break
             self.engine.screen.addstr(
                 map_offset_y + y, 

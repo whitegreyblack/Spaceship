@@ -4,7 +4,7 @@
 
 import time
 
-from ecs import Collision
+from ecs import Collision, Movement
 
 from ..common import Message
 from .system import System
@@ -65,24 +65,25 @@ class MovementSystem(System):
         return True
 
     def process_movement(self, entity):
-        print(
-            entity, 
-            self.engine.position_manager.components.keys(),
-            self.engine.position_manager.components.items())
         position = self.engine.position_manager.find(entity)
         movement = self.engine.movement_manager.find(entity)
 
         x = position.x + movement.x
         y = position.y + movement.y
 
+        # print(entity.id, 'new position', x, y)
         if self.engine.world.array[y][x] in ('#', '+'):
+            # print('position blocked by wall')
+            # if entity == self.engine.player:
+            #     self.engine.logger.add('new position blocked by environment')
             self.engine.collision_manager.add(entity, Collision(x=x, y=y))
             return self.engine.collision_system.process_collision(entity)
         positions = self.engine.position_manager.components.items()
         for eid, p in positions:
-            if (p.x, p.y) == (x, y):
+            if entity.id != eid and (p.x, p.y) == (x, y):
+                # print('new position blocked by unit', eid)
                 self.engine.collision_manager.add(entity, Collision(eid))
                 return self.engine.collision_system.process_collision(entity)
         self.move(position, movement)
-        print('---', entity, 'moved')
+        self.engine.logger.add(f"{entity.id} moves {'left' if movement.x < 0 else 'right'}")
         return True

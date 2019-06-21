@@ -19,7 +19,9 @@ class InputSystem(System):
         if char == ord('q') or char == 27:
             self.engine.running = False
             return None, None
-        self.engine.logger.add(Message(f"{char}, {repr(char)}, {chr(char)}"))
+        # self.engine.logger.add(
+        #     f"{char}, {repr(char)}, {chr(char)}"
+        # )
         return self.engine.keyboard.get(char, (0, 0))
 
     def direction_from_random(self, entity):
@@ -35,6 +37,7 @@ class InputSystem(System):
                 possible_spaces.append((x, y))
         index = random.randint(0, len(possible_spaces)-1)
         return possible_spaces[index]
+        # return -1, 0
 
     def process(self):
         entities = self.engine.entity_manager.entities
@@ -54,7 +57,6 @@ class InputSystem(System):
                 result = self.engine.movement_system.process()
                 if result:
                     break
-                # print(result)
     
     def process_entity(self, entity):
         ai = self.engine.ai_manager.find(entity)
@@ -62,5 +64,6 @@ class InputSystem(System):
             x, y = self.direction_from_random(entity)
         else:
             x, y = self.direction_from_input()
+        # self.engine.logger.add(f"{entity.id} moves {x}, {y}")
         self.engine.movement_manager.add(entity, Movement(x, y))
         return self.engine.movement_system.process_movement(entity)

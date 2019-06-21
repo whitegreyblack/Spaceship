@@ -34,6 +34,8 @@ class Engine(object):
             if attr.endswith('_system'):
                 systems.append(attr)
         return f"Engine({', '.join(managers)}, {', '.join(systems)})"
+    def find_entity(self, entity_id):
+        return self.entity_manager.find(entity_id)
     def add_world(self, world):
         if hasattr(self, 'world') and getattr(self, 'world'):
             raise Exception("world already initialized")
@@ -42,6 +44,7 @@ class Engine(object):
         if hasattr(self, 'screen') and getattr(self, 'screen'):
             raise Exception("screen already initialized")
         self.screen = screen
+        self.height, self.width = screen.getmaxyx()
     def add_player(self, entity):
         self.player = entity
     def add_keyboard(self, keyboard):
@@ -54,39 +57,21 @@ class Engine(object):
         # if hasattr(self, component + '_system'):
         #     system = getattr(self, component + '_system')
         #     system.process()
-    def find_entity(self, entity_id):
-        return self.entity_manager.find(entity_id)
     def run(self):
         self.render_system.process()
         while self.running:
             self.update()
-            self.render_system.process()
-            self.graveyard_system.process()
-            for system in (
-                self.input_system, 
-                self.render_system, 
-                self.graveyard_system
-            ):
+            for system in (self.render_system, self.graveyard_system):
                 system.process()
-            # time.sleep(.15)
     def update(self):
         entity_index = 0
-        print('llooping', self.entity_manager.entities)
         while entity_index < len(self.entity_manager.entities):
             entity = self.entity_manager.entities[entity_index]
+            # self.logger.add(f"Processing action for {entity.id}")
             result = self.input_system.process_entity(entity)
-            if result:
-                entity_index += 1
-            self.graveyard_system.process()
-            # # self.add_component(action, x, y)
-            # movement = Movement(x, y)
-            # result = self.movement_system.process_move(entity, movement)
-            # if not result:
-            #     action, x, y = self.add_component(action, x, y)
-            #     collision = Collision(x=x, y=y)
-            #     result = self.CollisionSystem.process_collision(entity, collision)
-            #     if result:
-            #         entity_index += 1
+            while not result:
+                result = self.input_system.process_entity(entity)
+            entity_index += 1
 
 if __name__ == '__main__':
     from ecs.util import dprint
