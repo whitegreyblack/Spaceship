@@ -55,19 +55,17 @@ def curses_setup(screen):
     screen.addstr(0, 1, '[__main__]')
 
 def ecs_setup(screen, npcs=1):
-    engine = Engine(components=components, systems=systems)
+    engine = Engine(
+        components=components, 
+        systems=systems,
+        world=Map.factory(LARGE_DUNGEON),
+        screen=screen,
+        keyboard=keyboard
+    )
 
-    # world
-    world =  Map.factory(LARGE_DUNGEON)
-    engine.add_world(world)
-    engine.map_y_offset = 1
-    engine.map_x_offset = 1
-
-    # other components
-    engine.add_screen(screen)
-    engine.add_keyboard(keyboard)
-    
-    """         position render info ai  health
+    """
+    component-entity graph
+                position render info ai  health
     player       o        o      o        o
     computer     o        o      o    o   o
     item         o        o      o
@@ -110,7 +108,7 @@ def ecs_setup(screen, npcs=1):
     )
     engine.render_manager.add(item, Render('%'))
     engine.information_manager.add(item, Information("item"))
-    engine.logger.add(f"{item.id} @ ({space})")
+    engine.logger.add(f"{item.id} @ ({space})") # show us item position
     return engine
 
 def main(screen, npcs):
