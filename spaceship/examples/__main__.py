@@ -25,27 +25,28 @@ colors = {
 }
 
 keyboard = {
-    curses.KEY_DOWN: (0, 1), # 258
-    curses.KEY_UP: (0, -1), # 259
-    curses.KEY_LEFT: (-1, 0), # 260
-    curses.KEY_RIGHT: (1, 0), # 261
-    449: (-1, -1), # fn-7
-    450: ( 0, -1), # fn-8
-    451: ( 1, -1), # fn-9
-    452: (-1,  0), # fn-4
-    453: ( 0,  0), # fn-5
-    454: ( 1,  0), # fn-6
-    455: (-1,  1), # fn-1
-    456: ( 0,  1), # fn-2
-    457: ( 1,  1), # fn-3
-    104: (-1,  0), # h
-    106: ( 0,  1), # j
-    107: ( 0, -1), # k
-    108: ( 1,  0), # l
-    117: (-1,- 1), # u
-    105: ( 1, -1), # i
-    110: (-1,  1), # n
-    109: ( 1,  1), # m
+    curses.KEY_DOWN: ('move', 0, 1), # 258
+    curses.KEY_UP: ('move', 0, -1), # 259
+    curses.KEY_LEFT: ('move', -1, 0), # 260
+    curses.KEY_RIGHT: ('move', 1, 0), # 261
+    449: ('move', -1, -1), # fn-7
+    450: ('move',  0, -1), # fn-8
+    451: ('move',  1, -1), # fn-9
+    452: ('move', -1,  0), # fn-4
+    453: ('move',  0,  0), # fn-5
+    454: ('move',  1,  0), # fn-6
+    455: ('move', -1,  1), # fn-1
+    456: ('move',  0,  1), # fn-2
+    457: ('move',  1,  1), # fn-3
+    104: ('move', -1,  0), # h
+    106: ('move',  0,  1), # j
+    107: ('move',  0, -1), # k
+    108: ('move',  1,  0), # l
+    117: ('move', -1,- 1), # u
+    105: ('move',  1, -1), # i
+    110: ('move', -1,  1), # n
+    109: ('move',  1,  1), # m
+    73: ('system', 'inventory') # I
 }
 
 def curses_setup(screen):
@@ -66,6 +67,12 @@ def ecs_setup(screen, npcs=1):
     engine.add_screen(screen)
     engine.add_keyboard(keyboard)
     
+    """         position render info ai  health
+    player       o        o      o        o
+    computer     o        o      o    o   o
+    item         o        o      o
+    wall         o        o      
+    """
     # player
     player = engine.entity_manager.create()
     # engine.ai_manager.add(player, AI())
@@ -76,11 +83,12 @@ def ecs_setup(screen, npcs=1):
     engine.add_player(player)
 
     # computer(s)
+    positions = engine.position_manager.components.values()
     for _ in range(npcs):
         computer = engine.entity_manager.create()
         open_spaces = set(engine.world.spaces()).difference(set(
             (position.x, position.y)
-                for position in engine.position_manager.components.values()
+                for position in positions
         ))
         if not open_spaces:
             break
@@ -91,6 +99,18 @@ def ecs_setup(screen, npcs=1):
         engine.information_manager.add(computer, Information("goblin"))
         engine.health_manager.add(computer, Health(2, 2))
 
+    item = engine.entity_manager.create()
+    open_spaces = set(engine.world.spaces())
+    if not open_spaces:
+        return engine
+    space = open_spaces.pop()
+    engine.position_manager.add(
+        item, 
+        Position(*space, blocks_movement=False)
+    )
+    engine.render_manager.add(item, Render('%'))
+    engine.information_manager.add(item, Information("item"))
+    engine.logger.add(f"{item.id} @ ({space})")
     return engine
 
 def main(screen, npcs):

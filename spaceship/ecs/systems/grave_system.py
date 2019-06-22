@@ -2,7 +2,6 @@
 
 """Graveyard system class"""
 
-from ..common import Message
 from .system import System
 import time
 

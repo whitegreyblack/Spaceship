@@ -5,11 +5,12 @@
 from ecs.entity import Entity
 
 class EntityManager(object):
-    __slots__ = ['next_id', 'ids', 'entities']
+    __slots__ = ['next_id', 'ids', 'entities', 'removed']
     
     def __init__(self):
         self.next_id = 0
         self.ids = set()
+        self.removed = set()
         self.entities = []
 
     def __repr__(self):
@@ -31,6 +32,8 @@ class EntityManager(object):
 
     def remove(self, entity):
         self.ids -= {entity.id}
+        # careful though. components not removed entirely can be accesed if id is reused
+        self.removed.add(entity.id)
         self.entities.remove(entity)
 
 if __name__ == "__main__":

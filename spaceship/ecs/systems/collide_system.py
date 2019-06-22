@@ -2,10 +2,12 @@
 
 """Collision system class"""
 
-from ..common import Message
-from .system import System
 import time
+
 from ecs import Effect
+
+from .system import System
+
 
 class CollisionSystem(System):
     def process(self):
@@ -39,8 +41,8 @@ class CollisionSystem(System):
             collidee_health.cur_hp -= 1
             effect_x, effect_y = collidee_position.x, collidee_position.y
             self.engine.add_component(collidee, 'effect', '*')
-            self.engine.logger.messages.append(
-                Message(f"{collider_info.name} deals 1 damage to {collidee_info.name}", 1)
+            self.engine.logger.add(
+                f"{collider_info.name} deals 1 damage to {collidee_info.name}", 1
             )
             self.engine.render_system.process()
             # self.engine.render_system.process()

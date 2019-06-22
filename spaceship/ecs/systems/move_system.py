@@ -6,7 +6,6 @@ import time
 
 from ecs import Collision, Movement
 
-from ..common import Message
 from .system import System
 
 
@@ -80,10 +79,12 @@ class MovementSystem(System):
             return self.engine.collision_system.process_collision(entity)
         positions = self.engine.position_manager.components.items()
         for eid, p in positions:
-            if entity.id != eid and (p.x, p.y) == (x, y):
+            other_entity = entity.id != eid
+            same_position = (p.x, p.y) == (x, y)
+            if other_entity and same_position and p.blocks_movement:
                 # print('new position blocked by unit', eid)
                 self.engine.collision_manager.add(entity, Collision(eid))
                 return self.engine.collision_system.process_collision(entity)
         self.move(position, movement)
-        self.engine.logger.add(f"{entity.id} moves {'left' if movement.x < 0 else 'right'}")
+        # self.engine.logger.add(f"{entity.id} moves {'left' if movement.x < 0 else 'right'}")
         return True

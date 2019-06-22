@@ -77,6 +77,7 @@ class Position(Component):
     x: int = 0
     y: int = 0
     moveable: bool = True
+    blocks_movement: bool = True
 
 
 @dataclass

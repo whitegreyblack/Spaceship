@@ -66,11 +66,11 @@ class Engine(object):
     def update(self):
         entity_index = 0
         while entity_index < len(self.entity_manager.entities):
+            if not self.running:
+                break
             entity = self.entity_manager.entities[entity_index]
             # self.logger.add(f"Processing action for {entity.id}")
-            result = self.input_system.process_entity(entity)
-            while not result:
-                result = self.input_system.process_entity(entity)
+            self.input_system.process_entity(entity)
             entity_index += 1
 
 if __name__ == '__main__':

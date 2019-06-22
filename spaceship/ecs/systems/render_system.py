@@ -4,10 +4,8 @@
 
 import time
 
-from ..common import Message
 from .system import System
 
-redraw = 0
 
 class RenderSystem(System):
     def render_map(self, redraw=False):
@@ -41,6 +39,14 @@ class RenderSystem(System):
         if redraw:
             self.redraw()
 
+    # def render_items(self, redraw=True):
+    #     position_manager = self.engine.position_manager
+    #     for eid, position in position_manager.components.items():
+    #         entity = self.engine.entity_manager.find(eid)
+    #         if not entity or position.:
+    #             continue
+    #         render = self.engine.render_manger.find(entity)
+
     def render_effect(self, x, y, effect, redraw=True):
         self.engine.screen.addch(
             y + self.engine.map_y_offset,
@@ -49,7 +55,7 @@ class RenderSystem(System):
         )
         if redraw:
             self.redraw()
-            time.sleep(.05)
+            time.sleep(.1)
 
     def render_effects(self, redraw=True):
         effect_manager = self.engine.effect_manager
@@ -68,10 +74,7 @@ class RenderSystem(System):
                 time.sleep(1)
 
     def redraw(self):
-        global redraw
-        redraw += 1
         self.engine.screen.refresh()
-        print(redraw)
 
     def process(self):
         self.engine.screen.erase()
@@ -79,6 +82,7 @@ class RenderSystem(System):
 
         self.render_map(False)
         self.render_effects(True)
+        # self.render_items(False)
         self.render_units(False)
 
         map_offset_y = self.engine.map_y_offset
