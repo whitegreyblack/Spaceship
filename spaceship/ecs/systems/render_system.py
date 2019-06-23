@@ -8,22 +8,34 @@ from .system import System
 
 
 class RenderSystem(System):
+    def render_string(self, x, y, string):
+        self.engine.screen.addstr(y, x, string)
+
+    def render_char(self, x, y, character):
+        self.engine.screen.addch(y, x, character)
+
+    def render_header(self, redraw=False):
+        health = self.engine.health_manager.find(self.engine.player)
+        position = self.engine.position_manager.find(self.engine.player)
+        self.header_x_offset = self.engine.map_x_offset
+        self.header_y_offset = self.engine.map_y_offset
+        self.render_string(
+            self.header_x_offset,
+            self.header_y_offset,
+            f"{health.cur_hp}/{health.max_hp} {position.x}, {position.y}"
+        )
+
     def render_map(self, redraw=False):
+        self.map_x_offset = self.header_x_offset
+        self.map_y_offset = self.header_y_offset + 1
         for x, y, c in self.engine.world.characters():
-            self.engine.screen.addch(
-                y + self.engine.map_y_offset, 
-                x + self.engine.map_x_offset, 
+            self.render_char(
+                x + self.map_x_offset, 
+                y + self.map_y_offset, 
                 c
             )
         if redraw:
             self.redraw()
-
-    def render_unit(self, position, render):
-        self.engine.screen.addch(
-            position.y + self.engine.map_y_offset, 
-            position.x + self.engine.map_x_offset, 
-            render.char
-        )
 
     def render_units(self, redraw=True):
         position_manager = self.engine.position_manager
@@ -35,7 +47,11 @@ class RenderSystem(System):
             health = self.engine.health_manager.find(entity)
             if not render or (health and health.cur_hp < 1):
                 continue
-            self.render_unit(position, render)
+            self.render_char(
+                position.x + self.map_x_offset,
+                position.y + self.map_y_offset,
+                render.char
+            )
         if redraw:
             self.redraw()
 
@@ -48,9 +64,9 @@ class RenderSystem(System):
     #         render = self.engine.render_manger.find(entity)
 
     def render_effect(self, x, y, effect, redraw=True):
-        self.engine.screen.addch(
-            y + self.engine.map_y_offset,
-            x + self.engine.map_x_offset,
+        self.render_char(
+            x + self.map_x_offset,
+            y + self.map_y_offset,
             effect.char
         )
         if redraw:
@@ -73,6 +89,19 @@ class RenderSystem(System):
                 self.redraw()
                 time.sleep(1)
 
+    def render_logs(self, redraw=True):
+        for y, log in enumerate(self.engine.logger.messages):
+            # stop if lines reach end of the line 
+            # could also index messages by height of window
+            if map_offset_y + y > self.engine.height - 2:
+                break
+            self.engine.screen.addstr(
+                self.map_y_offset + self.engine.world.height + y, 
+                self.map_x_offset, 
+                log.string
+            )
+            log.lifetime -= 1
+
     def redraw(self):
         self.engine.screen.refresh()
 
@@ -80,24 +109,11 @@ class RenderSystem(System):
         self.engine.screen.erase()
         self.engine.screen.border()
 
+        self.render_header(False)
         self.render_map(False)
         self.render_effects(True)
         # self.render_items(False)
         self.render_units(False)
 
-        map_offset_y = self.engine.map_y_offset
-        map_offset_x = self.engine.world.width + self.engine.map_x_offset + 2
-
-        # logs
-        for y, log in enumerate(self.engine.logger.messages):
-            # stop if lines reach end of the line 
-            # could also index messages by height of window
-            if map_offset_y + y > self.engine.height - 2:
-                break
-            self.engine.screen.addstr(
-                map_offset_y + y, 
-                map_offset_x, 
-                log.string
-            )
-            log.lifetime -= 1
+        self.render_logs(False)
         self.redraw()

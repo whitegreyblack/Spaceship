@@ -15,7 +15,7 @@ class InputSystem(System):
 
     def direction_from_input(self):
         curses.flushinp()
-        char = self.engine.screen.getch()
+        char = self.engine.get_input()
         # check exit input
         if char == ord('q') or char == 27:
             self.engine.running = False

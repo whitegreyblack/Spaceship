@@ -39,6 +39,9 @@ class CollisionSystem(System):
             
             hitpoints = collidee_health.cur_hp
             collidee_health.cur_hp -= 1
+            if collidee == self.engine.player and collidee_health.cur_hp < 1:
+                self.engine.running = False
+                return True
             effect_x, effect_y = collidee_position.x, collidee_position.y
             self.engine.add_component(collidee, 'effect', '*')
             self.engine.logger.add(

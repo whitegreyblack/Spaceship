@@ -51,6 +51,9 @@ class Engine(object):
             system = system_type(self)
             self.__setattr__(name, system)
 
+    def get_input(self):
+        return self.screen.getch()
+
     def find_entity(self, entity_id):
         return self.entity_manager.find(entity_id)
 

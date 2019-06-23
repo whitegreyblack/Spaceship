@@ -76,7 +76,7 @@ def ecs_setup(screen, npcs=1):
     # engine.ai_manager.add(player, AI())
     engine.position_manager.add(player, Position(1, 1))
     engine.render_manager.add(player, Render('@'))
-    engine.health_manager.add(player, Health(100, 100))
+    engine.health_manager.add(player, Health(100, 2))
     engine.information_manager.add(player, Information("you"))
     engine.add_player(player)
 
@@ -119,7 +119,7 @@ def main(screen, npcs):
 @click.command()
 @click.option('-n', '--npcs', default=2)
 def preload(npcs):
-    curses.wrapper(main, npcs)
+    curses.wrapper(main, npcs)  
 
 if __name__ == "__main__":
     preload()
