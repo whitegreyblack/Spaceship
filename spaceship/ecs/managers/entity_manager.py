@@ -16,12 +16,13 @@ class EntityManager(object):
     def __repr__(self):
         return f"{self.__class__.__name__}(next_id={self.next_id})"
 
-    def create(self):
-        entity_id = self.next_id
+    def create(self, entity_id=None):
+        if not entity_id:
+            entity_id = self.next_id
+            self.next_id += 1
         entity = Entity(entity_id)
         self.ids.add(entity_id)
         self.entities.append(entity)
-        self.next_id += 1
         return entity
 
     def find(self, eid):
@@ -39,7 +40,15 @@ class EntityManager(object):
 if __name__ == "__main__":
     from ecs.util import dprint
     manager = EntityManager()
-    print(dprint(manager))
-    entity = manager.create_entity()
+    print(dprint(manager), '# check next_id value')
+    entity = manager.create()
     print(dprint(entity))
-    print(dprint(manager))
+    print(dprint(manager), '# verify next_id value incremented')
+
+    e = manager.create()
+    print(e.id)
+    print(manager.next_id)
+
+    f = manager.create(e.id)
+    print(f.id)
+    print(manager.next_id)

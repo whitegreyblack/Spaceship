@@ -12,11 +12,11 @@ class GraveyardSystem(System):
         self.engine.effect_manager.components.clear()
 
     def remove_unit(self, entity):
-        self.engine.collision_manager.remove(entity)
-        self.engine.position_manager.remove(entity)
-        self.engine.health_manager.remove(entity)
-        self.engine.render_manager.remove(entity)
-        self.engine.ai_manager.remove(entity)
+        # self.engine.collision_manager.remove(entity)
+        # self.engine.position_manager.remove(entity)
+        # self.engine.health_manager.remove(entity)
+        # self.engine.render_manager.remove(entity)
+        # self.engine.ai_manager.remove(entity)
         self.engine.entity_manager.remove(entity)
 
     def remove_units(self):
@@ -27,6 +27,8 @@ class GraveyardSystem(System):
         entites_to_remove = []
         for entity_id, health in health_manager.components.items():
             entity = entity_manager.find(entity_id)
+            if not entity:
+                continue
             info = info_manager.find(entity)
             if health.cur_hp < 1:
                 entites_to_remove.append(entity)

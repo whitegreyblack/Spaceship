@@ -4,7 +4,7 @@
 
 import time
 
-from ecs import Effect
+from ecs import Destroy, Effect
 
 from .system import System
 
@@ -57,33 +57,59 @@ class CollisionSystem(System):
         position = self.engine.position_manager.find(collidee)
         health = self.engine.health_manager.find(collidee)
         health.cur_hp -= 1
-        self.engine.graveyard_system.process()
+        died = health.cur_hp < 1
+        if died:
+            self.engine.destroy_manager.add(collidee, Destroy())
+        # self.engine.graveyard_system.process()
         effect = Effect(char='*')
-        # if entity == self.engine.player:
-        #     self.engine.logger.add("You bump into a unit")
-        return Effect(char='*'), position.x, position.y
+        if entity == self.engine.player:
+            info = self.engine.information_manager.find(collidee)
+            if died:
+                self.engine.logger.add(f"You kill the {info.name}")
+            else:
+                self.engine.logger.add(f"You hit the {info.name}")
+            self.engine.render_system.render_effect(
+                position.x, 
+                position.y,
+                effect
+            )
+            self.engine.render_system.process()
+        elif collision.entity_id == self.engine.player.id:
+            info = self.engine.information_manager.find(entity)
+            if died:
+                self.engine.logger.add(f"You die to the {info.name}")
+            else:
+                self.engine.logger.add(f"You were attacked by {info.name}")
+            self.engine.render_system.render_effect(
+                position.x, 
+                position.y,
+                effect
+            )
+            self.engine.render_system.process()
+        return True
 
     def process_collision_environment(self, entity, collision):
         effect = Effect(char='X')
         position = self.engine.position_manager.find(entity)
         movement = self.engine.movement_manager.find(entity)
-        # if entity == self.engine.player:
-        #     self.engine.logger.add("You bump into a wall")
-        return Effect(char='X'), position.x + movement.x, position.y + movement.y
+        if entity == self.engine.player:
+            self.engine.logger.add("You bump into a wall")
+        self.engine.render_system.render_effect(
+            position.x + movement.x, 
+            position.y + movement.y, 
+            effect
+        )
+        self.engine.render_system.process()
+        return False
 
     def process_collision(self, entity):
-        environment_collision = False
+        entity_collision = False
         collision = self.engine.collision_manager.find(entity)
+        # print(f'process collission for {entity} {collision} {self.engine.collision_manager.components}')
         if collision.entity_id > -1:
-            effect, x, y = self.process_collision_entity(entity, collision)
+            entity_collision = self.process_collision_entity(entity, collision)
         else:
-            effect, x, y = self.process_collision_environment(entity, collision)
-            environment_collision = True
-        if entity == self.engine.player:
-            self.engine.render_system.render_effect(x, y, effect)
-        self.engine.render_system.process()
+            entity_collision = self.process_collision_environment(entity, collision)
         # self.engine.graveyard_system.process()
         self.engine.collision_manager.remove(entity)
-        if entity == self.engine.player:
-            return not environment_collision
-        return True
+        return entity_collision

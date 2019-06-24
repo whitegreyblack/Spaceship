@@ -2,6 +2,7 @@
 
 """Render system class"""
 
+import curses
 import time
 
 from .system import System
@@ -11,8 +12,8 @@ class RenderSystem(System):
     def render_string(self, x, y, string):
         self.engine.screen.addstr(y, x, string)
 
-    def render_char(self, x, y, character):
-        self.engine.screen.addch(y, x, character)
+    def render_char(self, x, y, character, color_pair=0):
+        self.engine.screen.addch(y, x, character, color_pair)
 
     def render_header(self, redraw=False):
         health = self.engine.health_manager.find(self.engine.player)
@@ -67,7 +68,8 @@ class RenderSystem(System):
         self.render_char(
             x + self.map_x_offset,
             y + self.map_y_offset,
-            effect.char
+            effect.char,
+            curses.color_pair(1)
         )
         if redraw:
             self.redraw()
@@ -93,10 +95,11 @@ class RenderSystem(System):
         for y, log in enumerate(self.engine.logger.messages):
             # stop if lines reach end of the line 
             # could also index messages by height of window
-            if map_offset_y + y > self.engine.height - 2:
+            log_y = self.map_y_offset + self.engine.world.height + y
+            if log_y > self.engine.height - 2:
                 break
             self.engine.screen.addstr(
-                self.map_y_offset + self.engine.world.height + y, 
+                log_y,
                 self.map_x_offset, 
                 log.string
             )

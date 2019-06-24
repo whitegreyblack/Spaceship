@@ -79,6 +79,8 @@ class MovementSystem(System):
             return self.engine.collision_system.process_collision(entity)
         positions = self.engine.position_manager.components.items()
         for eid, p in positions:
+            if eid not in self.engine.entity_manager.ids:
+                continue
             other_entity = entity.id != eid
             same_position = (p.x, p.y) == (x, y)
             if other_entity and same_position and p.blocks_movement:

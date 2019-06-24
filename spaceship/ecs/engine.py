@@ -11,7 +11,7 @@ from ecs.systems import CollisionSystem, MovementSystem
 
 
 class Engine(object):
-    def __init__(self, components, systems, world, screen, keyboard):
+    def __init__(self, components, systems, world=None, screen=None, keyboard=None):
         self.running = True
         self.logger = Logger()
         self.debugger = Logger()
@@ -29,7 +29,7 @@ class Engine(object):
 
     def __repr__(self):
         managers = []
-        systems = []    
+        systems = []
         for attr in self.__dict__.keys():
             if attr.endswith('_manager'):
                 managers.append(attr.replace('_manager', ''))
@@ -70,6 +70,7 @@ class Engine(object):
 
     def add_player(self, entity):
         self.player = entity
+        self.player_id = entity.id
 
     def add_component(self, entity, component, *args):
         manager = getattr(self, component + '_manager')
@@ -78,28 +79,35 @@ class Engine(object):
         manager.add(entity, self.components[component](*args))
 
     def run(self):
-        self.render_system.process()
-        while self.running:
+        while True:
+            self.render_system.process()
             self.update()
-            for system in (self.render_system, self.graveyard_system):
-                system.process()
+            self.graveyard_system.process()
+            if not self.running:
+                break
+        # while self.running:
+        #     self.update()
+        #     for system in (self.render_system, self.graveyard_system):
+        #         system.process()
+        self.screen.getch()
 
     def update(self):
         entity_index = 0
         while entity_index < len(self.entity_manager.entities):
-            if not self.running:
-                break
             entity = self.entity_manager.entities[entity_index]
             # self.logger.add(f"Processing action for {entity.id}")
             self.input_system.process_entity(entity)
+            if not self.running:
+                break
             entity_index += 1
 
 
 if __name__ == '__main__':
+    from ecs import Position, Information
     from ecs.util import dprint
     e = Engine(
         components=(
-            Position, 
+            Position,
             Information
         ),
         systems=(

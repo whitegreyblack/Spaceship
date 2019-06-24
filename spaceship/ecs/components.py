@@ -39,6 +39,11 @@ class Collision(Component):
 
 
 @dataclass
+class Destroy(Component):
+    ...
+
+
+@dataclass
 class Effect(Component):
     char: str
     foreground: str = None
@@ -54,11 +59,16 @@ class Experience(Component):
 
 @dataclass
 class Health(Component):
-    max_hp: int = 1
     cur_hp: int = 1
+    max_hp: int = 1
     @property
     def alive(self):
         return self.cur_hp > 0
+
+
+@dataclass
+class Input(Component):
+    ...
 
 
 @dataclass
