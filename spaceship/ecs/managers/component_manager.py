@@ -19,6 +19,10 @@ class ComponentManager(object):
         l = len(self.components.keys())
         return f"{self.__class__.__name__}(components={l})"
 
+    def __iter__(self):
+        for k, v in self.components.items():
+            yield k, v
+
     def add(self, entity, component):
         if type(component).__name__ is not self.ctype:
             raise ValueError("Invalid component type added.")

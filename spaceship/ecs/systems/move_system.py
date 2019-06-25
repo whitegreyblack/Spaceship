@@ -10,9 +10,9 @@ from .system import System
 
 
 class MovementSystem(System):
-    def move(self, position, movement):
-        position.x += movement.x
-        position.y += movement.y
+    def move(self, position, x, y):
+        position.x += x
+        position.y += y
 
     def process(self):
         entity_manager = self.engine.entity_manager
@@ -90,3 +90,21 @@ class MovementSystem(System):
         self.move(position, movement)
         # self.engine.logger.add(f"{entity.id} moves {'left' if movement.x < 0 else 'right'}")
         return True
+
+    def process(self, movement):
+        entity, position, movement = movement
+        x, y = position.x + movement[0], position.y + movement[1]
+        if self.engine.world.world[y][x] in ('#', '+'):
+            self.engine.logger.add(f"collision with environment")
+            return  
+        for other_id, other_position in self.engine.position.components.items():
+            if other_id == entity.id:
+                continue
+            future_position_blocked = (
+                (x, y) == (other_position.x, other_position.y)
+            )
+            if future_position_blocked:
+                self.engine.add_component(entity, 'collision', other_id)
+                self.engine.logger.add(f"collision")
+                return
+        self.move(position, *movement)

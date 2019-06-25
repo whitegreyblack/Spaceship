@@ -1,0 +1,14 @@
+{
+    "items": [{
+        "render": {
+            "symbol": "[[", 
+            "fg": "#00AAAA"
+        },
+        "information": {
+            "name": "sword"
+        },
+        "Position": {
+            "moveable": 0
+        }
+    }]
+}

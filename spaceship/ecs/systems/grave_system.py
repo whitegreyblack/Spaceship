@@ -46,6 +46,6 @@ class GraveyardSystem(System):
         # self.engine.logger.messages.append(
         #     Message("Graveyard", 1)
         # )
-        self.remove_effects()
-        self.remove_units()
+        # self.remove_effects()
+        # self.remove_units()
         self.remove_messages()
