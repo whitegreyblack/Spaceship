@@ -19,7 +19,7 @@ class InputSystem(System):
         # check exit input
         if char == ord('q') or char == 27:
             self.engine.running = False
-            return None
+            return None, None, None
         # check inventory command
         self.engine.logger.add(
             f"{char}, {repr(char)}, {chr(char)}"

@@ -52,7 +52,8 @@ keyboard = {
     105: ('move',  1, -1), # i
     110: ('move', -1,  1), # n
     109: ('move',  1,  1), # m
-    73: ('system', 'inventory') # I
+    73: ('inventory', None, None), # I,
+    27: ('main_menu', None, None), # ESCAPE
 }
 
 def curses_setup(screen):
@@ -142,7 +143,7 @@ def main(screen, dungeon, npcs):
 
 @click.command()
 @click.option('-d', '--dungeon', default='small')
-@click.option('-n', '--npcs', default=1)
+@click.option('-n', '--npcs', default=0)
 def preload(dungeon, npcs):
     curses.wrapper(main, dungeon, npcs)
 

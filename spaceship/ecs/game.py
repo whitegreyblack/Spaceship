@@ -1,17 +1,21 @@
-from bearlibterminal import terminal as term
-from collections import namedtuple
-from ecs.die import check_sign as check
-from ecs.keyboard import Keyboard
-from ecs.ecs import (
-    Entity, Component, Position, Render, Inventory, Damage, Equipment,
-    Information, Attribute, Delete
-)
-from ecs.component import (Entity, Position, Render, Information, Attribute, Delete,
-    Equipment, Damage)
-from ecs.map import Map, WORLD
 import math
 import random
 import textwrap
+from collections import namedtuple
+
+from bearlibterminal import terminal as term
+
+from ecs.die import check_sign as check
+# from ecs.ecs import (Attribute, Component, Damage, Delete, Entity, Equipment,
+#                      Information, Inventory, Position, Render)
+from ecs.keyboard import Keyboard
+from ecs.map import WORLD, Map
+from ecs import Entity, Position
+# from ecs.other import (
+#     #Attribute, 
+#     Damage, Delete, Entity, Equipment,
+#                        Information, Position, Render)
+
 
 def has(entity, components=None):
     def attr(name):
@@ -440,15 +444,18 @@ def create_player(entities, floors):
     # color -> class type
     # race/name
     # backpack stuff
-    return Entity(components=[
-        Position(*random_position(entities, floors)),
-        Information(name="Hero", race="Human"),
-        Render('a', '#DD8822', '#000088'),
-        ('backpack', []),
-        Equipment(Damage(("1d6", Damage.PHYSICAL)),
-                  Damage(("1d6", Damage.PHYSICAL))),
-        Attribute(strength=10),
-    ])
+    x, y = random_position(entities, floors)
+    return Entity(
+        components=[
+            Position(x, y),
+            Information(name="Hero", race="Human"),
+            Render('a', '#DD8822', '#000088'),
+            ('backpack', []),
+            Equipment(Damage(("1d6", Damage.PHYSICAL)),
+            Damage(("1d6", Damage.PHYSICAL))),
+            Attribute(strength=10),
+        ]
+    )
 
 def create_enemy(entities, floors):
     goblin = (Information(race="goblin"), 

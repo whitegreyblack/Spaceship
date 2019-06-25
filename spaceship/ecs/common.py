@@ -44,6 +44,8 @@ class Map:
             for i in range(self.width):
                 if self.array[j][i] == '.':
                     yield i, j
+    def blocked(self, i, j):
+        return self.array[j][i] in ('#', '+')
     @classmethod
     def factory(cls, string):
         return cls(*dimensions(string))

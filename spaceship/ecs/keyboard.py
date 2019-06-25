@@ -33,3 +33,14 @@ class Keyboard:
         term.TK_P: "pressed play",
         term.TK_E: "pressed exit",
     }
+
+# maps curses input to a string value
+# A-Za-z
+keyboard = { c: chr(c) for x in (65, 97) for c in range(x, x+26) }
+keyboard.update({
+    258: 'down',
+    259: 'up',
+    260: 'left',
+    261: 'right',
+    27: 'escape'
+})

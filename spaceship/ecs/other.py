@@ -1,8 +1,8 @@
 # components.py
 from collections.abc import Iterable
 from collections import namedtuple
-from component import Component
-from die import Die
+from .components import Component
+from .die import Die
 import random
 import re
 
