@@ -117,7 +117,7 @@ class RayCastedMap(Map):
     #       that take in a list of lists representing the world, width,
     #       height, player position and is_blocked, reset_light functions
     RAYS = 360
-    STEP = 2
+    STEP = 3
     def do_fov(self, px: int , py: int, radius: int):
         """Calculate lit squares from the given location and radius"""
         self.reset_light()

@@ -17,7 +17,7 @@ from ecs import (AI, Collision, Destroy, Effect, Engine, Experience, Health,
                  Render, components)
 from ecs.systems import systems
 from keyboard import keyboard
-from maps import Map, dungeons
+from maps import Map, RayCastedMap, dungeons
 from space import eight_square, nine_square
 
 
@@ -91,7 +91,7 @@ def ecs_setup(screen, dungeon, npcs):
         components=components, 
         systems=systems,
         # world=Map.factory(dungeon),
-        world=Map(dungeon),
+        world=RayCastedMap(dungeon),
         screen=screen,
         keyboard=keyboard
     )

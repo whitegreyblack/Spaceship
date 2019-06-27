@@ -108,10 +108,15 @@ class Map:
     def open_door(self, x: int, y: int):
         if self.is_door(x, y) and self.square(x, y) == '+':
             self.world[y][x] = '/'
+            print('door opened')
+            return True
+        return False
     
     def close_door(self, x: int, y:int):
         if self.is_door(x, y) and self.square(x, y) == '/':
             self.world[y][x] = '+'
+            return True
+        return False
         
     def lit(self, x: int, y: int) -> int:
         """

@@ -197,4 +197,3 @@ def main(width, height, passes, maptype, color):
 
 if __name__ == "__main__":
     main()
-

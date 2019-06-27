@@ -3,12 +3,14 @@
 """Runs the package as an application when running as module"""
 
 import curses
-import click
-from . import BltMap, Map, RayCastedMap, dungeons
 from collections import namedtuple
+
+import click
+
 from ecs import Position
 from keyboard import keyboard
 
+from . import BltMap, Map, RayCastedMap, dungeons
 
 directions = {
     'down': (0, 1),
