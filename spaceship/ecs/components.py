@@ -29,6 +29,7 @@ class Component(object):
 @dataclass
 class AI(Component):
     ...
+    manager: str = 'ais'
 
 
 @dataclass
@@ -36,11 +37,12 @@ class Collision(Component):
     entity_id: int = -1
     x: int = 0
     y: int = 0
+    manager: str = 'collisions'
 
 
 @dataclass
 class Destroy(Component):
-    ...
+    manager: str = 'destroyed'
 
 
 @dataclass
@@ -49,18 +51,21 @@ class Effect(Component):
     foreground: str = None
     background: str = None
     ticks: int = 1
+    manager: str = 'effects'
 
 
 @dataclass
 class Experience(Component):
     level: int = 1
     exp: int = 0
+    manager: str = 'experiences'
 
 
 @dataclass
 class Health(Component):
     cur_hp: int = 1
     max_hp: int = 1
+    manager: str = 'healths'
     @property
     def alive(self):
         return self.cur_hp > 0
@@ -68,18 +73,36 @@ class Health(Component):
 
 @dataclass
 class Input(Component):
-    ...
+    is_player: bool = False
+    manager: str = 'inputs'
 
 
 @dataclass
 class Information(Component):
     name: str
+    manager: str = 'infos'
 
 
 @dataclass
 class Movement(Component):
     x: int
     y: int
+    manager: str = 'movements'
+    @classmethod
+    def from_input(cls, keypress):
+        directions = {
+            'down': ( 0,  1),
+            'up': ( 0, -1),
+            'left': (-1,  0),
+            'right': ( 1,  0),
+        }
+        return cls(*directions[keypress])
+
+
+@dataclass
+class Openable(Component):
+    opened: bool = False
+    manager: str = 'openables'
 
 
 @dataclass
@@ -88,6 +111,7 @@ class Position(Component):
     y: int = 0
     moveable: bool = True
     blocks_movement: bool = True
+    manager: str = 'positions'
 
 
 @dataclass
@@ -95,7 +119,7 @@ class Render(Component):
     char: str = '@'
     fore: str = None #'#ffffff'
     back: str = None #'#000000'
-
+    manager: str = 'renders'
     @property
     def string(self):
         if self.fore:
@@ -103,8 +127,29 @@ class Render(Component):
         return self.char
 
 
+@dataclass
+class Tile(Component):
+    entity_id: int
+    manager: str = 'tiles'
+
+
+@dataclass
+class TileMap(Component):
+    width: int
+    height: int
+    manager: str = 'tilemaps'
+
+
+@dataclass
+class Visibility(Component):
+    level: int = 0
+    manager = 'visibilities'
+
+components = Component.__subclasses__()
+
+
 if __name__ == "__main__":
-    from ecs.util import dprint
+    from ecs.debug import dprint
     for component in Component.__subclasses__():
         try:
             print(component())

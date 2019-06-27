@@ -9,11 +9,10 @@ import random
 import colorama
 
 from classes.utils import dimensions
-from ecs import Entity
 from ecs.common import Map
 from ecs.components import (AI, Collision, Health, Information, Movement,
                             Position, Render)
-from ecs.managers import ComponentManager, EntityManager
+from ecs.managers import ComponentManager, Entity, EntityManager
 
 direction = {
     (0, -1): 'north',

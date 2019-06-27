@@ -7,11 +7,15 @@ import random
 import time
 from dataclasses import dataclass, field
 
-from ecs import Movement, Position
+from ecs import Movement, Position, Collision
 from space import eight_square, nine_square
-
+from ecs.managers import join
 from .system import System
 
+@dataclass
+class Command:
+    char: str
+    keypress: str
 
 @dataclass
 class DoorAction:
@@ -29,22 +33,6 @@ class DoorAction:
 
 class InputSystem(System):
 
-    def direction_from_input(self):
-        curses.flushinp()
-        char = self.engine.get_input()
-        # check exit input
-        if char == ord('q'):
-            self.engine.running = False
-            return None, None, None
-        # check inventory command
-        self.engine.logger.add(
-            f"{char}, {repr(char)}, {chr(char)}"
-        )
-        command = self.engine.keyboard.get(char, None)
-        if not command:
-            self.engine.logger.add("Command unknown")
-        return command
-
     def direction_from_random(self, entity):
         position = self.engine.position_manager.find(entity)
         possible_spaces = []
@@ -59,128 +47,188 @@ class InputSystem(System):
         index = random.randint(0, len(possible_spaces)-1)
         return possible_spaces[index]
 
-    def open_door(self, position):
+    def open_door(self, entity):
+        """TODO: render log message when opening a door of multiple doors"""
+        position = self.engine.positions.find(entity)        
         turn_over = False
-        doors = []
+        coordinates = []
+        # get all cardinal coordinates surrounding current entity position
         for x, y in eight_square():
-            target = DoorAction(position, Movement(x, y))
-            is_blocked = self.engine.world.is_blocked(target.x, target.y)
-            is_door = self.engine.world.is_door(target.x, target.y)
-            if is_blocked and is_door:
-                doors.append(target)
+            coordinates.append((position.x + x, position.y + y))
+        g = join(
+            self.engine.openables, 
+            self.engine.positions, 
+            self.engine.renders
+        )
+        doors = {}
+        # compare coordinates against entities that can be opened that have a
+        # a position x, y value in the coordinates list.
+        for entity_id, (openable, coordinate, render) in g:
+            valid_coordinate = (coordinate.x, coordinate.y) in coordinates
+            if valid_coordinate and not openable.opened:
+                x = coordinate.x - position.x
+                y = coordinate.y - position.y
+                doors[(x, y)] = (openable, coordinate, render)
+        door_to_open = None
         if not doors:
             self.engine.logger.add(f"No closed doors to open")
         elif len(doors) == 1:
-            door = doors.pop()
-            opened = self.engine.world.open_door(door.x, door.y)
-            if opened:
-                self.engine.logger.add(f"You open the door")
-            else:
-                self.engine.logger.add(f"You cannot open the door")
+            door_to_open, = doors.items()
         else:
+            self.engine.logger.add(f"Which door to open?")
+            self.engine.render_system.render_logs()
             char = self.engine.get_input()
-            directions = {
-                258: Movement( 0,  1),
-                259: Movement( 0, -1),
-                260: Movement(-1,  0),
-                261: Movement( 1,  0),
-            }
-            direction = directions.get(char, None)
-            if not direction or direction not in doors:
-                self.engine.logger.add(f"You cancel opening a door")
-            else:
-                self.engine.world.add(f"You open the door")
-                turn_over = True
-        return turn_over
+            # invalid keypress
+            if not 258 <= char < 262:
+                self.engine.logger.add(f"You cancel opening a door due to input error")
+                return turn_over
+            keypress = self.engine.keyboard[char]
+            movement = Movement.from_input(keypress)
+            # valid direction keypress but not valid door direction
+            door = doors.get((movement.x, movement.y), None)
+            if not door:
+                self.engine.logger.add(f"You cancel opening a door direction invalid error")
+            door_to_open = ((movement.x, movement.y), door)
+        if door_to_open:
+            ((x, y), (openable, position, render)) = door_to_open
+            openable.opened = True
+            position.blocks_movement = False
+            render.char = '/'
+            self.engine.logger.add(f"You open the door")
+            turn_over = True
+        return turn_over    
 
-    def close_door(self, position):
+    def close_door(self, entity):
+        """TODO: cannot close door when unit is standing on the cell"""
+        position = self.engine.positions.find(entity)
         turn_over = False
-        doors = []
+        coordinates = []
         for x, y in eight_square():
-            target = DoorAction(position, Movement(x, y))
-            is_unblocked = not self.engine.world.is_blocked(*target)
-            is_door = self.engine.world.is_door(*target)
-            if is_door and is_unblocked:
-                doors.append(target)
+            coordinates.append((position.x + x, position.y + y))
+        g = join(
+            self.engine.openables, 
+            self.engine.positions, 
+            self.engine.renders
+        )
+        doors = {}
+        # compare coordinates against entities that can be closed that have a
+        # a position x, y value in the coordinates list.
+        for entity_id, (openable, coordinate, render) in g:
+            if (coordinate.x, coordinate.y) in coordinates and openable.opened:
+                x = coordinate.x - position.x
+                y = coordinate.y - position.y
+                doors[(x, y)] = (openable, coordinate, render)
+        door_to_close = None
         if not doors:
             self.engine.logger.add(f"No opened door to close")
         elif len(doors) == 1:
-            door = doors.pop()
-            closed = self.engine.world.close_door(*door)
-            if closed:
-                self.engine.logger.add(f"You close the door")
-            else:
-                self.engine.logger.add(f"You cannot close the door")
-                turn_over = True
+            door_to_close, = doors.items()
         else:
+            self.engine.logger.add(f"Which door to open?")
+            self.engine.render_system.render_logs()
             char = self.engine.get_input()
-            directions = {
-                258: ( 0,  1),
-                259: ( 0, -1),
-                260: (-1,  0),
-                261: ( 1,  0),
-            }
-            direction = directions.get(char, None)
-            if not direction or direction not in doors:
-                self.engine.logger.add(f"You cancel opening a door")
+            # invalid keypress
+            if not 258 <= char < 262:
+                self.engine.logger.add(f"You cancel closing a door due to input error")
+                return turn_over
+            keypress = self.engine.keyboard[char]
+            movement = Movement.from_input(keypress)
+            # valid direction keypress but not valid door direction
+            door = doors.get((movement.x, movement.y), None)
+            if not door:
+                self.engine.logger.add(f"You cancel closing a door direction invalid error")
+            door_to_close = ((movement.x, movement.y), door)
+        if door_to_close:
+            ((x, y), (openable, position, render)) = door_to_close
+            openable.opened = False
+            position.blocks_movement = True
+            render.char = '+'
+            self.engine.logger.add(f"You close the door")
+            turn_over = True
+        return turn_over
+
+    def collide(self, entity, collision):
+        other = self.engine.entities.find(collision.entity_id)
+        info = self.engine.infos.find(other)
+        self.engine.logger.add(f'collided with a {info.name}({collision.entity_id})')
+
+    def move(self, entity, movement) -> bool:
+        position = self.engine.positions.find(entity)
+        if not position or not movement:
+            return False
+        x, y = position.x + movement.x, position.y + movement.y
+        for other_id, other_position in self.engine.positions:
+            if other_id == entity.id or not other_position.blocks_movement:
+                continue
+            future_position_blocked = (
+                (x, y) == (other_position.x, other_position.y)
+            )
+            if future_position_blocked:
+                self.collide(entity, Collision(other_id))
+                return True
+        position.x += movement.x
+        position.y += movement.y
+        return True
+
+    def player_command(self, entity):
+        while True:
+            # self.engine.logger.add(f"Turn for {entity.id}")
+            exit_prog = False
+            turn_over = False
+            char = self.engine.get_input()
+            # print(char)
+            if char == -1:
+                break
+            keypress = self.engine.keypress_from_input(char)
+            if keypress == 'q':
+                self.engine.running = False
+                break
+            elif keypress in ('up', 'down', 'left', 'right'):
+                movement = Movement.from_input(keypress)
+                # self.engine.movements.add(entity, movement)
+                turn_over = self.move(entity, movement)
+            elif keypress == 'escape':
+                while True:
+                    self.engine.render_system.main_menu.render()
+                    keep_open = self.engine.render_system.main_menu.get_input()
+                    if not self.engine.running:
+                        return
+                    if not keep_open:
+                        break
+            elif keypress == 'i':
+                while True:
+                    self.engine.render_system.inventory_menu.render()
+                    keep_open = self.engine.render_system.inventory_menu.get_input()
+                    if not keep_open:
+                        break
+            elif keypress == 'o':
+                turn_over = self.open_door(entity)
+            elif keypress == 'c':
+                turn_over = self.close_door(entity)
             else:
-                self.engine.world.add(f"You open the door")
-                turn_over = True
+                self.engine.logger.add(f"unknown command {char} {chr(char)}")
+            if turn_over:
+                break
+            self.engine.render_system.process()
+
+    def computer_command(self, entity):
+        position = self.engine.positions.find(entity)
+        possible_spaces = []
+        for x, y in nine_square():
+            possible_spaces.append((x, y))
+        index = random.randint(0, len(possible_spaces)-1)
+        movement = Movement(*possible_spaces[index])
+        return self.move(entity, movement)
 
     def process(self):
-        for entity_id in self.engine.input.components.keys():
+        for entity_id, need_input in self.engine.inputs:
             entity = self.engine.entities.find(entity_id)
-            position = self.engine.position.find(entity)
-            ai = self.engine.ai.find(entity)
-            # process player input
-            if not ai:
-                while True:
-                    self.engine.logger.add(f"Turn for {entity.id}")
-                    exit_prog = False
-                    turn_over = False
-                    char = self.engine.get_input()
-                    keypress = self.engine.keyboard[char]
-                    self.engine.logger.add(keypress)
-                    if keypress == 'q':
-                        self.engine.running = False
-                        break
-                    elif keypress in ('up', 'down', 'left', 'right'):
-                        directions = {
-                            258: ( 0,  1),
-                            259: ( 0, -1),
-                            260: (-1,  0),
-                            261: ( 1,  0),
-                        }
-                        self.engine.movement_system.process((
-                            entity, 
-                            position, 
-                            directions[char]
-                        ))
-                        turn_over = True
-                    elif keypress == 'escape':
-                        while True:
-                            self.engine.render_system.main_menu.render()
-                            keep_open = self.engine.render_system.main_menu.get_input()
-                            print(keep_open, exit_prog)
-                            if not self.engine.running:
-                                return
-                            if not keep_open:
-                                break
-                    elif keypress == 'i':
-                        while True:
-                            self.engine.render_system.inventory_menu.render()
-                            keep_open = self.engine.render_system.inventory_menu.get_input()
-                            if not keep_open:
-                                break
-                    elif keypress == 'o':
-                        turn_over = self.open_door(position)
-                    elif keypress == 'c':
-                        turn_over = self.close_door(position)
-                    else:
-                        self.engine.logger.add(f"unknown command {char} {chr(char)}")
-                    if turn_over:
-                        break
-                    self.engine.render_system.process()
+            ai = self.engine.ais.find(entity)
+            if ai:
+                command = self.computer_command(entity)
+            else:
+                command = self.player_command(entity)
+            # self.engine.process_command(command)
 
     def process_entity(self, entity):
         ai = self.engine.ai_manager.find(entity)

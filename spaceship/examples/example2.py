@@ -4,20 +4,20 @@ import textwrap
 from time import sleep, time
 from collections import namedtuple
 from bearlibterminal import terminal as term
-import spaceship.strings as strings
-from spaceship.scene import Scene
-from spaceship.screen_functions import *
-import spaceship.tools as tools
-import spaceship.action as actions
-from spaceship.gamelog import GameLogger
-from spaceship.classes.item import Item, Potion, sort
-from spaceship.classes.wild import wilderness
-from spaceship.classes.player import Player
-from spaceship.classes.world import World
-from spaceship.classes.city import City
-from spaceship.classes.cave import Cave
-from spaceship.classes.point import Point, spaces
-import spaceship.classes.controller as controller
+import strings as strings
+from scene import Scene
+from screen_functions import *
+import tools as tools
+import action as actions
+from gamelog import GameLogger
+from classes.item import Item, Potion, sort
+from classes.wild import wilderness
+from classes.player import Player
+from classes.world import World
+from classes.city import City
+from classes.cave import Cave
+from classes.point import Point, spaces
+import classes.controller as controller
 
 enter_maps = {
     'cave': Cave,
@@ -1235,7 +1235,7 @@ class Start(Scene):
         print(self.log)
 
 if __name__ == "__main__":
-    from .make import Create
+    from make import Create
     term.open()
     c = Create()
     ret = c.run()

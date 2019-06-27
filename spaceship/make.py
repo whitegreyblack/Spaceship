@@ -8,8 +8,8 @@ from collections import namedtuple
 from bearlibterminal import terminal as term
 # sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')
 import spaceship.strings as strings
-from .screen_functions import *
-from .scene import Scene
+from screen_functions import *
+from scene import Scene
 
 # some helper objects used in character creation
 equipment = namedtuple("Equipment", "hd nk bd ar hn lh rh lr rr wa lg ft")

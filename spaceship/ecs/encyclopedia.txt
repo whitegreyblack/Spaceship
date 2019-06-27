@@ -7,3 +7,46 @@
         intelligence: 2
     }
 }
+
+# wall entity
+entity
+    .position({x, y, blocks_move=True})
+    .render(char='#')
+    .information()
+    .tile() # seen by map
+# door entity
+entity
+    .position({x, y, blocks_move=(True || False # depending on opend or not)})
+    .render(char='+') || .render(char='/')
+    .information()
+    .tile()
+    .openable()
+# floor entity
+entity
+    .position({x, y})
+    .render(char='.')
+    .information()
+    .tile()
+# player entity
+entity
+    .position()
+    .render()
+    .health()
+    .information()
+    .input()
+# enemy entity
+entity
+    .position()
+    .render()
+    .health()
+    .information()
+    .input()
+    .ai
+# so far
+.position()
+.render()
+.information()
+
+# moveable entities (player, enemy)
+.input()
+.health()

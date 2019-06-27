@@ -208,16 +208,11 @@ class Map:
         """
         Returns all positions and characters on the map
         """
-        if not width:
-            width = self.width
-        if not height:
-            height = self.height
         for y in range(self.height):
             for x in range(self.width):
-                l = self.lit(x, y)
+                # l = self.lit(x, y)
                 c = self.square(x, y)
-                yield x, y, c, l
-
+                yield x, y, c # , l
 
 if __name__ == "__main__":
     print("Usage: py -m maps -m map")

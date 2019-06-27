@@ -6,8 +6,8 @@ from collections import namedtuple
 '''
 
 '''Constants used in main and other modules -- equivalent to globals'''
-FONT_PATH = "./spaceship/assets/fonts/"
-IMG_PATH = "./spaceship/assets/"
+FONT_PATH = "./assets/fonts/"
+IMG_PATH = "./assets/"
 MENU_SCREEN_WIDTH, MENU_SCREEN_HEIGHT = 80, 25
 MENU_FONT_WIDTH, MENU_FONT_HEIGHT = 8, 16
 

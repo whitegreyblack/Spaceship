@@ -1,2 +1,2 @@
-from .entity_manager import EntityManager
-from .component_manager import ComponentManager
+from .entity_manager import EntityManager, Entity
+from .component_manager import ComponentManager, join

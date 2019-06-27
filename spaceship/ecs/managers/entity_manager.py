@@ -2,7 +2,13 @@
 
 """Manager for entity objects"""
 
-from ecs.entity import Entity
+from dataclasses import dataclass
+
+
+@dataclass
+class Entity:
+    __slots__ = ['id']
+    id: int
 
 class EntityManager(object):
     __slots__ = ['next_id', 'ids', 'entities', 'removed']
@@ -15,6 +21,10 @@ class EntityManager(object):
 
     def __repr__(self):
         return f"{self.__class__.__name__}(next_id={self.next_id})"
+
+    def __iter__(self):
+        for entity in self.entities:
+            yield entity
 
     def create(self, entity_id=None):
         if not entity_id:

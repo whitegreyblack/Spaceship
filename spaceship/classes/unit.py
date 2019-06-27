@@ -2,8 +2,8 @@ from random import choice
 from .object import Object
 from .color import Color
 from collections import namedtuple
-from ..tools import distance
-from ..action import commands_ai
+from tools import distance
+from action import commands_ai
 
 ''' TODO: implement unique attributes
 self.str, self.agi, self.int

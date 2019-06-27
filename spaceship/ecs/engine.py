@@ -2,33 +2,49 @@
 
 """Engine class to hold all objects"""
 
+import curses
+import random
 import time
+from dataclasses import dataclass, field
 
-from ecs.common import Logger, Map, render_main_menu, direction_from_input, direction_from_random
-from ecs import Movement, Collision
+from ecs import Collision, Movement, Position, Information, Openable
+from ecs.common import (Logger, Map, direction_from_input,
+                        direction_from_random, render_main_menu)
 from ecs.managers import ComponentManager, EntityManager
 from ecs.systems import CollisionSystem, MovementSystem
-import curses
-
 from space import nine_square
-import random
+
+
+@dataclass
+class Result:
+    events: list = field(default_factory=list)
+    made_progress: bool = False
+    @property
+    def refresh():
+        return made_progress or events
 
 class Engine(object):
-    def __init__(self, components, systems, world=None, screen=None, keyboard=None):
+    def __init__(
+            self, 
+            components, 
+            systems,
+            # world=None, 
+            terminal=None, 
+            keyboard=None
+    ):
         self.running = True
         self.logger = Logger()
         self.debugger = Logger()
+        self.entity = 0
         self.entities = EntityManager()
         # self.components = {}
         self.init_managers(components)
         self.init_systems(systems)
-        self.world = world
+        # self.init_world(world)
         self.map_x_offset = 1
         self.map_y_offset = 1
-        if screen:
-            self.add_screen(screen)
-        if keyboard:
-            self.keyboard = keyboard
+        self.add_terminal(terminal)
+        self.keyboard = keyboard
 
     def __repr__(self):
         managers = []
@@ -36,18 +52,12 @@ class Engine(object):
         for attr in self.__dict__.keys():
             if attr.endswith('_manager'):
                 managers.append(attr.replace('_manager', ''))
-            # if attr.endswith('_system'):
-            #     systems.append(attr)
-        return f"Engine({', '.join(managers)})" #, {', '.join(systems)})"
+        return f"Engine({', '.join(managers)})"
 
     def init_managers(self, components):
-        # self.components = {}
         for component in components:
-            # self.components[component.classname()] = component
-            # name = f"{component.classname()}_manager"
-            # manager = ComponentManager(component)
             self.__setattr__(
-                component.classname(),
+                component.manager,
                 ComponentManager(component)
             )
 
@@ -58,7 +68,11 @@ class Engine(object):
             self.__setattr__(name, system)
 
     def get_input(self):
-        return self.screen.getch()
+        # curses.flushinp()
+        return self.terminal.getch()
+
+    def keypress_from_input(self, char):
+        return self.keyboard.get(char, None)
 
     def find_entity(self, entity_id):
         return self.entity_manager.find(entity_id)
@@ -68,11 +82,18 @@ class Engine(object):
             raise Exception("world already initialized")
         self.world = world
 
-    def add_screen(self, screen):
-        if hasattr(self, 'screen') and getattr(self, 'screen'):
-            raise Exception("screen already initialized")
-        self.screen = screen
-        self.height, self.width = screen.getmaxyx()
+    def add_screen(self, name, screen):
+        if hasattr(self, name):
+            raise AttributeError(f"Attribute already set: {name}.")
+        self.__setattr__(name, screen)
+
+    def add_terminal(self, terminal):
+        if not terminal:
+            return
+        if hasattr(self, 'terminal') and getattr(self, 'terminal'):
+            raise Exception("terminal already initialized")
+        self.terminal = terminal
+        self.height, self.width = terminal.getmaxyx()
 
     def add_player(self, entity):
         self.player = entity
@@ -92,11 +113,19 @@ class Engine(object):
 
     def run(self):
         while True:
+            start = time.time()
+            self.render_system.render_fov()
             self.render_system.process()
-            self.input_system.process() # per entity turn
-            self.graveyard_system.process()
+            # per entity turn
+            # self.turn_system.process()
+            # print(time.time() - start)
+            self.input_system.process()
+            # self.graveyard_system.process()
             if not self.running:
                 break
+
+    # def process_command(self, command):
+    #     if command == 
 
 if __name__ == '__main__':
     from ecs import Position, Information

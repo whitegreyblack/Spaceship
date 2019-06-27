@@ -4,8 +4,9 @@
 Uses a different fov than map.py
 """
 
+import time
 from .map import Map
-
+from ecs.managers import join
 
 sintable = [
     0.00000, 0.01745, 0.03490, 0.05234, 0.06976, 0.08716, 0.10453,
@@ -111,13 +112,48 @@ costable = [
     0.99939, 0.99985, 1.00000
 ]
 
+def raycast(engine):
+    start = time.time()
+    player = engine.positions.find(engine.player)
+    tilemap = engine.tilemaps.find(engine.world)
+    # reset visibility level to either 0 for unexplored or 1 for all other values
+    blocked = set()    
+    for eid, (visible, position) in join(engine.visibilities, engine.positions):
+        if position.moveable == True:
+            visible.level = 0
+        else:
+            visible.level = max(0, min(visible.level, 1))
+        if (position.x, position.y) == (player.x, player.y):
+            visible.level = 2 # set player position visiblity as fully visible
+        if position.blocks_movement:
+            blocked.add((position.x, position.y))
+    lighted = set()
+    for i in range(0, 361, 1):
+        ax = sintable[i]
+        ay = costable[i]
+
+        x = player.x
+        y = player.y
+        for z in range(10):
+            x += ax
+            y += ay
+            if not (0 <= x < tilemap.width and 0 <= y < tilemap.height):
+                break
+            rx = int(round(x))
+            ry = int(round(y))
+            lighted.add((rx, ry))
+            if (rx, ry) in blocked:
+                break
+    for eid, (visible, position) in join(engine.visibilities, engine.positions):
+        if (position.x, position.y) in set(lighted):
+            visible.level = 2
 
 class RayCastedMap(Map):
     # TODO: take algo from map and this do_fov and make them pure functions
     #       that take in a list of lists representing the world, width,
     #       height, player position and is_blocked, reset_light functions
     RAYS = 360
-    STEP = 3
+    STEP = 1
     def do_fov(self, px: int , py: int, radius: int):
         """Calculate lit squares from the given location and radius"""
         self.reset_light()

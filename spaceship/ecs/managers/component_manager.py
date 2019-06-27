@@ -7,6 +7,17 @@
 from dataclasses import dataclass, field
 
 
+def join(*managers):
+    # at least two needed
+    if len(managers) == 1:
+        return managers.components.items()
+    first, *rest = managers
+    keys = set(first.components.keys())
+    for manager in rest:
+        keys = keys.intersection(set(manager.components.keys()))
+    for eid in keys:
+        yield eid, (m.components[eid] for m in managers)
+
 class ComponentManager(object):
 
     __slots__ = ['ctype', 'components']
@@ -22,6 +33,24 @@ class ComponentManager(object):
     def __iter__(self):
         for k, v in self.components.items():
             yield k, v
+
+    def __contains__(self, eid):
+        return eid in self.components.keys()
+
+    # def join(self, *others):
+    #     keys = set(self.components.keys())
+    #     for other in others:
+    #         keys =  keys.intersection(set(other.components.keys()))
+    #     for eid in keys:
+    #         builder = []
+    #         for manager in (self, *others):
+    #             builder.append(manager.components[eid])
+    #         yield eid, builder
+
+    def exclude(self, other):
+        for eid, component in self:
+            if eid not in other:
+                yield eid, component
 
     def add(self, entity, component):
         if type(component).__name__ is not self.ctype:
