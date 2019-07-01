@@ -37,16 +37,6 @@ class ComponentManager(object):
     def __contains__(self, eid):
         return eid in self.components.keys()
 
-    # def join(self, *others):
-    #     keys = set(self.components.keys())
-    #     for other in others:
-    #         keys =  keys.intersection(set(other.components.keys()))
-    #     for eid in keys:
-    #         builder = []
-    #         for manager in (self, *others):
-    #             builder.append(manager.components[eid])
-    #         yield eid, builder
-
     def exclude(self, other):
         for eid, component in self:
             if eid not in other:
@@ -57,15 +47,14 @@ class ComponentManager(object):
             raise ValueError("Invalid component type added.")
         self.components[entity.id] = component
 
-    def remove(self, entity) -> bool:
-        if entity.id in self.components:
+    def remove(self, entity=None, eid=None) -> bool:
+        if not entity and not eid:
+            raise Exception("need entity or eid")
+        if entity and entity.id in self.components:
             del self.components[entity.id]
             return True
-        return False
-
-    def remove_by_id(self, entity_id) -> bool:
-        if entity_id in self.components:
-            del self.components[entity_id]
+        if eid and eid in self.components.keys():
+            del self.components[eid]
             return True
         return False
 

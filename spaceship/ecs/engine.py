@@ -55,6 +55,12 @@ class Engine(object):
                 attributes.append(attr)
         return f"Engine({', '.join(attributes)})"
 
+    @property
+    def systems(self):
+        for value in self.__dict__.values():
+            if isinstance(value, ComponentManager):
+                yield value
+
     def init_managers(self, components):
         for component in components:
             self.__setattr__(

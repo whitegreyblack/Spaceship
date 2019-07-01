@@ -148,9 +148,27 @@ class InputSystem(System):
         return turn_over
 
     def collide(self, entity, collision):
-        other = self.engine.entities.find(collision.entity_id)
+        other = self.engine.entities.find(eid=collision.entity_id)
         info = self.engine.infos.find(other)
-        self.engine.logger.add(f'collided with a {info.name}({collision.entity_id})')
+
+        health = self.engine.healths.find(eid=collision.entity_id)
+        if not health and entity == self.engine.player:
+            self.engine.logger.add(f'collided with a {info.name}({collision.entity_id})')
+        elif health:
+            print(other, info, health)
+            cur_hp = health.cur_hp
+            max_hp = health.max_hp
+            health.cur_hp -= 1
+            log = f"Attacked {info.name} for 1 damage ({cur_hp}->{health.cur_hp})."
+            if health.cur_hp < 1:
+                self.delete(other)
+                log += f" {info.name.capitalize()} died."
+            self.engine.logger.add(log)
+
+    def delete(self, entity):
+        for system in self.engine.systems:
+            system.remove(entity)
+        self.engine.entities.remove(entity)
 
     def move(self, entity, movement) -> bool:
         position = self.engine.positions.find(entity)
@@ -251,8 +269,11 @@ class InputSystem(System):
         return self.move(entity, movement)
 
     def process(self):
-        for entity_id, need_input in self.engine.inputs:
+        inputs = list(self.engine.inputs)
+        for entity_id, need_input in inputs:
             entity = self.engine.entities.find(entity_id)
+            if not entity:
+                continue
             ai = self.engine.ais.find(entity)
             if ai:
                 command = self.computer_command(entity)

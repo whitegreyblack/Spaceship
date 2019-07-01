@@ -5,9 +5,11 @@
 import curses
 import time
 
-from maps.map_raycast import raycast
-from .system import System
 from ecs.managers import join
+from maps.map_raycast import raycast
+
+from .system import System
+
 
 def border(screen: object, x: int, y: int, dx: int, dy: int) -> None:
     """
@@ -136,9 +138,6 @@ class RenderSystem(System):
 
         self.logs_x = self.inventory_x + self.inventory_width
         self.logs_y = self.map_y + self.map_height
-
-    def render_main_menu(self):
-        self.main_menu.render()
 
     def render_string(self, x, y, string):
         self.terminal.addstr(y, x, string)
@@ -303,7 +302,6 @@ class RenderSystem(System):
     def render_logs(self, redraw=True):
         logs = filter(lambda x: x.lifetime > 0, self.engine.logger.messages)
         tilemap = self.engine.tilemaps.find(self.engine.world)
-        # print(list(logs))
         for y, log in enumerate(logs):
             # stop if lines reach end of the line 
             # could also index messages by height of window
