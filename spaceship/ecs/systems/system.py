@@ -8,6 +8,7 @@ class System(object):
         self.engine = engine
         # need a logger listener here that appends to self.engine.logger
         self.logger = logger
+
     @classmethod
     def classname(cls):
         return cls.__name__.lower()

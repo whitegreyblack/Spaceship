@@ -116,19 +116,22 @@ def raycast(engine):
     start = time.time()
     player = engine.positions.find(engine.player)
     tilemap = engine.tilemaps.find(engine.world)
+
     # reset visibility level to either 0 for unexplored or 1 for all other values
     blocked = set()    
     for eid, (visible, position) in join(engine.visibilities, engine.positions):
-        if position.moveable == True:
-            visible.level = 0
-        else:
-            visible.level = max(0, min(visible.level, 1))
-        if (position.x, position.y) == (player.x, player.y):
-            visible.level = 2 # set player position visiblity as fully visible
+        # if position.moveable == True:
+        #     visible.level = 0
+        # else:
+        visible.level = max(0, min(visible.level, 1))
+        # if (position.x, position.y) == (player.x, player.y):
+        #     visible.level = 2 # set player position visiblity as fully visible
         if position.blocks_movement:
             blocked.add((position.x, position.y))
-    lighted = set()
-    for i in range(0, 361, 1):
+
+    # main algo to determine if light touches a block
+    lighted = {(player.x, player.y)}
+    for i in range(0, 361, 3):
         ax = sintable[i]
         ay = costable[i]
 

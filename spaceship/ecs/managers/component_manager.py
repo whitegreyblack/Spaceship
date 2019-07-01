@@ -69,10 +69,13 @@ class ComponentManager(object):
             return True
         return False
 
-    def find(self, entity):
-        # print(self.ctype, entity, self.components)
-        if entity.id in self.components.keys():
+    def find(self, entity=None, eid=None):
+        if not entity and not eid:
+            raise Exception("need entity or eid")
+        if entity and entity.id in self.components.keys():
             return self.components[entity.id]
+        if eid and eid in self.components.keys():
+            return self.components[eid]
         return None
 
 if __name__ == "__main__":

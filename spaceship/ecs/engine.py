@@ -11,7 +11,7 @@ from ecs import Collision, Movement, Position, Information, Openable
 from ecs.common import (Logger, Map, direction_from_input,
                         direction_from_random, render_main_menu)
 from ecs.managers import ComponentManager, EntityManager
-from ecs.systems import CollisionSystem, MovementSystem
+from ecs.systems import CollisionSystem, MovementSystem, RenderSystem
 from space import nine_square
 
 
@@ -29,13 +29,17 @@ class Engine(object):
             components, 
             systems,
             # world=None, 
-            terminal=None, 
-            keyboard=None
+            terminal, 
+            keyboard
     ):
         self.running = True
         self.logger = Logger()
         self.debugger = Logger()
         self.entity = 0
+        
+        self.add_terminal(terminal)
+        self.keyboard = keyboard
+
         self.entities = EntityManager()
         # self.components = {}
         self.init_managers(components)
@@ -43,9 +47,6 @@ class Engine(object):
         # self.init_world(world)
         self.map_x_offset = 1
         self.map_y_offset = 1
-        self.add_terminal(terminal)
-        self.keyboard = keyboard
-
     def __repr__(self):
         attributes = []
         # systems = []
@@ -64,7 +65,10 @@ class Engine(object):
     def init_systems(self, systems):
         for system_type in systems:
             name = f"{system_type.classname().replace('system', '')}_system"
-            system = system_type(self)
+            if system_type.__name__ == 'RenderSystem':
+                system = system_type(self, self.terminal)
+            else:
+                system = system_type(self)
             self.__setattr__(name, system)
 
     def get_input(self):

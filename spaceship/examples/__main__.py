@@ -58,7 +58,6 @@ def add_player(engine):
     engine.renders.add(player, Render('@'))
     engine.healths.add(player, Health(20, 20))
     engine.infos.add(player, Information("you"))
-    engine.visibilities.add(player, Visibility())
     engine.inventories.add(player, Inventory())
     engine.add_player(player)
 
@@ -74,7 +73,6 @@ def add_computers(engine, npcs):
         engine.ais.add(computer, AI())
         engine.infos.add(computer, Information("goblin"))
         engine.healths.add(computer, Health(2, 2))
-        engine.visibilities.add(computer, Visibility())
 
 def add_map(engine, mapstring):
     # add entity that holds tiles
@@ -122,7 +120,6 @@ def add_items(engine, items):
         engine.renders.add(item, Render('%'))
         engine.infos.add(item, Information("food item"))
         engine.items.add(item, Item())
-        engine.visibilities.add(item, Visibility())
         engine.logger.add(f"{item.id} @ ({space})") # show us item position
 
 def ecs_setup(terminal, dungeon, npcs, items):
@@ -136,12 +133,11 @@ def ecs_setup(terminal, dungeon, npcs, items):
     add_map(engine, dungeon)
     # add_screens(engine)
     add_player(engine)
-    # add_computers(engine, npcs)
+    add_computers(engine, npcs)
     add_items(engine, items)
 
     # engine.logger.add(f"count: {len(engine.entities.entities)}")
     return engine
-
 
 def test(engine):
     start = time.time()

@@ -112,6 +112,8 @@ class Position(Component):
     moveable: bool = True
     blocks_movement: bool = True
     manager: str = 'positions'
+    def __eq__(self, other):
+        return (self.x, self.y) == (other.x, other.y)
 
 
 @dataclass
@@ -157,7 +159,6 @@ class Item(Component):
     manager = 'items'
 
 components = Component.__subclasses__()
-
 
 if __name__ == "__main__":
     from ecs.debug import dprint
