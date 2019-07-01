@@ -145,6 +145,17 @@ class Visibility(Component):
     level: int = 0
     manager = 'visibilities'
 
+
+@dataclass
+class Inventory(Component):
+    size: int = 10
+    items: list = field(default_factory=list)
+    manager = 'inventories'
+
+@dataclass
+class Item(Component):
+    manager = 'items'
+
 components = Component.__subclasses__()
 
 

@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 
 
 def join(*managers):
-    # at least two needed
+    # at least two needed else returns dict items
     if len(managers) == 1:
         return managers.components.items()
     first, *rest = managers
@@ -60,6 +60,12 @@ class ComponentManager(object):
     def remove(self, entity) -> bool:
         if entity.id in self.components:
             del self.components[entity.id]
+            return True
+        return False
+
+    def remove_by_id(self, entity_id) -> bool:
+        if entity_id in self.components:
+            del self.components[entity_id]
             return True
         return False
 

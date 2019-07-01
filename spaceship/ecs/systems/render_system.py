@@ -13,10 +13,23 @@ class InventoryMenu:
     def __init__(self, engine):
         self.engine = engine
     
+    def render_items(self):
+        inventory = self.engine.inventories.find(self.engine.player)
+        self.engine.terminal.addstr(1, 1, f"{inventory}")
+        items = []
+        for eid, (_, info) in join(self.engine.items, self.engine.infos):
+            if eid in inventory.items:
+                items.append(info)
+        for i, info in enumerate(items):
+            self.engine.terminal.addstr(2+i, 1, f"{i+1}. {info.name}")
+
     def render(self):
         self.engine.terminal.clear()
         self.engine.terminal.border()
         self.engine.terminal.addstr(0, 1, '[inventory]')
+
+        self.render_items()
+
         self.engine.terminal.refresh()
     
     def get_input(self):
@@ -150,13 +163,21 @@ class RenderSystem(System):
         if redraw:
             self.redraw()
 
-    # def render_items(self, redraw=True):
-    #     position = self.engine.position
-    #     for eid, position in position.components.items():
-    #         entity = self.engine.entities.find(eid)
-    #         if not entity or position.:
-    #             continue
-    #         render = self.engine.render_manger.find(entity)
+    def render_items(self, redraw=True):
+        g = join(
+            self.engine.items,
+            self.engine.positions,
+            self.engine.renders,
+            self.engine.visibilities
+        )
+        for eid, (item, position, render, visibility) in g:
+            if visibility.level > 1:
+                self.render_char(
+                    position.x + self.map_x_offset,
+                    position.y + self.map_y_offset,
+                    render.char,
+                    curses.color_pair(visibility.level)
+                )
 
     def render_effect(self, x, y, effect, redraw=True):
         self.render_char(
@@ -213,7 +234,7 @@ class RenderSystem(System):
         self.render_header(False)
         self.render_map(False)
         # self.render_effects(True)
-        # # self.render_items(False)
+        self.render_items(False)
         self.render_units(False)
 
         self.render_logs(False)

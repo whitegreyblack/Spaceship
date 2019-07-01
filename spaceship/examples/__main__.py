@@ -13,8 +13,9 @@ import click
 import examples.utils as utils
 from classes.utils import dimensions
 from ecs import (AI, Collision, Destroy, Effect, Engine, Experience, Health,
-                 Information, Input, Logger, Message, Movement, Openable,
-                 Position, Render, Tile, TileMap, Visibility, components)
+                 Information, Input, Inventory, Item, Logger, Message,
+                 Movement, Openable, Position, Render, Tile, TileMap,
+                 Visibility, components)
 from ecs.managers import join
 from ecs.scene import InventoryMenu, MainMenu
 from ecs.systems import systems
@@ -39,6 +40,8 @@ def find_empty_space(engine):
             open_spaces.add((pos.x, pos.y))
     for entity_id, (hp, pos) in join(engine.healths, engine.positions):
         open_spaces.remove((pos.x, pos.y))
+    for entity_id, (item, pos) in join(engine.items, engine.positions):
+        open_spaces.remove((pos.x, pos.y))
     if not open_spaces:
         return None
     return open_spaces.pop()
@@ -56,6 +59,7 @@ def add_player(engine):
     engine.healths.add(player, Health(20, 20))
     engine.infos.add(player, Information("you"))
     engine.visibilities.add(player, Visibility())
+    engine.inventories.add(player, Inventory())
     engine.add_player(player)
 
 def add_computers(engine, npcs):
@@ -105,34 +109,35 @@ def add_map(engine, mapstring):
             else:
                 engine.infos.add(tile, floor_info)
 
-# def add_items(engine):
-#     item = engine.entities.create()
-#     open_spaces = set(engine.world.spaces())
-#     if not open_spaces:
-#         return engine
-#     space = open_spaces.pop()
-#     engine.position.add(
-#         item, 
-#         Position(*space, blocks_movement=False)
-#     )
-#     engine.render.add(item, Render('%'))
-#     engine.information.add(item, Information("item"))
-#     engine.logger.add(f"{item.id} @ ({space})") # show us item position
+def add_items(engine, items):
+    for i in range(items):
+        item = engine.entities.create()
+        space = find_empty_space(engine)
+        if not space:
+            raise Exception("No empty spaces to place item")
+        engine.positions.add(
+            item, 
+            Position(*space, moveable=False, blocks_movement=False)
+        )
+        engine.renders.add(item, Render('%'))
+        engine.infos.add(item, Information("food item"))
+        engine.items.add(item, Item())
+        engine.visibilities.add(item, Visibility())
+        engine.logger.add(f"{item.id} @ ({space})") # show us item position
 
-def ecs_setup(terminal, dungeon, npcs):
+def ecs_setup(terminal, dungeon, npcs, items):
     engine = Engine(
         components=components, 
         systems=systems,
-        # world=Map.factory(dungeon),
-        # world=RayCastedMap(dungeon),
         terminal=terminal,
         keyboard=keyboard
     )
+    print(engine)
     add_map(engine, dungeon)
     # add_screens(engine)
     add_player(engine)
-    add_computers(engine, npcs)
-    # add_items(engine)
+    # add_computers(engine, npcs)
+    add_items(engine, items)
 
     # engine.logger.add(f"count: {len(engine.entities.entities)}")
     return engine
@@ -178,17 +183,18 @@ def test_loop(engine):
     print(sum(t3s) / len(t3s))
     print(sum(t4s) / len(t4s))
 
-def main(terminal, dungeon, npcs):
+def main(terminal, dungeon, npcs, items):
     curses_setup(terminal)
     dungeon = dungeons.get(dungeon.lower(), 'small')
-    engine = ecs_setup(terminal, dungeon=dungeon, npcs=npcs)
+    engine = ecs_setup(terminal, dungeon=dungeon, npcs=npcs, items=items)
     engine.run()
 
 @click.command()
 @click.option('-d', '--dungeon', default='dungeon')
 @click.option('-n', '--npcs', default=2)
-def preload(dungeon, npcs):
-    curses.wrapper(main, dungeon, npcs)
+@click.option('-i', '--items', default=2)
+def preload(dungeon, npcs, items):
+    curses.wrapper(main, dungeon, npcs, items)
 
 if __name__ == "__main__":
     preload()

@@ -47,12 +47,12 @@ class Engine(object):
         self.keyboard = keyboard
 
     def __repr__(self):
-        managers = []
+        attributes = []
         # systems = []
-        for attr in self.__dict__.keys():
-            if attr.endswith('_manager'):
-                managers.append(attr.replace('_manager', ''))
-        return f"Engine({', '.join(managers)})"
+        for attr, value in self.__dict__.items():
+            if isinstance(value, ComponentManager):
+                attributes.append(attr)
+        return f"Engine({', '.join(attributes)})"
 
     def init_managers(self, components):
         for component in components:

@@ -36,11 +36,12 @@ class Keyboard:
 
 # maps curses input to a string value
 # A-Za-z
-keyboard = { c: chr(c) for x in (65, 97) for c in range(x, x+26) }
+keyboard = { i: chr(i) for x in (65, 97) for i in range(x, x + 26) }
 keyboard.update({
     258: 'down',
     259: 'up',
     260: 'left',
     261: 'right',
-    27: 'escape'
-})
+    27: 'escape',
+    44: 'comma',
+}) 

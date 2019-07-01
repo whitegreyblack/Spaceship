@@ -170,6 +170,33 @@ class InputSystem(System):
         position.y += movement.y
         return True
 
+    def pick_item(self, entity):
+        position = self.engine.positions.find(entity)
+        inventory = self.engine.inventories.find(entity)
+        g = join(
+            self.engine.items,
+            self.engine.positions,
+            self.engine.infos
+        )
+        descriptions = []
+        items_picked_up = []
+        for eid, (item, item_position, info) in g:
+            if (position.x, position.y) == (item_position.x, item_position.y):
+                items_picked_up.append(eid)
+                descriptions.append(info.name)
+        if not items_picked_up:
+            return False
+        for eid in items_picked_up:
+            # remove from map
+            entity = self.engine.entities.find(eid)
+            self.engine.visibilities.remove(entity)
+            self.engine.renders.remove(entity)
+            self.engine.positions.remove(entity)
+            # add to inventory
+            inventory.items.append(entity.id)
+        self.engine.logger.add(f"Picked up {', '.join(descriptions)}")
+        return True
+
     def player_command(self, entity):
         while True:
             # self.engine.logger.add(f"Turn for {entity.id}")
@@ -205,6 +232,8 @@ class InputSystem(System):
                 turn_over = self.open_door(entity)
             elif keypress == 'c':
                 turn_over = self.close_door(entity)
+            elif keypress == 'comma':
+                turn_over = self.pick_item(entity)
             else:
                 self.engine.logger.add(f"unknown command {char} {chr(char)}")
             if turn_over:
@@ -212,6 +241,7 @@ class InputSystem(System):
             self.engine.render_system.process()
 
     def computer_command(self, entity):
+        """Computer commands currently only support mindless movement"""
         position = self.engine.positions.find(entity)
         possible_spaces = []
         for x, y in nine_square():
@@ -228,29 +258,3 @@ class InputSystem(System):
                 command = self.computer_command(entity)
             else:
                 command = self.player_command(entity)
-            # self.engine.process_command(command)
-
-    def process_entity(self, entity):
-        ai = self.engine.ai_manager.find(entity)
-        x, y = None, None
-        if ai:
-            x, y = self.direction_from_random(entity)
-            self.engine.movement_manager.add(entity, Movement(x, y))
-            self.engine.movement_system.process_movement(entity)
-
-        elif self.engine.player == entity:
-            while 1:
-                command = self.direction_from_input()
-                if not self.engine.running: # can only be stopped here by user
-                    return
-                if not command:
-                    self.engine.render_system.process()
-                    continue
-                self.engine.movement_manager.add(
-                    entity,
-                    Movement(command[1], command[2])
-                )
-                result = self.engine.movement_system.process_movement(entity)
-                self.engine.movement_manager.remove(entity)
-                if result:
-                    break
