@@ -1,9 +1,9 @@
 from random import choice
-from .object import Object
-from .color import Color
+from spaceship.classes.object import Object
+from spaceship.classes.color import Color
 from collections import namedtuple
-from tools import distance
-from action import commands_ai
+from spaceship.tools import distance
+from spaceship.action import commands_ai
 
 ''' TODO: implement unique attributes
 self.str, self.agi, self.int
