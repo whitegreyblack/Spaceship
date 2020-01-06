@@ -7,8 +7,8 @@ import random
 import time
 from dataclasses import dataclass, field
 
-from ecs import Movement, Position
-from space import eight_square, nine_square
+from spaceship.ecs import Movement, Position
+from spaceship.space import eight_square, nine_square
 
 from .system import System
 

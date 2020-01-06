@@ -70,9 +70,14 @@ class Cave(Map):
             self.generate_units()
         
     def build(self, rot=0, max_rooms=15):
-        '''Places rooms in a box of size width by height and applies rot if
-        is not 0 and returns the box to be parsed as a dungeon'''
+        """
+            Places rooms in a box of size width by height and applies rot if
+            is not 0 and returns the box to be parsed as a dungeon
+        """
         def mst(graph):
+            """
+                Minimum spanning tree
+            """
             q, p = {}, {}
 
             for k in graph.keys(): 
@@ -80,13 +85,13 @@ class Cave(Map):
                 p[k] = 0
 
             q[0] = 0
-            p[0] = 0
+            p[0] = [0]
             
             while q:
                 u = min(k for k in q.keys())
                 for z in graph[u].keys():
                     if z in q.keys() and 0 < graph[u][z] < q[z]: 
-                        p[z] = u
+                        p[z] = [u]
                         q[z] = graph[u][z]
 
                 q.pop(u)
@@ -95,7 +100,7 @@ class Cave(Map):
                     u = min(k for k in q.keys())
                     for z in graph[u].keys():
                         if z in q.keys() and 0 < graph[u][z] < q[z]: 
-                            p[z] = u
+                            p[z] = [u]
                             q[z] = graph[u][z]  
             return p
 
@@ -165,34 +170,32 @@ class Cave(Map):
 
         # Expansion Algorithm
         key_range = 3 if self.height <= 25 else 4
-        while len(rooms) < max_rooms and tries < 2000:
+        while len(rooms) < max_rooms and tries < 3000:
             key = choice([i for i in range(-1, key_range)])
 
             if key == 4:
                 x, y = randint(16, 20), randint(12, 16)
                 px, py = randint(9, self.width - 9), randint(7, self.height - 7)
-
             elif key >= 2:
                 x, y = randint(12, 16), randint(8, 12)
                 px, py = randint(x // 2, self.width - x // 2), randint(y // 2, self.height - y // 2)
-
             elif key >= 0:
                 x, y = randint(8, 12), randint(4, 6)
                 px, py = randint(x // 2, self.width - x // 2), randint(y // 2, self.height - y // 2)
-
             else:
                 x, y = randint(6, 8), randint(3, 4)
                 px, py = randint(x // 2, self.width - x // 2), randint(y // 2, self.height - y // 2)
 
-            if randint(0, 3):
-                x, y = y, x
-                px, py = py, px
+            # if randint(0, 3):
+            #     x, y = y, x
+            #     px, py = py, px
 
             temp = box(
-                    px - int(round(x / 2)), 
-                    py - int(round(y / 2)), 
-                    px - int(round(x / 2)) + x, 
-                    py - int(round(y / 2)) + y)
+                px - int(round(x / 2)), 
+                py - int(round(y / 2)), 
+                px - int(round(x / 2)) + x, 
+                py - int(round(y / 2)) + y
+            )
 
             # check for out of bounds error first -- makes for filtering easier and does not check
             # intersections with temp and other rooms due to first failure -- thus faster looping 
@@ -218,6 +221,20 @@ class Cave(Map):
         # build a mst graph between rooms
         graph = mst(graph)
 
+        # randomly choose rooms to join with
+        m = max(graph.keys())
+        pairs = {
+            (i, j) for i in range(m) for j in range(m-1)
+        }
+        paired = {
+           (k, v[0]) 
+                for k, v in graph.items()
+        }
+        pairs.difference_update(paired)
+        for i in range(len(graph.keys()) // 2):
+            a, b = pairs.pop()
+            graph[a].append(b)
+
         # =========================================================================
         # basically these steps draw the rooms onto a tilemap
         # anything before is pre rendering (drawing)
@@ -228,8 +245,8 @@ class Cave(Map):
         # now append dimensions to the map and create a dungeon
         # floors then rooms then walls
 
-        floor = []
         # drawing rooms
+        floor = []
         for r in rooms:
             for x in range(r.x1, r.x2+1):
                 for y in range(r.y1, r.y2+1):
@@ -245,10 +262,11 @@ class Cave(Map):
 
         # draw paths/hallways
         paths = []
-        for k in graph.keys():
-            for x, y in lpath(rooms[k], rooms[graph[k]]):
-                dungeon[y][x] = '#'
-                paths.append((x, y))
+        for k, vs in graph.items():
+            for v in vs:
+                for x, y in lpath(rooms[k], rooms[v]):
+                    dungeon[y][x] = '#'
+                    paths.append((x, y))
 
         # draw doors
         doors = []
@@ -329,12 +347,12 @@ class Cave(Map):
     
 
 @click.command()
-@click.option('--width', default=80, help="width of cave")
-@click.option('--height', default=25, help="height of cave")
+@click.option('--width', default=58, help="width of cave")
+@click.option('--height', default=17, help="height of cave")
 @click.option('--runs', default=1, help="number of generated caves")
 def cli(width, height, runs):
     for _ in range(runs):
-        print(repr(Cave(width, height)))
+        print(repr(Cave(width, height, False)))
 
 if __name__ == "__main__":
     cli()

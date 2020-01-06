@@ -5,12 +5,14 @@ from collections import namedtuple
 
 from bearlibterminal import terminal as term
 
-from ecs.die import check_sign as check
+from spaceship.ecs.die import check_sign as check
 # from ecs.ecs import (Attribute, Component, Damage, Delete, Entity, Equipment,
 #                      Information, Inventory, Position, Render)
-from ecs.keyboard import Keyboard
-from ecs.map import WORLD, Map
-from ecs import Entity, Position
+from spaceship.keyboard import Keyboard
+from spaceship.maps.map_configs import WORLD
+from spaceship.maps.map import Map
+from spaceship.ecs.entities import Entity
+from spaceship.ecs.components import Position
 # from ecs.other import (
 #     #Attribute, 
 #     Damage, Delete, Entity, Equipment,
@@ -536,7 +538,7 @@ class Game:
         fov_recalc = True
         messages = []
         while proceed:
-            self.dungeon.do_fov(*self.player.position(), 15)
+            self.dungeon.do_fov(*self.player.`position`(), 15)
             system_status(self.player)
             system_enemy_status(self.dungeon, self.player, self.entities)
             system_draw(fov_recalc, self.dungeon, self.player, self.entities)

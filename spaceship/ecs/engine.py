@@ -7,12 +7,12 @@ import random
 import time
 from dataclasses import dataclass, field
 
-from ecs import Collision, Movement, Position, Information, Openable
-from ecs.common import (Logger, Map, direction_from_input,
+from spaceship.ecs import Collision, Movement, Position, Information, Openable
+from spaceship.ecs.common import (Logger, Map, direction_from_input,
                         direction_from_random, render_main_menu)
-from ecs.managers import ComponentManager, EntityManager
-from ecs.systems import CollisionSystem, MovementSystem, RenderSystem
-from space import nine_square
+from spaceship.ecs.managers import ComponentManager, EntityManager
+from spaceship.ecs.systems import CollisionSystem, MovementSystem, RenderSystem
+from spaceship.space import nine_square
 
 
 @dataclass

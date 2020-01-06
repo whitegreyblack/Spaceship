@@ -4,7 +4,7 @@
 
 import time
 
-from ecs import Collision, Movement
+from  spaceship.ecs import Collision, Movement
 
 from .system import System
 

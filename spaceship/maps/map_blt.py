@@ -4,7 +4,7 @@
 Uses map base class to specify outputs blt terminal
 """
 
-from .map import Map
+from spaceship.maps.map import Map
 
 
 class BltMap(Map):

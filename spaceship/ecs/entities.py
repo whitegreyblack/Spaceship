@@ -1,6 +1,6 @@
-from ecs import Entity
-import .components
-from .die import Die
+from spaceship.ecs.managers.entity_manager import Entity
+import spaceship.ecs.components as components
+from spaceship.ecs.die import Die
 
 def make_sword():
     return Entity(components={

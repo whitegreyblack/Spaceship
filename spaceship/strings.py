@@ -552,7 +552,14 @@ pass_by_item = [
 ]
 
 if __name__ == "__main__":
-    try:
-        print(movement_move_chars[input()])
-    except KeyError:
-        raise
+    import pprint
+    import textwrap
+    printer = pprint.PrettyPrinter(width=79)
+
+    lines = []
+    for strs in (RACE_STRINGS, CLASS_STRINGS):
+        for s in strs:
+            for t in textwrap.wrap(s, 79):
+                lines.append(t)
+            lines.append('\n')
+    print('\n'.join(lines))

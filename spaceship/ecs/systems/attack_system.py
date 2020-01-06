@@ -4,7 +4,7 @@
 
 import time
 
-from ecs import Destroy, Effect
+from  spaceship.ecs import Destroy, Effect
 
 from .system import System
 

@@ -7,10 +7,12 @@ import random
 import time
 from dataclasses import dataclass, field
 
-from ecs import Movement, Position, Collision
-from space import eight_square, nine_square
-from ecs.managers import join
+from spaceship.space import eight_square, nine_square
+from spaceship.ecs import Collision, Movement, Position
+from spaceship.ecs.managers import join
+
 from .system import System
+
 
 @dataclass
 class Command:

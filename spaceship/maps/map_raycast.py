@@ -5,8 +5,8 @@ Uses a different fov than map.py
 """
 
 import time
-from .map import Map
-from ecs.managers import join
+from spaceship.maps.map import Map
+from spaceship.ecs.managers import join
 
 sintable = [
     0.00000, 0.01745, 0.03490, 0.05234, 0.06976, 0.08716, 0.10453,

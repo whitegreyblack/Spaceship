@@ -3,7 +3,7 @@
 """Holds commonly used simple data class objects"""
 
 from dataclasses import dataclass, field
-from classes.utils import dimensions
+from spaceship.classes.utils import dimensions
 
 
 @dataclass

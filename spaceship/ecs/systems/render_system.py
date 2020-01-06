@@ -5,8 +5,8 @@
 import curses
 import time
 
-from ecs.managers import join
-from maps.map_raycast import raycast
+from spaceship.maps.map_raycast import raycast
+from spaceship.ecs.managers import join
 
 from .system import System
 
